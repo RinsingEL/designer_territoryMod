@@ -28,6 +28,15 @@
 - 代码导览：`../30_code_guide/city/c9_execution.md`
 - 测试：`../40_tests/city/c9_execution/`
 
+## 开发工具
+
+### 代码过程浏览可视工具
+
+- 方案：`../10_product/devtools/code_process_viewer/`
+- 契约：`../20_contracts/devtools/code_process_viewer/`
+- 代码导览：`../30_code_guide/devtools/code_process_viewer/`
+- 测试：`../40_tests/devtools/code_process_viewer/`
+
 ## 历史资料
 
 - 旧 `workFlow`、`dev_docs`：`../90_archive/StructureBinder/`
