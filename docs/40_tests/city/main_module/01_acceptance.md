@@ -1,19 +1,13 @@
 # 主模块验收入口
 
-## 当前主线验证重点
+当前主模块测试真值已迁移到目录化结构，旧文件保留为兼容入口。
 
-- `C7 -> C8 -> C9` 是否打通
-- MCP 是否能读取 C8 会话并提交节点决策
-- 已校验节点是否能进入 `C9` 队列
-- `C9` 是否能按队列执行落地
+## 当前主入口
 
-## 当前证据来源
+- 测试入口：`./测试入口.md`
+- 影响面：`./影响面.md`
+
+## 历史证据
 
 - `../../../../90_archive/StructureBinder/dev_docs/current_20260402_030950/`
 - `../../../../90_archive/StructureBinder/root_docs/TEST_C_FLOW_CHECKLIST.md`
-
-## 当前建议继续验证
-
-- 主链连续多节点施工
-- 主模块落地后的 runtime collision
-- 失败后的 retry / blocked 可读性

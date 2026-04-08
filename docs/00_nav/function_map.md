@@ -4,10 +4,10 @@
 
 ### 主模块建造
 
-- 方案：`../10_product/city/main_module/`
-- 契约：`../20_contracts/city/C8.md`、`../20_contracts/city/C9.md`
-- 代码导览：`../30_code_guide/city/main_module.md`
-- 测试：`../40_tests/city/main_module/`
+- 方案：`../10_product/city/main_module/系统概述.md`
+- 契约：`../20_contracts/city/main_module/配置表/`
+- 代码导览：`../30_code_guide/city/main_module/代码导览.md`
+- 测试：`../40_tests/city/main_module/测试入口.md`
 
 ### 次级建筑
 

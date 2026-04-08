@@ -1,30 +1,15 @@
 # 主模块代码导览
 
-## 主要仓库
+当前主模块代码导览真值已迁移到目录化结构，旧文件保留为兼容入口。
 
-- `StructureBinder`
+## 当前主入口
 
-## 主要类
+- 代码导览：`./main_module/代码导览.md`
+- 功能实现：`./main_module/功能实现/C7工头计划.md`
+- 功能实现：`./main_module/功能实现/C8节点会话与提交.md`
+- 功能实现：`./main_module/功能实现/C8子节点Jigsaw求解.md`
 
-- `src/main/java/com/user/terra_script/world/city/stage/c7/CityC7Stages.java`
-- `src/main/java/com/user/terra_script/world/city/stage/c8/CityC8Stages.java`
-- `src/main/java/com/user/terra_script/world/city/stage/c9/CityC9Stages.java`
-- `src/main/java/com/user/terra_script/server/mcp/CityController.java`
+## 当前边界说明
 
-## 阅读顺序
-
-1. `CityController`
-2. `CityC7Stages`
-3. `CityC8Stages`
-4. `CityC9Stages`
-
-## 当前职责摘要
-
-- `CityC7Stages`
-  - 产出工头计划
-- `CityC8Stages`
-  - 管理节点会话、提交、失败、重试
-- `CityC9Stages`
-  - 生成可执行计划与队列
-- `CityController`
-  - 暴露 MCP / HTTP 入口
+- 主模块目录当前重点维护 `C7`、`C8` 与 `jigsaw` 求解实现。
+- `C9` 执行层请继续查看 `./c9_execution.md`。
