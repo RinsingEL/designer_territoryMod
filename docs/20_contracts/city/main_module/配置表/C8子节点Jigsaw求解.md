@@ -25,6 +25,10 @@
 | `runtime_parent_connectors` | runtime 模板中扫描出的 parent jigsaw 候选 |
 | `debug_preview_steps` | 调试预览步骤列表 |
 | `apply_now` | 当前是否走立即落地 |
+| `queue_summary / active_node / validated_nodes / failed_attempts` | 求解成功后最新的 C8 会话树快照 |
+| `solve_result.placement.incoming_pool_refs` | 当前 solved child 实际接入的 runtime parent pool |
+| `solve_result.placement.outgoing_connectors` | child 当前真实 runtime outgoing connector、`pool_refs` 与 pool 真值诊断 |
+| `placement_execution.terrain_preparation.post_cleanup` | `apply_now=true` 时的落地后 jigsaw 收口统计 |
 
 ## 当前稳定调试产物
 
@@ -41,7 +45,13 @@
 | 求解深度 | 当前固定单步 child 扩展，深度为 `1` |
 | 垂直 jigsaw | 当前不进入真实求解，只返回 pending 占位结果 |
 | runtime parent pool | 当前优先读取 parent runtime jigsaw 原始 `pool`，再在该 pool 中筛 AI 指定模板 |
-| `apply_now` | 只表示把求解结果继续交给执行层，不替代执行层系统真值 |
+| 求解成功后的 child | 会立即写回 `validated_nodes / placements`，即使 `apply_now=false` 也入树 |
+| placeholder child | 同一 parent 下旧的合成 placeholder 会被真实 `vjigsaw_*` child 替换 |
+| 下一层 ready 节点 | 当前优先按真实 child runtime connector 的 `pool_refs` 展开；对 namespaced runtime pool 先按 pool 路径收束成员，catalog 仅做兜底 |
+| runtime/catalog pool 冲突 | 当前不阻断求解，但会把 `pool_truth_source / pool_mismatch / mismatch_detail` 写进 `solve_result.placement.outgoing_connectors` 与 `node_debug` |
+| `apply_now` | 只表示把已成功入树的求解结果继续交给执行层，不控制是否入树 |
+| 落地后 jigsaw | 所有已落地 jigsaw 统一按 `final_state -> air fallback` 收口，不保留世界中的残留 jigsaw 方块 |
+| 调试预览图 | 当前 `jigsaw_solver_debug` 预览标签改为外置错位、半透明底、带引线；`*.legend.json` 会额外写入 `label_layout / label_opacity / label_scope` |
 
 ## 常见拒绝类型
 
