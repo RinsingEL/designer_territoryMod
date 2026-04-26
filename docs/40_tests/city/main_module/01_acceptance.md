@@ -28,6 +28,9 @@
   - `chosen_start_reason_zh`
   - `runtime_fallback_used`
   - `runtime_fallback_reason`
+- 当前临时策略是否已生效：
+  - `terrain_probe_points` 不再作为 solver / arrangement engine 的硬地形拒绝依据
+  - 代码中能通过 `TEMP-C35-TERRAIN-PROBE-HARD-CHECK-DISABLED` 一次搜到全部临时关闭点
 
 - 测试入口：`./测试入口.md`
 - 影响面：`./影响面.md`
@@ -54,6 +57,18 @@
   - `manual_attach_summary`
   - `first_blocker_stage`
   - `vanilla_stub_generated`
+  - `vanilla_piece_count`
+  - `vanilla_pool_element_piece_count`
+  - `vanilla_piece_extraction_stage`
+  - `vanilla_piece_debug_summary_zh`
+  - `vanilla_piece_items`
   - 第 04 步预览图中的候选矩形颜色分层
 - `g_market_03` 在重新生成 `C8` 后，start 是否不再长期固定在多边形北侧边缘，且首个水平扩展失败原因不再停留在已知的“朝外越界”
+- `g_market_03` 在临时关闭 `terrain_probe_points` 硬限制后，当前首阻塞是否已前移为 `vanilla_empty_stub`，并且 trace 中应明确看到：
+  - `attachable_count = 1`
+  - `area_pass_count = 1`
+  - `collision_free_count = 1`
+  - `terrain_pass_count = 1`
+  - `viable_count = 1`
 - 当当前环境拿不到 runtime 模板管理器时，`C8` 是否显式落出 fallback 证据，而不是静默继续沿用旧 seed / anchor
+- 若后续恢复模板 probe 地形硬限制，是否能通过统一标记 `TEMP-C35-TERRAIN-PROBE-HARD-CHECK-DISABLED` 快速定位全部回滚点

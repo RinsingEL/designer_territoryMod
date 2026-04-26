@@ -213,6 +213,14 @@
   - `first_blocker_stage`
   - `vanilla_stub_generated`
   - `piece_generated`
+- 当第 04 步进一步卡在 `vanilla_empty_stub` 时，还应继续输出 vanilla builder 诊断字段，用于解释“stub 为什么没提取出 child piece”，至少包括：
+  - `vanilla_piece_count`
+  - `vanilla_pool_element_piece_count`
+  - `selected_vanilla_piece_index`
+  - `vanilla_piece_extraction_stage`
+  - `vanilla_piece_debug_summary_zh`
+  - `vanilla_piece_types`
+  - `vanilla_piece_items`
 - 其中 child 兼容诊断必须以运行时已加载模板为真值：
   - parent jigsaw 由 `StructureTemplate.filterBlocks(..., Blocks.JIGSAW)` 扫描
   - child jigsaw 也必须由 runtime 模板枚举
@@ -246,7 +254,32 @@
   - 再判断 connector 是否朝向多边形内部
   - 再复用当前水平 solver 做第一跳 child dry-run
   - 若 runtime 不可用，则显式回退，不允许静默沿用旧 heuristics
+- 当前阶段对 `terrain_probe_points` 的运行口径已临时调整：
+  - `terrain_probe_points` 仍来自 TerraSense C3.5 预处理产物，不从运行时现算
+  - TerraSense 默认会按 `placement.footprint` 自动补出“矩形四角 + 中心点”5 个 probe 点
+  - 但当前主模块已经引入 foundation / terrain adaptation 语义，因此 `StructureBinder` 里的 solver 与 arrangement engine 暂时不再把这些 probe 点用于硬地形拒绝
+  - 当前代码里统一以 `TEMP-C35-TERRAIN-PROBE-HARD-CHECK-DISABLED` 作为临时关闭标记，后续若要恢复，可按该标记整体检索回滚
+- 当前阶段地形职责的临时划分为：
+  - solver 继续负责 connector、rotation、bounds、碰撞、可解释调试
+  - foundation / terrain adaptation / 执行层负责真实的地形适配、嵌入地面、基台与地表修正
+  - 因此当前若模板只靠 `terrain_probe_points` 才会被拒绝，不应在 solver 阶段直接判死
 - 当前阶段 `selected_rotation` 仅保留兼容字段，第一版不作为实际求解约束，应以 vanilla jigsaw 返回的实际 rotation 为准
 - 当前阶段暂不把 child 默认切进 `C8 submit` 主链
 - 当前阶段也不改 `C9` 的默认消费方式
 - 后续主模块正式接入时，应直接复用本轮工具层与其真实 connector 口径、vanilla piece placement 输出
+
+## 当前真机状态
+
+- 以 `g_market_03` 为当前主回归样例时：
+  - `C8` 的 start 已由 runtime 水平 connector 评分决定，不再因为旧的北侧朝外越界问题直接失败
+  - 在临时关闭 `terrain_probe_points` 硬限制后，start 第一跳 dry-run 的首阻塞已从 `terrain` 前移为 `vanilla_empty_stub`
+  - 当前水平口 `jigsaw_east_7_1_0` 的手工兼容分析已经可以得到：
+    - `attachable_count = 1`
+    - `area_pass_count = 1`
+    - `collision_free_count = 1`
+    - `terrain_pass_count = 1`
+    - `viable_count = 1`
+  - 这表示当前“理论可行候选”已经存在，下一阶段的主问题是 `JigsawPlacement.addPieces(...)` 返回了 stub，但没有提取出可用 child piece
+- 垂直口当前仍按计划分流：
+  - `jigsaw_up_*` / `jigsaw_down_*` 直接返回 `vertical_jigsaw_solver_pending`
+  - 不再混入当前水平求解器的 start / child 评分链
