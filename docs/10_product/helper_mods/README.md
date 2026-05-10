@@ -9,3 +9,4 @@
   - 当前文档：
     - `01_c35_runtime_jigsaw_truth.md`
     - `02_runtime_jigsaw_问题与修改记录.md`
+    - `03_structure_curation_tool.md`
