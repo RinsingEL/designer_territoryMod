@@ -1,10 +1,17 @@
 # Function Map
 
+## 开发协作
+
+- AI 协作开发规范：`./AI协作开发规范.md`
+
 ## 城市系统
 
 ### C 大重构（2026-05-06 版）
 
 - 方案：`../10_product/city/c_refactor/系统概述.md`
+- C5：`../10_product/city/c_refactor/功能设计/C5Area图规划与保留策略.md`
+- C6：`../10_product/city/c_refactor/功能设计/C6Area安全规范.md`
+- LLM 复查：`../10_product/city/c_refactor/功能设计/LLM复查与策略配置.md`
 - 契约：`../20_contracts/city/c_refactor/配置表/`
 - 代码导览：`../30_code_guide/city/c_refactor/代码导览.md`
 - 测试：`../40_tests/city/c_refactor/测试入口.md`

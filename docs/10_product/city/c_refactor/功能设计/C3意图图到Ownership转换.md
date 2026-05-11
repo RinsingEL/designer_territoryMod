@@ -21,7 +21,7 @@ flowchart TD
     E --> F["C3 ownership / block / district seed"]
     D --> G["程序重渲染半透明 overlay preview"]
     E --> G
-    F --> H["C4 road / C5 parcel / C6 footprint budget"]
+    F --> H["C4 road / C5 area / C6 area build brief"]
 ```
 
 | 产物 | 生成者 | 用途 | 是否是真值 |
@@ -64,9 +64,9 @@ flowchart TD
 | --- | --- |
 | `district_seed` | 从功能区多边形生成的稳定片区种子 |
 | `ownership_polygon` | 映射到世界坐标后的可追踪片区边界 |
-| `block_seed` | 给 C4/C5 继续切路网和 parcel 的街坊初始数据 |
+| `block_seed` | 给 C4/C5 继续生成道路网络和 area 图的街坊初始数据 |
 | `function_weights` | 从 C2 继承的功能权重，不压扁成单标签 |
-| `road_hints` | 从 `road_sketch` 和锚点转换来的道路求解提示 |
+| `road_hints` | 从 `road_sketch` 和锚点转换来的道路网络化提示 |
 | `anchor_refs` | gate、plaza、port、bridge、landmark 等锚点引用 |
 | `conversion_report` | 裁剪、清理、合并、丢弃和 warning 记录 |
 
@@ -78,7 +78,7 @@ flowchart TD
 4. 清理过小碎片、极细长噪声和无法解释的孤岛。
 5. 对重叠或缝隙执行可解释修正，并写入 `conversion_report`。
 6. 为每个功能区生成稳定 `district_id`，继承 C2 `function_weights`。
-7. 根据道路草图和锚点生成 `road_hints`，交给 C4 道路求解，不在 C3 直接铺路。
+7. 根据道路草图和锚点生成 `road_hints`，交给 C4 识别和网络化，不在 C3 直接铺路。
 8. 生成 `district_seed`、`ownership_polygon` 和 `block_seed`。
 9. 用结构化结果重新渲染 `intent_overlay_preview.png`，供人工和 AI 复核。
 
@@ -97,9 +97,9 @@ C3 只把道路草图转成提示，不直接决定最终道路。
 
 | 来源 | C3 输出 | 后续消费 |
 | --- | --- | --- |
-| `road_sketch.main_roads` | `road_hints.main_axis` | C4 主路求解 |
+| `road_sketch.main_roads` | `road_hints.main_axis` | C4 主路识别和网络化 |
 | `road_sketch.entries` | `road_hints.entries` | C4 城门、入口和外部连接 |
-| `anchor_points.plaza` | `anchor_refs.plaza` | C4 广场连接、C5 parcel 切分 |
+| `anchor_points.plaza` | `anchor_refs.plaza` | C4 广场连接、C5 reserved_area / plaza_edge 生成 |
 | `anchor_points.port` | `anchor_refs.port` | C4 桥/滨水路、C6 港口预算 |
 | `anchor_points.landmark` | `anchor_refs.landmark` | C7 工头计划和结构候选召回 |
 
@@ -118,7 +118,7 @@ C3 只把道路草图转成提示，不直接决定最终道路。
 
 - 不直接选择结构模板。
 - 不生成最终道路。
-- 不切最终 parcel。
+- 不切最终 area。
 - 不做 step=1 施工级坡度、水下、solid base 检查。
 - 不把半透明 overlay 当作机器解析源。
 - 不让 C3 改写 C2 功能权重含义。

@@ -115,6 +115,6 @@
 ## 下游消费
 
 - C2 消费 `district_polygons`、`district_weight_hints`、`road_sketch`、`anchor_points` 生成多边形功能区权重表。
-- C3-C5 消费城市边界、功能区多边形和道路草图生成 ownership、road、parcel。
+- C3-C5 消费城市边界、功能区多边形和道路草图生成 ownership、road、area。
 - C6-C9 不直接信任原始 image2 图，只信任校验后的结构化产物。
 - 精细施工级地形检查不在 C1 完成，进入单功能区 `step = 1` 后再处理。

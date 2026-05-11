@@ -4,7 +4,7 @@
 
 `C3OwnershipBlocks` 是 C3 意图图转换阶段的结构化输出。它把 C1 `UrbanIntentMap` 和 C2 功能区权重表转换成世界坐标下可追踪的 district / ownership / block seed / road hint 数据，供 C4-C6 临时兼容消费。
 
-它不是最终道路、parcel 或施工计划。
+它不是最终道路、area 或施工计划。
 
 ## 顶层字段
 
@@ -62,7 +62,7 @@
 | `ownership_id` | 所属 ownership |
 | `district_id` | 所属 district |
 | `seed_point` | 世界坐标下的代表点 |
-| `boundary_hint` | 可选边界提示，供 C4/C5 继续求解 |
+| `boundary_hint` | 可选边界提示，供 C4 网络化和 C5 切分 |
 | `function_weights` | 继承后的功能权重 |
 | `placement_context_hints` | waterfront、road_frontage、plaza_edge 等位置提示 |
 
@@ -95,4 +95,4 @@
 - `intent_overlay_preview.png` 只用于复核，不得反向作为机器解析源。
 - `intent_mask.png` 只作为 C1/CV 解析源和追溯材料，C3 不直接读取像素。
 - `function_weights` 必须继承 C2 结果，不允许在 C3 被压成单标签。
-- C3 不做最终道路、parcel、结构选择或施工合法性判断。
+- C3 不做最终道路、area、结构选择或施工合法性判断。
