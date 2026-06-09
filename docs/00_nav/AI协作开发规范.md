@@ -158,4 +158,4 @@ AI 自行闭环时，必须保留可复查证据：
 - 影响面变化。
 - 代码导览入口变化。
 
-正式方案和契约必须写入 `docs/10_product`、`docs/20_contracts`、`docs/30_code_guide` 或 `docs/40_tests`，不能只留在实现仓库 `dev_docs`。
+正式方案和契约必须写入 `docs/systems/<系统>/` 或 `docs/tools/<工具>/` 下的对应分层，不能只留在实现仓库 `dev_docs`。

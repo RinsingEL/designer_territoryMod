@@ -4,53 +4,42 @@
 
 - AI 协作开发规范：`./AI协作开发规范.md`
 
-## 城市系统
+## GIS 地貌基础设施
 
-### C 大重构（2026-05-06 版）
+- 总入口：`../systems/gis/README.md`
+- 方案：`../systems/gis/10_product/系统概述.md`
+- 开发计划：`../systems/gis/10_product/开发计划.md`
+- 半径刷新：`../systems/gis/10_product/功能设计/半径刷新与Atlas构建.md`
+- 指标层：`../systems/gis/10_product/功能设计/GIS指标层.md`
+- 地貌分类：`../systems/gis/10_product/功能设计/地貌分类与地貌区.md`
+- 预览调试：`../systems/gis/10_product/功能设计/预览图与调试图.md`
+- 数据契约：`../systems/gis/20_contracts/数据契约/`
+- 配置表：`../systems/gis/20_contracts/配置表/`
+- 代码导览：`../systems/gis/30_code_guide/代码导览.md`
+- 测试与验收：`../systems/gis/40_tests/`
 
-- 方案：`../10_product/city/c_refactor/系统概述.md`
-- C5：`../10_product/city/c_refactor/功能设计/C5Area图规划与保留策略.md`
-- C6：`../10_product/city/c_refactor/功能设计/C6Area安全规范.md`
-- LLM 复查：`../10_product/city/c_refactor/功能设计/LLM复查与策略配置.md`
-- 契约：`../20_contracts/city/c_refactor/配置表/`
-- 代码导览：`../30_code_guide/city/c_refactor/代码导览.md`
-- 测试：`../40_tests/city/c_refactor/测试入口.md`
+## 待重建系统
 
-### 主模块建造
-
-- 方案：`../10_product/city/main_module/系统概述.md`
-- 契约：`../20_contracts/city/main_module/配置表/`
-- 代码导览：`../30_code_guide/city/main_module/代码导览.md`
-- 测试：`../40_tests/city/main_module/测试入口.md`
-
-### 次级建筑
-
-- 方案：`../10_product/city/secondary_structures/`
-- 契约：`../20_contracts/city/secondary_structures.md`
-- 代码导览：`../30_code_guide/city/secondary_structures.md`
-- 测试：`../40_tests/city/secondary_structures/`
-
-### 道路接口
-
-- 方案：`../10_product/city/road_interface/`
-- 契约：`../20_contracts/city/road_interface.md`
-
-### C9 执行层
-
-- 方案：`../10_product/city/c9_execution/`
-- 契约：`../20_contracts/city/C9.md`
-- 代码导览：`../30_code_guide/city/c9_execution.md`
-- 测试：`../40_tests/city/c9_execution/`
+旧城市、国度、世界阶段文档已从当前真值目录清理。后续重建时，按 `systems/<系统>/10_product`、`systems/<系统>/20_contracts`、`systems/<系统>/30_code_guide`、`systems/<系统>/40_tests` 重新补入口。
 
 ## 开发工具
 
 ### 代码过程浏览可视工具
 
-- 方案：`../10_product/devtools/code_process_viewer/`
-- 契约：`../20_contracts/devtools/code_process_viewer/`
-- 代码导览：`../30_code_guide/devtools/code_process_viewer/`
-- 测试：`../40_tests/devtools/code_process_viewer/`
+- 总入口：`../tools/code_process_viewer/README.md`
+- 方案：`../tools/code_process_viewer/10_product/`
+- 测试：`../tools/code_process_viewer/40_tests/`
+
+## 辅助 Mod
+
+### TerraSense
+
+- 总入口：`../tools/TerraSense/README.md`
+- 方案：`../tools/TerraSense/10_product/`
+- 契约：`../tools/TerraSense/20_contracts/`
+- 代码导览：`../tools/TerraSense/30_code_guide/代码导览.md`
+- 测试：`../tools/TerraSense/40_tests/`
 
 ## 历史资料
 
-- 旧 `workFlow`、`dev_docs`：`../90_archive/StructureBinder/`
+- 历史归档目录：`../90_archive/`

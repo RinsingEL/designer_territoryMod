@@ -12,62 +12,69 @@
 
 实现代码真值仍在：
 
-- `E:\mc_dev\StructureBinder-rebuild\StructureBinder`
+- `E:\Mod_Dev\StructureBinder`
+
+本仓库也可称为“策划案仓库”。凡用户提到策划案、方案、契约、导览、验收或影响面更新，默认优先检查并维护本仓库的 `docs/` 当前真值目录。
+
+本仓库不承载实现仓库的逐轮过程日志。实现过程记录、联调输出、临时诊断证据仍属于 `E:\Mod_Dev\StructureBinder\dev_docs`，且应按触发式、语义化目录维护，不按时间戳持续堆叠。
 
 ## 文档主目录规则
 
-本仓库当前有效文档只认以下目录：
+本仓库从当前阶段开始优先采用“系统内聚”结构。新建或重建系统文档时，当前真值优先写入：
+
+- `docs/systems/<系统>/10_product`
+- `docs/systems/<系统>/20_contracts`
+- `docs/systems/<系统>/30_code_guide`
+- `docs/systems/<系统>/40_tests`
+
+开发工具、辅助 Mod、扫描器、调试器等非运行时主系统，当前真值优先写入：
+
+- `docs/tools/<工具>/10_product`
+- `docs/tools/<工具>/20_contracts`
+- `docs/tools/<工具>/30_code_guide`
+- `docs/tools/<工具>/40_tests`
+
+通用入口和历史资料仍保留：
 
 - `docs/00_nav`
-- `docs/10_product`
-- `docs/20_contracts`
-- `docs/30_code_guide`
-- `docs/40_tests`
+  - 仓库映射、功能地图、总导航入口
+- `docs/90_archive`
+  - 历史资料，只读归档
 
-这些目录分别承担：
-
-1. `00_nav`
-   - 仓库映射、功能地图、总导航入口
-2. `10_product`
-   - 功能方案、范围、边界、阶段目标
-3. `20_contracts`
-   - 数据契约、输入输出边界、结构化协议
-4. `30_code_guide`
-   - 代码入口、类职责、主链说明、从文档跳实现
-5. `40_tests`
-   - 测试计划、验收口径、联调入口、问题清单、影响面
+根级旧四层目录 `docs/10_product`、`docs/20_contracts`、`docs/30_code_guide`、`docs/40_tests` 不再作为当前真值入口。四层结构只允许作为 `docs/systems/<系统>/` 或 `docs/tools/<工具>/` 内部子目录存在。
 
 agent `MUST NOT` 将当前有效结论继续写回旧的 `workFlow` 风格文档中。
 
 ## 系统级文档组织规则
 
-从当前阶段开始，系统文档 `MUST` 逐步按“一个系统一个文件夹”维护。
+从当前阶段开始，系统文档 `MUST` 按“一个系统一个文件夹”维护。
 
 ### 目录组织要求
 
-同一系统应尽量在以下层级使用同名目录：
+同一系统应在以下层级维护：
 
-- `docs/10_product/<领域>/<系统>/`
-- `docs/20_contracts/<领域>/<系统>/`
-- `docs/30_code_guide/<领域>/<系统>/`
-- `docs/40_tests/<领域>/<系统>/`
+- `docs/systems/<系统>/10_product/`
+- `docs/systems/<系统>/20_contracts/`
+- `docs/systems/<系统>/30_code_guide/`
+- `docs/systems/<系统>/40_tests/`
 
 agent `MUST` 遵守：
 
 1. 一个系统只维护一套当前有效目录，不把多个系统揉在同一份主文档中。
-2. 新建系统文档或重构旧文档时，`MUST` 优先采用目录化结构，不再新增平铺式系统主文档。
+2. 新建系统文档或重构旧文档时，`MUST` 优先采用 `docs/systems/<系统>/`，不再新增平铺式系统主文档。
 3. 旧文件如 `01_scope.md`、`01_acceptance.md`、平铺式 `main_module.md` 可暂时保留，但当本轮任务触达该系统当前真值时，`MUST` 同步补齐或迁移到新结构。
 
 ### 最小文档骨架
 
 任一系统至少应逐步具备以下文档：
 
-- `docs/10_product/<领域>/<系统>/系统概述.md`
-- `docs/10_product/<领域>/<系统>/功能设计/<功能名>.md`
-- `docs/20_contracts/<领域>/<系统>/配置表/<对象或功能名>.md` 或等价契约文档
-- `docs/30_code_guide/<领域>/<系统>/代码导览.md`
-- `docs/40_tests/<领域>/<系统>/测试入口.md`
-- `docs/40_tests/<领域>/<系统>/影响面.md`
+- `docs/systems/<系统>/README.md`
+- `docs/systems/<系统>/10_product/系统概述.md`
+- `docs/systems/<系统>/10_product/功能设计/<功能名>.md`
+- `docs/systems/<系统>/20_contracts/配置表/<对象或功能名>.md` 或等价契约文档
+- `docs/systems/<系统>/30_code_guide/代码导览.md`
+- `docs/systems/<系统>/40_tests/测试入口.md`
+- `docs/systems/<系统>/40_tests/影响面.md`
 
 若系统还在起步阶段，可先补以下最小集合：
 
@@ -91,29 +98,24 @@ agent 在本仓库写系统文档时，`MUST` 优先遵守以下原则：
 
 `docs/90_archive/` 是历史资料区，只承担追溯价值。
 
-其中：
-
-- `docs/90_archive/StructureBinder/dev_docs`
-- `docs/90_archive/StructureBinder/workFlow`
-- `docs/90_archive/StructureBinder/whitepaper`
-- `docs/90_archive/StructureBinder/root_docs`
-
-都视为只读归档。
+如果历史资料仍需保留，应放在 `docs/90_archive/` 下，并视为只读归档。
 
 agent `MUST` 遵守：
 
 1. 不在 `90_archive/` 中持续维护新方案。
 2. 不把 `90_archive/` 当作当前真值来源。
-3. 如需引用历史资料，必须将当前有效结论重写进 `10_product`、`20_contracts`、`30_code_guide` 或 `40_tests`。
+3. 如需引用历史资料，必须将当前有效结论重写进对应 `docs/systems/<系统>/`。
 
 ## 双仓库协作规则
 
 当前双仓库协作约定如下：
 
 - 实现仓库负责：
+  - 路径：`E:\Mod_Dev\StructureBinder`
   - Java / MCP / 运行时实现
   - 调试、联调、`dev_docs` 过程记录
 - 文档仓库负责：
+  - 路径：`E:\Mod_Dev\designer_territoryMod`
   - 功能方案真值
   - 契约真值
   - 代码导览真值
@@ -132,7 +134,7 @@ agent `MUST` 遵守：
 
 每次系统开发时，agent `MUST` 同步维护：
 
-- `docs/40_tests/<领域>/<系统>/影响面.md`
+- `docs/systems/<系统>/40_tests/影响面.md`
 
 维护方式 `MUST` 遵守：
 
@@ -144,6 +146,19 @@ agent `MUST` 遵守：
    - 影响的测试入口或验收口径
    - 影响的上下游系统
    - 当前风险、限制或未决问题
+5. 小的实现补丁若不改变功能边界、接口、验收方式或上下游影响，默认不更新影响面文档。
+6. 影响面文档只记录当前有效结论和风险，不记录逐轮调试流水账。
+
+## 文档清理规则
+
+agent 发现以下情况时，`SHOULD` 主动建议清理或合并：
+
+- 同一系统出现多个并行“最终版”“新版”“临时版”文档。
+- 当前真值散落在 `90_archive/`、旧 `workFlow` 风格文档或实现仓库过程日志中。
+- 文档内容只剩历史流水账，无法回答当前目标、实现入口或下一步。
+- 影响面文档按时间戳或批次重复新增，而不是维护同一功能小标题。
+
+清理时 `MUST` 保留当前真值入口，历史资料只在必要时移动到 `docs/90_archive/` 或从当前文档中删除过期表述。
 
 ## 自测问题与文档联动规则
 
