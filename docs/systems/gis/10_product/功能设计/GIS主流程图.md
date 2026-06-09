@@ -9,17 +9,19 @@ flowchart TD
   C --> D["划分 AtlasRegion<br/>按固定区块范围组织缓存"]
   D --> E["生成 AtlasCell 网格<br/>默认 4x4 blocks 一个 Cell"]
 
-  E --> F["基础采样层"]
-  F --> F1["高度<br/>WORLD_SURFACE_WG"]
-  F --> F2["水体 / 水深<br/>WORLD_SURFACE_WG + OCEAN_FLOOR_WG"]
-  F --> F3["生物群系 / 表面类型"]
+  E --> F["生成器先验采样"]
+  F --> F1["基础高度<br/>ChunkGenerator#getBaseHeight"]
+  F --> F2["海平面 / 基础列<br/>seaLevel / getBaseColumn"]
+  F --> F3["生物群系<br/>BiomeSource#getNoiseBiome"]
+  F --> F4["可选后验校正<br/>observed chunk if loaded"]
 
   F1 --> G["指标计算层"]
   F2 --> G
   F3 --> G
+  F4 --> G
   G --> G1["小邻域指标<br/>坡度 / 局部起伏 / 粗糙度"]
   G --> G2["TPI 指标<br/>小尺度 TPI / 大尺度 TPI"]
-  G --> G3["水距与可建性<br/>waterDistance / buildability"]
+  G --> G3["水体关系指标<br/>waterDistance / shoreDistance"]
 
   G1 --> H["Cell 级地貌分类"]
   G2 --> H
@@ -35,7 +37,7 @@ flowchart TD
 
   J --> K["调试输出"]
   K --> K1["PreviewManifest"]
-  K --> K2["高度 / 坡度 / TPI / 地貌 / 可建性图"]
+  K --> K2["高度 / 坡度 / TPI / 地貌 / Patch 图"]
 
   J --> L["GIS 查询接口"]
   L --> M1["City<br/>选址 / 可建区 / 临水评价"]
@@ -48,7 +50,9 @@ flowchart TD
 
 GIS 的输入不是“生成城市”，而是一次地貌事实刷新请求。刷新请求会先拆成 `RefreshJob`，再按半径计算稳定区和依赖边界。稳定区给消费者使用，依赖边界主要用于 TPI、水距等邻域指标，避免边缘 Cell 误判。
 
-`AtlasCell` 是整条链路的最小数据单元。它把 Minecraft 方块世界压缩成固定步长的栅格，首版建议 `4x4 blocks = 1 Cell`。后续坡度、TPI、可建性和地貌分类都基于 Cell 计算，而不是让每个消费者重复逐方块扫描。
+`AtlasCell` 是整条链路的最小数据单元。它把 Minecraft 方块世界压缩成固定步长的栅格，v1 建议 `4x4 blocks = 1 Cell`。后续坡度、TPI、水距和地貌分类都基于 Cell 计算，而不是让每个消费者重复逐方块扫描。
+
+v1 基础采样默认走生成器先验：通过当前世界的 `ChunkGenerator`、`BiomeSource`、`RandomState` 采样基础高度、生物群系和海平面关系，不为了刷新 Atlas 大范围生成 chunk。已加载或已生成 chunk 可以作为后验校正来源，但它是增强项，不是主流程前提。
 
 指标层分两类：小邻域指标适合快速判断坡度和破碎程度，大邻域指标适合判断山脊、谷地、盆地、台地等区域地貌。依赖数据不足的 Cell 必须保留状态标记，例如 `edgeDirty`，不能假装已经稳定。
 
@@ -56,3 +60,6 @@ GIS 的输入不是“生成城市”，而是一次地貌事实刷新请求。�
 
 调试输出和查询接口是同一份 Atlas 的两个出口：调试图用于人工验收和阈值校准，查询接口用于后续系统消费。两者都不应该绕过 Atlas 重新扫描世界。
 
+GIS 不追踪树、草、矿物、洞穴、原版结构最终落位或玩家改动。这些信息不参与 v1 地表规划底图。结构真正物化时再读取真实 chunk 做局部校验即可。
+
+查询接口只提供地貌事实。城市、道路和结构系统需要根据自己的 profile 计算适配度，例如灯塔可以偏好岸线或悬崖，港口可以偏好浅水和岸线，普通聚落才偏好低坡度平地。

@@ -11,7 +11,7 @@ AtlasRegion 是 AtlasCell 的区域容器。它负责组织缓存、刷新状态
 | cellStepBlocks | 4 |
 | cellsPerRegion | 128x128 cells |
 
-默认值可以后续通过配置调整，但首版实现应先固定一个尺度，避免缓存和调试图复杂化。
+默认值可以后续通过配置调整，但 v1 实现应先固定一个尺度，避免缓存和调试图复杂化。
 
 ## 字段
 
@@ -35,7 +35,7 @@ AtlasRegion 是 AtlasCell 的区域容器。它负责组织缓存、刷新状态
 ## 边界规则
 
 - Region 内部 Cell 可以直接合并 Patch。
-- 跨 Region 的 Patch 首版允许断开。
+- 跨 Region 的 Patch v1 允许断开。
 - 如果 Region 边缘缺少邻域依赖，对应 Cell 必须标记 `edgeDirty`。
 - 后续实现跨 Region 缝合时，应新增独立 merge pass，不改变 Cell 基础契约。
 
@@ -44,4 +44,3 @@ AtlasRegion 是 AtlasCell 的区域容器。它负责组织缓存、刷新状态
 - 主数据不使用人工维护 JSON。
 - Region 主缓存后续优先使用紧凑二进制或 Minecraft SavedData 管理索引。
 - JSON 可用于调试摘要、PreviewManifest 和人工验收报告。
-

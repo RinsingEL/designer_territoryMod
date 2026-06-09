@@ -13,6 +13,7 @@ RefreshJob 描述一次 GIS 半径刷新任务。它用于把刷新请求拆成�
 | radiusChunks | int | 稳定刷新半径，单位为 chunk。 |
 | dependencyMarginCells | int | 指标计算所需的外扩 Cell 边界。 |
 | cellStepBlocks | int | Cell 采样步长。 |
+| sampleMode | enum | prior、observedIfLoaded、verifySurface。v1 默认 prior。 |
 | priority | enum | low、normal、high、debug。 |
 | budgetCellsPerBatch | int | 每批最多处理 Cell 数。 |
 | status | enum | queued、sampling、metrics、classifying、patching、completed、failed。 |
@@ -29,4 +30,5 @@ RefreshJob 描述一次 GIS 半径刷新任务。它用于把刷新请求拆成�
 - debug 优先级可以跳过后台节流，但不应在正式运行中长期占用预算。
 - 如果刷新边缘缺少依赖数据，不应失败，应标记 `edgeDirty`。
 - `completed` 只表示本次半径内可执行步骤完成，不表示跨 Region 缝合已经完成。
-
+- 常规半径刷新必须使用 `prior` 或 `observedIfLoaded`，不得大范围触发 chunk 预生成。
+- `verifySurface` 只用于结构物化前或强验收的小范围候选点校验，不作为 Atlas 建库默认模式。

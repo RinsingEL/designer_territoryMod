@@ -13,6 +13,8 @@ PreviewManifest 是 GIS 调试预览输出的清单。它用于把预览图、�
 | centerBlockZ | int | 输出中心方块 Z。 |
 | radiusChunks | int | 输出半径。 |
 | cellStepBlocks | int | Cell 采样步长。 |
+| sampleMode | enum | 本次预览使用的采样模式，例如 prior、observedIfLoaded。 |
+| sourceCounts | object | 不同 sampleSource 的 Cell 数量统计。 |
 | atlasVersion | int | Atlas 数据格式版本。 |
 | configVersion | string | 指标和分类配置版本。 |
 | generatedAt | long | 生成时间。 |
@@ -36,4 +38,3 @@ PreviewManifest 是 GIS 调试预览输出的清单。它用于把预览图、�
 - PreviewManifest 是调试和验收契约，不是主数据契约。
 - 图层文件可以重建，Manifest 需要足够描述生成条件。
 - 每次阈值调整后，Manifest 的 `configVersion` 必须变化或能追溯到配置变更。
-
