@@ -166,12 +166,15 @@ Review 前建议同时打开：
 - 当前 v1 是否仍按四邻接、同类型合并；若改变邻接或近似合并，是否同步文档。
 - `PATCH_READY` 是否只给参与 patch 的 Cell。
 - Patch 摘要字段是否来自成员 Cell，而不是 bbox 或默认值硬填。
+- PatchEnvelope 是否只作为成员 Cell 派生出的外接范围，不反向决定成员 Cell。
+- `patchId`、PatchShape、`memberCells` 或 `cellPatchIndex` 是否能从 Cell 精确追溯所属 Patch。
 - `fragment`、`edgeDirty`、`crossRegionCandidate` 是否按真实条件设置。
 - 未实现成员 Cell 持久化、真实轮廓、跨 Region 缝合时，不应在接口中暗示已支持。
 
 常见风险：
 
 - Patch 只看 bbox 导致摘要和成员不一致。
+- 用 PatchEnvelope 作为最终命中结果，而不是先返回 candidate 再用 PatchShape 精查。
 - 小碎片吸收改变语义，却没有测试和契约说明。
 - patch preview 视觉优化被误写成主数据结构变更。
 
@@ -189,7 +192,7 @@ Review 前建议同时打开：
 - progress 是否在关键状态变更后写出。
 - preview 图层是否和 `PreviewManifest` 一致。
 - preview/export 是否不反向修改主数据。
-- `patch.png` 若仍使用 bbox，文档和验收说明是否避免把它当真实轮廓。
+- `patch.png` 是否使用 Cell/PatchShape 表达真实成员形状，而不是用 PatchEnvelope 画形状。
 - snapshot 是否写入 `snapshotPurpose` 和 `productionPersistence=false`。
 - 快照读写字段是否和 AtlasCell/AtlasRegion/LandformPatch 契约保持一致。
 

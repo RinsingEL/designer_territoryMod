@@ -19,6 +19,7 @@ PreviewManifest 是 GIS 调试预览输出的清单。它用于把预览图、�
 | configVersion | string | 指标和分类配置版本。 |
 | generatedAt | long | 生成时间。 |
 | layers | PreviewLayer[] | 输出图层列表。 |
+| legend | string | 图例文件路径，v1 为 `legend.png`。 |
 | hasEdgeDirty | boolean | 是否存在边缘脏区。 |
 | unknownCellCount | int | 未分类 Cell 数量。 |
 | notes | string | 人工备注。 |
@@ -37,4 +38,5 @@ PreviewManifest 是 GIS 调试预览输出的清单。它用于把预览图、�
 
 - PreviewManifest 是调试和验收契约，不是主数据契约。
 - 图层文件可以重建，Manifest 需要足够描述生成条件。
+- 每次导出 preview 都应同时导出图例，避免颜色和线条语义只能靠代码猜；图例标签优先使用“中文(英文契约名)”格式。
 - 每次阈值调整后，Manifest 的 `configVersion` 必须变化或能追溯到配置变更。

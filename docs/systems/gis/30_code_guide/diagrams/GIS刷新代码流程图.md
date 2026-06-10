@@ -81,5 +81,5 @@ flowchart TD
 
 - `MinecraftPriorAtlasSampler` 当前实现 prior 采样；`observedIfLoaded` 和 `verifySurface` 后验分支尚未落地。
 - `PatchMerger` 当前只做同类型四邻接合并。
-- `LandformPatch` 当前保存摘要和 bbox，不保存成员 Cell 集合。
-- `PreviewExporter` 的 `patch.png` 当前是 bbox overlay，不代表最终 Patch 轮廓。
+- `LandformPatch` 当前保存摘要和 PatchEnvelope；Cell 的 `patchId` 是当前 PatchShape 成员映射。
+- `PreviewExporter` 的 `patch.png` 当前按 Cell `patchId` 画 Patch 成员边界，不用 PatchEnvelope 代替真实 shape。

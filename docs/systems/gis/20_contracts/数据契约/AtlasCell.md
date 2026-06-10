@@ -52,6 +52,7 @@ v1 建议：
 | tpiLarge | float | 大尺度 TPI。 |
 | waterDistance | float | 到最近水体或岸线的距离。 |
 | landformType | enum | Cell 级地貌分类。 |
+| patchId | string? | 可选；Cell 所属 LandformPatch。若实现采用 Region 级 `cellPatchId` 映射，可不在 Cell 内重复保存。 |
 | stateFlags | bitset | sampled、metricsReadySmall、metricsReadyLarge、landformReady、patchReady、edgeDirty 等。 |
 
 ## SampleSource
@@ -76,3 +77,4 @@ GIS 的职责是回答“这里是什么地形”，结构、城市和道路系�
 - `metricsReadySmall = false` 时，坡度、局部起伏、小尺度 TPI 不可信。
 - `metricsReadyLarge = false` 时，大尺度 TPI、水距、区域级地貌分类不可信。
 - `edgeDirty = true` 时，允许调试显示，但消费者应降低权重或等待补全。
+- `patchReady = true` 时，Cell 应能通过 `patchId` 或 Region 级映射追溯到所属 LandformPatch；不得只通过 PatchEnvelope 反推所属关系。

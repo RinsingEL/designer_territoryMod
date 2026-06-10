@@ -29,6 +29,7 @@ AtlasRegion 是 AtlasCell 的区域容器。它负责组织缓存、刷新状态
 | configVersion | string | 指标和分类配置版本。 |
 | cells | AtlasCell[] | Region 内 Cell 数据。 |
 | patches | LandformPatch[] | Region 内 Patch 列表。 |
+| cellPatchIndex | object? | 可选；Region 内 Cell 到 `patchId` 的映射，用于表达 PatchShape。若 `AtlasCell.patchId` 已持久记录，可不重复保存。 |
 | status | enum | empty、sampled、metricsPartial、ready、dirty。 |
 | updatedAt | long | 最近更新时间。 |
 
@@ -38,6 +39,7 @@ AtlasRegion 是 AtlasCell 的区域容器。它负责组织缓存、刷新状态
 - 跨 Region 的 Patch v1 允许断开。
 - 如果 Region 边缘缺少邻域依赖，对应 Cell 必须标记 `edgeDirty`。
 - 后续实现跨 Region 缝合时，应新增独立 merge pass，不改变 Cell 基础契约。
+- Patch 的真实 shape 由成员 Cell 或 `cellPatchIndex` 表达；PatchEnvelope 只服务查询粗筛和定位，不代表真实覆盖范围。
 
 ## 持久化原则
 
