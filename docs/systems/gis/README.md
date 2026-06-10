@@ -14,8 +14,9 @@ GIS 是 Geomantia 的地貌基础设施层。它负责把 Minecraft 世界转换
 8. `30_code_guide/代码导览.md`
 9. `30_code_guide/flows/半径刷新实现指南.md`
 10. `30_code_guide/review/GIS主链Review清单.md`
-11. `40_tests/自动测试方案.md`
-12. `40_tests/验收计划.md`
+11. `30_code_guide/diagrams/GIS_G1-G7设计Review流程图.md`
+12. `40_tests/自动测试方案.md`
+13. `40_tests/验收计划.md`
 
 ## 目录说明
 
