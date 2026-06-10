@@ -22,6 +22,9 @@
 - 数据契约：`../systems/gis/20_contracts/数据契约/`
 - 配置表：`../systems/gis/20_contracts/配置表/`
 - 代码导览：`../systems/gis/30_code_guide/代码导览.md`
+- 刷新流程实现指南：`../systems/gis/30_code_guide/flows/半径刷新实现指南.md`
+- GIS 主链 Review 清单：`../systems/gis/30_code_guide/review/GIS主链Review清单.md`
+- GIS 刷新代码流程图：`../systems/gis/30_code_guide/diagrams/GIS刷新代码流程图.md`
 - 测试与验收：`../systems/gis/40_tests/`
 
 ## 待重建系统
