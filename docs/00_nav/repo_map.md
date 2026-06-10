@@ -25,7 +25,7 @@
 1. 先进入 `systems/<系统>/README.md` 或 `tools/<工具>/README.md`
 2. 再看 `10_product/` 确认功能边界
 3. 再看 `20_contracts/` 确认输入输出
-4. 再看 `30_code_guide/` 跳到实现类
+4. 再看 `30_code_guide/` 跳到实现类、流程实现指南和 review 清单
 
 ### 从实现找文档
 
