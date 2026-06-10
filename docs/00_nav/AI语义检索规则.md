@@ -50,6 +50,7 @@ rg -n "<用户提到的核心名词>" E:\Mod_Dev\designer_territoryMod\docs
 | 测试、自测、验收、回归、结构校验、失败现象、影响范围 | `40_tests/` |
 | 影响面、上下游、风险、验收口径变化 | `40_tests/影响面.md` |
 | 新系统、新工具、大重构、从 0 到 1 | `docs/00_nav/从0到1设计开发流程.md` |
+| 项目结构健康、package 迁移、系统边界、workflow 组织 | `docs/00_nav/实现仓库结构规范.md` |
 | bug、异常、测试失败、多轮不收敛 | `docs/00_nav/Bug修复流程.md` |
 | 调试过程、失败验证、故障复盘 | 实现仓库 `dev_docs/` |
 
@@ -62,6 +63,8 @@ rg -n "<用户提到的核心名词>" E:\Mod_Dev\designer_territoryMod\docs
 - 对应 `10_product/`、`20_contracts/`、`30_code_guide/`、`40_tests/` 中本轮涉及的文档
 
 系统或工具 README 应维护常见术语、别名和关键对象。全局 `AGENTS.md` 不负责长期维护领域关键词表。
+
+未开发系统不应只因被提到就创建完整文档入口或实现仓库空 package。只有进入实际重建或实现时，才按从 0 到 1 流程补齐系统入口。
 
 ## 不确定时的处理
 

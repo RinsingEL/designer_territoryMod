@@ -12,6 +12,8 @@
 - 新建或重建系统的当前真值优先放在本仓库 `docs/systems/<系统>/`
 - 新建或重建工具的当前真值优先放在本仓库 `docs/tools/<工具>/`
 - 根级旧四层目录 `docs/10_product`、`docs/20_contracts`、`docs/30_code_guide`、`docs/40_tests` 不再作为当前真值入口
+- 当前导航只登记已开发系统和工具；未开发系统不预建文档四层目录或实现仓库空 package
+- 实现仓库 Java 代码优先按系统 / 能力边界内聚，Minecraft / Forge / HTTP / MCP 放在适配边界；详见 `00_nav/实现仓库结构规范.md`
 - 实现仓库当前 `dev_docs/` 继续作为过程记录和提交归档依据
 - 新建过程记录按 `dev_docs/systems/<系统>/`、`dev_docs/tools/<工具>/`、`dev_docs/workflows/<主题>/` 组织
 - 系统和工具级故障经验优先沉淀到对应 `故障索引.md`
