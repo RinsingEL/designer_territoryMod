@@ -45,6 +45,7 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- | --- |
 | `radiusChunks` | number | 否 | `8` | 刷新半径，范围 `1..64`。 |
+| `cellStepBlocks` | number | 否 | `4` | AtlasCell 步长，单位 block，范围 `1..256`，且必须整除 GIS Region 方块尺寸。 |
 | `sampleMode` | string | 否 | `prior` | `prior`、`observedIfLoaded`、`verifySurface`。 |
 | `centerBlockX` | number | 条件 | - | 中心方块 X，需与 `centerBlockZ` 同时出现。 |
 | `centerBlockZ` | number | 条件 | - | 中心方块 Z，需与 `centerBlockX` 同时出现。 |
@@ -59,6 +60,7 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 | `runId` | string | 刷新任务 ID。 |
 | `status` | string | RefreshJob 状态契约名。 |
 | `sampleMode` | string | 实际采样模式。 |
+| `cellStepBlocks` | number | 实际 AtlasCell 步长。 |
 | `dimensionId` | string | 实际维度。 |
 | `centerBlockX` / `centerBlockZ` | number | 实际中心点。 |
 | `radiusChunks` | number | 实际刷新半径。 |
@@ -93,7 +95,7 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 | 工具 | HTTP 映射 | 说明 |
 | --- | --- | --- |
 | `gis_status` | `GET /gis/status` | 查询本地接口、debugRoot 和在线玩家。 |
-| `gis_refresh` | `POST /gis/refresh` | 执行真实世界半径刷新。 |
+| `gis_refresh` | `POST /gis/refresh` | 执行真实世界半径刷新，可选传入 `cellStepBlocks` 覆盖默认 step。 |
 | `gis_test_run` | `POST /gis/test_run` | 执行合成验收用例。 |
 
 工具返回内容为格式化 JSON 文本，错误时返回 MCP `isError=true` 与 `Error: <message>`。
@@ -103,4 +105,5 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 - `gis_status` 能在 MC server 启动后返回 `ok=true`。
 - `gis_test_run {"caseId":"mixed"}` 能返回 `ok=true`、`passed=true` 和 `runDirectory`。
 - `gis_refresh {"radiusChunks":8,"sampleMode":"prior"}` 在有在线玩家时能返回 `ok=true`，并在 runDirectory 中生成 progress 与 preview manifest。
+- `gis_refresh {"radiusChunks":8,"sampleMode":"prior","cellStepBlocks":8}` 能返回 `cellStepBlocks=8`，且产物 manifest 中记录同一 step。
 - 无在线玩家时，`gis_refresh` 必须显式传入 `centerBlockX` 与 `centerBlockZ`。

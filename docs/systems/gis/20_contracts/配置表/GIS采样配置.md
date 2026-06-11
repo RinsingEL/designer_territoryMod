@@ -6,13 +6,25 @@
 
 | 配置 | 默认值 | 说明 |
 | --- | --- | --- |
-| cellStepBlocks | 4 | 一个 AtlasCell 覆盖的方块步长。 |
+| cellStepBlocks | 4 | 一个 AtlasCell 覆盖的方块步长。v1.1 起调试刷新入口允许按请求覆盖，范围 `1..256`，且必须整除 Region 方块尺寸。 |
 | regionSizeChunks | 32 | 一个 AtlasRegion 单边包含的区块数。 |
 | stableRadiusChunks | 16 | v1 默认稳定刷新半径。 |
 | dependencyMarginCells | 12 | 邻域指标额外依赖边界，至少覆盖大尺度 TPI。 |
 | maxWaterDistanceCells | 64 | 水距传播或搜索上限。 |
 | budgetCellsPerBatch | 4096 | 单批处理 Cell 上限。 |
 | defaultSampleMode | prior | 默认只做生成器先验采样，不主动生成 chunk。 |
+
+## Step 参数化
+
+GIS v1.1 的内核改动只要求同一条 GIS 主链支持不同 `cellStepBlocks`。未显式传入时继续使用默认值 `4`，以保持 v1 行为和测试基线兼容。
+
+约束：
+
+- `cellStepBlocks` 单位为方块。
+- 合法范围为 `1..256`。
+- `regionSizeChunks * 16` 必须能被 `cellStepBlocks` 整除，否则同一 Region 内 Cell 网格无法稳定对齐。
+- 指标半径仍以 Cell 为计算单位；调试 manifest 必须同时记录对应的 block 尺度，便于判断不同 step 下的实际覆盖范围。
+- 本轮不引入 `world_coarse`、`city_fine` 等命名 profile 注册表；消费层后续可以按用途选择传入 step。
 
 ## 高度采样
 

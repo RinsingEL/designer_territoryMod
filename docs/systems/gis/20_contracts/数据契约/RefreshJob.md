@@ -27,6 +27,8 @@ RefreshJob 描述一次 GIS 半径刷新任务。它用于把刷新请求拆成�
 ## 执行约束
 
 - 同一 Region 可以合并多个低优先级刷新请求。
+- `cellStepBlocks` 未传入时使用默认值 `4`；传入时必须在 `1..256` 范围内，并能整除 Region 方块尺寸。
+- `dirtyRegions` 中的 Region ID 必须能区分不同 `cellStepBlocks`，避免不同 step 的刷新互相污染。
 - debug 优先级可以跳过后台节流，但不应在正式运行中长期占用预算。
 - 如果刷新边缘缺少依赖数据，不应失败，应标记 `edgeDirty`。
 - `completed` 只表示本次半径内可执行步骤完成，不表示跨 Region 缝合已经完成。

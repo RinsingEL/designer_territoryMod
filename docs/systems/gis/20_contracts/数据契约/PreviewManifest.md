@@ -13,6 +13,8 @@ PreviewManifest 是 GIS 调试预览输出的清单。它用于把预览图、�
 | centerBlockZ | int | 输出中心方块 Z。 |
 | radiusChunks | int | 输出半径。 |
 | cellStepBlocks | int | Cell 采样步长。 |
+| metricRadiiCells | object | 指标半径的 Cell 单位配置，例如 slope、tpiLarge、dependencyMargin。 |
+| metricRadiiBlocks | object | 指标半径换算后的方块尺度，用于解释不同 step 下的真实覆盖范围。 |
 | sampleMode | enum | 本次预览使用的采样模式，例如 prior、observedIfLoaded。 |
 | sourceCounts | object | 不同 sampleSource 的 Cell 数量统计。 |
 | atlasVersion | int | Atlas 数据格式版本。 |

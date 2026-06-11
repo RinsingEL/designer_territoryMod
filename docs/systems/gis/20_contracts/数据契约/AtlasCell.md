@@ -20,7 +20,7 @@ GIS 核心契约不依赖原版固定噪声参数。地形 Mod 可能完全改�
 
 ## 建议尺度
 
-v1 建议：
+默认建议：
 
 | 字段 | 默认值 |
 | --- | --- |
@@ -28,7 +28,7 @@ v1 建议：
 | cellSize | 4x4 blocks |
 | heightSample | cell 中心点或代表点高度 |
 
-后续可以为不同 LOD 引入 8x8 或 16x16 Cell，但 v1 先保持单一尺度。
+v1.1 起调试刷新入口可以覆盖 `cellStepBlocks`。同一 Region 内 Cell 的覆盖范围以本次刷新使用的 step 为准，消费者必须从 Region、RefreshJob 或 manifest 中读取实际 step。
 
 ## 字段
 

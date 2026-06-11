@@ -18,7 +18,7 @@ GIS v1 采用“中心点 + 半径”的刷新方式。系统不尝试一次扫�
 | centerBlockX / centerBlockZ | 刷新中心的世界方块坐标。 |
 | radiusChunks | 需要刷新的区块半径。 |
 | dependencyMarginCells | 为邻域指标额外采样的 Cell 边界。 |
-| cellStepBlocks | 一个 Atlas Cell 对应的方块步长，v1 建议 4。 |
+| cellStepBlocks | 一个 Atlas Cell 对应的方块步长，默认 4，v1.1 调试刷新可按请求覆盖。 |
 | sampleMode | 采样模式，v1 默认 prior。 |
 | priority | 任务优先级，例如调试手动刷新高于后台补全。 |
 | budget | 每 tick 或每批次允许处理的 Cell 数量或耗时预算。 |
@@ -73,7 +73,7 @@ Atlas Cell 不应该只有“有/没有”两种状态。v1 至少需要以下�
 
 v1 建议以固定区块范围作为 Atlas Region。一个可行默认值是 32x32 chunks，也就是 512x512 blocks。
 
-在 `cellStepBlocks = 4` 时，一个 Region 约为 128x128 个 Atlas Cell。这个规模足够表达大地貌，也能避免逐方块扫描带来的成本失控。
+在 `cellStepBlocks = 4` 时，一个 Region 约为 128x128 个 Atlas Cell。这个规模足够表达大地貌，也能避免逐方块扫描带来的成本失控。v1.1 允许传入其他 step，但 Region ID、snapshot 和 preview manifest 必须记录实际 step，避免不同网格混用。
 
 ## 稳定区与边缘区
 
