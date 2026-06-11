@@ -26,13 +26,20 @@
   - 总入口：`systems/gis/README.md`
   - 方案：`systems/gis/10_product/系统概述.md`
   - v1 开发计划：`systems/gis/10_product/开发计划.md`
-  - v1.1 开发计划：`systems/gis/10_product/开发计划-v1.1-多分辨率Atlas与W粗Patch.md`
+  - v1.1 开发计划：`systems/gis/10_product/开发计划-v1.1-Step参数化最小闭环.md`
   - 契约：`systems/gis/20_contracts/`
   - 代码导览：`systems/gis/30_code_guide/代码导览.md`
   - 测试与验收：`systems/gis/40_tests/`
 - 国度规划系统
   - 总入口：`systems/realm_planning/README.md`
   - T 阶段方案：`systems/realm_planning/10_product/T阶段国度与城市种子方案.md`
+  - W / T 主流程设计：`systems/realm_planning/10_product/功能设计/W-T阶段主流程设计.md`
+  - v1.1 开发计划：`systems/realm_planning/10_product/开发计划-v1.1-W粗Patch与T阶段重建.md`
+  - 数据契约：`systems/realm_planning/20_contracts/数据契约/W-T阶段数据契约.md`
+  - MCP 接口契约：`systems/realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md`
+  - 代码导览：`systems/realm_planning/30_code_guide/代码导览.md`
+  - 测试入口：`systems/realm_planning/40_tests/测试入口.md`
+  - 真实游玩验收计划：`systems/realm_planning/40_tests/真实游玩验收计划.md`
 
 当前工具入口：
 

@@ -10,7 +10,7 @@ GIS 是 Geomantia 的地貌基础设施层。它负责把 Minecraft 世界转换
 4. `10_product/功能设计/半径刷新与Atlas构建.md`
 5. `10_product/功能设计/GIS指标层.md`
 6. `10_product/功能设计/地貌分类与地貌区.md`
-7. `10_product/开发计划-v1.1-多分辨率Atlas与W粗Patch.md`
+7. `10_product/开发计划-v1.1-Step参数化最小闭环.md`
 8. `20_contracts/数据契约/`、`20_contracts/接口契约/`
 9. `30_code_guide/代码导览.md`
 10. `30_code_guide/flows/半径刷新实现指南.md`

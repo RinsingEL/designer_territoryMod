@@ -17,7 +17,7 @@
 - 总入口：`../systems/gis/README.md`
 - 方案：`../systems/gis/10_product/系统概述.md`
 - v1 开发计划：`../systems/gis/10_product/开发计划.md`
-- v1.1 开发计划：`../systems/gis/10_product/开发计划-v1.1-多分辨率Atlas与W粗Patch.md`
+- v1.1 开发计划：`../systems/gis/10_product/开发计划-v1.1-Step参数化最小闭环.md`
 - 半径刷新：`../systems/gis/10_product/功能设计/半径刷新与Atlas构建.md`
 - 指标层：`../systems/gis/10_product/功能设计/GIS指标层.md`
 - 地貌分类：`../systems/gis/10_product/功能设计/地貌分类与地貌区.md`
@@ -35,6 +35,13 @@
 
 - 总入口：`../systems/realm_planning/README.md`
 - T 阶段国度与城市种子方案：`../systems/realm_planning/10_product/T阶段国度与城市种子方案.md`
+- W / T 阶段主流程设计：`../systems/realm_planning/10_product/功能设计/W-T阶段主流程设计.md`
+- v1.1 W 粗 Patch 与 T 阶段重建计划：`../systems/realm_planning/10_product/开发计划-v1.1-W粗Patch与T阶段重建.md`
+- W / T 阶段数据契约：`../systems/realm_planning/20_contracts/数据契约/W-T阶段数据契约.md`
+- W / T 阶段 MCP 接口契约：`../systems/realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md`
+- 代码导览：`../systems/realm_planning/30_code_guide/代码导览.md`
+- 测试入口：`../systems/realm_planning/40_tests/测试入口.md`
+- 真实游玩验收计划：`../systems/realm_planning/40_tests/真实游玩验收计划.md`
 
 ## 待重建系统
 
