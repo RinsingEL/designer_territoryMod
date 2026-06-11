@@ -3,6 +3,7 @@
 ## 开发协作
 
 - AI 协作开发规范：`./AI协作开发规范.md`
+- 地貌驱动主线 Workflow：`./地貌驱动主线Workflow.md`
 - AI 语义检索规则：`./AI语义检索规则.md`
 - 实现仓库结构规范：`./实现仓库结构规范.md`
 - 代码导览编写规范：`./代码导览编写规范.md`
@@ -15,7 +16,8 @@
 
 - 总入口：`../systems/gis/README.md`
 - 方案：`../systems/gis/10_product/系统概述.md`
-- 开发计划：`../systems/gis/10_product/开发计划.md`
+- v1 开发计划：`../systems/gis/10_product/开发计划.md`
+- v1.1 开发计划：`../systems/gis/10_product/开发计划-v1.1-多分辨率Atlas与W粗Patch.md`
 - 半径刷新：`../systems/gis/10_product/功能设计/半径刷新与Atlas构建.md`
 - 指标层：`../systems/gis/10_product/功能设计/GIS指标层.md`
 - 地貌分类：`../systems/gis/10_product/功能设计/地貌分类与地貌区.md`
@@ -29,9 +31,14 @@
 - GIS 刷新代码流程图：`../systems/gis/30_code_guide/diagrams/GIS刷新代码流程图.md`
 - 测试与验收：`../systems/gis/40_tests/`
 
+## 国度规划系统
+
+- 总入口：`../systems/realm_planning/README.md`
+- T 阶段国度与城市种子方案：`../systems/realm_planning/10_product/T阶段国度与城市种子方案.md`
+
 ## 待重建系统
 
-旧城市、国度、世界阶段文档已从当前真值目录清理。未开发系统不进入当前核心系统入口，也不在实现仓库预建空 package。后续重建时，先按 `从0到1设计开发流程.md` 明确系统边界，再按 `systems/<系统>/10_product`、`systems/<系统>/20_contracts`、`systems/<系统>/30_code_guide`、`systems/<系统>/40_tests` 重新补入口。
+旧城市、世界阶段文档已从当前真值目录清理。未开发系统不进入当前核心系统入口，也不在实现仓库预建空 package。后续重建时，先读 `地貌驱动主线Workflow.md` 确认 W / C 主链职责；涉及国度、城市名册和城市生长种子时，进入国度规划系统入口；随后按 `从0到1设计开发流程.md` 明确系统边界，并在 `systems/<系统>/10_product`、`systems/<系统>/20_contracts`、`systems/<系统>/30_code_guide`、`systems/<系统>/40_tests` 重新补入口。
 
 ## 开发工具
 
