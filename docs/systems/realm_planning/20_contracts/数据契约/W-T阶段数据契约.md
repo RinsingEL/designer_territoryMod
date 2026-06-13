@@ -146,12 +146,16 @@ T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约
 | `patchId` | string? | 已分类必填 | 所属 patch。 |
 | `landWater` | enum | 是 | `land`、`water`、`shore`、`unknown`。 |
 | `landform` | enum/string | 是 | 粗地貌类型。 |
-| `baseLandform` | enum/string? | v1.2 建议 | 清洗后的主地貌；建议 `water`、`shore`、`lowland`、`upland`、`ridge`、`valley`、`unknown`。 |
-| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。v1.5 起，`cellStepBlocks>=64` 且有 micro 指标时，正式 `cliff` / `steep` 必须由局部 `slopeStats` 支撑；coarse GIS 的 cliff 只能进入 `cliff_candidate` / `micro_contradiction` 等诊断 tag。 |
+| `baseLandform` | enum/string? | v1.2 建议 | 清洗后的主地貌；建议 `water`、`shore`、`lowland`、`plateau`、`upland`、`ridge`、`valley`、`unknown`。 |
+| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`water_edge`、`seacoast`、`riverbank`、`lakeshore`、`coastal`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。v1.5 起，`cellStepBlocks>=64` 且有 micro 指标时，正式 `cliff` / `steep` 必须由局部 `slopeStats` 支撑；coarse GIS 的 cliff 只能进入 `cliff_candidate` / `micro_contradiction` 等诊断 tag；`coastal` 保留为 `seacoast` 兼容别名，不再表示所有水边；water / unknown 主体不生成正式 `water_edge`。 |
+| `waterEdgeType` | enum/string? | v1.5 | 可分配水边 cell 的水边类型：`seacoast`、`riverbank`、`lakeshore`。 |
+| `waterComponentId` | string? | v1.5 调试 | 最近水体连通域 id；用于解释 `waterEdgeType` 来源。 |
+| `waterComponentAreaCells` | int? | v1.5 调试 | 最近水体连通域面积，单位 W cell。 |
 | `continentIdClean` | string? | v1.2 建议 | 清洗 / 合并后的大陆 id。 |
 | `patchIdClean` | string? | v1.2 建议 | 清洗 / 合并后的 macro patch id。 |
 | `heightAvg` | number? | 建议 | 平均高度。 |
 | `slopeAvg` | number? | 建议 | 平均坡度。 |
+| `relativeHeightRank` | number? | v1.5 | 本次扫描可分配陆地内的相对高度分位，`0..1`；用于区分低地、平坦高原和山地。 |
 | `heightStats` | object? | v1.2 建议 | `p10`、`p50`、`p90`、`robustRelief`。 |
 | `slopeStats` | object? | v1.2 建议 | `mean`、`p90`、`steepFrac`。 |
 | `barrierCost` | number/object? | v1.3 | 当前实现写单 cell 通行成本；后续可扩展为 `north/east/south/west` edge cost。 |
@@ -203,8 +207,11 @@ Tag Audit 的 reference tags 使用比 W 粗扫更密的局部扫描事实复判
 | reference tag | 判定口径 |
 | --- | --- |
 | `steep` | `slopeP90 >= 14` 或 `steepFrac >= 0.25`。 |
-| `cliff` | `slopeP95 >= 18` 且 `steepFrac >= 0.35`；如果 `waterFrac` 在 `0.05..0.95` 的水陆混合区，`steepFrac` 阈值提升到 `0.45`。 |
-| `coastal` | `waterFrac` 在 `0.05..0.95` 之间。 |
+| `cliff` | `slopeP95 >= 18` 且 `steepFrac >= 0.55`；如果 `waterFrac` 在 `0.05..0.95` 的水陆混合区，`steepFrac` 阈值提升到 `0.65`。 |
+| `water_edge` | W 正式输出只用于可分配陆地 / shore 边缘；Tag Audit reference 仍用局部 `waterFrac` 在 `0.05..0.95` 之间估算水陆混合事实。 |
+| `seacoast` / `coastal` | W 正式输出优先由最近水体连通域判定：大水体、触扫描边界、或含 ocean biome。 |
+| `riverbank` | W 正式输出优先由最近水体连通域判定：river biome、狭长或较小水体组件。 |
+| `lakeshore` | W 正式输出优先由最近水体连通域判定：闭合且非狭长的内陆水体组件。 |
 
 W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step 下基于每个粗采样点的 micro 指标判定，Tag Audit 则对抽样点周围 `auditRadiusBlocks` 范围做局部精扫，用于开发期估算 precision / recall。
 
@@ -217,7 +224,7 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | `gridX/gridZ` | int | W planning grid 坐标。 |
 | `blockX/blockZ` | int | 抽样点局部精扫中心 block 坐标，可直接用于人工传送复核。 |
 | `cellMinBlockX/cellMinBlockZ` | int | 来源 W coarse cell 的最小 block 坐标，用于追溯 `WorldPatchMap.cells[]`。 |
-| `auditLayer` | string | 本点来自的抽样分层，例如 `confirmed_cliff`、`coarse_cliff_micro_rejected`、`coastal`、`upland_macro`、`land_baseline`。 |
+| `auditLayer` | string | 本点来自的抽样分层，例如 `confirmed_cliff`、`coarse_cliff_micro_rejected`、`water_edge`、`upland_macro`、`land_baseline`。 |
 | `tpCommand` | string | 开发期人工复核辅助命令，例如 `/tp @s <blockX> ~ <blockZ>`。 |
 | `baseLandform` | string | W 输出主地貌。 |
 | `coarseLandform` | string | GIS coarse landform 原值。 |
