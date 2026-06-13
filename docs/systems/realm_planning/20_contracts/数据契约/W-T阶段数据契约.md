@@ -58,7 +58,10 @@ v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegis
 | `metricSampleStrideBlocks` | int? | v1.3 | `microSampleStrideBlocks` 的契约别名，用于强调这是指标采样尺度。 |
 | `localSlopeRadiusBlocks` | int? | v1.3 | micro sample 周边局部坡度半径，默认 `8`。 |
 | `microSamplingImplemented` | boolean? | v1.3 | 是否真实执行 cell 内 micro-sampling。strict 验收应为 `true`。 |
+| `microSampleBudget` | long? | v1.3 | 本次 W survey 计划采样预算。当前固定 stride 模式为 `gridCellCount * microSampleBudgetPerCell`。 |
+| `microSampleBudgetPerCell` | int? | v1.3 | 单个 planning cell 的 micro sample 预算；例如 `cellStepBlocks=128`、`microSampleStrideBlocks=32` 时为 `16`。 |
 | `microSampleCount` | long? | v1.3 | 本次 W survey 实际 micro sample 总数。 |
+| `adaptiveSampling` | boolean? | v1.3 | 是否启用自适应加密；当前固定 stride 实现必须显式写 `false`，不得伪装成自适应。 |
 | `configHash` | string? | v1.3 | seed / 维度 / 范围 / step / stride / slope radius 等配置哈希，用于 tile 和 feature cache 校验。 |
 | `scoreManifest` | string? | v1.2 建议 | `score_manifest.json` 路径。 |
 | `source.gisRefreshJobId` | string? | 否 | 若来自 GIS refresh，记录 job ID。 |
@@ -115,7 +118,7 @@ W 调度层还必须写出 `world_survey_manifest.json`，用于断点续扫和�
 | `config` | object | 是 | 维度、seed、中心、`planningRadiusBlocks`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`。 |
 | `scanBounds` | object | 是 | block 级扫描边界和直径。 |
 | `grid` | object | 是 | grid 原点、宽高、cell 数。 |
-| `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleCount`。 |
+| `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleBudget`、`microSampleBudgetPerCell`、`microSampleCount`、`adaptiveSampling`。 |
 | `tiles[]` | array | 是 | 每个 tile / GIS Region 的坐标、状态、cache 路径、`configHash` 和错误信息。 |
 
 ## WorldPatchMap
