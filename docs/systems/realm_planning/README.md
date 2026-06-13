@@ -12,14 +12,15 @@
 4. `10_product/开发计划-v1.2-W粗扫T3T4质量重构.md`
 5. `10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
 6. `10_product/开发计划-v1.4-T3行动力国度扩张模型.md`
-7. `20_contracts/数据契约/W-T阶段数据契约.md`
-8. `20_contracts/接口契约/W-T阶段MCP接口.md`
-9. `30_code_guide/代码导览.md`
-10. `30_code_guide/flows/W-T主链实现指南.md`
-11. `30_code_guide/review/国度规划主链Review清单.md`
-12. `30_code_guide/diagrams/国度规划W-T代码流程图.md`
-13. `40_tests/测试入口.md`
-14. `40_tests/真实游玩验收计划.md`
+7. `10_product/开发计划-v1.5-高步长局部指标封装与地貌判定修正.md`
+8. `20_contracts/数据契约/W-T阶段数据契约.md`
+9. `20_contracts/接口契约/W-T阶段MCP接口.md`
+10. `30_code_guide/代码导览.md`
+11. `30_code_guide/flows/W-T主链实现指南.md`
+12. `30_code_guide/review/国度规划主链Review清单.md`
+13. `30_code_guide/diagrams/国度规划W-T代码流程图.md`
+14. `40_tests/测试入口.md`
+15. `40_tests/真实游玩验收计划.md`
 
 ## 当前状态
 
@@ -30,6 +31,7 @@
 - v1.3 计划以 Dregora 体感世界为标准，目标 `planningRadiusBlocks=16384`；当前实现已在 W runner 内落地 `metricSampleStrideBlocks` / `localSlopeRadiusBlocks` 的真实 micro-sampling 聚合与 feature grid 缓存。
 - v1.4 计划聚焦 T3 行动力扩张模型；当前 strict 默认已由行动力预算、地形消耗、竞争压力和 wild / contested / blocked / unreachable land 共同决定国度范围。
 - 2026-06-12 已完成 v1.3 / v1.4 Dregora 标准档真实验收：`planningRadiusBlocks=16384`、`cellStepBlocks=128`、`microSampleStrideBlocks=32`、`expansionModel=action_budget`，最终 `acceptance_report.passed=true`、`score_manifest.totalScore=82.95`、`hardBlocks=[]`。
+- v1.5 计划聚焦高步长局部指标封装和地貌判定修正：保护低 step GIS 主链，同时让 `cellStepBlocks=128` 的 W 粗扫使用 micro 局部证据确认 `cliff` / `steep` / `shore` 等局部标签。
 - 后续如扩展 C 阶段消费、城市内部规划或结构物化，应进入 `systems/city/README.md` 或后续 Materialization 系统，不塞回当前 T4。
 
 ## 核心产物
@@ -54,7 +56,7 @@
 
 | 目录 | 内容 |
 | --- | --- |
-| `10_product/` | 系统方案、v1.1 最小闭环计划、v1.2 质量重构计划、v1.3 Dregora 标准 W 粗扫计划、v1.4 T3 行动力扩张计划和 W / T 主流程设计。 |
+| `10_product/` | 系统方案、v1.1 最小闭环计划、v1.2 质量重构计划、v1.3 Dregora 标准 W 粗扫计划、v1.4 T3 行动力扩张计划、v1.5 高步长局部指标封装计划和 W / T 主流程设计。 |
 | `20_contracts/` | W / T 阶段结构化产物契约和 MCP 接口契约。 |
 | `30_code_guide/` | 当前实现仓库入口、主调用链、代码过程图和 review 检查点。 |
 | `40_tests/` | 结构校验、fixture、未来自动测试入口和真实游玩验收计划。 |

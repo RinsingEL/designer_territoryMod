@@ -144,7 +144,7 @@ T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约
 | `landWater` | enum | 是 | `land`、`water`、`shore`、`unknown`。 |
 | `landform` | enum/string | 是 | 粗地貌类型。 |
 | `baseLandform` | enum/string? | v1.2 建议 | 清洗后的主地貌；建议 `water`、`shore`、`lowland`、`upland`、`ridge`、`valley`、`unknown`。 |
-| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。 |
+| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。v1.5 起，`cellStepBlocks>=64` 且有 micro 指标时，正式 `cliff` / `steep` 必须由局部 `slopeStats` 支撑；coarse GIS 的 cliff 只能进入 `cliff_candidate` / `micro_contradiction` 等诊断 tag。 |
 | `continentIdClean` | string? | v1.2 建议 | 清洗 / 合并后的大陆 id。 |
 | `patchIdClean` | string? | v1.2 建议 | 清洗 / 合并后的 macro patch id。 |
 | `heightAvg` | number? | 建议 | 平均高度。 |
@@ -190,6 +190,53 @@ v1.3 中，`WorldFeatureGrid` 记录 planning cell 内真实 micro-sampling 的�
 | `shoreDist` | number | 到岸线 / 水体距离。 |
 | `passability` | number | 规划通行性。 |
 | `barrierCostN/E/S/W` | number | 边穿越成本。 |
+
+## TagAudit
+
+v1.5 开发期调试产物，用少量抽样点的局部精确扫描评估 W 粗扫 tag 正确率。它只在 `runTagAudit=true` 或开发工具显式触发时输出，不属于普通玩家开局必跑流程。
+
+### tag_audit_samples.json
+
+数组，每项记录一个抽样点：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `gridX/gridZ` | int | W planning grid 坐标。 |
+| `blockX/blockZ` | int | 抽样点 block 坐标。 |
+| `baseLandform` | string | W 输出主地貌。 |
+| `coarseLandform` | string | GIS coarse landform 原值。 |
+| `wTags[]` | string[] | W 输出 tags。 |
+| `referenceTags[]` | string[] | 局部精扫重新判定的参考 tags。 |
+| `cliffMatch/steepMatch/coastalMatch` | boolean | 关键 tag 是否和 reference 一致。 |
+| `auditMetrics` | object | 局部精扫指标。 |
+
+`auditMetrics` 至少包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `sampleCount` | int | 局部精扫样本数。 |
+| `heightP05/P50/P95` | number | 高度分位。 |
+| `reliefP95P05` | number | 局部稳健起伏。 |
+| `slopeP90/slopeP95/slopeMax` | number | 局部坡度分布。 |
+| `steepFrac` | number | 局部陡坡样本占比。 |
+| `waterFrac` | number | 局部水体占比。 |
+| `shoreMixScore` | number | 水陆混合程度。 |
+| `dominantBiome` / `biomeHist` | string / object | 局部 biome 事实。 |
+
+### tag_audit_report.json
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `runId` | string | 来源 run。 |
+| `sampleCount` | int | 实际抽样点数量。 |
+| `auditRadiusBlocks` | int | 局部精扫半径。 |
+| `auditStrideBlocks` | int | 局部精扫步长。 |
+| `centerSlopeRadiusBlocks` | int | 局部坡度半径。 |
+| `tagMetrics` | object | 按 tag 统计 `precision`、`recall`、TP / FP / FN / TN。 |
+| `confusionMatrix` | object | 关键 tag 的混淆矩阵。 |
+| `cliffFalsePositiveExamples[]` | array | 前若干个 cliff 误报样例坐标。 |
+| `cliffFalseNegativeExamples[]` | array | 前若干个 cliff 漏报样例坐标。 |
+| `microContradictionAcceptedRate` | number | 被 micro 拒绝的 coarse cliff 中，局部精扫仍判定 cliff 的比例。 |
 
 `patches[]`：
 
@@ -506,6 +553,17 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | `badCases[]` | array | 否 | 关键坏例坐标、国度或 patch。 |
 | `previewSet` | object | 否 | 关联预览图路径。 |
 
+`subScores.W` v1.5 建议字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `cliffRatio` / `cliffTagRatio` | number | 正式 `cliff` tag 占可分配陆地比例。 |
+| `steepTagRatio` | number | `steep` tag 占可分配陆地比例。 |
+| `coarseCliffCandidateRatio` | number | coarse GIS `landform=cliff` 候选比例，仅作诊断。 |
+| `microContradictionRatio` | number | coarse cliff 被 micro 局部证据否定的比例。 |
+| `baseLandformDistribution` | object | 主地貌分布。 |
+| `landformTagDistribution` | object | tag 分布。 |
+
 ## 关键校验规则
 
 | 规则 | 阶段 | 说明 |
@@ -519,5 +577,7 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | 国度面积弹性 | T3 v1.4 | `quota_frontier` 下仍按 `scalePlan.minAreaRatio/maxAreaRatio` 阻断；`action_budget` 下 `scalePlan` 为软目标，面积偏差进入 `budgetCoherenceScore` / `overExpansionPenalty`，不再单独硬阻断。 |
 | 行动力最低可玩领地 | T3 v1.4 | strict + `action_budget` 下，每个国度必须有 owned territory；极小 owned 结果应进入硬阻断，不能只靠首都点放行。 |
 | 城市锚点必须在 owned territory | T4 v1.4 | `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的国度不能生成首都种子。 |
+| 高 step cliff 必须有局部证据 | W v1.5 | `cellStepBlocks>=64` 且 `microSamplingImplemented=true` 时，正式 `cliff` / `steep` tag 必须由 `slopeStats` / `steepFrac` 支撑；coarse cliff 不得直接进入正式 cliff tag。 |
+| Tag Audit 抽样精扫 | W v1.5 | 开发期 `runTagAudit=true` 应输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，报告中至少包含 `cliff/steep/coastal` 的 precision / recall。 |
 | 城市种子不得同格重叠 | T4 v1.2 | 除显式复合城市 / 卫星节点外，同格城市直接阻断。 |
 | 坏质量不能只靠 `passed=true` 放行 | 验收 v1.2 | `score_manifest.json` 的硬阻断优先于端到端链路状态。 |

@@ -75,6 +75,11 @@
 | `resumePolicy` | string | 否 | `use_cache`、`rescan`、`use_cache_strict`，默认 `use_cache`。 |
 | `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
+| `runTagAudit` | boolean | 否 | v1.5 开发期调试开关；为 `true` 时，W 完成后抽样局部精扫并输出 tag audit 产物。 |
+| `tagAuditSampleCount` | number | 否 | v1.5 Tag Audit 抽样点数量，默认 `120`。 |
+| `tagAuditRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部精扫半径，默认 `32`。 |
+| `tagAuditStrideBlocks` | number | 否 | v1.5 Tag Audit 局部精扫步长，默认 `4`。 |
+| `tagAuditSlopeRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部坡度半径，默认 `4`。 |
 | `centerBlockX` / `centerBlockZ` | number | 否 | 粗扫中心；省略时使用玩家位置或测试默认点。 |
 | `dimensionId` | string | 否 | 维度 ID，默认玩家维度或 `minecraft:overworld`。 |
 | `worldTheme` | object/string | 否 | 世界主题摘要。 |
@@ -91,6 +96,7 @@
 | `wManifest` | 坐标转换、step、patch、continent 摘要。 |
 | `worldSurveyManifest` | 分片扫描、缓存命中、失败 tile、耗时和数据量审计。 |
 | `worldFeatureGrid` | v1.3 micro-sampling 聚合特征，分片 W survey 下输出 `world_feature_grid.json`。 |
+| `tagAuditSamples` / `tagAuditReport` | v1.5 开发期抽样局部精扫产物，仅 `runTagAudit=true` 时输出。 |
 | `scoreManifest` | v1.2 若执行评分，返回评分与阻断摘要。 |
 
 最低验收：
@@ -239,6 +245,11 @@
 | `cellStepBlocks` | number | 否 | 默认 `128`。 |
 | `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
+| `runTagAudit` | boolean | 否 | v1.5 开发期调试开关；验收完成后对 W tag 抽样局部精扫。 |
+| `tagAuditSampleCount` | number | 否 | v1.5 Tag Audit 抽样点数量，默认 `120`。 |
+| `tagAuditRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部精扫半径，默认 `32`。 |
+| `tagAuditStrideBlocks` | number | 否 | v1.5 Tag Audit 局部精扫步长，默认 `4`。 |
+| `tagAuditSlopeRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部坡度半径，默认 `4`。 |
 | `resumePolicy` | string | 否 | 默认 `use_cache`。 |
 | `realmProfiles[]` | array | 否 | 可覆盖默认国度配置。 |
 | `autoSelectCoordinates` | boolean | 否 | 是否使用 fixture 坐标自动走 T2；真实 AI 选点验收时应为 false。 |
@@ -253,6 +264,7 @@
 | `artifacts` | W / T1 / T2 / T3 / T4 全部产物路径。 |
 | `previewSet` | 可人工查看的关键预览图集合。 |
 | `scoreManifest` | v1.2 质量评分、硬阻断和人工 review 清单。 |
+| `tagAuditSamples` / `tagAuditReport` | v1.5 开发期抽样局部精扫产物，仅 `runTagAudit=true` 时输出。 |
 
 ## 建议 HTTP 对应路径
 
