@@ -215,7 +215,10 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `gridX/gridZ` | int | W planning grid 坐标。 |
-| `blockX/blockZ` | int | 抽样点 block 坐标。 |
+| `blockX/blockZ` | int | 抽样点局部精扫中心 block 坐标，可直接用于人工传送复核。 |
+| `cellMinBlockX/cellMinBlockZ` | int | 来源 W coarse cell 的最小 block 坐标，用于追溯 `WorldPatchMap.cells[]`。 |
+| `auditLayer` | string | 本点来自的抽样分层，例如 `confirmed_cliff`、`coarse_cliff_micro_rejected`、`coastal`、`upland_macro`、`land_baseline`。 |
+| `tpCommand` | string | 开发期人工复核辅助命令，例如 `/tp @s <blockX> ~ <blockZ>`。 |
 | `baseLandform` | string | W 输出主地貌。 |
 | `coarseLandform` | string | GIS coarse landform 原值。 |
 | `wTags[]` | string[] | W 输出 tags。 |
@@ -241,10 +244,12 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `runId` | string | 来源 run。 |
+| `sampleSeed` | string | 本轮抽样 seed；同一 run 可换 seed 抽另一批点。 |
 | `sampleCount` | int | 实际抽样点数量。 |
 | `auditRadiusBlocks` | int | 局部精扫半径。 |
 | `auditStrideBlocks` | int | 局部精扫步长。 |
 | `centerSlopeRadiusBlocks` | int | 局部坡度半径。 |
+| `sampleLayerCounts` | object | 各抽样分层实际入样数量。 |
 | `tagMetrics` | object | 按 tag 统计 `precision`、`recall`、TP / FP / FN / TN。 |
 | `confusionMatrix` | object | 关键 tag 的混淆矩阵。 |
 | `cliffFalsePositiveExamples[]` | array | 前若干个 cliff 误报样例坐标。 |

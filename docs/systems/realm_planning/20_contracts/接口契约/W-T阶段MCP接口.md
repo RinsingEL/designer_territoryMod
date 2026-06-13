@@ -78,6 +78,7 @@
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
 | `runTagAudit` | boolean | 否 | v1.5 开发期调试开关；为 `true` 时，W 完成后抽样局部精扫并输出 tag audit 产物。 |
 | `tagAuditSampleCount` | number | 否 | v1.5 Tag Audit 抽样点数量，默认 `120`。 |
+| `tagAuditSampleSeed` | string | 否 | v1.5 Tag Audit 抽样 seed；同一 run 可换 seed 抽另一批点，便于分批人工传送复核。 |
 | `tagAuditRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部精扫半径，默认 `32`。 |
 | `tagAuditStrideBlocks` | number | 否 | v1.5 Tag Audit 局部精扫步长，默认 `4`。 |
 | `tagAuditSlopeRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部坡度半径，默认 `4`。 |
@@ -248,6 +249,7 @@
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
 | `runTagAudit` | boolean | 否 | v1.5 开发期调试开关；验收完成后对 W tag 抽样局部精扫。 |
 | `tagAuditSampleCount` | number | 否 | v1.5 Tag Audit 抽样点数量，默认 `120`。 |
+| `tagAuditSampleSeed` | string | 否 | v1.5 Tag Audit 抽样 seed；同一 run 可换 seed 抽另一批点，便于分批人工传送复核。 |
 | `tagAuditRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部精扫半径，默认 `32`。 |
 | `tagAuditStrideBlocks` | number | 否 | v1.5 Tag Audit 局部精扫步长，默认 `4`。 |
 | `tagAuditSlopeRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部坡度半径，默认 `4`。 |
@@ -277,6 +279,7 @@
 | --- | --- | --- | --- |
 | `runId` | string | 是 | 已有 sealed W / W-T run ID。 |
 | `tagAuditSampleCount` | number | 否 | 抽样点数量，默认 `120`。 |
+| `tagAuditSampleSeed` | string | 否 | 抽样 seed；默认使用 `runId`，传不同 seed 可在同一 run 上换一批抽样点。 |
 | `tagAuditRadiusBlocks` | number | 否 | 局部精扫半径，默认 `32`。 |
 | `tagAuditStrideBlocks` | number | 否 | 局部精扫步长，默认 `4`。 |
 | `tagAuditSlopeRadiusBlocks` | number | 否 | 局部坡度半径，默认 `4`。 |
