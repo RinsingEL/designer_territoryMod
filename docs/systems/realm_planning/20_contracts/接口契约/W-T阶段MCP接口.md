@@ -68,9 +68,13 @@
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `radiusChunks` | number | 是 | 粗扫半径，单位 chunk。 |
-| `cellStepBlocks` | number | 是 | 粗 cell 步长，建议 64 / 128 / 256。 |
+| `planningRadiusBlocks` | number | 否 | 配置的 W 最大扫描半径，单位 block。正式 W 优先使用该字段。 |
+| `radiusChunks` | number | 否 | 兼容字段；未传 `planningRadiusBlocks` 时换算为 block 半径。 |
+| `cellStepBlocks` | number | 否 | 粗 cell 步长，默认 `128`，可选 64 / 128 / 256。 |
 | `sampleMode` | string | 否 | 默认 `prior`。 |
+| `resumePolicy` | string | 否 | `use_cache`、`rescan`、`use_cache_strict`，默认 `use_cache`。 |
+| `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
+| `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
 | `centerBlockX` / `centerBlockZ` | number | 否 | 粗扫中心；省略时使用玩家位置或测试默认点。 |
 | `dimensionId` | string | 否 | 维度 ID，默认玩家维度或 `minecraft:overworld`。 |
 | `worldTheme` | object/string | 否 | 世界主题摘要。 |
@@ -85,10 +89,15 @@
 | `worldPatchPreview` | 粗 patch 调试图。 |
 | `gridOverlayPreview` | 带 grid 坐标的候选底图。 |
 | `wManifest` | 坐标转换、step、patch、continent 摘要。 |
+| `worldSurveyManifest` | 分片扫描、缓存命中、失败 tile、耗时和数据量审计。 |
+| `worldFeatureGrid` | v1.3 micro-sampling 聚合特征，分片 W survey 下输出 `world_feature_grid.json`。 |
+| `scoreManifest` | v1.2 若执行评分，返回评分与阻断摘要。 |
 
 最低验收：
 
 - `cellStepBlocks`、`gridOriginBlock`、`gridSize` 可追溯。
+- `WorldSurveyContext.sealed = true` 后才能进入 T1。
+- `world_survey_manifest.json` 中 `failedTileCount = 0`。
 - 至少存在一个可分配 land continent。
 - preview 能显示 grid 坐标或可由 manifest 映射 grid 坐标。
 
@@ -166,6 +175,8 @@
 | `normalizationGroup` | string | 否 | 扩张分组；默认所有已完成 T2 的目标大陆。 |
 | `allowUnclaimedLand` | boolean | 否 | 是否允许保留 wild land。 |
 | `seaCrossingPolicyOverride` | string | 否 | 调试用总开关，通常不填。 |
+| `qualityMode` | string | 否 | v1.2 调试字段，`smoke` 或 `strict`；正式验收使用 `strict`。 |
+| `expansionModel` | string | 否 | `quota_frontier` 或 `action_budget`；`strict` 默认 `action_budget`，`smoke` 默认 `quota_frontier`。 |
 
 返回产物：
 
@@ -174,12 +185,15 @@
 | `RealmTerritoryMap` | cell 级国度范围。 |
 | `territoryPreview` | 国境预览图。 |
 | `t3Report` | 面积比例、邻接、异常和归一化结果。 |
+| `territoryRepairLog` | v1.2 飞地、孔洞、边界修复日志。 |
+| `scoreManifest` | v1.4 T3 质量评分和硬阻断，包含 budget / terrain identity / wildland / contested 指标。 |
 
 最低验收：
 
 - 所有参与扩张的国度必须已有 accepted `RealmSeed`。
 - 同一输入重复运行结果稳定。
-- 输出记录归一化前后的 `targetAreaRatio`。
+- 输出记录归一化前后的 `targetAreaRatio`，并在 `action_budget` 下记录行动力预算、地形成本、wild / contested / blocked / unreachable 比例。
+- v1.2 strict 模式下，非海权国 `largestComponentRatio < 0.90` 或 `detachedAreaRatio > 0.05` 必须失败。
 
 ## realm_t4_build_registry
 
@@ -192,19 +206,24 @@
 | `runId` | string | 是 | 当前 run。 |
 | `territoryMapId` | string | 否 | 指定 T3 结果；省略使用最新结果。 |
 | `allowAiCityNaming` | boolean | 否 | 是否允许 AI 给城市命名。 |
+| `cityPlanningMode` | string | 否 | v1.2 建议：`rule_fixture`、`ai_candidate_selection`。 |
 
 返回产物：
 
 | 产物 | 说明 |
 | --- | --- |
 | `CitySeedRegistry` | 城市种子名册。 |
+| `RealmCityCandidateMapPackage[]` | v1.2 单国度城市候选图包。 |
 | `citySeedPreview` | 城市锚点预览图。 |
 | `t4Report` | 城市数量、规模分布、触发条件摘要。 |
+| `scoreManifest` | v1.2 城市分布评分和硬阻断。 |
 
 约束：
 
 - 首都必须来自 `CapitalCitySeed`。
 - T4 不创建城市实例，不生成城市边界、功能区、道路或结构落点。
+- v1.2 中，有限城市必须有稳定粗锚点或候选编号；不得只输出无坐标条件模板。
+- 除显式复合城市或卫星节点外，城市种子不得同格重叠。
 
 ## realm_run_acceptance
 
@@ -215,10 +234,16 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `caseId` | string | 否 | 固定验收用例，例如 `realm_v1_1_smoke`。 |
-| `radiusChunks` | number | 否 | 默认由 case 决定。 |
-| `cellStepBlocks` | number | 否 | 默认由 case 决定。 |
+| `planningRadiusBlocks` | number | 否 | 配置的 W 最大扫描半径，默认由 case 决定。 |
+| `radiusChunks` | number | 否 | 兼容字段；未传 block 半径时使用。 |
+| `cellStepBlocks` | number | 否 | 默认 `128`。 |
+| `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
+| `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
+| `resumePolicy` | string | 否 | 默认 `use_cache`。 |
 | `realmProfiles[]` | array | 否 | 可覆盖默认国度配置。 |
 | `autoSelectCoordinates` | boolean | 否 | 是否使用 fixture 坐标自动走 T2；真实 AI 选点验收时应为 false。 |
+| `qualityMode` | string | 否 | v1.2 验收质量模式，`smoke` 可只看链路，`strict` 必须执行评分阻断。 |
+| `expansionModel` | string | 否 | `quota_frontier` 或 `action_budget`；省略时按 `qualityMode` 默认。 |
 
 返回产物：
 
@@ -227,6 +252,7 @@
 | `acceptanceReport` | 端到端验收报告。 |
 | `artifacts` | W / T1 / T2 / T3 / T4 全部产物路径。 |
 | `previewSet` | 可人工查看的关键预览图集合。 |
+| `scoreManifest` | v1.2 质量评分、硬阻断和人工 review 清单。 |
 
 ## 建议 HTTP 对应路径
 

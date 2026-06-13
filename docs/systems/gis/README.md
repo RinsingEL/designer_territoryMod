@@ -11,13 +11,18 @@ GIS 是 Geomantia 的地貌基础设施层。它负责把 Minecraft 世界转换
 5. `10_product/功能设计/GIS指标层.md`
 6. `10_product/功能设计/地貌分类与地貌区.md`
 7. `10_product/开发计划-v1.1-Step参数化最小闭环.md`
-8. `20_contracts/数据契约/`、`20_contracts/接口契约/`
-9. `30_code_guide/代码导览.md`
-10. `30_code_guide/flows/半径刷新实现指南.md`
-11. `30_code_guide/review/GIS主链Review清单.md`
-12. `30_code_guide/diagrams/GIS_G1-G7设计Review流程图.md`
-13. `40_tests/自动测试方案.md`
-14. `40_tests/验收计划.md`
+8. `../realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
+9. `20_contracts/数据契约/`、`20_contracts/接口契约/`
+10. `30_code_guide/代码导览.md`
+11. `30_code_guide/flows/半径刷新实现指南.md`
+12. `30_code_guide/review/GIS主链Review清单.md`
+13. `30_code_guide/diagrams/GIS_G1-G7设计Review流程图.md`
+14. `40_tests/自动测试方案.md`
+15. `40_tests/验收计划.md`
+
+## 当前跨系统计划
+
+- 国度规划 v1.3 计划会驱动 GIS 指标层改造：将 `cellStepBlocks` 与指标采样尺度拆开，避免 W 粗扫在 `cellStepBlocks=128` 时用 coarse cell-to-cell 高差误判 cliff。详见 `../realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`。
 
 ## 目录说明
 

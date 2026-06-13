@@ -51,6 +51,15 @@ flowchart LR
 | C7：PoolPlan | 为每个功能区配置 start pool、template pool、权重、max depth / radius / piece budget。 | AI 给倾向，程序求预算。 | 结构池计划和生成预算。 | 不让 AI 任意填写无法解释的步长和深度。 |
 | C8/C9：Materialization | 执行强化 jigsaw / prefab，放置结构，失败回写，导出 trace 和调试信息。 | 原版机制 + 强化求解器。 | 已放置结构、失败记录、调试 trace。 | 不回到 AI 逐步手工摆放。 |
 
+## 过程分组
+
+当前开发文档按大过程组织，而不是把 C1-C8 当作八个互不相干的小系统。
+
+| 过程 | 覆盖阶段 | 当前文档归属 | 说明 |
+| --- | --- | --- | --- |
+| 城市规划过程 | C1-C4 | `systems/city/` | 从局部地貌事实生成城市语法、功能区、边界处理和道路网络。 |
+| 结构落地过程 | C5-C8/C9 | 后续 Materialization 系统；当前先在 `systems/city/` 记录交接口径 | 从规划结果生成 anchor、约束场、结构池预算，并执行 jigsaw / prefab 物化。 |
+
 ## 功能区生成规则
 
 地貌只回答“哪里适合什么”，不直接回答“这里必须是什么”。功能区应按容量、比例、连接性和城市语法生成。
@@ -91,9 +100,9 @@ W 粗 patch 不用于决定城市内部边界、功能区、道路和结构落�
 
 W / T 阶段适合在新世界早期或新手村缓冲期异步完成，用大 step 粗扫、粗 patch 和国度配置先定世界基调。T 阶段锁定国度、城市名册、城市数量、理论规模和城市生长种子；城市边界和功能区要等 C 阶段读取局部 GIS 后再确定。
 
-C1-C7 适合跟随城市候选、玩家推进或规划任务按需生成。它们尽量基于 GIS 先验和缓存，不要求大范围 chunk FULL 预生成。
+C1-C4 城市规划适合跟随城市候选、玩家推进或规划任务按需生成。它们尽量基于 GIS 先验和缓存，不要求大范围 chunk FULL 预生成。
 
-C8/C9 只在需要物化城市、加载相关区域或执行调试任务时进入。执行层要保留 trace，便于判断失败来自地形、边界、池配置、碰撞还是原版 jigsaw 本身。
+C5-C8/C9 只在需要生成 anchor、约束场、结构池预算、物化城市、加载相关区域或执行调试任务时进入。执行层要保留 trace，便于判断失败来自地形、边界、池配置、碰撞还是原版 jigsaw 本身。
 
 ## 旧资料使用口径
 
@@ -105,6 +114,6 @@ C8/C9 只在需要物化城市、加载相关区域或执行调试任务时进�
 
 1. GIS 已是当前系统，继续维护 `docs/systems/gis/`。
 2. 国度规划系统已进入 `docs/systems/realm_planning/`，承接 T：RealmProfile、国度扩张、CitySeedRegistry 和 T 到 C 的交接。
-3. City 开始实现时，新建 `docs/systems/city/`，承接 C1-C6。
-4. Structure / Materialization 开始实现时，新建对应系统或工具文档，承接 C7-C9。
+3. City 已建立 `docs/systems/city/`，承接 C1-C4 城市规划过程，并暂存 C5-C8 结构落地交接口径。
+4. Structure / Materialization 开始实现时，新建对应系统或工具文档，承接 C5-C9，并从 City 文档迁移或拆分结构落地交接内容。
 5. TerraSense 升级时，在 `docs/tools/TerraSense/` 记录“start 结构 place 后整体结构范围和类型识别”的辅助能力。

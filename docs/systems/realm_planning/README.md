@@ -9,17 +9,28 @@
 1. `10_product/T阶段国度与城市种子方案.md`
 2. `10_product/功能设计/W-T阶段主流程设计.md`
 3. `10_product/开发计划-v1.1-W粗Patch与T阶段重建.md`
-4. `20_contracts/数据契约/W-T阶段数据契约.md`
-5. `20_contracts/接口契约/W-T阶段MCP接口.md`
-6. `30_code_guide/代码导览.md`
-7. `40_tests/测试入口.md`
-8. `40_tests/真实游玩验收计划.md`
+4. `10_product/开发计划-v1.2-W粗扫T3T4质量重构.md`
+5. `10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
+6. `10_product/开发计划-v1.4-T3行动力国度扩张模型.md`
+7. `20_contracts/数据契约/W-T阶段数据契约.md`
+8. `20_contracts/接口契约/W-T阶段MCP接口.md`
+9. `30_code_guide/代码导览.md`
+10. `30_code_guide/flows/W-T主链实现指南.md`
+11. `30_code_guide/review/国度规划主链Review清单.md`
+12. `30_code_guide/diagrams/国度规划W-T代码流程图.md`
+13. `40_tests/测试入口.md`
+14. `40_tests/真实游玩验收计划.md`
 
 ## 当前状态
 
 - 当前已有 T 阶段方案、v1.1 W / T 重建开发计划、主流程设计、数据契约、MCP 接口契约、代码导览、测试入口和真实游玩验收计划。
 - v1.1 最小实现已接入实现仓库，提供 W / T 主链、HTTP / MCP / Forge 调试入口、JVM 测试和 Forge GameTest 验收。
-- 后续如扩展 C 阶段消费、城市内部规划或结构物化，应在新系统 / 新阶段文档中另起计划，不塞回当前 T4。
+- v1.2 计划已根据真实世界验收复盘补充，重点修复 W 地貌分类 / patch 粒度、T3 国境连通性、T4 城市种子分布和质量评分阻断。
+- v1.2 验收后补齐 `30_code_guide` 代码过程导览；v1.4 已让 strict T3 默认使用 action budget 行动力扩张模型，旧 quota frontier 仅作为 smoke / 对照模型保留。
+- v1.3 计划以 Dregora 体感世界为标准，目标 `planningRadiusBlocks=16384`；当前实现已在 W runner 内落地 `metricSampleStrideBlocks` / `localSlopeRadiusBlocks` 的真实 micro-sampling 聚合与 feature grid 缓存。
+- v1.4 计划聚焦 T3 行动力扩张模型；当前 strict 默认已由行动力预算、地形消耗、竞争压力和 wild / contested / blocked / unreachable land 共同决定国度范围。
+- 2026-06-12 已完成 v1.3 / v1.4 Dregora 标准档真实验收：`planningRadiusBlocks=16384`、`cellStepBlocks=128`、`microSampleStrideBlocks=32`、`expansionModel=action_budget`，最终 `acceptance_report.passed=true`、`score_manifest.totalScore=82.95`、`hardBlocks=[]`。
+- 后续如扩展 C 阶段消费、城市内部规划或结构物化，应进入 `systems/city/README.md` 或后续 Materialization 系统，不塞回当前 T4。
 
 ## 核心产物
 
@@ -32,17 +43,18 @@
 | CapitalCitySeed | 首都一定存在的城市种子。 |
 | RealmTerritoryMap | 多国度统一扩张后的势力范围。 |
 | CitySeedRegistry | 城市名册、城市数量、理论规模、生成条件和触发方式。 |
+| ScoreManifest | W / T3 / T4 结果质量评分、硬阻断和人工 review 清单。 |
 
 ## 上下游
 
 - 上游：W 阶段 WorldSurveyContext、GIS 按消费层传入 `cellStepBlocks` 生成的粗地貌事实、粗 WorldPatchMap、地貌图集和带网格坐标预览图。
-- 下游：C 阶段 City / FunctionZone / Materialization 链路。
+- 下游：City 系统 C1-C4 城市规划链路，以及后续 Materialization 结构落地链路。
 
 ## 目录说明
 
 | 目录 | 内容 |
 | --- | --- |
-| `10_product/` | 系统方案、v1.1 开发计划和 W / T 主流程设计。 |
+| `10_product/` | 系统方案、v1.1 最小闭环计划、v1.2 质量重构计划、v1.3 Dregora 标准 W 粗扫计划、v1.4 T3 行动力扩张计划和 W / T 主流程设计。 |
 | `20_contracts/` | W / T 阶段结构化产物契约和 MCP 接口契约。 |
-| `30_code_guide/` | 当前实现仓库入口、主调用链和 review 检查点。 |
+| `30_code_guide/` | 当前实现仓库入口、主调用链、代码过程图和 review 检查点。 |
 | `40_tests/` | 结构校验、fixture、未来自动测试入口和真实游玩验收计划。 |

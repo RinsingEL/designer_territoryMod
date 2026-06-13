@@ -20,13 +20,21 @@
 | --- | --- | --- | --- | --- |
 | `WorldSurveyContext` | W | 记录一次 W 粗扫上下文。 | 旧 W 阶段扫描上下文。 | 新建。 |
 | `WorldPatchMap` | W | 给 T 阶段消费的粗地貌地图。 | W3 大陆聚类、W4 地貌图集。 | 复用思路，新建结构。 |
+| `WorldFeatureGrid` | W | v1.2 记录 micro-sampling 后的稳健特征。 | 无直接旧结构。 | 新增。 |
 | `RealmProfile` | T1 | 国度设定。 | `TerritoryBlueprint`。 | 保留高层概念，删掉低层扫描参数。 |
 | `RealmCandidateMapPackage` | T1 | 给 AI 选坐标的候选图包。 | 旧 T1 候选图 / 候选簇。 | 改成图上直接选坐标。 |
 | `RealmCoordinateSelection` | T2 | 保存 AI 选点和程序校验结果。 | 旧 T1 / T2 selection artifact。 | 新建，替代选簇 / 选方向。 |
 | `RealmSeed` | T2 | T3 扩张种子。 | 旧 territory config。 | 保留用途，结构重写。 |
 | `CapitalCitySeed` | T2 | 首都城市种子。 | 旧 T3 后只有首都语义。 | 保留“首都必定存在”。 |
 | `RealmTerritoryMap` | T3 | 国度扩张结果。 | `TerritoryManager` 扩张结果。 | 复用算法，重写实现。 |
+| `TerritoryRepairLog` | T3 | v1.2 记录飞地、孔洞和边界修复。 | 旧实现无稳定产物。 | 新增。 |
+| `RealmCityCandidateMapPackage` | T4 | v1.2 单国度城市候选图包。 | 旧实现无稳定产物。 | 新增。 |
 | `CitySeedRegistry` | T4 | 全城市名册。 | 旧 T4 不匹配。 | 新建。 |
+| `ScoreManifest` | 验收 | v1.2 记录质量评分、硬阻断和人工 review。 | 无旧结构。 | 新增。 |
+
+## v1.2 扩展口径
+
+v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegistry`。实现可先保持 v1.1 字段兼容，同时新增 clean id、feature stats、repair log、单国度城市候选图包和 `score_manifest.json`。正式消费层应优先读取 v1.2 clean / score 字段；缺失时只能按 v1.1 smoke 口径验收，不能宣称 strict 质量通过。
 
 ## WorldSurveyContext
 
@@ -43,6 +51,16 @@
 | `gridOriginBlock.z` | int | 是 | grid 原点对应的世界方块 Z。 |
 | `gridSize.width` | int | 是 | grid 宽度，单位 cell。 |
 | `gridSize.height` | int | 是 | grid 高度，单位 cell。 |
+| `sealed` | boolean | 是 | 配置范围内所有 tile 完成且全局 patch 汇总完成后为 `true`。T 阶段只接受 sealed survey。 |
+| `scanBounds` | object | 是 | 本次可规划世界范围，记录中心、半径和 block 边界。 |
+| `surveyStats` | object | 是 | 记录 tile 数、缓存命中、失败数、耗时和产物数据量。 |
+| `microSampleStrideBlocks` | int? | v1.3 | W feature 提取步长，默认 `32`。 |
+| `metricSampleStrideBlocks` | int? | v1.3 | `microSampleStrideBlocks` 的契约别名，用于强调这是指标采样尺度。 |
+| `localSlopeRadiusBlocks` | int? | v1.3 | micro sample 周边局部坡度半径，默认 `8`。 |
+| `microSamplingImplemented` | boolean? | v1.3 | 是否真实执行 cell 内 micro-sampling。strict 验收应为 `true`。 |
+| `microSampleCount` | long? | v1.3 | 本次 W survey 实际 micro sample 总数。 |
+| `configHash` | string? | v1.3 | seed / 维度 / 范围 / step / stride / slope radius 等配置哈希，用于 tile 和 feature cache 校验。 |
+| `scoreManifest` | string? | v1.2 建议 | `score_manifest.json` 路径。 |
 | `source.gisRefreshJobId` | string? | 否 | 若来自 GIS refresh，记录 job ID。 |
 | `source.sampleMode` | string? | 否 | 例如 `prior`。 |
 | `createdAt` | string | 是 | 生成时间。 |
@@ -56,15 +74,49 @@
   "dimensionId": "minecraft:overworld",
   "worldSeed": 123,
   "cellStepBlocks": 128,
+  "sealed": true,
   "gridOriginBlock": { "x": -8192, "z": -8192 },
   "gridSize": { "width": 128, "height": 128 },
+  "scanBounds": {
+    "centerBlockX": 0,
+    "centerBlockZ": 0,
+    "planningRadiusBlocks": 8192,
+    "minBlockX": -8192,
+    "minBlockZ": -8192,
+    "maxBlockX": 8191,
+    "maxBlockZ": 8191
+  },
+  "surveyStats": {
+    "durationMs": 120000,
+    "tileCount": 1024,
+    "scannedTileCount": 1024,
+    "cachedTileCount": 0,
+    "failedTileCount": 0,
+    "artifactBytes": 12345678
+  },
   "source": {
-    "gisRefreshJobId": "gis_job_001",
+    "sourceType": "world_survey_tiles",
+    "worldSurveyManifest": "world_survey_manifest.json",
     "sampleMode": "prior"
   },
   "createdAt": "2026-06-11T00:00:00Z"
 }
 ```
+
+## WorldSurveyManifest
+
+W 调度层还必须写出 `world_survey_manifest.json`，用于断点续扫和真实验收统计。它不是 T 阶段主要消费数据，但它是 W 是否完整 sealed 的审计依据。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `schemaVersion` | string | 是 | 结构版本。 |
+| `surveyId` | string | 是 | 对应 `WorldSurveyContext`。 |
+| `status` | enum | 是 | `sealed` 或 `failed`。 |
+| `config` | object | 是 | 维度、seed、中心、`planningRadiusBlocks`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`。 |
+| `scanBounds` | object | 是 | block 级扫描边界和直径。 |
+| `grid` | object | 是 | grid 原点、宽高、cell 数。 |
+| `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleCount`。 |
+| `tiles[]` | array | 是 | 每个 tile / GIS Region 的坐标、状态、cache 路径、`configHash` 和错误信息。 |
 
 ## WorldPatchMap
 
@@ -77,6 +129,7 @@ T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约
 | `cells[]` | array | 是 | 粗 cell 列表。 |
 | `patches[]` | array | 是 | patch 摘要。 |
 | `continents[]` | array | 是 | 大陆 / 大区摘要。 |
+| `cleaningSummary` | object? | v1.2 建议 | land mask 清洗、小斑块合并、孔洞填补和跨 tile merge 摘要。 |
 
 `cells[]`：
 
@@ -90,10 +143,53 @@ T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约
 | `patchId` | string? | 已分类必填 | 所属 patch。 |
 | `landWater` | enum | 是 | `land`、`water`、`shore`、`unknown`。 |
 | `landform` | enum/string | 是 | 粗地貌类型。 |
+| `baseLandform` | enum/string? | v1.2 建议 | 清洗后的主地貌；建议 `water`、`shore`、`lowland`、`upland`、`ridge`、`valley`、`unknown`。 |
+| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。 |
+| `continentIdClean` | string? | v1.2 建议 | 清洗 / 合并后的大陆 id。 |
+| `patchIdClean` | string? | v1.2 建议 | 清洗 / 合并后的 macro patch id。 |
 | `heightAvg` | number? | 建议 | 平均高度。 |
 | `slopeAvg` | number? | 建议 | 平均坡度。 |
+| `heightStats` | object? | v1.2 建议 | `p10`、`p50`、`p90`、`robustRelief`。 |
+| `slopeStats` | object? | v1.2 建议 | `mean`、`p90`、`steepFrac`。 |
+| `barrierCost` | number/object? | v1.3 | 当前实现写单 cell 通行成本；后续可扩展为 `north/east/south/west` edge cost。 |
+| `waterFrac` | number? | v1.3 | cell 内 micro sample 水体比例。 |
+| `microSampleCount` | int? | v1.3 | 本 cell 实际 micro sample 数。 |
+| `biomeHist` | object? | v1.3 | cell 内 biome 采样直方图。 |
 | `waterDistanceBlocks` | number? | 建议 | 到水体或岸线距离，单位 block。 |
 | `flags[]` | string[] | 否 | `coastal`、`lowland`、`mountain_edge` 等标签。 |
+
+## WorldFeatureGrid
+
+v1.3 中，`WorldFeatureGrid` 记录 planning cell 内真实 micro-sampling 的稳健统计。当前实现由 `WorldSurveyRunner` 在 W survey 后按 `microSampleStrideBlocks` 构造 micro sample，聚合后写入 `world_feature_grid.json`，并把同一统计内嵌到 `WorldPatchMap.cells[]`。`configHash` 一致时可复用 feature grid 缓存。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `surveyId` | string | 是 | 来源 W survey。 |
+| `cellStepBlocks` | int | 是 | planning cell 尺寸。 |
+| `microSampleStrideBlocks` | int | 是 | cell 内采样步长，建议 `16` 或 `32`。 |
+| `metricSampleStrideBlocks` | int | 是 | 指标采样步长别名。 |
+| `localSlopeRadiusBlocks` | int | 是 | 局部坡度采样半径。 |
+| `microSamplingImplemented` | boolean | 是 | 是否真实执行 micro-sampling。 |
+| `microSampleCount` | long | 是 | 全部 cell 的 micro sample 总数。 |
+| `configHash` | string | 是 | 与 `world_survey_manifest.json` 对齐的配置哈希。 |
+| `cells[]` | array | 是 | 每个 planning cell 的特征统计。 |
+
+`cells[]` 建议包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `gridX/gridZ` | int | planning grid 坐标。 |
+| `heightP10/P50/P90` | number | 稳健高度分位。 |
+| `robustRelief` | number | `P90 - P10`。 |
+| `slopeMean/slopeP90/steepFrac` | number | 坡度统计。 |
+| `roughnessTri` | number | 粗糙度。 |
+| `dev32/dev64/dev128` | number | 多尺度相对地形位置。 |
+| `waterFrac` | number | 水体占比。 |
+| `microSampleCount` | int | 本 planning cell 实际样本数。 |
+| `biomeHist` | object | biome 直方图。 |
+| `shoreDist` | number | 到岸线 / 水体距离。 |
+| `passability` | number | 规划通行性。 |
+| `barrierCostN/E/S/W` | number | 边穿越成本。 |
 
 `patches[]`：
 
@@ -271,6 +367,7 @@ T3 输出，先按粗 cell 记录势力范围。
 | --- | --- | --- | --- |
 | `territoryMapId` | string | 是 | 结果 ID。 |
 | `surveyId` | string | 是 | 来源 W 粗扫。 |
+| `expansionModel` | enum | v1.4 | `quota_frontier` 或 `action_budget`。strict 默认 `action_budget`。 |
 | `territoryCells[]` | array | 是 | cell 归属。 |
 | `realmStats[]` | array | 是 | 国度摘要。 |
 | `warnings[]` | string[] | 否 | 飞地、空洞、面积过小等异常。 |
@@ -281,8 +378,10 @@ T3 输出，先按粗 cell 记录势力范围。
 | --- | --- | --- | --- |
 | `gridX` | int | 是 | grid X。 |
 | `gridZ` | int | 是 | grid Z。 |
-| `realmId` | string | 是 | 归属国度。 |
+| `realmId` | string | 条件 | `owned` cell 的归属国度；`wild/blocked/unreachable` 可为空。 |
+| `status` | enum | v1.4 | `owned`、`wild`、`contested`、`blocked`、`unreachable`。 |
 | `claimStrength` | number | 否 | 占有强度或竞争余量。 |
+| `claimCost` | number | v1.4 | action model 下的累计占领成本。 |
 
 `realmStats[]`：
 
@@ -293,6 +392,46 @@ T3 输出，先按粗 cell 记录势力范围。
 | `coastalRatio` | number | 否 | 海岸占比。 |
 | `primaryLandforms[]` | string[] | 否 | 主要地貌。 |
 | `neighbors[]` | string[] | 否 | 相邻国度。 |
+| `targetAreaCells` | int? | v1.2 建议 | 目标面积。 |
+| `actualAreaCells` | int? | v1.2 建议 | 实际面积。 |
+| `largestComponentRatio` | number? | v1.2 建议 | 最大连通块面积 / 本国总面积。 |
+| `detachedAreaRatio` | number? | v1.2 建议 | 非最大连通块面积占比。 |
+| `holeAreaRatio` | number? | v1.2 建议 | 小孔洞面积占比。 |
+| `naturalBoundaryFit` | number? | v1.2 建议 | 国界落在强 barrier edge 上的比例。 |
+| `budgetUsedRatio` | number? | v1.4 | 使用的行动力预算比例。 |
+| `averageClaimCost` | number? | v1.4 | 平均累计占领成本。 |
+| `maxClaimCost` | number? | v1.4 | 最大累计占领成本。 |
+| `terrainCostBreakdown` | object? | v1.4 | 按 baseLandform 汇总的占领成本。 |
+| `stopReasonSummary` | object? | v1.4 | 行动力耗尽、屏障阻断、竞争失败等停止原因计数。 |
+
+`t3_report.json` v1.4 额外包含：
+
+| 字段 | 说明 |
+| --- | --- |
+| `expansionModel` | 本次使用的扩张模型。 |
+| `expansionBudgets` | 每国派生的 `baseActionBudget`、`budgetMultiplier`、`effectiveActionBudget`、`softStopThreshold`、`hardStopThreshold`、`maxClaimCost`、`wildlandTolerance`。 |
+| `terrainCostProfiles` | 程序从 `expansionStyle` 派生的 base landform / tag cost 表。 |
+| `territoryStatusSummary` | `owned/wild/contested/blocked/unreachable` 的 cell 数和比例。 |
+
+## TerritoryRepairLog
+
+记录 T3 后处理，不作为城市规划主输入，但作为评分和 debug 依据。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `territoryMapId` | string | 是 | 来源国境图。 |
+| `repairs[]` | array | 是 | 飞地合并、孔洞填补、边界平滑记录。 |
+| `blockedRepairs[]` | array | 否 | 因强 barrier、海权规则或面积约束未执行的修复。 |
+| `summary` | object | 是 | 修复数量、影响面积、剩余风险。 |
+
+`repairs[]` 至少包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `type` | string | `detached_component_merge`、`hole_fill`、`boundary_smooth`、`sea_bridgehead` 等。 |
+| `realmId` | string | 影响国度。 |
+| `areaCells` | int | 影响面积。 |
+| `reason` | string | 修复理由。 |
 
 ## CitySeedRegistry
 
@@ -311,15 +450,61 @@ T4 输出，登记城市名册和生成条件。
 | --- | --- | --- | --- |
 | `citySeedId` | string | 是 | 稳定城市种子 ID。 |
 | `realmId` | string | 是 | 所属国度。 |
+| `name` | string? | v1.2 建议 | AI / 人类给出的城市名。 |
 | `role` | enum/string | 是 | `capital`、`port`、`border_fort`、`mining_town` 等。 |
 | `theoreticalScale` | enum | 是 | 理论规模。 |
 | `anchorGrid.x` / `anchorGrid.z` | int | 是 | 粗锚点。 |
 | `anchorBlock.x` / `anchorBlock.z` | int | 是 | block 锚点。 |
 | `candidateRangeCells` | int | 是 | 后续 C 阶段可搜索半径，单位 cell。 |
+| `planningRadiusCells` | int? | v1.2 建议 | 规模影响半径，用于城市间约束。 |
+| `subregionId` | string? | v1.2 建议 | 所属二级区域。 |
+| `candidateId` | string? | v1.2 建议 | 来源候选点编号。 |
+| `graphDistanceToNearestCity` | number? | v1.2 建议 | 到最近城市的国度内图距离。 |
+| `satelliteOf` | string? | 否 | 若是卫星节点，指向主城市。 |
 | `requiredConditions[]` | string[] | 是 | 生成条件。 |
 | `coreFunctions[]` | string[] | 是 | 核心功能。 |
 | `trigger` | enum/string | 是 | `always`、`player_nearby`、`realm_development`、`story_stage`、`debug`。 |
 | `source` | object | 建议 | 来源说明，例如来自 capital seed、海岸 patch、边境条件。 |
+
+## RealmCityCandidateMapPackage
+
+T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世界图。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `packageId` | string | 是 | 图包 ID。 |
+| `realmId` | string | 是 | 对应国度。 |
+| `territoryMapId` | string | 是 | 来源 T3 国境图。 |
+| `candidateMapImage` | string | 是 | 单国度城市候选图。 |
+| `subregions[]` | array | 是 | 二级区域摘要。 |
+| `candidates[]` | array | 是 | 带编号的候选点。 |
+| `selectionRules` | object | 是 | AI 返回格式和约束。 |
+
+`candidates[]` 建议包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `candidateId` | string | 稳定候选编号，例如 `P03`、`B07`。 |
+| `gridX/gridZ` | int | 候选坐标。 |
+| `roleFits[]` | string[] | 适合的城市角色。 |
+| `scoreBreakdown` | object | 中央性、岸线、矿业、边境、可建设性等分项。 |
+| `constraints[]` | string[] | 必须满足或需要避开的约束。 |
+
+## ScoreManifest
+
+验收评分产物，用于避免“链路跑通但结果不可玩”被误判为通过。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` | string | 是 | 验收 run。 |
+| `surveyId` | string | 是 | 来源 W survey。 |
+| `totalScore` | number | 是 | 0-100 总分。 |
+| `passed` | boolean | 是 | 是否通过评分和硬阻断。 |
+| `subScores` | object | 是 | W / patch / continent / T3 / T4 / preview 子分。 |
+| `hardBlocks[]` | array | 是 | 硬阻断项。 |
+| `manualReviewChecklist[]` | array | 是 | 人工 review 五问和结果。 |
+| `badCases[]` | array | 否 | 关键坏例坐标、国度或 patch。 |
+| `previewSet` | object | 否 | 关联预览图路径。 |
 
 ## 关键校验规则
 
@@ -330,3 +515,9 @@ T4 输出，登记城市名册和生成条件。
 | 拒绝静默跨域 snap | T2 | 跨大陆、跨海、跨禁用 patch 时必须拒绝或请求重试。 |
 | T3 输入必须全部 accepted | T3 | `RealmCoordinateSelection.validation.status` 未通过的国度不能进入扩张。 |
 | CitySeed 不包含城市内部规划 | T4 | 不出现道路、功能区边界、关键建筑坐标、jigsaw 参数等字段。 |
+| 非海权国领土必须基本连通 | T3 v1.2 | `largestComponentRatio < 0.90` 应进入硬阻断。 |
+| 国度面积弹性 | T3 v1.4 | `quota_frontier` 下仍按 `scalePlan.minAreaRatio/maxAreaRatio` 阻断；`action_budget` 下 `scalePlan` 为软目标，面积偏差进入 `budgetCoherenceScore` / `overExpansionPenalty`，不再单独硬阻断。 |
+| 行动力最低可玩领地 | T3 v1.4 | strict + `action_budget` 下，每个国度必须有 owned territory；极小 owned 结果应进入硬阻断，不能只靠首都点放行。 |
+| 城市锚点必须在 owned territory | T4 v1.4 | `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的国度不能生成首都种子。 |
+| 城市种子不得同格重叠 | T4 v1.2 | 除显式复合城市 / 卫星节点外，同格城市直接阻断。 |
+| 坏质量不能只靠 `passed=true` 放行 | 验收 v1.2 | `score_manifest.json` 的硬阻断优先于端到端链路状态。 |
