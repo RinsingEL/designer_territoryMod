@@ -195,6 +195,16 @@ v1.3 中，`WorldFeatureGrid` 记录 planning cell 内真实 micro-sampling 的�
 
 v1.5 开发期调试产物，用少量抽样点的局部精确扫描评估 W 粗扫 tag 正确率。它只在 `runTagAudit=true` 或开发工具显式触发时输出，不属于普通玩家开局必跑流程。
 
+Tag Audit 的 reference tags 使用比 W 粗扫更密的局部扫描事实复判：
+
+| reference tag | 判定口径 |
+| --- | --- |
+| `steep` | `slopeP90 >= 14` 或 `steepFrac >= 0.25`。 |
+| `cliff` | `slopeP95 >= 18` 且 `steepFrac >= 0.35`；如果 `waterFrac` 在 `0.05..0.95` 的水陆混合区，`steepFrac` 阈值提升到 `0.45`。 |
+| `coastal` | `waterFrac` 在 `0.05..0.95` 之间。 |
+
+W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step 下基于每个粗采样点的 micro 指标判定，Tag Audit 则对抽样点周围 `auditRadiusBlocks` 范围做局部精扫，用于开发期估算 precision / recall。
+
 ### tag_audit_samples.json
 
 数组，每项记录一个抽样点：
