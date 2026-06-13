@@ -574,6 +574,17 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | `baseLandformDistribution` | object | 主地貌分布。 |
 | `landformTagDistribution` | object | tag 分布。 |
 
+`subScores.T4` v1.4 建议字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `citySeedCount` | number | 城市种子总数。 |
+| `capitalCount` | number | 首都种子数量。 |
+| `duplicateAnchorCount` | number | 非卫星城市同格锚点冲突数，非 0 时 hard block。 |
+| `spacingViolationCount` | number | 非卫星城市规划半径冲突数，非 0 时 hard block。 |
+| `offTerritoryAnchorCount` | number | 城市锚点未落在同 realm owned territory 内的数量，非 0 时 hard block。 |
+| `allAnchorsInOwnedTerritory` | boolean | 是否所有城市锚点都落在同 realm owned territory 内。 |
+
 ## 关键校验规则
 
 | 规则 | 阶段 | 说明 |
