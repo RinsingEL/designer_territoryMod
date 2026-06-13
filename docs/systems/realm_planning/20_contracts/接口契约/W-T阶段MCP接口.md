@@ -22,6 +22,7 @@
 | `realm_t3_expand` | T3 | 对指定大陆 / 分组运行国度扩张，输出 `RealmTerritoryMap`。 |
 | `realm_t4_build_registry` | T4 | 生成 `CitySeedRegistry`。 |
 | `realm_run_acceptance` | 验收 | 用固定配置跑完整 W -> T4 调试链，并输出验收报告。 |
+| `realm_tag_audit` | W 调试 | 对已有 sealed W run 单独执行 Tag Audit 抽样局部精扫，不重跑 W/T 主链。 |
 
 ## 通用返回字段
 
@@ -266,6 +267,28 @@
 | `scoreManifest` | v1.2 质量评分、硬阻断和人工 review 清单。 |
 | `tagAuditSamples` / `tagAuditReport` | v1.5 开发期抽样局部精扫产物，仅 `runTagAudit=true` 时输出。 |
 
+## realm_tag_audit
+
+对已有 sealed W run 单独执行 v1.5 Tag Audit。该工具用于“已经跑过大世界 W / acceptance 后，再抽更多点复核 tag 正确率”的开发验收场景。
+
+请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` | string | 是 | 已有 sealed W / W-T run ID。 |
+| `tagAuditSampleCount` | number | 否 | 抽样点数量，默认 `120`。 |
+| `tagAuditRadiusBlocks` | number | 否 | 局部精扫半径，默认 `32`。 |
+| `tagAuditStrideBlocks` | number | 否 | 局部精扫步长，默认 `4`。 |
+| `tagAuditSlopeRadiusBlocks` | number | 否 | 局部坡度半径，默认 `4`。 |
+| `dimensionId` | string | 否 | 采样维度；省略时从该 run 的 `world_survey_manifest.json` 恢复。 |
+| `playerName` | string | 否 | 维度回退辅助；通常不需要。 |
+
+行为：
+
+- 如果 run 仍在内存中，直接复用当前 `RealmRun`。
+- 如果 run 不在内存中，必须从 `world_survey_manifest.json`、tile snapshots 和 `world_feature_grid.json` 恢复 sealed W 结果；缺少 sealed manifest 或 tile cache 时返回失败，不静默重扫 W。
+- 输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，并更新返回的 `artifacts`。
+
 ## 建议 HTTP 对应路径
 
 | MCP 工具 | HTTP 路径 |
@@ -277,6 +300,7 @@
 | `realm_t3_expand` | `POST /realm/t3/expand` |
 | `realm_t4_build_registry` | `POST /realm/t4/build_registry` |
 | `realm_run_acceptance` | `POST /realm/acceptance/run` |
+| `realm_tag_audit` | `POST /realm/tag_audit` |
 
 ## 实现优先级
 
