@@ -472,6 +472,11 @@ T3 输出，先按粗 cell 记录势力范围。
 | `expansionBudgets` | 每国派生的 `baseActionBudget`、`budgetMultiplier`、`effectiveActionBudget`、`softStopThreshold`、`hardStopThreshold`、`maxClaimCost`、`wildlandTolerance`。 |
 | `terrainCostProfiles` | 程序从 `expansionStyle` 派生的 base landform / tag cost 表。 |
 | `territoryStatusSummary` | `owned/wild/contested/blocked/unreachable` 的 cell 数和比例。 |
+| `ownedAreaRatio` | 顶层验收别名，等于 `territoryStatusSummary.ownedRatio`。 |
+| `wildlandRatio` | 顶层验收别名，等于 `territoryStatusSummary.wildRatio`。 |
+| `contestedRatio` | 顶层验收别名，等于 `territoryStatusSummary.contestedRatio`。 |
+| `blockedRatio` | 顶层验收别名，等于 `territoryStatusSummary.blockedRatio`。 |
+| `unreachableRatio` | 顶层验收别名，等于 `territoryStatusSummary.unreachableRatio`。 |
 
 ## TerritoryRepairLog
 
