@@ -583,7 +583,10 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | `packageId` | string | 是 | 图包 ID。 |
 | `realmId` | string | 是 | 对应国度。 |
 | `territoryMapId` | string | 是 | 来源 T3 国境图。 |
-| `candidateMapImage` | string | 是 | 单国度城市候选图。 |
+| `candidateMapImage` | string | 是 | 单国度城市候选图；必须裁剪到该国 owned territory 的包围盒，并可带少量邻接上下文，不得继续使用整张世界图作为主输入。 |
+| `mapScope` | string? | v1.6/T4 补充 | 当前应为 `realm_owned_territory`。 |
+| `mapBounds` | object? | v1.6/T4 补充 | 候选图裁剪后的 grid 范围：`minGridX/minGridZ/maxGridX/maxGridZ/widthCells/heightCells`。 |
+| `contextPolicy` | string? | v1.6/T4 补充 | 单国度图保留多少上下文；当前为 `crop_to_realm_owned_bounds_with_small_neighbor_context`。 |
 | `subregions[]` | array | 是 | 二级区域摘要。 |
 | `candidates[]` | array | 是 | 带编号的候选点。 |
 | `selectionRules` | object | 是 | AI 返回格式和约束。 |
