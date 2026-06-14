@@ -19,6 +19,8 @@
 - v1 开发计划：`../systems/gis/10_product/开发计划.md`
 - v1.1 开发计划：`../systems/gis/10_product/开发计划-v1.1-Step参数化最小闭环.md`
 - Dregora 标准 W 粗扫驱动的 GIS 指标聚合计划：`../systems/realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
+- 高步长局部指标封装与地貌判定修正计划：`../systems/realm_planning/10_product/开发计划-v1.5-高步长局部指标封装与地貌判定修正.md`
+- 多尺度 GIS 地貌特征栈与面域验收计划：`../systems/realm_planning/10_product/开发计划-v1.6-多尺度GIS地貌特征栈与面域验收.md`
 - 半径刷新：`../systems/gis/10_product/功能设计/半径刷新与Atlas构建.md`
 - 指标层：`../systems/gis/10_product/功能设计/GIS指标层.md`
 - 地貌分类：`../systems/gis/10_product/功能设计/地貌分类与地貌区.md`
@@ -41,6 +43,8 @@
 - v1.2 W 粗扫 / T3 / T4 质量重构计划：`../systems/realm_planning/10_product/开发计划-v1.2-W粗扫T3T4质量重构.md`
 - v1.3 Dregora 标准 W 粗扫与 GIS 指标聚合计划：`../systems/realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
 - v1.4 T3 行动力国度扩张模型计划：`../systems/realm_planning/10_product/开发计划-v1.4-T3行动力国度扩张模型.md`
+- v1.5 高步长局部指标封装与地貌判定修正计划：`../systems/realm_planning/10_product/开发计划-v1.5-高步长局部指标封装与地貌判定修正.md`
+- v1.6 多尺度 GIS 地貌特征栈与面域验收计划：`../systems/realm_planning/10_product/开发计划-v1.6-多尺度GIS地貌特征栈与面域验收.md`
 - W / T 阶段数据契约：`../systems/realm_planning/20_contracts/数据契约/W-T阶段数据契约.md`
 - W / T 阶段 MCP 接口契约：`../systems/realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md`
 - 代码导览：`../systems/realm_planning/30_code_guide/代码导览.md`

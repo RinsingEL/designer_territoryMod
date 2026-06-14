@@ -36,6 +36,10 @@
   - W / T 主流程设计：`systems/realm_planning/10_product/功能设计/W-T阶段主流程设计.md`
   - v1.1 开发计划：`systems/realm_planning/10_product/开发计划-v1.1-W粗Patch与T阶段重建.md`
   - v1.2 质量重构计划：`systems/realm_planning/10_product/开发计划-v1.2-W粗扫T3T4质量重构.md`
+  - v1.3 Dregora 标准 W 粗扫计划：`systems/realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
+  - v1.4 T3 行动力国度扩张计划：`systems/realm_planning/10_product/开发计划-v1.4-T3行动力国度扩张模型.md`
+  - v1.5 高步长局部指标计划：`systems/realm_planning/10_product/开发计划-v1.5-高步长局部指标封装与地貌判定修正.md`
+  - v1.6 多尺度 GIS 地貌特征栈计划：`systems/realm_planning/10_product/开发计划-v1.6-多尺度GIS地貌特征栈与面域验收.md`
   - 数据契约：`systems/realm_planning/20_contracts/数据契约/W-T阶段数据契约.md`
   - MCP 接口契约：`systems/realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md`
   - 代码导览：`systems/realm_planning/30_code_guide/代码导览.md`

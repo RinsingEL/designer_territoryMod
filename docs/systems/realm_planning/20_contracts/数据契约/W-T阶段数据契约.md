@@ -63,6 +63,7 @@ v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegis
 | `microSampleCount` | long? | v1.3 | 本次 W survey 实际 micro sample 总数。 |
 | `adaptiveSampling` | boolean? | v1.3 | 是否启用自适应加密；当前固定 stride 实现必须显式写 `false`，不得伪装成自适应。 |
 | `configHash` | string? | v1.3 | seed / 维度 / 范围 / step / stride / slope radius 等配置哈希，用于 tile 和 feature cache 校验。 |
+| `metricScales` | object? | v1.6 | 多尺度 GIS 派生指标的物理尺度说明，例如 `scanHeightRank=scan_bounds`、`localScaleBlocks=512`、`regionalScaleBlocks=2048`、`plateauCoreScaleBlocks=512`、`plateauOuterScaleBlocks=1536`、`plateauProminenceThreshold`、`rankDriftThreshold`。 |
 | `scoreManifest` | string? | v1.2 建议 | `score_manifest.json` 路径。 |
 | `source.gisRefreshJobId` | string? | 否 | 若来自 GIS refresh，记录 job ID。 |
 | `source.sampleMode` | string? | 否 | 例如 `prior`。 |
@@ -147,15 +148,26 @@ T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约
 | `landWater` | enum | 是 | `land`、`water`、`shore`、`unknown`。 |
 | `landform` | enum/string | 是 | 粗地貌类型。 |
 | `baseLandform` | enum/string? | v1.2 建议 | 清洗后的主地貌；建议 `water`、`shore`、`lowland`、`plateau`、`upland`、`ridge`、`valley`、`unknown`。 |
-| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`water_edge`、`seacoast`、`riverbank`、`lakeshore`、`coastal`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。v1.5 起，`cellStepBlocks>=64` 且有 micro 指标时，正式 `cliff` / `steep` 必须由局部 `slopeStats` 支撑；coarse GIS 的 cliff 只能进入 `cliff_candidate` / `micro_contradiction` 等诊断 tag；`coastal` 保留为 `seacoast` 兼容别名，不再表示所有水边；water / unknown 主体不生成正式 `water_edge`。 |
-| `waterEdgeType` | enum/string? | v1.5 | 可分配水边 cell 的水边类型：`seacoast`、`riverbank`、`lakeshore`。 |
+| `landformTags[]` | string[] | v1.2 建议 | `steep`、`cliff`、`water_edge`、`seacoast`、`riverbank`、`lakeshore`、`coastal`、`wet`、`rugged`、`mountain_front`、`harbor_candidate` 等二级标签。v1.5 起，`cellStepBlocks>=64` 且有 micro 指标时，正式 `cliff` / `steep` 必须由局部 `slopeStats` 支撑；coarse GIS 的 cliff 只能进入 `cliff_candidate` / `micro_contradiction` 等诊断 tag；`coastal` 保留为 `seacoast` 兼容别名，不再表示所有水边；water / unknown 主体不生成正式 `water_edge`。v1.6 起可出现 `mixed_cell`、`low_confidence`、`rank_drift`、`boundary_truncated`、`open_water_unknown` 等诊断 tag。 |
+| `overlayTags[]` | string[]? | v1.6 | 非互斥叠加层，当前从 `landformTags[]` 中筛出 `cliff`、`steep`、`water_edge`、水边类型、`mixed_cell`、`low_confidence`、`rank_drift`、`mountain_front` 等，供预览 / 审计 / PCG suitability 消费。 |
+| `landformConfidence` | number? | v1.6 | `0..1` 主地貌置信度，由 rank 稳定性、局部坡度、形态和水边不确定性派生。 |
+| `landformEvidence[]` | array? | v1.6 | 多尺度证据列表，记录 `scan_height_rank`、`local_height_rank`、`regional_height_rank`、`dev_local`、`dev_regional`、`roughness_local`、`plateau_prominence`、`plateau_core_flat_support`、`geomorphon` 等证据名、数值和说明。 |
+| `debugReasons[]` | string[]? | v1.6 | 开发期解释字符串，用于人工 TP 抽样时理解 base landform、rank、DEV、roughness、plateau prominence/support、geomorphon 和水边来源。 |
+| `waterEdgeType` | enum/string? | v1.5/v1.6 | 可分配水边 cell 的水边类型：`seacoast`、`riverbank`、`lakeshore`、`boundary_truncated`。`boundary_truncated` 表示扫描边界截断水体，不能直接当作高置信海岸。 |
 | `waterComponentId` | string? | v1.5 调试 | 最近水体连通域 id；用于解释 `waterEdgeType` 来源。 |
+| `waterComponentType` | enum/string? | v1.6 | 最近水体连通域语义：`open_water`、`river_like`、`lake_like`、`boundary_truncated`。 |
 | `waterComponentAreaCells` | int? | v1.5 调试 | 最近水体连通域面积，单位 W cell。 |
+| `waterBoundaryConfidence` | number? | v1.6 | 水体边界置信度；扫描边界截断且无 ocean / 大水体证据时应降低。 |
 | `continentIdClean` | string? | v1.2 建议 | 清洗 / 合并后的大陆 id。 |
 | `patchIdClean` | string? | v1.2 建议 | 清洗 / 合并后的 macro patch id。 |
 | `heightAvg` | number? | 建议 | 平均高度。 |
 | `slopeAvg` | number? | 建议 | 平均坡度。 |
-| `relativeHeightRank` | number? | v1.5 | 本次扫描可分配陆地内的相对高度分位，`0..1`；用于区分低地、平坦高原和山地。 |
+| `relativeHeightRank` | number? | v1.5 | 本次扫描可分配陆地内的相对高度分位，`0..1`；v1.6 起等价于 `scanHeightRank`，只能作为辅助特征，不能单独决定 `ridge` / `plateau` / `lowland`。 |
+| `scanHeightRank` | number? | v1.6 | `relativeHeightRank` 的明确别名，强调其依赖本次扫描范围。 |
+| `localHeightRank` | number? | v1.6 | 当前 cell 在约 512 block 局部窗口内的高度分位。 |
+| `regionalHeightRank` | number? | v1.6 | 当前 cell 在约 2048 block 区域窗口内的高度分位。 |
+| `heightRankStability` | number? | v1.6 | 多尺度 rank 一致性，低值表示扫描 / 尺度敏感。 |
+| `terrainMetrics` | object? | v1.6 | 多尺度派生指标集合，包含 local / regional scale、TPI、DEV、roughness、relief、`plateauCoreScaleBlocks`、`plateauOuterScaleBlocks`、`plateauCoreMeanHeight`、`plateauOuterMeanHeight`、`plateauProminence`、`plateauCoreFlatSupport`、`geomorphonClass`、`supportConfidence` 等。 |
 | `heightStats` | object? | v1.2 建议 | `p10`、`p50`、`p90`、`robustRelief`。 |
 | `slopeStats` | object? | v1.2 建议 | `mean`、`p90`、`steepFrac`。 |
 | `barrierCost` | number/object? | v1.3 | 当前实现写单 cell 通行成本；后续可扩展为 `north/east/south/west` edge cost。 |
@@ -200,7 +212,7 @@ v1.3 中，`WorldFeatureGrid` 记录 planning cell 内真实 micro-sampling 的�
 
 ## TagAudit
 
-v1.5 开发期调试产物，用少量抽样点的局部精确扫描评估 W 粗扫 tag 正确率。它只在 `runTagAudit=true` 或开发工具显式触发时输出，不属于普通玩家开局必跑流程。
+v1.5 开发期调试产物，用少量抽样点的局部精确扫描评估 W 粗扫 tag 正确率。v1.6 起，Tag Audit 的抽样单位升级为 W coarse cell：每个样本 cell 同时输出代表点、point reference 和 cell reference，用于区分“玩家 TP 点观察”和“128x128 cell 面域标签”之间的尺度差异。它只在 `runTagAudit=true` 或开发工具显式触发时输出，不属于普通玩家开局必跑流程。
 
 Tag Audit 的 reference tags 使用比 W 粗扫更密的局部扫描事实复判：
 
@@ -221,17 +233,25 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `gridX/gridZ` | int | W planning grid 坐标。 |
-| `blockX/blockZ` | int | 抽样点局部精扫中心 block 坐标，可直接用于人工传送复核。 |
+| `gridX/gridZ` | int | W planning grid 坐标，v1.6 起表示抽中的 W coarse cell。 |
+| `blockX/blockZ` | int | 推荐 TP 点 block 坐标，可直接用于人工传送复核。v1.6 起它不再必然是 cell 中心，而是按标签选择的代表点。 |
 | `cellMinBlockX/cellMinBlockZ` | int | 来源 W coarse cell 的最小 block 坐标，用于追溯 `WorldPatchMap.cells[]`。 |
 | `auditLayer` | string | 本点来自的抽样分层，例如 `confirmed_cliff`、`coarse_cliff_micro_rejected`、`water_edge`、`upland_macro`、`land_baseline`。 |
 | `tpCommand` | string | 开发期人工复核辅助命令，例如 `/tp @s <blockX> ~ <blockZ>`。 |
 | `baseLandform` | string | W 输出主地貌。 |
 | `coarseLandform` | string | GIS coarse landform 原值。 |
+| `cellReferenceBaseLandform` | string? | v1.6 | 对整个 W cell 或 cell 内规则网格精扫得到的面域 reference 主地貌。 |
+| `mixedCell` | boolean? | v1.6 | cell 内是否存在水陆混合、缓坡高差或多种 reference 并存。 |
+| `representativePointMismatch` | boolean? | v1.6 | 推荐 TP 点的 point reference 是否与 cell reference 不一致。 |
 | `wTags[]` | string[] | W 输出 tags。 |
-| `referenceTags[]` | string[] | 局部精扫重新判定的参考 tags。 |
+| `referenceTags[]` | string[] | 兼容字段，v1.6 起等价于 `pointReferenceTags[]`。 |
+| `pointReferenceTags[]` | string[]? | v1.6 | 推荐 TP 点周围局部精扫重新判定的参考 tags。 |
+| `cellReferenceTags[]` | string[]? | v1.6 | 对整个 W coarse cell 面域精扫汇总得到的参考 tags。 |
+| `representativePoints` | object? | v1.6 | `cellCenter`、`highestMicroPoint`、`lowestMicroPoint`、`maxSlopeMicroPoint`、`recommendedTpPoint`，每个点包含 block 坐标和 `/tp` 命令。 |
 | `cliffMatch/steepMatch/coastalMatch` | boolean | 关键 tag 是否和 reference 一致。 |
-| `auditMetrics` | object | 局部精扫指标。 |
+| `auditMetrics` | object | 兼容字段，v1.6 起等价于 `pointReferenceMetrics`。 |
+| `pointReferenceMetrics` | object? | v1.6 | 推荐 TP 点周围局部精扫指标。 |
+| `cellReferenceMetrics` | object? | v1.6 | 整个 W coarse cell 面域精扫指标。 |
 
 `auditMetrics` 至少包含：
 
@@ -258,10 +278,21 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | `centerSlopeRadiusBlocks` | int | 局部坡度半径。 |
 | `sampleLayerCounts` | object | 各抽样分层实际入样数量。 |
 | `tagMetrics` | object | 按 tag 统计 `precision`、`recall`、TP / FP / FN / TN。 |
+| `cellTagMetrics` | object? | v1.6 | 使用 `cellReferenceTags[]` 统计的 tag user / producer accuracy、precision、recall。 |
+| `baseLandformMetrics` | object? | v1.6 | 使用 `cellReferenceBaseLandform` 统计主地貌 user / producer accuracy。 |
 | `confusionMatrix` | object | 关键 tag 的混淆矩阵。 |
+| `cellConfusionMatrix` | object? | v1.6 | 使用 cell reference 的 tag 混淆矩阵。 |
 | `cliffFalsePositiveExamples[]` | array | 前若干个 cliff 误报样例坐标。 |
 | `cliffFalseNegativeExamples[]` | array | 前若干个 cliff 漏报样例坐标。 |
 | `microContradictionAcceptedRate` | number | 被 micro 拒绝的 coarse cliff 中，局部精扫仍判定 cliff 的比例。 |
+| `samplingUnit` | string? | v1.6 | 当前应为 `w_coarse_cell`。 |
+| `responseDesign` | string? | v1.6 | 当前应为 `cell_reference_and_representative_point`。 |
+| `referenceCellStrideBlocks` | int? | v1.6 | cell reference 精扫步长。 |
+| `referenceCellRadiusBlocks` | int? | v1.6 | cell reference 精扫半径，通常为 `cellStepBlocks/2`。 |
+| `mixedCellRate` | number? | v1.6 | 样本中 mixed cell 比例。 |
+| `representativePointMismatchRate` | number? | v1.6 | 推荐 TP 点 reference 与 cell reference 不一致的比例。 |
+| `rankDriftRate` | number? | v1.6 | 样本中 W 输出 `rank_drift` 的比例。 |
+| `overallAccuracy` / `areaAdjustedAccuracy` | number? | v1.6 | 主地貌整体准确率；首版实现中 area-adjusted 与 overall 使用同一抽样权重，后续可按分层面积修正。 |
 
 `patches[]`：
 
@@ -620,5 +651,9 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | 城市锚点必须在 owned territory | T4 v1.4 | `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的国度不能生成首都种子。 |
 | 高 step cliff 必须有局部证据 | W v1.5 | `cellStepBlocks>=64` 且 `microSamplingImplemented=true` 时，正式 `cliff` / `steep` tag 必须由 `slopeStats` / `steepFrac` 支撑；coarse cliff 不得直接进入正式 cliff tag。 |
 | Tag Audit 抽样精扫 | W v1.5 | 开发期 `runTagAudit=true` 应输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，报告中至少包含 `cliff/steep/coastal` 的 precision / recall。 |
+| 多尺度 rank 不替代真值 | W v1.6 | `relativeHeightRank` / `scanHeightRank` 只能作为辅助特征；`ridge`、`plateau`、`lowland` 判定必须至少可追溯到 local / regional rank、roughness、DEV 或 geomorphon evidence。 |
+| plateau 必须有面域抬升证据 | W v1.6 | `plateau` 不得只由局部平坦或高度 rank 推出；正式判定必须可追溯到 `plateauProminence`、`plateauCoreFlatSupport` 和 regional rank，小型平顶土坡应降级为 `lowland` / `upland`。 |
+| 面域 Tag Audit | W v1.6 | `runTagAudit=true` 时样本应以 W coarse cell 为抽样单位，输出 `representativePoints`、`pointReferenceTags`、`cellReferenceTags`、`cellReferenceBaseLandform`、`mixedCell` 和 `representativePointMismatch`。 |
+| 扫描边界水体不直接等价海岸 | W v1.6 | 仅因水体触达扫描边界且缺少 ocean / 大水体证据时，应输出 `boundary_truncated` / `open_water_unknown` 或降低 `waterBoundaryConfidence`，不得直接给高置信 `seacoast`。 |
 | 城市种子不得同格重叠 | T4 v1.2 | 除显式复合城市 / 卫星节点外，同格城市直接阻断。 |
 | 坏质量不能只靠 `passed=true` 放行 | 验收 v1.2 | `score_manifest.json` 的硬阻断优先于端到端链路状态。 |
