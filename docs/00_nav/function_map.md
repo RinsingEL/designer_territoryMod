@@ -60,6 +60,7 @@
 - 系统概述：`../systems/city/10_product/系统概述.md`
 - C1-C4 城市规划过程：`../systems/city/10_product/过程设计/C1-C4城市规划过程.md`
 - C5-C8 结构落地交接过程：`../systems/city/10_product/过程设计/C5-C8结构落地交接过程.md`
+- v0.1 City 城市构造最小闭环开发计划：`../systems/city/10_product/开发计划-v0.1-City城市构造最小闭环.md`
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
 - 代码导览：`../systems/city/30_code_guide/代码导览.md`

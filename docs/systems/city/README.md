@@ -9,10 +9,13 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 1. `10_product/系统概述.md`
 2. `10_product/过程设计/C1-C4城市规划过程.md`
 3. `10_product/过程设计/C5-C8结构落地交接过程.md`
-4. `20_contracts/数据契约/城市规划数据契约.md`
-5. `20_contracts/数据契约/结构落地交接契约.md`
-6. `30_code_guide/代码导览.md`
-7. `40_tests/测试入口.md`
+4. `10_product/案子/城市构造流程-v0.1/README.md`
+5. `10_product/案子/C5锚点与保留区-v0.1/README.md`
+6. `10_product/开发计划-v0.1-City城市构造最小闭环.md`
+7. `20_contracts/数据契约/城市规划数据契约.md`
+8. `20_contracts/数据契约/结构落地交接契约.md`
+9. `30_code_guide/代码导览.md`
+10. `40_tests/测试入口.md`
 
 ## 当前状态
 
@@ -33,7 +36,7 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 
 | 目录 | 内容 |
 | --- | --- |
-| `10_product/` | City 系统边界、C1-C4 城市规划过程、C5-C8 结构落地交接口径。 |
+| `10_product/` | City 系统边界、C1-C4 城市规划过程、C5-C8 结构落地交接口径，以及具体案子计划。 |
 | `20_contracts/` | 阶段间传递对象、核心字段、状态和版本口径。 |
 | `30_code_guide/` | 当前尚未实现；用于记录未来实现入口和 review 边界。 |
 | `40_tests/` | 未来自测、真实游玩验收和调试图验收入口。 |
