@@ -23,7 +23,7 @@ City 功能区层只告诉下游：“这个功能区是港口 / 住宅 / 防御
 
 1. 从 T4 的一个 `CitySeed` 锁定城市局部范围。
 2. 在城市范围内执行或请求 C1 局部 GIS，得到 `TerrainPatchMap` / `LandformPatch`。
-3. 从 GIS patch 中整理面积、邻接、`landformType`、GIS tags、metrics 和 evidence。
+3. 从 GIS patch 中整理面积、邻接、`landformType`、GIS tags、metrics 和成员 cell 薄索引。
 4. 把城市角色、国度风格、目标规模和 GIS 事实包交给 AI 设计功能区。
 5. AI 只能基于图上的 patch 名称 / 编号做分组，例如 `[海岸01, 近海01, 平原05]`。
 6. 程序把 AI 的 patch group 实体化成 City 自己的 `FunctionZonePatch`，并计算该功能区的面积、形状、高度范围、坡度、水体和岸线统计。
@@ -71,8 +71,8 @@ flowchart LR
 | --- | --- | --- | --- |
 | `hamlet` | 160-240 blocks | 8-16 blocks | 首版小规模目标，通常承载 3-5 个结构意图。 |
 | `village` | 256-384 blocks | 16 blocks | 首版推荐目标。 |
-| `town` | 512-640 blocks | 16-24 blocks | 等村镇闭环稳定后再做。 |
-| `city` | 768+ blocks | 24-32 blocks | 不作为 v0.1 首要验收。 |
+| `town` | 512-640 blocks | 16 blocks | 等村镇闭环稳定后再做；step 必须保持 GIS region 可整除。 |
+| `city` | 768+ blocks | 32 blocks | 不作为 v0.1 首要验收；step 必须保持 GIS region 可整除。 |
 
 范围必须裁剪到所属国度允许区域；如果城市靠近边境、水体或山体，允许保留少量上下文，但上下文不得进入 owned territory 之外的核心功能区。
 
@@ -101,12 +101,12 @@ City 需要从 GIS patch 中读取：
 
 ## C1.5：CityLandformReviewPackage
 
-本阶段不是把 GIS patch 压缩成纯文本摘要，而是生成给 AI / 人类 review 的“城市地理分块图包”。主输入是整座城市范围的地理分块预览图，结构化 JSON 只负责提供图例、patch 索引、证据引用和坐标换算。
+本阶段不是把 GIS patch 压缩成纯文本摘要，而是生成给 AI / 人类 review 的“城市地理分块图包”。主输入是整座城市范围的真实渲染地理分块预览图，结构化 JSON 只负责提供图例、patch 索引、成员 cell、metrics 和坐标换算。
 
 - 地貌事实来自 GIS `LandformPatch`。
 - AI 必须能看到整座城市范围内各 GIS patch 的相对位置、邻接关系、尺度、水体 / 高地 / 平缓区分布和 T4 城市锚点。
 - City 只添加 `planningContext[]`，例如 `near_realm_border`、`near_city_anchor`、`near_water_crossing`。
-- AI 可以根据地理分块预览图设计功能区，但必须引用具体 `landformPatchRefs[]` 和 evidence。
+- AI 可以根据地理分块预览图设计功能区，但只需要引用具体 `mapLabel` / `landformPatchRefs[]` 并说明规划理由。
 - 最终结构是否可落地交给结构自己的规则。
 
 ### 1. 预览图要求
@@ -133,14 +133,14 @@ C1.5 的主产物是 `landform_review_map.png`，不是单纯 JSON 摘要。
 | 规则 | 说明 |
 | --- | --- |
 | 不复制地貌体系 | City 不重新定义 `terrainTags[]`，不维护第二套地貌 tag。 |
-| 引用 GIS 真值 | 功能区草案必须引用 `LandformPatch.patchId`、`landformType`、GIS tag 或 metrics。 |
+| 引用 GIS 真值 | 功能区草案必须引用图上 `mapLabel` 或 `LandformPatch.patchId`，程序再回查 D3 索引中的地貌事实。 |
 | 低置信降级 | `confidence` 低或带 `edgeDirty` / `fragment` 的 patch 可进入 debug，但不能作为功能区主依据。 |
 | 语义分层 | GIS 地貌事实、City 规划上下文、AI 功能区意图必须分字段存储。 |
-| 不写功能暗示表 | 不把“plain 适合住宅、ridge 适合塔”写成规则表；AI 可看图推理，但要引用 GIS 证据。 |
+| 不写功能暗示表 | 不把“plain 适合住宅、ridge 适合塔”写成规则表；AI 可看图推理，但不需要回填 GIS tag / metric evidence。 |
 
 ### 2. Patch 索引
 
-JSON 只做预览图的索引和证据表，不能替代预览图：
+JSON 只做预览图的薄索引，不能替代预览图：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -148,6 +148,9 @@ JSON 只做预览图的索引和证据表，不能替代预览图：
 | `mapLabel` | 预览图上显示的“地貌名 + 序号”，例如 `平原01`。 |
 | `displayLandformName` | 给 AI / 人类看的地貌名，例如 `平原`、`海岸`、`坡地`、`山脊`。 |
 | `centerBlock` | patch 中心。 |
+| `blockBounds` | patch block 包围盒，用于回查和缺少成员格子时降级。 |
+| `geometryMode` | 正常为 `patch_member_cells`，缺少成员格子时降级为 `patch_envelope`。 |
+| `memberCells[]` | patch 的真实成员 cell 薄索引，供 D4 合并功能区 mask。 |
 | `areaBlocks` / `cellCount` | 面积估算。 |
 | `landformType` | GIS 主地貌类型。 |
 | `landformTags[]` / `overlayTags[]` | GIS 地貌标签。 |
@@ -157,7 +160,7 @@ JSON 只做预览图的索引和证据表，不能替代预览图：
 | `areaClass` | `tiny`、`small`、`medium`、`large`，只表示 GIS patch 面积级别，不表示能建什么。 |
 | `summaryFacts[]` | 机器生成的事实摘要，只能复述 metrics / tag / adjacency，不写功能建议。 |
 
-不给 AI 传“常见功能暗示表”。AI 需要根据地图、城市角色和 GIS patch 事实自行提出功能区，并在 `landformEvidenceRefs[]` 中引用依据。
+不给 AI 传“常见功能暗示表”。AI 需要根据地图、城市角色和 GIS patch 事实自行提出功能区，输出引用的 patch 编号和分组理由即可。
 
 ## C2：AI PatchGroupPlan
 
@@ -181,8 +184,7 @@ AI 输出必须满足：
 | `landformPatchRefs[]` | 使用哪些 GIS `LandformPatch` 作为依据；可由 `patchLabels[]` 映射得到。 |
 | `mainBuildingRole` | 主要建筑角色，例如 `village_hall`、`dock_core`、`mage_tower`。 |
 | `supportingBuildingRoles[]` | 辅助建筑角色。 |
-| `landformEvidenceRefs[]` | 引用的 `landformPatchId` + landformType / GIS tag / metric / planningContext。 |
-| `groupReason` | 为什么这些 patch 要合成一组；必须能回溯到 `landformEvidenceRefs[]`。 |
+| `groupReason` | 为什么这些 patch 要合成一组；应能从预览图和 D3 索引回查。 |
 | `adjacencyIntent` | 希望靠近 / 远离哪些功能区。 |
 | `splitRequested` | 是否请求拆分某个 GIS patch；默认 false。 |
 
@@ -194,12 +196,12 @@ C3 将 AI 的 `PatchGroupPlan` 转成程序可校验的 City `FunctionZonePatch[
 
 1. 将 `patchLabels[]` 映射回 GIS `landformPatchId`，检查引用存在。
 2. 检查 group 中 patch 是否相邻或有明确 `groupReason` 支撑；无理由的远距离拼接进入 review。
-3. 检查 `landformEvidenceRefs[]` 引用存在，且 AI 没有发明不存在的 GIS tag。
-4. 检查功能类型和主要建筑角色是否在配置表内。
-5. 检查功能区规模是否大致匹配 `areaClass` 和城市目标规模。
-6. 对同类功能允许多实例，例如 `北居住区`、`南居住区`、`水岸市场`。
-7. 只做明显错误阻断，例如引用不存在的 patch、功能区完全不在城市范围内。
-8. 不因坡度、水体、悬崖等直接否掉结构池选择；这些交给结构池内结构的 placement rule。
+3. 检查功能类型和主要建筑角色是否在配置表内。
+4. 检查功能区规模是否大致匹配 `areaClass` 和城市目标规模。
+5. 对同类功能允许多实例，例如 `北居住区`、`南居住区`、`水岸市场`。
+6. 只做明显错误阻断，例如引用不存在的 patch、功能区完全不在城市范围内。
+7. 不因坡度、水体、悬崖等直接否掉结构池选择；这些交给结构池内结构的 placement rule。
+8. 合并引用 patch 的 `memberCells` 生成 `FunctionZonePatch.cellShape`；缺少成员格子时才显式降级到 envelope。
 9. 计算 `FunctionZoneTerrainStats`，供 C4 道路 / 边界和 C4.5 结构池预选使用。
 
 `FunctionZonePatch` 首版字段：
@@ -211,10 +213,9 @@ C3 将 AI 的 `PatchGroupPlan` 转成程序可校验的 City `FunctionZonePatch[
 | `zoneName` | 功能区名称。 |
 | `functionType` | 功能类型。 |
 | `landformPatchRefs[]` | 该功能区引用的 GIS patch。 |
-| `cellShape` / `memberCells` | 功能区真实形状，可由引用 patch 裁剪 / 合并 / 拆分得到。 |
+| `cellShape` / `memberCells` | 功能区真实形状，由引用 patch 的成员 cell 合并得到；缺少成员格子时降级为 envelope。 |
 | `areaBlocks` | 功能区面积。 |
 | `mainBuildingRole` | 主要建筑角色。 |
-| `landformEvidenceRefs[]` | GIS 证据引用。 |
 | `terrainStatsRef` | 该功能区的地形统计引用。 |
 | `groupReason` | AI 对 patch 组合的理由。 |
 | `generationNotes` | AI / 程序对功能区的简短说明。 |
@@ -270,7 +271,7 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 | `zoneId` | 所属功能区。 |
 | `mainBuildingRole` | 主要建筑角色，例如 `dock_core`、`mage_tower`、`village_hall`。 |
 | `structurePoolCandidates[]` | 推荐结构池 ID。 |
-| `landformEvidenceRefs[]` | 该功能区引用的 GIS patch / tag / metric / planning context。 |
+| `landformPatchRefs[]` | 该功能区引用的 GIS patch；详细地貌事实从 D3 索引和 `terrainStatsRef` 回查。 |
 | `terrainStatsRef` | 功能区地形统计引用。 |
 | `orientationHints` | 朝路、朝水、沿坡、朝广场，仅为提示。 |
 | `densityIntent` | 稀疏、普通、密集。 |
@@ -372,11 +373,11 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 
 | 场景 | 期望 |
 | --- | --- |
-| 平坦内陆 | GIS patch 应包含 plain / terrace 等低坡地貌事实；AI 若选择居住、市场、农牧或公共核心，必须引用 GIS patch evidence。 |
-| 河岸村镇 | GIS patch 应区分 shore / water / plain 等地貌；AI 若设计水岸市场或码头区，必须引用岸线相关 GIS evidence。 |
-| 山麓矿城 | AI 若设计矿业 / 仓储功能区，必须引用 GIS slope / cliff / ridge / exposed metrics 或相关 patch evidence。 |
-| 边境高地 | AI 若设计防御或塔类功能区，必须引用 GIS ridge / terrace / cliff 等地貌 evidence 和 City `near_realm_border` planning context。 |
-| 林地村落 | AI 若设计林业、猎人或隐居建筑组，必须引用 GIS patch 的森林 / biome / resource evidence。 |
+| 平坦内陆 | GIS patch 应包含 plain / terrace 等低坡地貌事实；AI 若选择居住、市场、农牧或公共核心，应引用图上的相关 patch。 |
+| 河岸村镇 | GIS patch 应区分 shore / water / plain 等地貌；AI 若设计水岸市场或码头区，应引用图上的岸线相关 patch。 |
+| 山麓矿城 | AI 若设计矿业 / 仓储功能区，应引用图上的 slope / cliff / ridge / exposed 相关 patch。 |
+| 边境高地 | AI 若设计防御或塔类功能区，应引用图上的 ridge / terrace / cliff 相关 patch 和 City `near_realm_border` planning context。 |
+| 林地村落 | AI 若设计林业、猎人或隐居建筑组，应引用图上的森林 / 资源相关 patch。 |
 
 ### 真实存档
 
@@ -395,5 +396,5 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 - 水岸、坡地、悬崖、高地等地貌事实以 GIS `LandformPatch` 为准；City 不维护第二套同义 tag。
 - 高坡、悬崖、高地不应被 City 层提前否掉；它们可能正是塔、神庙、防御和矿业结构需要的特色。
 - GIS `LandformPatch` 不是 City `FunctionZonePatch`。一个地貌 patch 可被拆成多个功能区，一个功能区也可引用多个地貌 patch。
-- 功能区不是建筑池。C3 功能区给语义、GIS 证据引用和地形统计；C4 生成道路 / 边界意图；C4.5 才给候选 pool；具体结构给 placement rule。
+- 功能区不是建筑池。C3 功能区给语义、GIS patch 引用、成员格子形状和地形统计；C4 生成道路 / 边界意图；C4.5 才给候选 pool；具体结构给 placement rule。
 - 首版可以让 AI 设计功能区草案，但程序要校验 GIS patch 引用和功能类型；结构池 ID 校验放在 C4。

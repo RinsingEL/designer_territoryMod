@@ -8,7 +8,7 @@
 
 ## 定位
 
-`CityLandformReviewPackage` 是 City 系统 D3 (C1.5) 的主输出。消费 GIS 局部 `LandformPatch` 数据，生成带编号标签的 patch 摘要、图例、AI 上下文和规划上下文，供后续 C2 AI 功能区草案使用。
+`CityLandformReviewPackage` 是 City 系统 D3 (C1.5) 的主输出。消费 GIS 局部 `LandformPatch` 与成员 cell 数据，生成带编号标签的真实预览图、patch 薄索引、AI 上下文和规划上下文，供后续 C2 AI / Codex 看图生成 `PatchGroupPlan`。
 
 ## 字段
 
@@ -37,6 +37,9 @@
 | `cellCount` | int | 是 | 包含 cell 数量 |
 | `areaClass` | string | 是 | tiny/small/medium/large |
 | `centerBlock` | object | 是 | `{ x, z }` patch 中心坐标 |
+| `blockBounds` | object | 是 | patch block 包围盒，用于回查与缺少成员格子时的降级预览 |
+| `geometryMode` | string | 是 | 正常为 `patch_member_cells`；只有缺少成员格子时降级为 `patch_envelope` |
+| `memberCells` | array | 是 | GIS patch 真实成员 cell 薄索引，元素含 `{ cellX, cellZ, blockMinX, blockMinZ }` |
 | `metricsSummary` | object | 是 | 高度/坡度/水距摘要 |
 | `landformTags` | array | 否 | GIS 地貌标签（flat/gentle/steep/waterfront/low_confidence） |
 | `overlayTags` | array | 否 | GIS 叠加标签（near_water/edge_dirty/fragment） |
@@ -59,6 +62,7 @@
 - 全局编号从 01 开始
 - 低置信度（confidence < 0.5）会在 facts 中标记
 - 碎片 patch（FRAGMENT flag）会在 facts 中标记
+- C1.5 的主输入是 `landform_review_map.png`；JSON 是图上 `mapLabel` 到 GIS patch / 成员 cell / metrics 的索引，不替代看图
 - C1.5 只复述 GIS metrics/tag/adjacency 事实，不输出“适合建设”“建议建设区域”等 C2 功能区决策文案
 
 ## 面积分级
@@ -81,9 +85,11 @@
 `POST /realm/city/plan_d3` / `city_plan_d3` 必须写出：
 
 - `run/realm_debug/<runId>/city_d3_<citySeedId>/landform_review_map.png`
+- `run/realm_debug/<runId>/city_d3_<citySeedId>/city_landform_review_package.json`
 
 返回体中：
 
 - `reviewMapImage` 指向该 PNG。
 - `debugRefs` 至少包含该 PNG 与 D3 输出目录。
 - `landformPatches[].mapLabel` 必须能在 PNG 中对应显示。
+- `landformPatches[].memberCells` 必须能回查预览图中的 patch 形状；缺失时只能显式降级到 envelope。

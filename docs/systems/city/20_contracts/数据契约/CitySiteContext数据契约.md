@@ -54,8 +54,8 @@
 |---|---|---|---|
 | hamlet | 160-240 blocks | 8-16 | 小聚落 |
 | village | 256-384 blocks | 16 | 村镇 |
-| town | 512-640 blocks | 16-24 | 城镇 |
-| city | 768+ blocks | 24-32 | 城市 |
+| town | 512-640 blocks | 16 | 城镇；保持 GIS region 可整除 |
+| city | 768+ blocks | 32 | 城市；保持 GIS region 可整除 |
 
 T4 兼容映射：`capital`/`large_city` → city，`town` → town。
 

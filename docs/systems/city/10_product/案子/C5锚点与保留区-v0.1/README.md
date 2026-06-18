@@ -172,7 +172,7 @@ Anchor 必须有优先级和失败策略：
 | `required` | 是否必需。 |
 | `failurePolicy` | 失败策略。 |
 | `orientationIntent` | 朝路、朝水、朝广场等意图。 |
-| `landformEvidenceRefs[]` | GIS 证据引用。 |
+| `landformPatchRefs[]` | 所属功能区引用的 GIS patch；地形依据从 `terrainStatsRef` 和 D3 索引回查。 |
 
 ### ReservedAreaMap
 
