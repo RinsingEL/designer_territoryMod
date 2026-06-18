@@ -27,7 +27,7 @@ City 功能区层只告诉下游：“这个功能区是港口 / 住宅 / 防御
 4. 把城市角色、国度风格、目标规模和 GIS 事实包交给 AI 设计功能区。
 5. AI 只能基于图上的 patch 名称 / 编号做分组，例如 `[海岸01, 近海01, 平原05]`。
 6. 程序把 AI 的 patch group 实体化成 City 自己的 `FunctionZonePatch`，并计算该功能区的面积、形状、高度范围、坡度、水体和岸线统计。
-7. 生成粗道路、边界和连接意图。
+7. 生成道路、边界和缓冲区连接意图，并转换成可真实执行的世界编辑操作。
 8. 独立的结构池预选步骤读取 `FunctionZonePatch` 统计、功能需求和结构 catalog，输出 `StructurePoolIntent` 候选。
 9. 具体结构落地限制由结构池 / 结构条目的 placement rule 配置。
 
@@ -51,7 +51,7 @@ flowchart LR
 | C1.5 | 导出整座城市的地理分块预览图，并附带 patch 图例、索引和证据表。 | `CityLandformReviewPackage` |
 | C2 | AI 根据图上 patch 编号把地貌 patch 分组，并给 group 配功能。 | `PatchGroupPlan` |
 | C3 | 程序把 group 实体化为功能区 patch，并计算功能区地形统计。 | `FunctionZonePatch[]`、`FunctionZoneMap`、`FunctionZoneTerrainStats` |
-| C4 | 生成粗道路、边界和连接意图。 | `RoadIntent`、`BoundaryIntent` |
+| C4 | 生成道路、边界和缓冲区连接意图，并通过 WorldEdit 执行后端完成真实落地验收。 | `RoadIntent`、`BoundaryIntent`、`BuildOperationPlan`、`WorldMutationReport` |
 | C4.5 | 根据功能区统计和结构 catalog 预选结构池。 | `StructurePoolIntent` |
 
 ## C0：城市局部范围
@@ -236,19 +236,45 @@ C3 将 AI 的 `PatchGroupPlan` 转成程序可校验的 City `FunctionZonePatch[
 | `gisFlags[]` | fragment、edgeDirty、lowConfidence 等质量信号。 |
 | `estimatedCapacity` | 按面积和形状估算的结构数量区间，不代表最终放置结果。 |
 
-## C4：道路与边界意图
+## C4：道路、边界与缓冲区真实落地
 
-C4 根据 `FunctionZonePatch`、邻接关系、城市入口、核心功能区和地貌事实，输出粗道路和边界意图。它仍属于 City C1-C4 城市规划过程，不放置真实道路方块，也不生成结构。
+C4 根据 `FunctionZonePatch`、邻接关系、城市入口、核心功能区和地貌事实，输出道路、边界和缓冲区意图，并把这些意图转换成可执行的世界编辑操作。D5 验收要求真实修改世界：可以清理植被、铺设道路 / 绿化缓冲带 / 边界带、替换地表材质，必要时粘贴门楼、桥头、码头等小型模板。
+
+C4 仍属于 City C1-C4 城市规划过程，不负责结构池选择，也不决定最终建筑坐标；但它需要为 C5 anchor、C6 约束场和后续结构落地提供已经在世界中可见、可回查的道路 / 边界 / 缓冲区基础。
 
 首版只要求：
 
 | 产物 | 说明 |
 | --- | --- |
 | `RoadIntent` | 入口到核心功能区的主连接、功能区之间的粗连接、道路等级和宽度意图。 |
-| `BoundaryIntent` | 功能区之间的边界处理意图，例如道路、水岸、软过渡、栅栏、墙、绿化。 |
+| `BoundaryIntent` | 功能区之间的边界处理意图，例如道路、水岸、软过渡、缓冲区、栅栏、墙、绿化。 |
 | `accessPoints[]` | 给 C5 anchor 和后续结构落地使用的接入点候选。 |
+| `BuildOperationPlan` | 从道路 / 边界意图翻译出的世界编辑操作计划，例如 `fill`、`replace`、`clearVegetation`、`pasteTemplate`、`carveBuffer`、`smoothEdge`。 |
+| `WorldMutationReport` | 真实执行报告，记录后端、变更范围、改动数量、失败原因、回滚引用和预览图。 |
 
-C4 不负责结构池选择，也不决定具体道路模板。
+### WorldEdit 执行后端
+
+D5 首版认真依赖 WorldEdit 作为真实落地执行后端，避免在项目内重造大面积填充、替换、mask、clipboard、schematic paste、undo/session 等世界编辑轮子。
+
+解耦边界：
+
+- City 规划层只产出 `RoadIntent` / `BoundaryIntent`，不直接调用 WorldEdit API。
+- `BuildOperationPlan` 只描述要做什么，不绑定 WorldEdit 的 selection / clipboard / mask 类型。
+- `WorldMutationBackend` 是执行接口，`WorldEditMutationBackend` 是首选实现。
+- 允许保留很薄的 vanilla debug backend，但它只用于小范围测试或无 WorldEdit 环境下的降级，不承担 D5 真实验收。
+- WorldEdit 依赖可以是运行时硬前置；所有直接 API 调用集中在 `WorldEditMutationBackend`，便于版本迁移。
+
+首版操作类型：
+
+| 操作 | 用途 |
+| --- | --- |
+| `clearVegetation` | 清除道路、边界带和缓冲区中的树叶、藤蔓、草、花、竹子等软障碍。 |
+| `fill` / `replace` | 铺设道路面、墙基、台阶基底、绿化缓冲带或岸线修边。 |
+| `carveBuffer` | 在两个功能区之间生成软过渡区，不一定是道路。 |
+| `pasteTemplate` | 粘贴小型门楼、桥头、码头、路标或边界节点模板。 |
+| `smoothEdge` | 对道路 / 缓冲区边缘做低成本地表修整，避免硬切。 |
+
+C4 不负责结构池选择；`pasteTemplate` 只用于道路 / 边界节点的基础设施模板，不等同于住宅、市场、神庙等功能建筑落地。
 
 ## C4.5：结构池预选与结构自判定
 
@@ -364,7 +390,7 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 | Step 3 | 调用 GIS C1 局部精扫并读取 `TerrainPatchMap` / `LandformPatch` 预览。 | 真实存档能导出局部地貌图。 |
 | Step 4 | 实现 C1.5 城市地理分块预览图、图例、GIS patch 索引和 AI 输入包。 | synthetic + 真实存档可解释。 |
 | Step 5 | 实现 AI `PatchGroupPlan` 与 C3 `FunctionZonePatch` / `FunctionZoneTerrainStats`。 | 小村镇可生成 2-4 个功能区 patch，并输出面积 / 高度 / 水深 / 坡度统计。 |
-| Step 6 | 实现 C4 `RoadIntent` / `BoundaryIntent`。 | 入口到核心区连通，功能区边界有处理意图。 |
+| Step 6 | 实现 C4 `RoadIntent` / `BoundaryIntent`、`BuildOperationPlan` 和 WorldEdit 执行后端。 | 入口到核心区连通，功能区边界 / 缓冲区有处理意图，并能在真实存档中落地。 |
 | Step 7 | 实现 C4.5 `StructurePoolIntent`。 | 每个功能区有主要建筑角色、候选 pool、拒绝 pool 和匹配理由。 |
 
 ## 验收设计
@@ -388,7 +414,7 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 3. 人工抽样 5-10 个 GIS patch，tp 过去验证 GIS patch / metrics / tags 是否靠谱。
 4. 让 AI 根据上下文生成 2-4 个功能区草案。
 5. 规范化为 `FunctionZonePatch[]` 并输出 `FunctionZoneTerrainStats`，检查功能区是否能解释地貌依据。
-6. 运行 C4 道路 / 边界意图，检查入口到核心区是否连通，边界意图是否可解释。
+6. 运行 C4 道路 / 边界 / 缓冲区意图，生成 `BuildOperationPlan`，通过 WorldEdit 后端真实清理植被、铺设道路或边界带，并检查入口到核心区是否连通、世界中是否可见。
 7. 运行 C4.5 结构池预选，检查候选 / 拒绝 pool 是否能由功能区统计和 placement rules 解释。
 
 ## 风险与约束
@@ -396,5 +422,6 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 - 水岸、坡地、悬崖、高地等地貌事实以 GIS `LandformPatch` 为准；City 不维护第二套同义 tag。
 - 高坡、悬崖、高地不应被 City 层提前否掉；它们可能正是塔、神庙、防御和矿业结构需要的特色。
 - GIS `LandformPatch` 不是 City `FunctionZonePatch`。一个地貌 patch 可被拆成多个功能区，一个功能区也可引用多个地貌 patch。
-- 功能区不是建筑池。C3 功能区给语义、GIS patch 引用、成员格子形状和地形统计；C4 生成道路 / 边界意图；C4.5 才给候选 pool；具体结构给 placement rule。
+- 功能区不是建筑池。C3 功能区给语义、GIS patch 引用、成员格子形状和地形统计；C4 生成并落地道路 / 边界 / 缓冲区基础；C4.5 才给候选 pool；具体结构给 placement rule。
+- D5 真实落地优先走 WorldEdit 后端，避免重造大面积世界编辑能力；City 规划层不得直接调用 WorldEdit API。
 - 首版可以让 AI 设计功能区草案，但程序要校验 GIS patch 引用和功能类型；结构池 ID 校验放在 C4。
