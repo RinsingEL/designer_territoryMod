@@ -61,10 +61,14 @@
 - C1-C4 城市规划过程：`../systems/city/10_product/过程设计/C1-C4城市规划过程.md`
 - C5-C8 结构落地交接过程：`../systems/city/10_product/过程设计/C5-C8结构落地交接过程.md`
 - v0.1 City 城市构造最小闭环开发计划：`../systems/city/10_product/开发计划-v0.1-City城市构造最小闭环.md`
+- D6 结构选择与固定落点规划案：`../systems/city/10_product/案子/D6结构池规划-v0.1/README.md`
+- D7 条件包装结构生成案：`../systems/city/10_product/案子/D7条件包装结构生成-v0.1/README.md`
+- D7 剩余结构起点候选案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
 - 代码导览：`../systems/city/30_code_guide/代码导览.md`
 - 测试入口：`../systems/city/40_tests/测试入口.md`
+- D6-D7 临时真实结构测试配置：`../systems/city/40_tests/D6-D7临时真实结构测试配置.md`
 
 ## 待重建系统
 

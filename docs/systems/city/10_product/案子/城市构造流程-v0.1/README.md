@@ -2,13 +2,13 @@
 
 ## 定位
 
-本案子承接 T4 `CitySeedRegistry` 之后的 City 首版实现。目标不是一次性生成完整大城，而是先把“城市周边局部精扫 -> 读取 GIS `LandformPatch` -> 给每个 patch 标注地貌名 + 编号 -> AI 按 patch 分组并配置功能 -> 生成 City `FunctionZonePatch` 并计算地形统计 -> 生成道路 / 边界意图 -> 预选结构池”的链路做成可验证、可 review 的最小闭环。
+本案子承接 T4 `CitySeedRegistry` 之后的 City 首版实现。目标不是一次性生成完整大城，而是先把“城市周边局部精扫 -> 读取 GIS `LandformPatch` -> 给每个 patch 标注地貌名 + 编号 -> AI 按 patch 分组并配置功能 -> 生成 City `FunctionZonePatch` 并计算地形统计 -> 生成道路 / 边界意图 -> D6 结构选择与固定落点规划”的链路做成可验证、可 review 的最小闭环。
 
 本案子属于 City 系统 C1-C4 主责，并向 C5 结构落地交接提供输入。它不重新决定国度边界，不扫描完整世界，不直接放置 jigsaw / prefab，也不替具体结构判断最终能否落地。
 
 ## 关键取舍
 
-City v0.1 不重新定义地貌 tag，也不做重型“可建性”筛选。地貌事实来自 GIS `TerrainPatchMap` / `LandformPatch`；City 新生成的是 `FunctionZonePatch` / `FunctionZoneMap`。结构池预选单独成步，因为它需要读取功能区面积、尺寸估计、高度范围、水深、坡度、岸线等统计，并与结构 catalog 的 placement rules 对齐。最终能不能把某个结构放在某个具体位置，由结构池或结构条目自己的 placement rule 判断。
+City v0.1 不重新定义地貌 tag，也不做重型“可建性”筛选。地貌事实来自 GIS `TerrainPatchMap` / `LandformPatch`；City 新生成的是 `FunctionZonePatch` / `FunctionZoneMap`。D6 单独成步：程序先按结构画像和可建区过滤候选，AI / Codex 选择固定大小结构与非固定结构；固定大小结构由程序给出预选落点，AI 只选择 `landingCandidateId`；非固定结构才配置剩余可见面积占比。最终能不能把结构真实放进世界，由 D7 的 Overworld 结构生成接管和结构自身 placement 逻辑判断。
 
 例如：
 
@@ -17,7 +17,7 @@ City v0.1 不重新定义地貌 tag，也不做重型“可建性”筛选。地
 - 普通住宅可以自己声明最大坡度、最小 footprint、是否允许地基修整。
 - 矿井入口可以自己声明需要靠近岩体、山麓或地下入口。
 
-City 功能区层只告诉下游：“这个功能区是港口 / 住宅 / 防御 / 矿业，它引用了哪些 GIS 地貌 patch 作为证据，并提供哪些面积和地形统计”。结构池预选层再根据这些统计和结构 catalog 选 pool 候选，供后续 C5 AnchorPlan 和结构落地交接使用。City 不提前把大量位置过滤掉。
+City 功能区层只告诉下游：“这个功能区是港口 / 住宅 / 防御 / 矿业，它引用了哪些 GIS 地貌 patch 作为证据，并提供哪些面积和地形统计”。D6 再锁定固定大小结构的预选落点，并给非固定结构配置剩余面积预算，供 D7 在 chunk 生成阶段选择性触发原版结构生成。City 不做 AI 逐步 jigsaw 解算。
 
 ## 核心目标
 
@@ -28,8 +28,8 @@ City 功能区层只告诉下游：“这个功能区是港口 / 住宅 / 防御
 5. AI 只能基于图上的 patch 名称 / 编号做分组，例如 `[海岸01, 近海01, 平原05]`。
 6. 程序把 AI 的 patch group 实体化成 City 自己的 `FunctionZonePatch`，并计算该功能区的面积、形状、高度范围、坡度、水体和岸线统计。
 7. 生成道路、边界和缓冲区连接意图，并转换成可真实执行的世界编辑操作。
-8. 独立的结构池预选步骤读取 `FunctionZonePatch` 统计、功能需求和结构 catalog，输出 `StructurePoolIntent` 候选。
-9. 具体结构落地限制由结构池 / 结构条目的 placement rule 配置。
+8. 独立的 D6 结构选择与固定落点规划步骤读取 `FunctionZoneMap`、D3/D5 参考图、`BuildableAreaMap` 和结构画像，输出 `PlannedFixedPlacementMap` 与 `StructurePoolMap`。
+9. 具体结构落地限制由 D7 结构生成接管和结构自身 placement 逻辑处理。
 
 ## 阶段拆分
 
@@ -41,7 +41,7 @@ flowchart LR
   D --> E["C2 AI PatchGroupPlan"]
   E --> F["C3 FunctionZonePatch + TerrainStats"]
   F --> G["C4 Road / Boundary Intent"]
-  F --> H["C4.5 StructurePoolIntent"]
+  F --> H["D6 PlannedFixedPlacementMap + StructurePoolMap"]
 ```
 
 | 阶段 | 目标 | 首版输出 |
@@ -52,7 +52,7 @@ flowchart LR
 | C2 | AI 根据图上 patch 编号把地貌 patch 分组，并给 group 配功能。 | `PatchGroupPlan` |
 | C3 | 程序把 group 实体化为功能区 patch，并计算功能区地形统计。 | `FunctionZonePatch[]`、`FunctionZoneMap`、`FunctionZoneTerrainStats` |
 | C4 | 生成道路、边界和缓冲区连接意图，并通过 WorldEdit 执行后端完成真实落地验收。 | `RoadIntent`、`BoundaryIntent`、`BuildOperationPlan`、`WorldMutationReport` |
-| C4.5 | 根据功能区统计和结构 catalog 预选结构池。 | `StructurePoolIntent` |
+| D6 | 根据功能区语义、D3/D5 参考、可建区和结构画像选择结构，并为固定大小结构选择预选落点。 | `PlannedFixedPlacementMap` / `StructurePoolMap` |
 
 ## C0：城市局部范围
 
@@ -188,7 +188,7 @@ AI 输出必须满足：
 | `adjacencyIntent` | 希望靠近 / 远离哪些功能区。 |
 | `splitRequested` | 是否请求拆分某个 GIS patch；默认 false。 |
 
-AI 不输出具体结构坐标，不输出 jigsaw 深度，不输出逐块可放置结论，也不在 C2 直接选择结构池。结构池选择进入 C4。
+AI 不输出具体结构坐标，不输出 jigsaw 深度，不输出逐块可放置结论，也不在 C2 直接选择结构池。结构选择与固定落点选择进入 D6。
 
 ## C3：功能区实体化与地形统计
 
@@ -200,9 +200,9 @@ C3 将 AI 的 `PatchGroupPlan` 转成程序可校验的 City `FunctionZonePatch[
 4. 检查功能区规模是否大致匹配 `areaClass` 和城市目标规模。
 5. 对同类功能允许多实例，例如 `北居住区`、`南居住区`、`水岸市场`。
 6. 只做明显错误阻断，例如引用不存在的 patch、功能区完全不在城市范围内。
-7. 不因坡度、水体、悬崖等直接否掉结构池选择；这些交给结构池内结构的 placement rule。
+7. 不因坡度、水体、悬崖等直接否掉结构池选择；这些交给 D7 和结构自身 placement 逻辑。
 8. 合并引用 patch 的 `memberCells` 生成 `FunctionZonePatch.cellShape`；缺少成员格子时才显式降级到 envelope。
-9. 计算 `FunctionZoneTerrainStats`，供 C4 道路 / 边界和 C4.5 结构池预选使用。
+9. 计算 `FunctionZoneTerrainStats`，供 C4 道路 / 边界和 D6 结构选择与固定落点规划参考。
 
 `FunctionZonePatch` 首版字段：
 
@@ -276,42 +276,27 @@ D5 首版认真依赖 WorldEdit 作为真实落地执行后端，避免在项目
 
 C4 不负责结构池选择；`pasteTemplate` 只用于道路 / 边界节点的基础设施模板，不等同于住宅、市场、神庙等功能建筑落地。
 
-## C4.5：结构池预选与结构自判定
+## D6：结构选择与固定落点规划
 
-C4.5 根据 `FunctionZonePatch`、`FunctionZoneTerrainStats`、城市角色、国度风格和结构 catalog 输出 `StructurePoolIntent`。这是一个独立预选步骤，不混在 C2 AI patch group 中，也不替代 C5 AnchorPlan。
+D6 根据 `FunctionZoneMap`、`FunctionZoneTerrainStats`、D3 地貌图包、D5 道路 / 边界参考、`BuildableAreaMap` 和 `StructureProfileCatalog` 输出 `PlannedFixedPlacementMap` / `StructurePoolMap`。它是一个独立结构选择与固定落点规划步骤，不混在 C2 AI patch group 中，也不触发结构落地。
 
-结构 pool 配置可能依赖具体参数，例如：
+D6 不直接放建筑，也不解 jigsaw。它只做三件事：
 
-- 灯塔只能在指定高度区间的水域 / 岸线附近。
-- 船只需要水深范围和水面面积。
-- 小屋需要 footprint 范围、坡度上限和地基修整策略。
-- 法师塔偏好 `ridge` / `cliff` / `terrace`，但仍由结构自身规则决定具体落点。
-
-C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只输出结构池预选意图：
-
-每个功能区输出 `structurePoolIntent`：
+1. 程序过滤掉大小肯定超出功能区的固定大小结构。
+2. AI 选择想用的固定大小结构和非固定结构；固定结构不填占比，非固定结构才填目标可见面积占比。
+3. 程序为已选固定结构生成预选落点，AI 只选择 `landingCandidateId`，程序再做全局冲突校验。
 
 | 字段 | 说明 |
 | --- | --- |
+| `zonePatchId` | 所属功能区。 |
 | `functionType` | 功能类型，例如 `residential`。 |
-| `zoneId` | 所属功能区。 |
-| `mainBuildingRole` | 主要建筑角色，例如 `dock_core`、`mage_tower`、`village_hall`。 |
-| `structurePoolCandidates[]` | 推荐结构池 ID。 |
-| `landformPatchRefs[]` | 该功能区引用的 GIS patch；详细地貌事实从 D3 索引和 `terrainStatsRef` 回查。 |
-| `terrainStatsRef` | 功能区地形统计引用。 |
-| `orientationHints` | 朝路、朝水、沿坡、朝广场，仅为提示。 |
-| `densityIntent` | 稀疏、普通、密集。 |
-| `budgetInputs` | zone 面积、城市规模、期望建筑数量。 |
+| `fixedSelections[]` | 已选固定大小结构；不含占比和最终坐标。 |
+| `variableSelections[]` | 已选非固定结构；包含 `targetVisibleAreaRatio`。 |
+| `landingCandidateId` | AI 从程序生成的固定落点候选中选择的 ID。 |
+| `fallbackTags[]` | D7 失败时可用的宽松 fallback 标签。 |
+| `zoneReason` | AI 配池理由。 |
 
-具体结构条目自行配置 `placementRules`：
-
-| 结构例子 | 自身规则例子 |
-| --- | --- |
-| `boat` | 必须在水上，附近允许码头连接点。 |
-| `dock` | 必须贴岸，入口朝陆地或道路。 |
-| `mage_tower` | 可偏好 GIS `cliff`、`ridge`、`terrace` 或高地 metrics，允许小 footprint。 |
-| `small_house` | 需要普通陆地点和最小 footprint，允许轻微地基修整。 |
-| `mine_entrance` | 可偏好 GIS 山麓 / 岩体 / cliff / slope 证据，入口朝外。 |
+D6 的固定结构落点表达“计划优先完整放置”，但不代表已经落地；非固定结构候选只表达“可以在剩余面积中尝试”，不表达“一定能长满”。D7 才负责在 Overworld 的 chunk 生成阶段选择性接管结构生成，并记录成功、失败和跳过原因。
 
 示例：
 
@@ -358,40 +343,59 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 | `metricsSummary` | object | 高度、坡度、水距、confidence、flags 等。 |
 | `summaryFacts[]` | string[] | 仅复述 metrics / tag / adjacency 的事实句。 |
 
-### StructurePoolIntent
+### PlannedFixedPlacementMap
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 例如 `city_structure_pool_intent.v0.1`。 |
+| `schemaVersion` | string | 例如 `city_planned_fixed_placement_map.v0.1`。 |
 | `cityId` | string | 城市 ID。 |
-| `zonePatchId` | string | 对应功能区 patch。 |
-| `functionType` | string | 功能类型。 |
-| `mainBuildingRole` | string | 主要建筑角色。 |
-| `terrainStatsRef` | string | `FunctionZoneTerrainStats` 引用。 |
-| `candidatePools[]` | object[] | 候选结构池及理由。 |
-| `rejectedPools[]` | object[] | 因尺寸、高度、水深、坡度或缺少必要地貌证据被排除的 pool。 |
-| `budgetInputs` | object | 面积、容量、期望建筑数量、密度意图。 |
+| `placements[]` | object[] | 经程序校验后的固定大小结构落点计划。 |
+| `remainingVisibleAreaByZone` | object | 扣除固定结构后的剩余可见面积。 |
+| `quality` | object | 校验质量报告。 |
 
-`candidatePools[]` 至少记录：
+`placements[]` 至少记录：
 
 | 字段 | 说明 |
 | --- | --- |
-| `poolId` | 结构池 ID。 |
-| `fitReason` | 为什么可作为候选。 |
-| `requiredPlacementRules[]` | 该 pool / 结构条目要满足的落地规则摘要。 |
-| `estimatedCountRange` | 估算数量区间。 |
+| `landingCandidateId` | AI 选择的程序候选落点。 |
+| `structureId` | 固定大小结构 ID。 |
+| `zonePatchId` | 所属功能区。 |
+| `validatedAnchorBlock` | 程序校验后的候选点，不是已落地结果。 |
+| `rotation` | 放置朝向。 |
+| `footprint` | 固定结构完整 footprint。 |
+| `failurePolicy` | `block_city`、`degrade`、`skip_with_warning`。 |
+
+### StructurePoolMap
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `schemaVersion` | string | 例如 `city_structure_pool_map.v0.1`。 |
+| `cityId` | string | 城市 ID。 |
+| `zonePools[]` | object[] | 校验后的非固定结构池。 |
+| `sourceChoicePlanRef` | string | 原始 `StructureChoicePlan` 产物路径。 |
+| `quality` | object | 校验质量报告。 |
+
+`zonePools[].variableSelections[]` 至少记录：
+
+| 字段 | 说明 |
+| --- | --- |
+| `structureId` | 原版、mod 或项目结构 ID。 |
+| `weight` | 抽选权重。 |
+| `targetVisibleAreaRatio` | 占扣除固定结构后的剩余可见面积比例。 |
+| `placementHints[]` | `near_road`、`near_water`、`inside_zone` 等软提示。 |
+| `reason` | 为什么这个结构适合该功能区。 |
 
 ## 开发步骤
 
 | 步骤 | 内容 | 完成口径 |
 | --- | --- | --- |
-| Step 1 | 建立 City v0.1 契约：`CitySiteContext`、`CityLandformReviewPackage`、`PatchGroupPlan`、`FunctionZonePatch`、`FunctionZoneTerrainStats`、`StructurePoolIntent`。 | 文档契约齐全。 |
+| Step 1 | 建立 City v0.1 契约：`CitySiteContext`、`CityLandformReviewPackage`、`PatchGroupPlan`、`FunctionZonePatch`、`FunctionZoneTerrainStats`、`StructureChoicePlan`、`PlannedFixedPlacementMap`、`StructurePoolMap`。 | 文档契约齐全。 |
 | Step 2 | 实现 C0 从 T4 `CitySeed` 生成城市局部范围。 | 可选一个城市 seed 输出规划范围。 |
 | Step 3 | 调用 GIS C1 局部精扫并读取 `TerrainPatchMap` / `LandformPatch` 预览。 | 真实存档能导出局部地貌图。 |
 | Step 4 | 实现 C1.5 城市地理分块预览图、图例、GIS patch 索引和 AI 输入包。 | synthetic + 真实存档可解释。 |
 | Step 5 | 实现 AI `PatchGroupPlan` 与 C3 `FunctionZonePatch` / `FunctionZoneTerrainStats`。 | 小村镇可生成 2-4 个功能区 patch，并输出面积 / 高度 / 水深 / 坡度统计。 |
 | Step 6 | 实现 C4 `RoadIntent` / `BoundaryIntent`、`BuildOperationPlan` 和 WorldEdit 执行后端。 | 入口到核心区连通，功能区边界 / 缓冲区有处理意图，并能在真实存档中落地。 |
-| Step 7 | 实现 C4.5 `StructurePoolIntent`。 | 每个功能区有主要建筑角色、候选 pool、拒绝 pool 和匹配理由。 |
+| Step 7 | 实现 D6 `StructureChoicePlan` / `FixedPlacementSelectionPlan` / `PlannedFixedPlacementMap` / `StructurePoolMap`。 | 固定结构只引用预选 `landingCandidateId`，非固定结构有剩余可见面积占比和配池理由。 |
 
 ## 验收设计
 
@@ -415,13 +419,13 @@ C4.5 不直接放建筑，也不对单个结构做最终可放置判断。它只
 4. 让 AI 根据上下文生成 2-4 个功能区草案。
 5. 规范化为 `FunctionZonePatch[]` 并输出 `FunctionZoneTerrainStats`，检查功能区是否能解释地貌依据。
 6. 运行 C4 道路 / 边界 / 缓冲区意图，生成 `BuildOperationPlan`，通过 WorldEdit 后端真实清理植被、铺设道路或边界带，并检查入口到核心区是否连通、世界中是否可见。
-7. 运行 C4.5 结构池预选，检查候选 / 拒绝 pool 是否能由功能区统计和 placement rules 解释。
+7. 运行 D6 结构选择与固定落点规划，检查固定结构落点是否来自程序候选、不会超出功能区，非固定结构占比是否符合功能区和城市风格。
 
 ## 风险与约束
 
 - 水岸、坡地、悬崖、高地等地貌事实以 GIS `LandformPatch` 为准；City 不维护第二套同义 tag。
 - 高坡、悬崖、高地不应被 City 层提前否掉；它们可能正是塔、神庙、防御和矿业结构需要的特色。
 - GIS `LandformPatch` 不是 City `FunctionZonePatch`。一个地貌 patch 可被拆成多个功能区，一个功能区也可引用多个地貌 patch。
-- 功能区不是建筑池。C3 功能区给语义、GIS patch 引用、成员格子形状和地形统计；C4 生成并落地道路 / 边界 / 缓冲区基础；C4.5 才给候选 pool；具体结构给 placement rule。
+- 功能区不是建筑池。C3 功能区给语义、GIS patch 引用、成员格子形状和地形统计；C4 生成并落地道路 / 边界 / 缓冲区基础；D6 才选择固定结构落点和非固定结构比例预算；具体生成由 D7 和结构自身 placement 逻辑处理。
 - D5 真实落地优先走 WorldEdit 后端，避免重造大面积世界编辑能力；City 规划层不得直接调用 WorldEdit API。
-- 首版可以让 AI 设计功能区草案，但程序要校验 GIS patch 引用和功能类型；结构池 ID 校验放在 C4。
+- 首版可以让 AI 设计功能区草案和 D6 结构选择草案，但程序要校验 GIS patch 引用、功能类型、结构 ID、固定结构尺寸、`landingCandidateId` 引用和非固定结构占比。

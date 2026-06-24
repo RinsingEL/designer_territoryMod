@@ -2,7 +2,7 @@
 
 City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，在城市候选范围内生成可 review、可验证、可交给结构落地层消费的城市规划图层。
 
-当前系统承接 C1-C4 的城市规划过程：局部地貌事实、城市语法、功能区落图、道路 / 边界 / 缓冲区规划，以及 D5 首版通过 WorldEdit 后端完成的基础世界落地。C5 之后的 anchor、约束场、结构池预算和 jigsaw / prefab 物化属于结构落地过程，当前先在本系统中记录交接口径，后续实现时可迁入独立的 Materialization 系统。
+当前系统承接 C1-C4 的城市规划过程：局部地貌事实、城市语法、功能区落图、道路 / 边界 / 缓冲区规划，以及 D5 首版通过 WorldEdit 后端完成的基础世界落地。D6 是 City 侧的结构选择与固定落点规划：程序消费 TerraSense 导出快照并归一为结构画像，再按功能区和结构画像过滤候选，AI 选择固定大小结构与非固定结构；固定大小结构不配置占比，由程序提供预选落地点并由 AI 选择 `landingCandidateId`；非固定结构才配置剩余可见面积占比。D7 进入 Overworld 内选择性接管原版结构生成，优先完整放置固定结构，再以条件包装结构、CityPlanIndex、validator 和 jigsaw 边界策略生成剩余结构；实现仓库当前提供 D7 最小可玩执行入口和 trace / 预览产物。
 
 ## 阅读顺序
 
@@ -11,15 +11,19 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 3. `10_product/过程设计/C5-C8结构落地交接过程.md`
 4. `10_product/案子/城市构造流程-v0.1/README.md`
 5. `10_product/案子/C5锚点与保留区-v0.1/README.md`
-6. `10_product/开发计划-v0.1-City城市构造最小闭环.md`
-7. `20_contracts/数据契约/城市规划数据契约.md`
-8. `20_contracts/数据契约/结构落地交接契约.md`
-9. `30_code_guide/代码导览.md`
-10. `40_tests/测试入口.md`
+6. `10_product/案子/D6结构池规划-v0.1/README.md`
+7. `10_product/案子/D7条件包装结构生成-v0.1/README.md`
+8. `10_product/案子/D7剩余结构起点候选-v0.1/README.md`
+9. `10_product/开发计划-v0.1-City城市构造最小闭环.md`
+10. `20_contracts/数据契约/城市规划数据契约.md`
+11. `20_contracts/数据契约/结构落地交接契约.md`
+12. `30_code_guide/代码导览.md`
+13. `40_tests/测试入口.md`
+14. `40_tests/D6-D7临时真实结构测试配置.md`
 
 ## 当前状态
 
-- 实现仓库已落地 City D2-D5 主链：D2 城市上下文、D3 地貌审查图包、D4 功能区实体化、D5 道路 / 边界 / 缓冲区计划与 WorldEdit 执行入口。
+- 实现仓库已落地 City D2-D7 最小闭环：D2 城市上下文、D3 地貌审查图包、D4 功能区实体化、D5 道路 / 边界 / 缓冲区计划与 WorldEdit 执行入口、D6 结构选择与固定落点规划、D7 固定结构优先放置与剩余结构起点候选 / trace 执行入口。
 - 旧 C1-C9 资料只作为 `docs/90_archive/` 下的历史参考，不迁回当前真值。
 - 本轮文档按“大过程”组织，不把 C1-C8 拆成八个独立开发阶段。
 
@@ -29,8 +33,8 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 | --- | --- | --- |
 | 上游 | 国度规划系统 | `CitySeedRegistry`、`CitySiteCandidate`、国度风格、城市功能类型、城市理论规模、候选选址条件。 |
 | 上游 | GIS | 城市局部 `TerrainPatchMap`、地貌指标、坡度、水体、岸线、patch 摘要和预览图。 |
-| 本系统 | City | `FunctionZoneMap`、`RoadIntent`、`BoundaryIntent`、`BuildOperationPlan`、`WorldMutationReport`。 |
-| 下游 | Materialization / 结构落地 | `StructureLandingIntent`、anchor 需求、保留区、道路与功能区边界、结构池倾向和预算输入。 |
+| 本系统 | City | `FunctionZoneMap`、`RoadIntent`、`BoundaryIntent`、`BuildOperationPlan`、`WorldMutationReport`、`StructureProfileCatalog`、`FilteredStructureCatalog`、`PlannedFixedPlacementMap`、`StructurePoolMap`、`StartCandidateSet`、`PlacedStructureMap`、`StructureGenerationTrace`。 |
+| 下游 | Materialization / 结构落地 | `PlannedFixedPlacementMap`、`StructurePoolMap`、保留区、道路与功能区边界、剩余可见面积预算、真实放置结果和结构落地约束。 |
 
 ## 目录说明
 
@@ -38,5 +42,5 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 | --- | --- |
 | `10_product/` | City 系统边界、C1-C4 城市规划过程、C5-C8 结构落地交接口径，以及具体案子计划。 |
 | `20_contracts/` | 阶段间传递对象、核心字段、状态和版本口径。 |
-| `30_code_guide/` | D2-D5 当前实现入口、HTTP/MCP 入口和 review 边界。 |
+| `30_code_guide/` | D2-D7 当前实现入口、HTTP/MCP 入口和 review 边界。 |
 | `40_tests/` | 自动测试、真实游玩验收和调试图验收入口。 |

@@ -68,7 +68,7 @@ TerraSense in MC 至少需要：
 - 扫描所有已加载 `.nbt` structure。
 - 按 namespace、目录和关键词筛选。
 - 批量放置结构到固定摄影场。
-- 输出正交或斜俯视截图，至少两张角度。
+- 输出标准三视图加 45 度斜俯视截图：正面、右侧、俯视、45 度整体视角。
 - 导出结构硬事实：
   - `structure_id`
   - 来源 namespace / path / mod hint
@@ -98,9 +98,14 @@ AI 只负责给建议，不是真值。
 输入：
 
 - 结构截图。
+- 结构 id、namespace、path、路径分段和文件名 token；这些只作为低置信语义辅助。
 - `data.json` 硬事实。
 - jigsaw / connector 信息。
 - 可选的同类优秀范例。
+
+路径名可以帮助 AI 区分 `houses`、`streets`、`town_centers`、`camps`、`outpost` 等结构来源，尤其适用于 `structure_assembly` / `jigsaw_assembly` 这种整套结构群样本。但路径名不得覆盖截图、硬事实和人工审核：如果视觉证据与路径语义冲突，应输出 warning 或低置信建议。
+
+内饰不进入自动拍摄和自动推断范围。住宅、商店、工坊、塔楼等内部用途与质量先由人工在 Studio 审核阶段确认，AI 不应根据外观截图猜测看不见的内饰。
 
 输出建议：
 
@@ -196,6 +201,45 @@ TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只�
 - `template_roles`
 - `connectors`
 - `sample_assemblies`
+
+### 命令生成样本
+
+除 `single/template/single_template` 三类模板级样本外，TerraSense 允许产出命令生成样本。
+
+推荐优先使用 `structure_assembly`。它不是单个 `.nbt` 模板，而是模拟 Minecraft 完整结构入口后得到的整套结构成品，例如：
+
+```text
+place structure trek:village/plains
+```
+
+这一路径会走 `worldgen/structure/*.json` 中的 configured structure 配置，包括 `start_pool`、`size`、高度投影、地形适配和结构自身规则，更接近玩家记忆中的“一条命令生成一整座村庄”。
+
+`jigsaw_assembly` 保留为底层调试入口，用于直接测试某个 template pool、target 和 depth，例如：
+
+```text
+place jigsaw minecraft:village/plains/town_centers minecraft:town_centers 7
+```
+
+MC 侧应提供：
+
+- `/ts_structure_assembly_scan <structure_id>`：用于扫描完整 configured structure，例如 `trek:village/plains`。
+- `/ts_jigsaw_assembly_scan <start_pool> [target] [max_depth]`：用于快速扫描一个指定 start pool。
+- `/ts_jigsaw_ui`：从当前单人世界的 template pool registry 中列出可用 start pool，允许搜索、多选，并从每个 pool 的模板 jigsaw `name` 自动推断 target，再用统一 max depth 批量生成 `jigsaw_assembly` 样本。
+
+`structure_assembly` 用于给 StructureBinder 后续落地消费提供“整座村庄 / 整套系统”级画像，而不是继续要求每个道路、中心、铁匠铺、房屋片段都只能单独作为候选。`jigsaw_assembly` 只在需要验证 template pool 级拼接行为时使用，不能默认代表完整村庄。
+
+口径：
+
+- `sample_type=structure_assembly` 或 `jigsaw_assembly`
+- `profile_type=jigsaw_system`
+- `independent_semantic_unit=true`
+- `placement_kind=minecraft_place_structure` 或 `minecraft_place_jigsaw`
+- `placement_command` 必须记录实际使用的 MC 命令。
+- `footprint.origin_offset` 必须记录实际生成包围盒最小点相对命令锚点的偏移。
+- `jigsaw_points` 仍按 runtime 扫描保留；若命令生成后不残留 jigsaw 方块，可以为空。
+- 列表选择入口只负责选择 start pool 和批量入队，不写人工审核真值。
+
+命令生成样本的人工审核重点是整体外观质量、是否可作为整包落地资产、适合的城市功能区与地形条件、命令锚点和实际内容包围盒之间的关系，以及是否需要拆回 `jigsaw_system` 子模板继续细标。
 
 如果单个模板只是屋顶、走廊、墙段、楼梯、房间片段，不能独立表达完整语义，则不要强行按完整建筑标注功能，而应把它归入所属 `jigsaw_system` 下的 template role。
 
@@ -312,15 +356,18 @@ TerraSense 不参与 C7-C9 运行时决策。它只负责在开局前或开发�
 | `single` | 可独立表达语义的完整结构，不依赖拼装 | 普通建筑、装饰、地标或完整废墟 |
 | `template` | 不能独立表达完整语义的 jigsaw/pool 片段 | start、child、道路段、房间片段、墙段、屋顶片段 |
 | `single_template` | 本身是完整结构，但带 jigsaw connector，可独立使用也可参与拼接 | 原版村庄房屋或工作站建筑 |
+| `structure_assembly` | 由 MC `place structure` 命令生成的完整 configured structure 样本 | 原版村庄、TREK 村庄、地牢、城墙系统或大型建筑系统 |
+| `jigsaw_assembly` | 由 MC `place jigsaw` 命令生成的底层 template pool 组合样本 | pool 调试、特殊 start pool 验证 |
 
 v1 必须做到：
 
 - 提供一条稳定命令或自动测试入口，启动固定三类样本扫描。
-- 每个样本放置到固定摄影场并输出至少两张截图。
+- 每个样本放置到固定摄影场并输出四张标准截图：`front/right/top/iso_45`。
 - 每个样本输出 `data.json`、`scan_config.json` 和截图目录。
 - 顶层输出 `scan_manifest.json`，记录本轮样本、状态、路径和错误。
 - `template` 与 `single_template` 样本必须输出原始 `orientation_raw/front/top/name/target/pool/joint/final_state`。
 - `single_template` 不能被降级成纯 `template`，因为它仍然是独立语义结构。
+- 命令生成样本必须记录 `placement_command`、实际内容包围盒尺寸和命令锚点偏移，供后续整包落地消费。
 - 自动测试可检查三类结构产物是否完整，不依赖 AI 服务。
 
 ### v2：TerraSense Studio 工作台
@@ -347,6 +394,7 @@ v3 必须做到：
 
 - Studio 中可以对单个结构或三类样本批量触发 AI 初标。
 - AI 输入包含截图、`data.json` 硬事实和当前动态术语表。
+- AI 输入包含 `source_semantics` 低置信路径语义包，用于给路径名和结构群命令提供辅助上下文。
 - AI 输出写入 `ai_suggestion.json`，不直接覆盖 `review.json`。
 - 提供 `mock` 模式，稳定返回示例初标，用于无 API key 的验收。
 - 提供真实 vision API 模式，用于实际图片识别。

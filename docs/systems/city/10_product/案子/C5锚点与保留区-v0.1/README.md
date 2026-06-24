@@ -2,7 +2,7 @@
 
 ## 定位
 
-C5 承接 C1-C4.5 的城市规划结果，把“功能区 + 道路 / 边界意图 + 结构池预选”转成结构落地层可以消费的关键锚点需求和保留区。
+C5 是早期结构落地交接设想，后续会被 D7+ 结构生成接管方案吸收。若继续使用本文，它应承接 D2-D6 的城市规划结果，把“功能区 + 道路 / 边界意图 + 结构池候选”转成结构落地层可以消费的关键锚点需求和保留区。
 
 C5 不放置真实结构，不调用 jigsaw / prefab，不决定最终结构坐标。它只回答：
 
@@ -18,7 +18,7 @@ C5 不放置真实结构，不调用 jigsaw / prefab，不决定最终结构坐�
 | 输入 | `FunctionZonePatch[]` / `FunctionZoneMap` | C3 功能区实体。 |
 | 输入 | `FunctionZoneTerrainStats` | C3 面积、高度、水深、坡度、岸线等统计。 |
 | 输入 | `RoadIntent` / `BoundaryIntent` | C4 道路、边界和接入点意图。 |
-| 输入 | `StructurePoolIntent` | C4.5 结构池预选和 placement rule 摘要。 |
+| 输入 | `StructurePoolMap` | D6 结构池候选和 role / hint 摘要。 |
 | 输出 | `AnchorPlan` | 关键建筑 / 公共空间需求。 |
 | 输出 | `ReservedAreaMap` | anchor、道路、公共空间和边界保留区。 |
 | 下游 | C6 `GenerationConstraintField` | 把保留区和约束输入转成结构落地约束场。 |
@@ -27,7 +27,7 @@ C5 不放置真实结构，不调用 jigsaw / prefab，不决定最终结构坐�
 
 - Anchor 是“优先需求”，不一定是一栋结构，也可以是广场、码头核心、城门口、桥头、矿井入口或结构群中心。
 - C5 只输出候选范围和保留需求，不输出最终 block 坐标。
-- C5 可以根据 pool 的 placement rules 过滤明显不合理的 anchor 候选，但具体结构能否落地仍由结构条目判断。
+- C5 可以根据 D6 role / hint 过滤明显不合理的 anchor 候选，但具体结构能否落地仍由 D7 和结构条目判断。
 - 普通住宅、摊位、仓库等非关键结构不需要都变成 anchor。
 - 必需 anchor 应优先保留空间，避免后续普通 jigsaw / prefab 抢占核心位置。
 
@@ -37,7 +37,7 @@ C5 不放置真实结构，不调用 jigsaw / prefab，不决定最终结构坐�
 flowchart LR
   A["FunctionZonePatch + TerrainStats"] --> B["Anchor Need Derivation"]
   C["RoadIntent / BoundaryIntent"] --> B
-  D["StructurePoolIntent"] --> B
+  D["StructurePoolMap"] --> B
   B --> E["AnchorCandidateArea"]
   E --> F["AnchorPlan"]
   F --> G["ReservedAreaMap"]
@@ -80,7 +80,7 @@ C5 不直接给最终坐标，而是输出候选范围。
 | `FunctionZoneTerrainStats` | 面积、高度范围、水深、坡度、岸线长度。 |
 | `RoadIntent.accessPoints[]` | 朝路、入口、核心连接点。 |
 | `BoundaryIntent` | 水岸、城墙、软过渡、桥位或台阶边界。 |
-| `StructurePoolIntent.requiredPlacementRules[]` | pool / 结构条目的关键需求摘要。 |
+| `StructurePoolMap.zonePools[].candidates[]` | D6 候选结构的 role、hint 和理由。 |
 
 候选范围至少记录：
 
@@ -167,7 +167,7 @@ Anchor 必须有优先级和失败策略：
 | `zonePatchId` | 所属功能区。 |
 | `mainBuildingRole` | 对应主要建筑角色。 |
 | `candidateAreaRefs[]` | 候选范围。 |
-| `poolIntentRefs[]` | 关联结构池预选。 |
+| `structurePoolRefs[]` | 关联 D6 结构池候选。 |
 | `priority` | 优先级。 |
 | `required` | 是否必需。 |
 | `failurePolicy` | 失败策略。 |
@@ -197,9 +197,9 @@ Anchor 必须有优先级和失败策略：
 
 ### 真实存档
 
-从 C1-C4.5 已完成的小村镇运行一次：
+从 D2-D6 已完成的小村镇运行一次：
 
-1. 读取 `FunctionZonePatch[]`、`FunctionZoneTerrainStats`、`RoadIntent`、`BoundaryIntent`、`StructurePoolIntent`。
+1. 读取 `FunctionZonePatch[]`、`FunctionZoneTerrainStats`、`RoadIntent`、`BoundaryIntent`、`StructurePoolMap`。
 2. 生成 `AnchorPlan` 和 `ReservedAreaMap`。
 3. 导出 `anchor_plan_preview.png`，图中显示 anchor 候选范围、道路核心和保留区。
 4. 人工检查必需 anchor 是否落在合理功能区，且没有抢占主路 / 水岸接入。
@@ -211,4 +211,4 @@ Anchor 必须有优先级和失败策略：
 - C5 不让普通结构抢占 anchor 保留区。
 - C5 的 `hard` 保留区要少而明确，避免后续结构落地几乎无处可放。
 - Anchor 失败必须可解释，不能静默跳过。
-- C5 输出必须能回溯到 C3 功能区、C4 道路 / 边界和 C4.5 结构池预选。
+- C5 输出必须能回溯到 C3 功能区、C4 道路 / 边界和 D6 结构池候选。
