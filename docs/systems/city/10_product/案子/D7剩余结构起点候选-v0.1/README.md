@@ -70,6 +70,8 @@ D7 只能把 D6 的偏好翻译成程序评分项。
 | `anchorBlock` | object | 候选起点 block。 |
 | `rotation` | string | 候选朝向。 |
 | `candidateFootprint` | object | configured structure 的估算 footprint；若内部 jigsaw 展开，则记录起始 footprint / assembly 画像来源。 |
+| `requiredPlacementBounds` | object | D7 为本候选推导的保守放置影响范围，用于等待 chunk 覆盖；首版来自 `candidateFootprint` 和 `expectedAreaRange`。 |
+| `requiredChunkRange` | object | `requiredPlacementBounds` 覆盖的 chunk 范围。 |
 | `hardPassed` | bool | 是否通过硬过滤。 |
 | `score` | number | 综合软评分。 |
 | `scoreBreakdown` | object | 各评分项。 |
@@ -146,6 +148,18 @@ worldSeed + cityId + zonePatchId + taskId + structureId + attemptIndex
 - 失败后按候选顺序或重新带 `attemptIndex` 抽下一个候选。
 - 每个 task 和每个 zone 必须有 retry budget。
 
+## Chunk 加载等待
+
+D7 起点候选只决定结构起点，不代表结构可以立即写进世界。真实放置前，D7 必须检查候选对应的 `requiredChunkRange` 是否已加载：
+
+| 情况 | 处理 |
+| --- | --- |
+| chunk 覆盖达标 | 进入真实 configured structure 放置入口。 |
+| chunk 未覆盖 | 本次 attempt 写 `status=waiting`，`reasonCode=STRUCTURE_CHUNK_NOT_LOADED` 或 `WAITING_CHUNKS`，不消耗 AI 重试，不当作结构失败。 |
+| 后续再次执行 | 复用同一输入和 seed，重新检查 chunk 覆盖；已真实放置的结构通过 ledger 跳过。 |
+
+玩家 TP 和预加载 mod 只是 chunk 覆盖的来源；D7 不依赖特定预加载 mod API。
+
 ## Validator 与 Trace
 
 抽中的候选还要经过 D7 结构 validator。
@@ -162,6 +176,7 @@ worldSeed + cityId + zonePatchId + taskId + structureId + attemptIndex
 | `scoreBreakdown` | 抽中时评分。 |
 | `validatorResult` | 失败原因。 |
 | `retryIndex` | 第几次尝试。 |
+| `requiredChunkRange` | 本次尝试需要的 chunk 覆盖范围。 |
 
 常见失败原因：
 

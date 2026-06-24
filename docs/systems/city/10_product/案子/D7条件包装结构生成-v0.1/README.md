@@ -19,6 +19,8 @@ StructurePoolMap
   -> trace
 ```
 
+D7 的长期运行模型是 chunk-driven materialization scheduler：D7 不要求一次 HTTP 调用立刻刷完整城市，而是把 D6 产物转换为可重入的结构落地任务；玩家、预加载 mod 或其他世界加载机制把城市范围 chunk 加载到位后，D7 再推进满足条件的任务。首版实现允许反复调用 `city_execute_d7`：缺少 chunk 时输出 `WAITING_CHUNKS` / `STRUCTURE_CHUNK_NOT_LOADED`，不把它算成结构失败；后续 chunk 覆盖达标后再次调用会继续推进。
+
 ## 输入与输出
 
 | 方向 | 输入 / 输出 | 说明 |
@@ -31,6 +33,8 @@ StructurePoolMap
 | 运行时产物 | `StartCandidateSet` | D7 程序为 `variable_area` 生成的候选起点集合。 |
 | 输出 | `PlacedStructureMap` | 已放置结构和占用 footprint。 |
 | 输出 | `StructureGenerationTrace` | 成功、失败、跳过和重试记录。 |
+| 运行时产物 | `MaterializationJobQueue` / 等价任务表 | D7 从固定落点和 variable 起点候选推导出的可重入落地任务；首版可内嵌在 trace / attempts 中。 |
+| 运行时产物 | `ChunkMaterializationLedger` / 等价账本 | 记录已真实写入世界的结构，避免多次调用重复放置；首版可由 `PlacedStructureMap.placedStructures[].worldMutationApplied` 承载。 |
 
 ## 阶段边界
 
@@ -38,6 +42,7 @@ StructurePoolMap
 | --- | --- |
 | 优先完整放置 D6 选定的 `fixed_footprint`。 | 不为固定结构重新选点。 |
 | 对固定结构做最终兜底 validator。 | 不裁切固定结构，不补半截，不收尾。 |
+| 在真实放置前检查所需 chunk 是否已加载；未加载则等待。 | 不为了结构落地大范围主动预加载城市，也不取代预加载 mod。 |
 | 扣除固定结构占用后，按剩余面积生成 `variable_area`。 | 不让 AI 配 jigsaw 深度、半径或 piece budget。 |
 | 程序生成剩余结构起点候选并 seeded weighted random 抽选。 | 不让 AI 选择剩余结构坐标，不在功能区内盲随机坐标。 |
 | 用条件包装限制 configured structure 能否落下。 | 不把功能区边缘随机失败当主流程。 |
@@ -56,6 +61,7 @@ StructurePoolMap
 - D7 不允许裁掉固定结构的一角。
 - D7 不允许对固定结构做 jigsaw 分支停止 / 收尾。
 - 固定结构失败后按 D6 的 `failurePolicy` 处理。
+- 固定结构真实执行前必须等待 footprint / clearance 对应 chunk 覆盖达标；chunk 未加载时状态为 waiting，不触发 `failurePolicy`。
 
 最终兜底 validator 只确认 D6 计划在真实生成上下文中仍可用：
 
@@ -87,6 +93,16 @@ remainingVisibleArea = D5 buildable area
 ```
 
 `variable_area` 结构按 D6 的 `targetVisibleAreaRatio` 在剩余可见面积内生成。D7 负责把比例翻译成生成任务和重试预算。
+
+首版 chunk-driven 口径：
+
+| 项 | 规则 |
+| --- | --- |
+| 触发来源 | 玩家 TP、预加载 mod 或世界加载机制让 chunk 进入 loaded 状态；D7 只消费当前已加载事实。 |
+| 固定结构 | 所需 chunk 未覆盖时保持 `WAITING_CHUNKS`，不裁切，不失败。 |
+| 可变结构 | 起点仍来自 `StartCandidateSet`；首版用 `candidateFootprint` + `expectedAreaRange.maxAreaBlocks` 推导保守 `requiredPlacementBounds` / `requiredChunkRange`，chunk 未覆盖则等待。 |
+| 可重入 | 多次调用 D7 应复用已真实放置的 ledger，不重复写世界；dry-run 产物不得被当作真实 ledger。 |
+| 长期扩展 | 如需更接近原版自然生成，可升级为持久化 `StructureStart` / piece 计划，并按 chunk 到达逐块 `placeInChunk`；这不属于 D7 v0.1 首版。 |
 
 首版口径：
 
@@ -170,7 +186,10 @@ piece / 分支规则：
 | `variableAttempts[]` | 可变结构尝试、失败、跳过和重试。 |
 | `remainingVisibleAreaByZone` | 每个功能区的剩余面积变化。 |
 | `failureSummary` | 按 reasonCode 聚合。 |
+| `waitingSummary` | 按等待原因聚合，至少包含 chunk 未加载。 |
 | `debugRefs[]` | 调试图、日志或报告。 |
+
+等待不是失败。`status=waiting` 表示当前城市结构落地尚未完成，但没有违反 D6/D7 规则；当预加载覆盖达标后再次执行 D7，应从 ledger 继续推进。
 
 ## 最小可玩闭环
 
@@ -181,6 +200,13 @@ piece / 分支规则：
 5. 在剩余可见面积内条件包装生成 2-4 个 configured structure；其内部 jigsaw 分支按规则停止 / 收尾 / 失败回写。
 6. 输出 `placed_structure_map.json` 和 `structure_generation_trace.json`。
 
+真实游玩首版可接受的 chunk-driven 最小闭环：
+
+1. 第一次执行 D7 时，如果玩家 / 预加载未覆盖结构范围，trace 写 `status=waiting` 和 `STRUCTURE_CHUNK_NOT_LOADED`。
+2. 玩家 TP 到城市 / 结构附近或预加载 mod 扫到目标范围后，再次执行 D7。
+3. 至少 1 个 `fixed_footprint` 在 chunk 覆盖达标后完整落地。
+4. `variable_area` 成功或继续给出结构化 waiting / failure，不静默失败。
+
 ## 验收
 
 | 检查 | 通过口径 |
@@ -189,6 +215,8 @@ piece / 分支规则：
 | D7 不重选固定落点 | 所有固定结构都引用 D6 `landingCandidateId`。 |
 | 剩余面积正确 | `variable_area` 预算基于扣除固定结构后的剩余可见面积。 |
 | 可变结构可少生成 | jigsaw 分支越界可停止或收尾，不阻断整个城市。 |
+| chunk-driven | chunk 未加载时等待并写 trace；chunk 到位后再次执行可继续推进。 |
+| 防重复 | 已真实放置结构进入 ledger，再次执行不得重复放置。 |
 | 无无限重试 | 每个 zone 和结构任务有明确重试上限。 |
 | AI 不解 jigsaw | trace 中没有 AI 逐 piece 决策字段。 |
 | 放置入口正确 | D7 真实 `structureId` 来自 `/place structure` configured structure registry。 |
