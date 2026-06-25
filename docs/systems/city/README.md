@@ -16,16 +16,18 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 8. `10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 9. `10_product/开发计划-v0.1-City城市构造最小闭环.md`
 10. `10_product/开发计划-v0.2-D7受控Jigsaw物化.md`
-11. `20_contracts/数据契约/城市规划数据契约.md`
-12. `20_contracts/数据契约/结构落地交接契约.md`
-13. `30_code_guide/代码导览.md`
-14. `40_tests/测试入口.md`
-15. `40_tests/D6-D7临时真实结构测试配置.md`
+11. `10_product/开发计划-v0.3-D7计划驱动Jigsaw拓展.md`
+12. `20_contracts/数据契约/城市规划数据契约.md`
+13. `20_contracts/数据契约/结构落地交接契约.md`
+14. `30_code_guide/代码导览.md`
+15. `40_tests/测试入口.md`
+16. `40_tests/D6-D7临时真实结构测试配置.md`
 
 ## 当前状态
 
 - 实现仓库已落地 City D2-D7 最小闭环：D2 城市上下文、D3 地貌审查图包、D4 功能区实体化、D5 道路 / 边界 / 缓冲区计划与 WorldEdit 执行入口、D6 结构选择与固定落点规划、D7 固定结构优先放置与剩余结构起点候选 / trace 执行入口。
 - D7+ 下一阶段主线是受控 jigsaw 物化：不全局 mixin 原版 jigsaw，也不为每个外部结构手写 `geomantia:*` wrapper；而是在 City D7+ 专用路径中读取外部 configured structure / pool / template，逐 piece 通过城市约束场后再写入世界。
+- v0.3 进一步把下一步工程路线收束为计划驱动 D7：以 `CityMaterializationJob`、chunk waiting、真实 ledger、`CityConstraintField` 和 bounded jigsaw solver 作为主线，保持与玩家 TP / 预加载 mod 的 chunk 生命周期协同。
 - 旧 C1-C9 资料只作为 `docs/90_archive/` 下的历史参考，不迁回当前真值。
 - 本轮文档按“大过程”组织，不把 C1-C8 拆成八个独立开发阶段。
 
