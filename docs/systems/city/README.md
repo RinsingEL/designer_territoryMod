@@ -18,11 +18,12 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 10. `10_product/开发计划-v0.2-D7受控Jigsaw物化.md`
 11. `10_product/开发计划-v0.3-D7计划驱动Jigsaw拓展.md`
 12. `10_product/开发计划-v0.4-D7受控Jigsaw真实粘贴与验收.md`
-13. `20_contracts/数据契约/城市规划数据契约.md`
-14. `20_contracts/数据契约/结构落地交接契约.md`
-15. `30_code_guide/代码导览.md`
-16. `40_tests/测试入口.md`
-17. `40_tests/D6-D7临时真实结构测试配置.md`
+13. `10_product/开发计划-v0.5-D7Jigsaw落地拦截与规则增强.md`
+14. `20_contracts/数据契约/城市规划数据契约.md`
+15. `20_contracts/数据契约/结构落地交接契约.md`
+16. `30_code_guide/代码导览.md`
+17. `40_tests/测试入口.md`
+18. `40_tests/D6-D7临时真实结构测试配置.md`
 
 ## 当前状态
 
@@ -30,6 +31,7 @@ City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidat
 - D7+ 下一阶段主线是受控 jigsaw 物化：不全局 mixin 原版 jigsaw，也不为每个外部结构手写 `geomantia:*` wrapper；而是在 City D7+ 专用路径中读取外部 configured structure / pool / template，逐 piece 通过城市约束场后再写入世界。
 - v0.3 进一步把下一步工程路线收束为计划驱动 D7：以 `CityMaterializationJob`、chunk waiting、真实 ledger、`CityConstraintField` 和 bounded jigsaw solver 作为主线，保持与玩家 TP / 预加载 mod 的 chunk 生命周期协同。当前实现已接入 MC start pool 适配、子 pool 发现和首版 connector 对齐。
 - v0.4 聚焦 D7 受控 jigsaw 的真实粘贴闭环：当前实现切片已把 `BoundedJigsawPlan.pieces[]` / `acceptedPieces[]` 中通过 validator 的 pieces 解析回真实 MC runtime piece source，等待 chunk 覆盖后以 `accepted_piece_template_paste` 写入世界，并同步 trace 与 piece ledger；真实游玩验收仍需在原版 / vanilla-like 测试存档中确认。
+- v0.5 聚焦 D7 bounded jigsaw 的规则增强：不为每个外部结构手写 `geomantia:*` wrapper，也不全局 mixin 原版自然结构生成器；主线是在 City D7 自己发起的 bounded jigsaw 任务中，把每个 `PieceCandidate` 在真实 paste 前交给 `CityJigsawRulePipeline` 判定，只有 accepted piece 能写世界，rejected / stopped piece 必须写 trace。
 - 旧 C1-C9 资料只作为 `docs/90_archive/` 下的历史参考，不迁回当前真值。
 - 本轮文档按“大过程”组织，不把 C1-C8 拆成八个独立开发阶段。
 

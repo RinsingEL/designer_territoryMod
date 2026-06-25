@@ -64,6 +64,7 @@
 - v0.2 D7 受控 Jigsaw 物化开发计划：`../systems/city/10_product/开发计划-v0.2-D7受控Jigsaw物化.md`
 - v0.3 D7 计划驱动 Jigsaw 拓展开发计划：`../systems/city/10_product/开发计划-v0.3-D7计划驱动Jigsaw拓展.md`
 - v0.4 D7 受控 Jigsaw 真实粘贴与验收开发计划：`../systems/city/10_product/开发计划-v0.4-D7受控Jigsaw真实粘贴与验收.md`
+- v0.5 D7 Jigsaw 落地拦截与规则增强开发计划：`../systems/city/10_product/开发计划-v0.5-D7Jigsaw落地拦截与规则增强.md`
 - D6 结构选择与固定落点规划案：`../systems/city/10_product/案子/D6结构池规划-v0.1/README.md`
 - D7 条件包装结构生成案：`../systems/city/10_product/案子/D7条件包装结构生成-v0.1/README.md`
 - D7 剩余结构起点候选案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
