@@ -112,7 +112,9 @@ remainingVisibleArea = D5 buildable area
 | 结构抽选 | 按 D6 `weight` 和目标占比。 |
 | 生成上限 | 每个 zone 有面积上限、任务上限和失败上限。 |
 | 失败处理 | 可变结构少生成可以接受，但必须进入 trace。 |
-| 结束条件 | 达到目标面积、候选耗尽、失败上限或任务上限。 |
+| 结束条件 | 默认 single-start plan 评分完成、候选耗尽、失败上限、任务上限或剩余功能区不足一个 start footprint。 |
+
+D7 v2 默认对同一 D6 `variableSelections[]` 只选择 1 个主 start：程序对多个 start candidate / seed 做 bounded dry-run 评分，选中最佳 plan 后再 true-run materialize 同一份 accepted pieces。D6 `targetAreaBlocks` 是评分目标，不是立即拒绝线；默认硬上限为 `target * 1.2`。如果单主 start 只能长成小聚落，trace 应输出 `feasibility=HAMLET/PARTIAL` 和限制原因，不继续撒新的 start。多 start 只作为后续 satellite 策略，必须显式打开，不进 v2 默认路径。
 
 起点选择口径：
 
@@ -120,7 +122,8 @@ remainingVisibleArea = D5 buildable area
 - D7 不让 AI 看图选坐标，不让 AI 参与重试。
 - 程序先从剩余可建 cell 生成 `StartCandidateSet`。
 - 候选点先过硬过滤：功能区内、不压道路、不压固定结构、不压 runtime footprint、地形硬条件通过。
-- 通过候选再按靠路、靠水、靠核心、间距、平坦度等软条件打分。
+- 通过候选再按靠路、靠水、靠核心、间距、平坦度、局部可建连通空间、到 reserved / 边界的安全距离和主要方向走廊余量等软条件打分。
+- 默认 single-start 策略下，起点评分必须惩罚“合法但贴角落 / 贴 reserved corridor、出门即碰壁”的候选，优先把 dry-run 样本给更开阔、更利于 jigsaw 展开的主 start。
 - 使用 `worldSeed + cityId + zonePatchId + taskId + structureId + attemptIndex` 做 seeded weighted random。
 - 抽中后仍需通过 D7 validator。
 

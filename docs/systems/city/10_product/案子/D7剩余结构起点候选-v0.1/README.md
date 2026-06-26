@@ -90,6 +90,8 @@ D7 只能把 D6 的偏好翻译成程序评分项。
 5. 为每个候选生成允许朝向。
 6. 输出候选 ID、位置、朝向和估算 footprint。
 
+D7 v2 默认对同一 D6 `variableSelections[]` 只选 1 个主 start。面积目标未满足时不自动追加 start，而是在 bounded dry-run 样本报告中输出 `feasibility=HAMLET/PARTIAL`、score、termination / rejection 统计。多 start 仅作为显式 satellite 策略；开启后，后续 start 必须把旧 ledger 和本轮已放置的 `variable_area` footprint 作为 runtime occupied 扣除，已使用的 `startCandidateId` 应标记为不可再次选择，避免重复放置或重叠。
+
 首版可用规则：
 
 | 项 | 规则 |
@@ -127,8 +129,13 @@ D7 只能把 D6 的偏好翻译成程序评分项。
 | `spacingScore` | 避免与已有结构过密或过远。 |
 | `terrainComfortScore` | 更平整、更少修整的位置更高。 |
 | `stylePreferenceScore` | 来自 D6 的靠路、靠水、密度等偏好。 |
+| `expansionScore` | 起点周围局部窗口内可建 cell 比例越高越高，避免把主 start 选到一出门就被道路 / 边界 / reserved 区堵住的位置。 |
+| `corridorScore` | 起点四向连续可建走廊越长越高，用于给 jigsaw 后续分支保留展开空间。 |
+| `reservedPenalty` | 周边 reserved cell 比例越高、距离 reserved 越近扣分越重，降低贴角落 / 贴红区候选的采样优先级。 |
 
 D6 可以提供偏好，但 D7 的打分和抽选由程序执行。
+
+当前 D7 v2 的 `scoreBreakdown` 至少应记录 `interiorScore`、`expansionScore`、`corridorScore`、`reservedPenalty`、`localBuildableRatio`、`localReservedRatio`、`nearestReservedDistanceCells`、`corridorReachCells` 和 `buildableFit`。这些字段是 trace 解释起点为什么没有选在某个角落、为什么更偏向开阔区域的依据；它们只影响候选排序和 dry-run 样本入口，不替代 piece 级 validator。
 
 ## 抽选规则
 
@@ -208,5 +215,6 @@ START_RETRY_BUDGET_EXHAUSTED
 | 不盲随机 | 抽选前必须存在 `StartCandidateSet`。 |
 | 可复现 | 同一 seed 和输入下候选与抽选结果稳定。 |
 | 不压固定结构 | 候选不得压 D6 fixed footprint / clearance。 |
+| 不贴死角 | 在存在更开阔 hard-passed 候选时，贴 reserved corridor / 边界且局部可建比例低的候选不应成为 top sample candidate。 |
 | 有重试上限 | task / zone 都有 retry budget。 |
 | 有失败 trace | 空候选、过滤失败、validator 失败都可追踪。 |
