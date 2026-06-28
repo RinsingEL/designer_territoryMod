@@ -2,90 +2,142 @@
 
 ## 版本
 
-v0.1 — City D2/D3 首版 MCP 接口
+v0.2 — City D3-D6 结构落地驱动主线。
 
-## 边界
-
-Java 侧 HTTP 接口监听 `127.0.0.1:5000`，Node 侧 `country_designer_mcp` 通过 MCP 工具调用 HTTP。
-
-环境变量：`GEOMANTIA_MC_API_URL`（默认 `http://127.0.0.1:5000`）
+Java HTTP：`127.0.0.1:5000`
+Node MCP：`country_designer_mcp`
+环境变量：`GEOMANTIA_MC_API_URL`，默认 `http://127.0.0.1:5000`
 
 ## 工具总览
 
-| MCP 工具 | HTTP 端点 | 说明 |
-|---|---|---|
-| `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext |
-| `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage（含局部 GIS 刷新） |
+| MCP 工具 | HTTP 端点 | 当前语义 |
+| --- | --- | --- |
+| `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
+| `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
+| `city_plan_d4` | `POST /realm/city/plan_d4` | 提交 `StructureAnchorPlan`，生成结构 anchor / envelope。 |
+| `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry 与 planned structure worldgen registry，不主动生成目标 chunk。 |
+| `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
+| `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 
-## city_plan_d2
+## city_plan_d4
 
-**描述**：基于已有 W/T run 的 CitySeed 构建 CitySiteContext。
+必填参数：
 
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `runId` | string | 是 | 已有 W/T run ID |
-| `citySeedId` | string | 是 | 目标城市种子的 citySeedId |
-| `cellStepBlocks` | number | 否 | 可选覆盖；未传时从 `world_survey_manifest.json` 恢复 W/T 采样步长 |
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `structureAnchorPlan`
 
-**返回**：
+`terrasenseProfileSource` 支持：
 
-```json
-{
-  "ok": true,
-  "citySiteContext": { ... }
-}
+- `sourceType=structure_profile_jsonl` + `profilePath`
+- `sourceType=debug_catalog` + `debugCatalogPath`
+
+旧 `patchGroupPlan`、`functionType`、`functionTag`、`function_candidates` 等字段必须失败：`LEGACY_CITY_FUNCTION_ZONE_FLOW_REMOVED`。
+
+返回 artifact：
+
+- `structureAnchorPlan`
+- `structureAnchorMap`
+- `structureProfileCatalog`
+- `structureAnchorPreview`
+- `qualityReport`
+- `sourceD3Package`
+
+## city_plan_d5 / city_execute_d5
+
+`city_plan_d5` 无 AI payload，只读取 D3/D4 artifact。
+
+返回 artifact：
+
+- `reservationMaskPlan`
+- `roadAccessPlan`
+- `buildOperationPlan`
+- `reservationMaskPreview`
+- `qualityReport`
+- `sourceStructureAnchorMap`
+
+`city_execute_d5` required：
+
+- `runId`
+- `citySeedId`
+- `confirmWorldMutation=true`
+
+执行语义：
+
+- 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
+- 同步激活 `active_planned_structure_registry.json`。
+- hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
+- active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
+- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`。
+
+## city_plan_d6
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+
+可选：
+
+- `dimensionId`
+- `playerName`
+
+不得传旧 `terrasenseProfileSource`、`structureChoicePlan`、`fixedPlacementSelectionPlan`、`plannedFixedPlacementMap`、`structurePoolMap`。
+
+返回 artifact：
+
+- `structureMaterializationPlan`
+- `placedStructureLedger`
+- `structureMaterializationTrace`
+- `inferredFunctionAreaMap`
+- `structureMaterializationPreview`
+- `qualityReport`
+
+未生成 chunk 时 response 为 `status=planned_worldgen` / `reasonCode=WAITING_FOR_WORLDGEN`；这不是结构失败。
+
+chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
+
+## city_execute_d7
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+
+可选：
+
+- `executeStructurePlacement`，默认 false。
+- `debugLateMaterialize`，默认 false，仅开发诊断可用。
+- `dimensionId`
+- `playerName`
+
+语义：
+
+- `executeStructurePlacement=false`：只查看 worldgen ledger / 当前 chunk 状态。
+- `executeStructurePlacement=true`：正式路径仍只查看 worldgen ledger / 当前 chunk 状态，不 late paste。
+- `debugLateMaterialize=true`：显式开发模式，才允许旧 `StructureStart.placeInChunk` 路径；trace 标记 `lateMaterialization=true`，不作为验收通过。
+
+返回 artifact：
+
+- `placedStructureLedger`
+- `structureMaterializationTrace`
+- `inferredFunctionAreaMap`
+- `placedStructurePreview`
+- `qualityReport`
+- `sourceStructureMaterializationPlan`
+
+## 推荐调用流程
+
+```text
+city_plan_d3
+city_plan_d4 { terrasenseProfileSource, structureAnchorPlan }
+city_plan_d5
+city_execute_d5 { confirmWorldMutation: true }
+city_plan_d6
+city_execute_d7 { executeStructurePlacement: false }
+city_execute_d7 { executeStructurePlacement: true }
 ```
 
-**最低验收**：返回 citySiteContext 含 schemaVersion、cityId、realmId、grid、bounds、anchorBlock、entryCandidates、territoryCheckResult。
-
-**真实 run 规则**：入口必须优先使用 `city_seed_registry.json` 的 `anchorBlock`，并读取 `realm_territory_map.json` 计算领地归属。不得因为 MCP 默认参数导致真实坐标错位。
-
-## city_plan_d3
-
-**描述**：构建 CityLandformReviewPackage，会触发局部 GIS 刷新获取 patch 数据。
-
-| 参数 | 类型 | 必填 | 说明 |
-|---|---|---|---|
-| `runId` | string | 是 | 已有 W/T run ID |
-| `citySeedId` | string | 是 | 目标城市种子的 citySeedId |
-| `cellStepBlocks` | number | 否 | 可选覆盖；未传时从 `world_survey_manifest.json` 恢复 W/T 采样步长 |
-| `dimensionId` | string | 否 | 维度 ID，省略时从 run manifest 恢复，再回退到玩家/overworld |
-| `playerName` | string | 否 | 玩家名，用于定位维度 |
-
-**返回**：
-
-```json
-{
-  "ok": true,
-  "patchCount": 18,
-  "citySiteContext": { ... },
-  "landformReviewPackage": { ... }
-}
-```
-
-**最低验收**：
-- landformReviewPackage 含 landformPatches、legend、planningContext、aiPromptContext
-- 每个 patch 有 mapLabel（如 `平原01`）、landformType、areaClass、metricsSummary、summaryFacts
-- 图例覆盖所有出现的地貌类型
-- `reviewMapImage` 指向 `run/realm_debug/<runId>/city_d3_<citySeedId>/landform_review_map.png`
-- `debugRefs` 至少包含 review PNG 与 D3 输出目录
-
-## 使用流程
-
-```
-# 1. 查看已有 run
-realm_status
-
-# 2. 运行验收生成 T4 产物
-realm_run_acceptance { runId: "city_test", planningRadiusBlocks: 4096, cellStepBlocks: 128 }
-
-# 3. City D2 上下文
-city_plan_d2 { runId: "city_test", citySeedId: "city_realm_0_capital" }
-
-# 4. City D3 地貌审查
-city_plan_d3 { runId: "city_test", citySeedId: "city_realm_0_capital" }
-```
-
-## 真实游玩验收状态
-
-截至 2026-06-16，本接口已有自动测试和 sealed run 产物测试，但尚未在运行中的 Minecraft 中完成 MCP 真实游玩验收。
+真实执行如果返回 `WAITING_FOR_WORLDGEN`，从目标 chunk 外侧靠近 / TP 触发 chunk 首次生成；生成后重复 `city_execute_d7 { executeStructurePlacement: true }` 查询 ledger。若返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，说明该 chunk 已错过生成期，正式路径不得补贴结构。
