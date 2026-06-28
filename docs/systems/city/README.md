@@ -41,6 +41,14 @@ D3 地形 patch 真值
 - `10_product/案子/D7条件包装结构生成-v0.1/README.md`
 - `10_product/开发计划-v0.2~v0.5-*`
 
+当前主线之后的分阶段小案子：
+
+- `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
+- `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
+- `10_product/案子/城市边界与城墙-v0.1/README.md`：把调试边界逐步升级为城墙、栅栏、码头线等城市边界表达。
+- `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：让结构之间的道路连接交给成熟道路能力处理。
+- `10_product/案子/结构地形兼容适配-v0.1/README.md`：处理悬空、硬切、台基和地形融合问题。
+
 ## 当前产物
 
 | 阶段 | 当前产物 |
