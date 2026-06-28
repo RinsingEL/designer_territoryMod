@@ -2,7 +2,7 @@
 
 City 系统负责承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，在城市候选范围内生成可 review、可验证、可交给结构落地层消费的城市规划图层。
 
-当前系统承接 C1-C4 的城市规划过程：局部地貌事实、城市语法、功能区落图、道路 / 边界 / 缓冲区规划，以及 D5 首版通过 WorldEdit 后端完成的基础世界落地。D6 是 City 侧的结构选择与固定落点规划：程序消费 TerraSense 导出快照并归一为结构画像，再按功能区和结构画像过滤候选，AI 选择固定大小结构与非固定结构；固定大小结构不配置占比，由程序提供预选落地点并由 AI 选择 `landingCandidateId`；非固定结构才配置剩余可见面积占比。D7 进入 Overworld 内选择性接管原版结构生成，优先完整放置固定结构，再以条件包装结构、CityPlanIndex、validator 和 jigsaw 边界策略生成剩余结构；实现仓库当前提供 D7 最小可玩执行入口和 trace / 预览产物。
+当前系统承接 C1-C4 的城市规划过程：局部地貌事实、城市语法、功能区落图、道路 / 边界 / 缓冲区规划，以及 D5 首版通过 WorldEdit 后端完成的基础世界落地。D6 是 City 侧的结构选择与固定落点规划：程序消费 TerraSense 导出快照并归一为结构画像，再按真实入口、尺寸、footprint、可建区和地形摘要过滤候选，同时把 D4 功能区 `semanticTerms` 与结构 TerraSense term 交给 AI 判断语义适配；固定大小结构不配置占比，由程序提供预选落地点并由 AI 选择 `landingCandidateId`；非固定结构才配置剩余可见面积占比。D7 进入 Overworld 内选择性接管原版结构生成，优先完整放置固定结构，再以条件包装结构、CityPlanIndex、validator 和 jigsaw 边界策略生成剩余结构；实现仓库当前提供 D7 最小可玩执行入口和 trace / 预览产物。
 
 ## 阅读顺序
 

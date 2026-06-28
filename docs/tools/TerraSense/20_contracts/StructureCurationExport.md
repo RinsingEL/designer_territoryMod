@@ -2,9 +2,9 @@
 
 ## 定位
 
-`StructureCurationExport` 是 TerraSense Studio 审核后的结构策展导出结果。它用于生成当前 StructureBinder 可消费的 `C3_5_StructureCatalog.preprocessed.json`，并兼容下一代 `StructureProfile`。
+`StructureCurationExport` 是 TerraSense Studio 审核后的结构策展导出结果。它用于生成当前 StructureBinder / City D6 可消费的 `StructureProfile.jsonl` 和显式 debug catalog。
 
-TerraSense Studio 标记阶段使用动态术语表；StructureBinder 消费阶段只接收冻结后的静态枚举和静态画像。
+TerraSense Studio 标记阶段使用动态术语表；StructureBinder 消费阶段只接收冻结后的 TerraSense 白名单 term 和静态结构画像，不再把语义投影成 City 功能枚举。
 
 ## 单结构审核对象
 
@@ -48,13 +48,13 @@ TerraSense Studio 标记阶段使用动态术语表；StructureBinder 消费阶�
 
 | 字段 | 说明 |
 | --- | --- |
-| `function_affinity` | 功能权重 |
-| `style_affinity` | 风格权重 |
-| `placement_affinity` | 位置倾向权重 |
-| `usage_affinity` | 主建筑、次级建筑、装饰、地标、新手村核心等用途倾向 |
+| `function` | 功能语义 term 列表，例如 `function.村庄`、`function.灯塔`。 |
+| `style` | 风格 term 列表。 |
+| `placement` | 位置倾向 term 列表。 |
+| `usage` | 主建筑、次级建筑、装饰、地标、新手村核心等用途 term。 |
 | `template_role` | start、child、middle、end、connector、decor、roof、wall、room、corridor 等角色 |
 | `system_ref` | 所属 jigsaw system 或 pool |
-| `quality_tags` | excellent、usable、needs_fix、reject |
+| `quality` | excellent、usable、needs_fix、reject 等质量 term |
 | `recommended_contexts` | 适合的城市、功能区、国度文化或新手村场景 |
 | `avoid_contexts` | 不适合的场景 |
 | `pairing_hints` | 适合搭配的结构或功能 |
@@ -83,7 +83,7 @@ TerraSense 的标记字段必须引用动态术语表，而不是任意散落字
 
 | 状态 | 说明 |
 | --- | --- |
-| `approved` | 已审核，可进入 StructureBinder 静态枚举 |
+| `approved` | 已审核，可进入 StructureBinder 正式 `StructureProfile.jsonl` |
 | `proposed` | 标记阶段临时新增，等待人工审核 |
 | `deprecated` | 已废弃，不应继续新增引用 |
 | `merged` | 已合并到其他 canonical term |
@@ -103,11 +103,11 @@ TerraSense 的标记字段必须引用动态术语表，而不是任意散落字
 ## 导出约束
 
 - `review_state != approved` 的结构默认不得进入主 catalog。
-- `quality_tags` 包含 `reject` 的结构不得进入城市生成候选。
+- `quality` / `qualityTerms` 包含 `reject` 或 `quality.reject` 的结构不得进入城市生成候选。
 - `manual_override=true` 时，导出结果应优先采用人工字段。
-- `function_affinity` 应映射到当前 `function_candidates`，同时保留下一代权重字段。
-- `function_affinity`、`style_affinity`、`placement_affinity`、`usage_affinity`、`template_role`、`quality_tags` 必须来自术语表 canonical term。
-- `proposed` 术语不得进入默认的 StructureBinder 静态枚举；若调试阶段需要导出，必须显式标记为非正式 catalog。
+- `function`、`style`、`placement`、`usage`、`template_role`、`quality` 必须来自术语表 canonical term。
+- `function` 术语必须保留 TerraSense 原始 term，不得映射为 City `functionType`、`function_candidates` 或 `functionTags`。
+- `proposed` 术语不得进入默认的 StructureBinder 正式 catalog；若调试阶段需要导出，必须显式标记为 `catalogMode=debug`。
 - `hard_facts` 中的 footprint、jigsaw、connector、rotation、pool 不得由 AI 编造。
 - `tag_source.manual_override` 和 `tag_source.scanner` 必须正确写入，以便 StructureBinder 严格过滤。
 
@@ -117,7 +117,10 @@ StructureBinder 侧消费的产物必须是冻结快照：
 
 | 产物 | 说明 |
 | --- | --- |
-| `C3_5_FunctionEnumTable.json` | 当前兼容层的功能枚举，只包含 approved function 术语 |
-| `C3_5_StructureCatalog.preprocessed.json` | 当前兼容层结构 catalog，字段值已归一为静态 canonical term |
-| `StructureProfile.jsonl` | 下一代画像，可带 `vocabulary_snapshot_id` 追踪术语表版本 |
-| `StructureVocabulary.snapshot.json` | 可选调试产物，用于说明本次导出采用的冻结术语表 |
+| `StructureProfile.jsonl` | 正式结构画像，一行一个 approved configured structure，包含 `semanticTerms`、`functionTerms`、`styleTerms`、`placementTerms`、`usageTerms`、`templateRoleTerms`、`qualityTerms`。 |
+| `StructureVocabulary.snapshot.json` | 本次导出采用的冻结术语表快照，只包含正式链路可用的 approved term。 |
+| `TerraSenseStructureProfileSource.official.json` | City D6 正式输入来源描述，`sourceType=structure_profile_jsonl`。 |
+| `debug_structure_profile_catalog.json` | 显式 debug catalog，可包含未审核 / proposed 信息，但必须 `catalogMode=debug`。 |
+| `TerraSenseStructureProfileSource.debug.json` | City D6 debug 输入来源描述，`sourceType=debug_catalog`。 |
+
+旧 `C3_5_FunctionEnumTable.json`、`C3_5_StructureCatalog.preprocessed.json`、`function_candidates` 和 `functionTags` 不再属于当前 City D6 / D7 主链。

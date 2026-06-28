@@ -24,9 +24,11 @@ TerraSenseWorkspace/
         top.png
         iso_45.png
   exports/
-    C3_5_FunctionEnumTable.json
-    C3_5_StructureCatalog.preprocessed.json
     StructureProfile.jsonl
+    StructureVocabulary.snapshot.json
+    TerraSenseStructureProfileSource.official.json
+    debug_structure_profile_catalog.json
+    TerraSenseStructureProfileSource.debug.json
 ```
 
 `safe_structure_id` 使用结构 id 的文件安全形态，例如把 `minecraft:village/plains/houses/plains_small_house_1` 转为 `minecraft__village_plains_houses_plains_small_house_1`。

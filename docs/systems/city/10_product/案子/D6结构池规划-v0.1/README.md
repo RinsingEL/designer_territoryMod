@@ -4,12 +4,12 @@
 
 D6 只做结构选择和固定大小结构的落点选择，不放置结构。
 
-D6 的结构画像来源是 TerraSense 导出快照。TerraSense 还没完全实现时，D6 也要先预留导入接口：优先消费 `StructureProfile.jsonl`，可降级消费兼容层 `C3_5_StructureCatalog.preprocessed.json`，再归一成 D6 内部的 `StructureProfileCatalog`。
+D6 的结构画像来源是 TerraSense 导出快照。正式链路只消费 `StructureProfile.jsonl`；开发期可显式消费 `debug_structure_profile_catalog.json`。旧 `C3_5_StructureCatalog.preprocessed.json` / `function_candidates` / `functionTags` 兼容层不再属于主链。
 
 D6 的核心目标是：
 
-1. 程序先按功能区和结构尺寸画像过滤结构目录，去掉大小肯定超出功能区的结构。
-2. AI 从过滤后的结构中选择想使用的结构。
+1. 程序先按真实放置入口、结构尺寸画像、footprint、可建区和地形摘要过滤结构目录，去掉肯定不能落地的结构。
+2. AI 基于 D4 功能区 `semanticTerms` 与结构 TerraSense term 从过滤后的结构中选择想使用的结构。
 3. 固定大小结构不由 AI 填占比；它的可见面积消耗由 footprint 决定。
 4. 非固定大小结构才由 AI 配置目标可见面积占比。
 5. AI 选完固定大小结构后，程序只为这些已选固定结构生成预选落地点。
@@ -26,8 +26,7 @@ D6 不负责扫描结构。结构扫描、截图、硬事实提取和人工审�
 | 优先级 | 输入 | 用途 |
 | --- | --- | --- |
 | 1 | `StructureProfile.jsonl` | 下一代结构画像，一行一个结构，首选输入。 |
-| 2 | `C3_5_StructureCatalog.preprocessed.json` | 当前兼容层结构 catalog，作为过渡输入。 |
-| 3 | debug structure id catalog | 开发期兜底，只能进入 `needs_review` 或低置信候选。 |
+| 2 | debug structure id catalog | 开发期兜底，只能显式标记为 `catalogMode=debug`。 |
 
 D6 必须把这些输入归一成 `StructureProfileCatalog`，后续主流程只消费归一后的 catalog。
 
@@ -42,11 +41,13 @@ D6 必须把这些输入归一成 `StructureProfileCatalog`，后续主流程只
 | `sampleType` | `sample_type`，例如 `single_template`、`structure_assembly`、`jigsaw_assembly`。 |
 | `placementKind` | 从 `sample_type` / `placement_command` 推导；D7 真实放置候选必须是 `minecraft_place_structure`。 |
 | `placementCommand` | TerraSense `placement_command`；D7 trace 可引用。 |
-| `functionTags[]` | `curation.function_affinity` 或兼容层 `function_candidates`。 |
-| `styleTags[]` | `curation.style_affinity`。 |
-| `placementTags[]` | `curation.placement_affinity`。 |
-| `usageTags[]` | `curation.usage_affinity`。 |
-| `qualityTags[]` | `curation.quality_tags`。 |
+| `semanticTerms[]` | TerraSense 导出的白名单 term 总集。 |
+| `functionTerms[]` | TerraSense `curation.function`，保留 `function.*` 前缀；D6 不投影到 City enum。 |
+| `styleTerms[]` | TerraSense `curation.style`。 |
+| `placementTerms[]` | TerraSense `curation.placement`。 |
+| `usageTerms[]` | TerraSense `curation.usage`。 |
+| `templateRoleTerms[]` | TerraSense `curation.template_role`。 |
+| `qualityTerms[]` | TerraSense `curation.quality`。 |
 | `fixedFootprint` | `hard_facts.footprint` / `hard_facts.size`。 |
 | `allowedRotations[]` | TerraSense placement / constraints；缺失时由 D6 默认策略补。 |
 | `connectorsRef` | TerraSense `jigsaw_points` / `connectors` 引用；D6 不解析。 |
@@ -54,8 +55,9 @@ D6 必须把这些输入归一成 `StructureProfileCatalog`，后续主流程只
 导入规则：
 
 - 只默认消费 `review_state=approved` 且术语为 approved 的结构。
-- `quality_tags` 包含 `reject` 的结构不得进入候选。
+- `qualityTerms` 包含 `reject` 或 `quality.reject` 的结构不得进入候选。
 - `needs_review`、`pending`、`proposed` 术语只能在 debug 模式进入 `needs_review`，不得进入正式 `FilteredStructureCatalog`。
+- 缺少 `functionTerms` 的结构不得进入候选；D6 不再读取 `functionTags`、`function_candidates` 或功能枚举兼容表。
 - TerraSense 的 `structure_assembly` 可作为整包画像进入 `variable_area` 或固定整包候选，但必须有可靠 footprint 才能进入 `fixed_footprint`。
 - TerraSense 的 `jigsaw_assembly` 默认进入 `variable_area`；除非人工审核明确声明固定 footprint，否则不得作为 `fixed_footprint`。
 - D7 真实放置候选必须使用 `/place structure` 等价入口，即 `sampleType=structure_assembly` 且 `placementKind=minecraft_place_structure`；`single_template` 和 `jigsaw_assembly` 只能作为画像 / debug 参考，不能作为真实 D7 `structureId`。
@@ -92,13 +94,13 @@ visibleBuildableArea = D5 BuildableAreaMap.buildableArea
 
 | 方向 | 输入 / 输出 | 说明 |
 | --- | --- | --- |
-| 输入 | `FunctionZoneMap` | 功能区类型、几何和面积。 |
+| 输入 | `FunctionZoneMap` | 功能区类型、几何、面积和 TerraSense `semanticTerms`。 |
 | 输入 | `FunctionZoneTerrainStats` | 功能区高度、坡度、水岸和容量摘要。 |
 | 输入 | `RoadIntent` / `BoundaryIntent` | 道路、水岸、边界和接入关系。 |
 | 输入 | `BuildableAreaMap` | D5 扣除道路、边界、缓冲区和小模板后的可建区。 |
-| 输入 | `TerraSenseStructureProfileSource` | TerraSense 导出快照位置和导入模式，可指向 `StructureProfile.jsonl` 或兼容 catalog。 |
-| 输入 | `StructureProfileCatalog` | D6 归一后的结构画像目录，包含 footprintMode、尺寸、可见面积、旋转和 clearance。 |
-| 输出 | `FilteredStructureCatalog` | 按功能区和尺寸过滤后的结构候选。 |
+| 输入 | `TerraSenseStructureProfileSource` | TerraSense 导出快照位置和导入模式，只接受 `StructureProfile.jsonl` 或显式 debug catalog。 |
+| 输入 | `StructureProfileCatalog` | D6 归一后的结构画像目录，包含 TerraSense term、footprintMode、尺寸、可见面积、旋转和 clearance。 |
+| 输出 | `FilteredStructureCatalog` | 按硬约束过滤后的结构候选，并暴露功能区 / 结构语义 term 给 AI。 |
 | 输出 | `StructureChoicePlan` | AI 选择的固定结构和非固定结构；非固定结构包含可见面积占比。 |
 | 输出 | `FixedPlacementCandidateSet` | 程序为已选固定结构生成的预选落地点。 |
 | 输出 | `FixedPlacementSelectionPlan` | AI 选择的固定结构落地点。 |
@@ -134,7 +136,7 @@ flowchart LR
 
 - `fixed_footprint` 的 footprint 加 clearance 肯定超过功能区可见面积时，过滤掉。
 - `fixed_footprint` 的任意允许旋转都无法完整投影进功能区可建形状时，过滤掉。
-- 结构功能标签与功能区不匹配时，过滤掉或降为 `needs_review`。
+- D6 不按 `functionType` 或 City enum 对结构语义做硬过滤；语义适配由 AI 基于功能区 `semanticTerms` 与结构 `semanticTerms/functionTerms/...` 判断。
 - 缺少尺寸画像的结构不得作为 `fixed_footprint` 提供给 AI。
 - `variable_area` 只做明显不适用过滤，不在 D6 判定最终 jigsaw 能否长满。
 
@@ -175,7 +177,7 @@ AI 只能在 `FixedPlacementSelectionPlan` 中引用 `landingCandidateId`，不�
 | --- | --- | --- |
 | `schemaVersion` | string | `city_structure_profile_catalog.v0.1`。 |
 | `source` | object | TerraSense 导出快照或 debug catalog 来源。 |
-| `catalogMode` | string | `official`、`compat`、`debug`。 |
+| `catalogMode` | string | `official`、`debug`。 |
 | `structures[]` | object[] | 结构画像。 |
 
 `structures[]` 关键字段：
@@ -189,11 +191,13 @@ AI 只能在 `FixedPlacementSelectionPlan` 中引用 `landingCandidateId`，不�
 | `placementKind` | string | D7 放置入口；真实放置候选必须是 `minecraft_place_structure`。 |
 | `placementCommand` | string | TerraSense 实际放置命令；`structure_assembly` 候选建议保留。 |
 | `footprintMode` | string | `fixed_footprint` 或 `variable_area`。 |
-| `functionTags[]` | string[] | 适合功能区。 |
-| `styleTags[]` | string[] | 风格标签。 |
-| `placementTags[]` | string[] | 位置倾向，例如临路、临水、广场边。 |
-| `usageTags[]` | string[] | 主建筑、装饰、地标、公共核心等用途。 |
-| `qualityTags[]` | string[] | TerraSense 审核质量。 |
+| `semanticTerms[]` | string[] | TerraSense 白名单语义总集。 |
+| `functionTerms[]` | string[] | TerraSense `function` 术语。 |
+| `styleTerms[]` | string[] | TerraSense `style` 术语。 |
+| `placementTerms[]` | string[] | TerraSense `placement` 术语。 |
+| `usageTerms[]` | string[] | TerraSense `usage` 术语。 |
+| `templateRoleTerms[]` | string[] | TerraSense `template_role` 术语。 |
+| `qualityTerms[]` | string[] | TerraSense `quality` 术语。 |
 | `fixedFootprint` | object | 固定结构尺寸；仅 `fixed_footprint` 必填。 |
 | `visibleAreaCost` | int | 固定结构可见面积消耗；程序计算。 |
 | `allowedRotations[]` | string[] | 可用朝向。 |
@@ -298,7 +302,7 @@ AI 只能在 `FixedPlacementSelectionPlan` 中引用 `landingCandidateId`，不�
 | --- | --- |
 | `structure_profile_catalog.json` | 结构画像目录或引用快照。 |
 | `terrasense_profile_source.json` | TerraSense 导出快照来源和导入模式。 |
-| `filtered_structure_catalog.json` | 按功能区和尺寸过滤后的候选结构。 |
+| `filtered_structure_catalog.json` | 按硬约束过滤后的候选结构，并携带功能区 / 结构 TerraSense 语义 term。 |
 | `structure_choice_plan.json` | AI 第一轮结构选择。 |
 | `fixed_placement_candidate_set.json` | 程序生成的固定结构落点候选。 |
 | `fixed_placement_selection_plan.json` | AI 第二轮落点选择。 |

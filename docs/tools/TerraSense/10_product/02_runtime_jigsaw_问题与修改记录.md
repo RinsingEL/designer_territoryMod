@@ -212,13 +212,13 @@ TerraSense 扫描模板时，原本就能读到：
 
 ### 当前后续边界
 
-- 需要确认最新 TerraSense 导出的 `C3.5` catalog 是否已经同步到 StructureBinder 当前运行目录
+- 需要确认最新 TerraSense 导出的 `StructureProfile.jsonl` / source 描述是否已经同步到 StructureBinder 当前运行目录
 - 需要用新 catalog 再跑 `g_market_02` 或等价 jigsaw 回归样本
 - StructureBinder 仍应推进对 `orientation_raw/front/top/name/target/pool/joint` 等 runtime jigsaw 字段的优先消费
 
 ## 下一步建议
 
-1. 将 TerraSense 最新导出的 `C3_5_StructureCatalog.preprocessed.json` 同步给 StructureBinder
+1. 将 TerraSense 最新导出的 `StructureProfile.jsonl`、`StructureVocabulary.snapshot.json` 和 `TerraSenseStructureProfileSource.official.json` 同步给 StructureBinder
 2. 再次真机验证 `g_market_02`
 3. 让 StructureBinder 的 solver 从“读取 connector 摘要”进一步升级为“优先消费 runtime 派生 jigsaw 细节”
 4. 把该验证纳入 C 大重构的 C8/Jigsaw 回归入口

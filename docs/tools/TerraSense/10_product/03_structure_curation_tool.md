@@ -40,7 +40,7 @@ flowchart TD
 | --- | --- | --- |
 | TerraSense in MC | Minecraft / Forge | 扫描结构、放置结构、截图、提取尺寸/palette/jigsaw 等硬事实 |
 | TerraSense Studio | 脱离 MC 的本地工具 | 浏览截图与元数据，AI 初标，动态术语表匹配，人工审核，导出结构画像 |
-| StructureBinder Exporter | Studio 或独立脚本 | 把已审核术语冻结为静态枚举，导出 `C3_5_StructureCatalog.preprocessed.json` 和下一代 `StructureProfile` |
+| StructureBinder Exporter | Studio 或独立脚本 | 把已审核术语冻结为 TerraSense 白名单 term，导出 `StructureProfile.jsonl`、vocabulary snapshot 和显式 debug catalog |
 
 ## 当前完成状态（2026-05-11）
 
@@ -51,13 +51,13 @@ TerraSense 结构策展工具按 v1-v3 功能包记录为已完成。后续 C �
 - v1：MC 侧固定产出 `single`、`template`、`single_template` 三类结构样本、硬事实、截图与扫描配置。
 - v2：TerraSense Studio 可脱离 MC 读取 workspace，进行人工审核并保存审核结果。
 - v3：Studio 图片识别初标链路已跑通，AI 建议与人工真值分层保存。
-- C3.5 兼容导出继续服务当前 StructureBinder，下一代 `StructureProfile` 服务 C 大重构的权重召回。
+- `StructureProfile.jsonl` 已作为当前 City D6 / D7 主链输入；旧 C3.5 兼容导出不再作为当前真值。
 
 后续工作重心转移到 StructureBinder 侧：
 
-- 接入 TerraSense 最新导出的 `C3_5_StructureCatalog.preprocessed.json` 和 `C3_5_FunctionEnumTable.json`。
-- 将 `StructureProfile` 或等价画像快照接入 C6/C7 的结构搜索。
-- 让 C8 优先消费 runtime jigsaw 真值字段，而不是只依赖压缩后的 connector 摘要。
+- 接入 TerraSense 最新导出的 `StructureProfile.jsonl` 和 `TerraSenseStructureProfileSource.official.json`。
+- 确认 City D6 使用原始 `semanticTerms/functionTerms/...`，不再投影为 City `functionTags` 或 `function_candidates`。
+- 让 D7 bounded jigsaw 优先消费 runtime jigsaw 真值字段，而不是只依赖压缩后的 connector 摘要。
 
 ## 最小交付能力
 
@@ -133,12 +133,12 @@ TerraSense Studio 是给协作者使用的核心工具。它必须不依赖启�
 
 ### 5. 动态术语表
 
-TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只使用冻结后的静态枚举。
+TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只使用冻结后的 TerraSense 白名单 term。
 
 这个边界用于同时满足两个目标：
 
 - 标记时允许新增词，避免协作者和 AI 被现有枚举卡住。
-- 导出时统一名词，保证后续索引、检索和 C7-C9 查询稳定。
+- 导出时统一名词，保证后续索引、检索和 City D6-D7 查询稳定。
 
 动态术语表不是简单白名单，而是可审核的受控词汇表。它至少覆盖：
 
@@ -158,7 +158,7 @@ TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只�
 3. 如果找到可信相似词，直接归一到已有 canonical term。
 4. 如果没有相似词，先新增为 `proposed` 术语，再允许当前结构引用它。
 5. 人工审核时决定批准、改名、合并、废弃或保留待定。
-6. 导出给 StructureBinder 时，只把 `approved` 术语冻结为静态枚举；`proposed` 默认不得进入正式运行时索引。
+6. 导出给 StructureBinder 时，只把 `approved` 术语冻结为正式 TerraSense term；`proposed` 默认不得进入正式运行时索引。
 
 因此“实在没有就先加进白名单再标记”是允许的，但新增词默认应是 `proposed`，不能直接污染正式枚举。
 
@@ -250,13 +250,13 @@ MC 侧应提供：
 | `profile_type` | `single` 或 `jigsaw_system` |
 | `independent_semantic_unit` | 是否能作为独立语义单元使用 |
 | `has_jigsaw_connectors` | 是否带 jigsaw connector |
-| `function_affinity` | market、residential、port、warehouse、civic、religious、farm、military 等功能权重 |
-| `style_affinity` | medieval、eastern、nomadic、industrial、ruin、magic、coastal 等风格权重 |
-| `placement_affinity` | road_frontage、waterfront、plaza_edge、corner、quiet_backstreet、slope 等位置倾向 |
-| `usage_affinity` | main_building、secondary_building、decoration、landmark、road_node、starter_village_core |
+| `function` | 功能 term，例如 `function.村庄`、`function.灯塔`、`function.trade` |
+| `style` | 风格 term，例如 medieval、eastern、nomadic、industrial、ruin、magic、coastal |
+| `placement` | 位置倾向 term，例如 road_frontage、waterfront、plaza_edge、corner、quiet_backstreet、slope |
+| `usage` | 用途 term，例如 main_building、secondary_building、decoration、landmark、road_node、starter_village_core |
 | `template_role` | start、child、middle、end、connector、decor、roof、wall、room、corridor 等 jigsaw 内部角色 |
 | `system_ref` | 若是 jigsaw 子模板，指向所属系统或 pool |
-| `quality_tags` | excellent、usable、needs_fix、reject |
+| `quality` | excellent、usable、needs_fix、reject |
 | `review_state` | pending、approved、rejected、needs_review |
 | `vocabulary_terms` | 本结构引用的动态术语表 canonical term、状态和版本 |
 | `evidence` | AI 或人工给出的标注依据 |
@@ -264,66 +264,59 @@ MC 侧应提供：
 
 ## StructureBinder 消费目标
 
-当前 StructureBinder 已经消费：
+当前 StructureBinder / City D6 消费：
 
-- `template_output/C3_5_StructureCatalog.preprocessed.json`
-- `template_output/C3_5_FunctionEnumTable.json`
+- `StructureProfile.jsonl`
+- `TerraSenseStructureProfileSource.official.json`
+- 显式 debug catalog
 
-当前 C7-C9 主要读取：
+当前 City D6-D7 主要读取：
 
 | 字段 | 当前用途 |
 | --- | --- |
 | `structure_id` | C7/C8/C9 模板 id |
 | `size / size_tier / piece_role` | 候选过滤和节点计划 |
-| `function_candidates` | `StructureTemplateQueryService` 按功能查询 |
-| `style_score` | 风格评分预留 |
+| `semanticTerms` / `functionTerms` | AI 选择结构时对照 D4 功能区语义，不投影为 City enum |
+| `styleTerms` / `placementTerms` / `usageTerms` / `templateRoleTerms` / `qualityTerms` | 风格、位置、用途、jigsaw 角色和质量判断 |
 | `placement` | origin offset、footprint、entry、terrain probe |
 | `constraints` | rotation、水/坡度/solid base 等硬约束 |
 | `connectors` | C8 jigsaw 求解和后续节点展开 |
 | `weight_profile` | 排列与权重预留 |
 | `tag_source` | 判断是否可信、是否人工覆盖或扫描来源 |
 
-TerraSense 导出必须优先保证这些字段稳定。
+TerraSense 导出必须优先保证这些字段稳定；旧 `function_candidates` 和 `functionTags` 不再作为当前消费字段。
 
 ## 导出格式
 
-第一版导出两个层级。
-
-### 兼容导出
-
-给当前 StructureBinder 直接消费：
-
-- `C3_5_StructureCatalog.preprocessed.json`
-- `C3_5_FunctionEnumTable.json`
-
-兼容导出必须是静态产物。它只能包含已审核通过并冻结的术语，不直接暴露 TerraSense Studio 内部的 `proposed` 动态词。
-
-### 下一代画像导出
-
-给 C 大重构和权重搜索使用：
+当前导出给 City D6 / D7 使用：
 
 - `StructureProfile.jsonl`
-- 或按 namespace 分片的 `StructureProfile/*.json`
+- `StructureVocabulary.snapshot.json`
+- `TerraSenseStructureProfileSource.official.json`
+- `debug_structure_profile_catalog.json`
+- `TerraSenseStructureProfileSource.debug.json`
 
 `StructureProfile` 需要对齐：
 
 - `hard_facts`
 - `hard_constraints`
-- `function_affinity`
-- `style_affinity`
-- `placement_affinity`
-- `usage_affinity`
+- `semanticTerms`
+- `functionTerms`
+- `styleTerms`
+- `placementTerms`
+- `usageTerms`
+- `templateRoleTerms`
+- `qualityTerms`
 - `vocabulary_snapshot`
 - `tag_source`
 - `evidence`
 
-## 与 C7-C9 的关系
+## 与 City D6-D7 的关系
 
 | 阶段 | 消费方式 |
 | --- | --- |
-| C7 | 按功能、风格、尺寸、用途和位置倾向召回候选结构，生成工头计划 |
-| C8 | 读取 placement、constraints、connectors 和 jigsaw 真值进行节点放置与求解 |
-| C9 | 按已验证 placement 执行结构放置，并记录失败回写 |
+| D6 | 按真实入口、尺寸、footprint、可建区和地形摘要过滤候选，并把 TerraSense term 交给 AI 做语义选择 |
+| D7 | 读取 placement、constraints、connectors 和 jigsaw 真值进行 bounded 生成、piece 校验和真实落地 |
 
 TerraSense 不参与 C7-C9 运行时决策。它只负责在开局前或开发期提供可信结构画像。
 
@@ -334,7 +327,7 @@ TerraSense 不参与 C7-C9 运行时决策。它只负责在开局前或开发�
 - 结构分类按“是否能独立表达语义”判断，不按是否存在 jigsaw 方块粗暴判断。
 - 带 jigsaw connector 的完整建筑可以是 `single`，但必须记录连接能力。
 - jigsaw 碎片不应被强行标成完整建筑，应回到所属系统和 template role 下解释。
-- TerraSense 标记阶段使用动态术语表；StructureBinder 运行时消费静态、冻结后的枚举和画像。
+- TerraSense 标记阶段使用动态术语表；StructureBinder 运行时消费冻结后的 TerraSense term 和画像，不消费 City enum 投影。
 - 新增术语默认进入 `proposed` 状态，审核通过前不得进入正式 StructureBinder catalog 索引。
 - 硬事实必须来自扫描、NBT、runtime 或人工规则，不能由 AI 编造。
 - jigsaw / connector 真值必须保留原始 runtime 语义，不能压扁成单个 facing。
@@ -402,9 +395,9 @@ v3 必须做到：
 
 ### 后续导出闭环
 
-TerraSense 侧 v1-v3 完成后，下一步推进 StructureBinder 兼容导出与回灌验证：
+TerraSense 侧 v1-v3 完成后，下一步推进 StructureBinder / City D6 回灌验证：
 
-1. 从 `review.json`、`vocabulary.json` 和 `data.json` 导出 `C3_5_StructureCatalog.preprocessed.json`。
-2. 导出 `C3_5_FunctionEnumTable.json`。
-3. 用 StructureBinder 的 `StructureTemplateQueryService` 验证人工审核结构可被功能召回。
-4. 用 C7-C8 链路验证 jigsaw 样本的 connector 真值不再漂移。
+1. 从 `review.json`、`vocabulary.json` 和 `data.json` 导出 `StructureProfile.jsonl`。
+2. 导出 `StructureVocabulary.snapshot.json` 和 `TerraSenseStructureProfileSource.official.json`。
+3. 用 `CityStructureD6Planner` 验证人工审核结构可进入硬约束过滤后的候选。
+4. 用 D7 bounded jigsaw 链路验证 jigsaw 样本的 connector 真值不再漂移。
