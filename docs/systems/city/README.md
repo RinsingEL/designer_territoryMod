@@ -8,6 +8,7 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 
 ```text
 D3 地形 patch 真值
+  -> configured structure envelope profiling
   -> D4 StructureAnchorPlan / StructureAnchorMap
   -> D5 reservation mask / planned structure 生成期注册
   -> D6 planned_worldgen 校验
@@ -46,6 +47,7 @@ D3 地形 patch 真值
 | --- | --- |
 | D2 | `citySiteContext` |
 | D3 | `city_landform_review_package.json`、`landform_review_map.png` |
+| envelope profiling | `structure_envelope_facts.json`、`structure_envelope_profile_preview.png`、`quality_report.json` |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
 | D5 | `reservation_mask_plan.json`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json` |
 | execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json` |
@@ -58,7 +60,7 @@ D3 地形 patch 真值
 | --- | --- | --- |
 | 上游 | 国度规划系统 | `CitySeedRegistry`、城市候选坐标、国度归属。 |
 | 上游 | GIS / TerraSense | D3 地形 patch 真值、TerraSense `StructureProfile.jsonl` / debug catalog、TerraSense tag 白名单。 |
-| 本系统 | City | 结构 anchor、reserved envelope、reservation mask、planned structure registry、worldgen ledger。 |
+| 本系统 | City | 顶层 configured structure envelope facts、结构 anchor、reserved envelope、reservation mask、planned structure registry、worldgen ledger。 |
 | 下游 | 世界生成 / Materialization | feature / vanilla structure 抑制 hook、planned structure worldgen hook、原版 `StructureStart` 生成期落地、ledger 与 trace。 |
 
 ## 目录说明

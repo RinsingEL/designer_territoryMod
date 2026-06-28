@@ -14,11 +14,39 @@ Node MCP：`country_designer_mcp`
 | --- | --- | --- |
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
+| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 P95/P99/maxObserved facts。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 提交 `StructureAnchorPlan`，生成结构 anchor / envelope。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry 与 planned structure worldgen registry，不主动生成目标 chunk。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
+
+## city_profile_structure_envelopes
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `structureIds`
+
+可选：
+
+- `sampleCount`，默认 256。
+- `dimensionId`
+- `playerName`
+
+语义：
+
+- 只采样 `/place structure <id>` 可触发的顶层 configured structure。
+- 不写世界，不生成正式 ledger。
+- 输出 `structure_envelope_facts.json`，供 D4 推导 `collisionEnvelope` / `maskEnvelope`。
+
+返回 artifact：
+
+- `structureEnvelopeFacts`
+- `structureEnvelopeProfilePreview`
+- `qualityReport`
 
 ## city_plan_d4
 
@@ -28,6 +56,10 @@ Node MCP：`country_designer_mcp`
 - `citySeedId`
 - `terrasenseProfileSource`
 - `structureAnchorPlan`
+
+可选：
+
+- `structureEnvelopeFactsSource`，形如 `{ "factsPath": "..." }`；未传时读取当前 run/city 默认产物。
 
 `terrasenseProfileSource` 支持：
 
@@ -132,10 +164,11 @@ chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTU
 
 ```text
 city_plan_d3
+city_profile_structure_envelopes { terrasenseProfileSource, structureIds }
 city_plan_d4 { terrasenseProfileSource, structureAnchorPlan }
 city_plan_d5
-city_execute_d5 { confirmWorldMutation: true }
 city_plan_d6
+city_execute_d5 { confirmWorldMutation: true }
 city_execute_d7 { executeStructurePlacement: false }
 city_execute_d7 { executeStructurePlacement: true }
 ```

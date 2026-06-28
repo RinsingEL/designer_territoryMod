@@ -124,3 +124,30 @@ StructureBinder 侧消费的产物必须是冻结快照：
 | `TerraSenseStructureProfileSource.debug.json` | City D6 debug 输入来源描述，`sourceType=debug_catalog`。 |
 
 旧 `C3_5_FunctionEnumTable.json`、`C3_5_StructureCatalog.preprocessed.json`、`function_candidates` 和 `functionTags` 不再属于当前 City D6 / D7 主链。
+
+## Structure Envelope Facts
+
+`structure_envelope_facts.json` 属于结构硬事实画像的派生产物，用于 City D4-D6 的防撞、mask 和 preflight，不是新的 City 语义枚举。
+
+生成方：
+
+- 当前由 StructureBinder 的 `city_profile_structure_envelopes` 读取 TerraSense `StructureProfile.jsonl` / debug catalog 后采样生成。
+- 后续 TerraSense Studio 可以把同类统计作为结构审核步骤的一部分固化，但仍应保持为硬事实画像。
+
+采样对象：
+
+- 只采顶层 configured structure，即 `/place structure <id>` 可触发的 `worldgen/structure/*.json`。
+- 不把 jigsaw 子模板、house/street/decor pool element 当 D4 anchor。
+
+数据用途：
+
+- `localEnvelopeP95`：City D4 collision envelope。
+- `localEnvelopeP99`：City D5 vegetation / vanilla structure mask envelope。
+- `maxObservedEnvelope`：safety / trace / 越界诊断。
+- `profileHash`、`structureConfigHash`、`sourcePackHash`：用于判断事实画像是否仍匹配当前 TerraSense profile 和结构资源。
+
+约束：
+
+- facts 是 bbox / piece count / area / invalid ratio 等硬事实，不引入新的 function / style / placement 语义 term。
+- facts 失效时不得在 City 侧偷偷映射或降级为旧 functionTag 逻辑。
+- 对约定必须回归大小区间的测试结构，facts 缺失或 hash 不匹配应让 D4 hard fail。

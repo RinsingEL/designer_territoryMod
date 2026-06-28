@@ -34,6 +34,7 @@ D3 已经产出足够多的地形 patch、指标、标签和成员 cell，后续
 
 ```text
 D3 地形 patch 真值
+  -> configured structure envelope profiling
   -> D4 结构落脚点规划
   -> D5 结构保留 mask / planned structure 生成期注册
   -> D6 worldgen 计划校验
@@ -61,7 +62,7 @@ D4 直接根据 D3 patch 信息选择合适的结构和落脚点。
 - 由 AI / review 过程基于 D3 地形 patch 选择结构类型和 anchor。
 - 消费 TerraSense 导出的结构画像、tag 白名单和 placement / terrain / feature terms。
 - 固定大小结构使用自身 footprint + clearance 做防撞。
-- 非固定大小 jigsaw 结构使用 `reservedEnvelope` 做防撞。
+- 非固定大小 configured structure 优先使用 envelope facts 的 P95/P99 bbox 做防撞和 mask。
 - 输出结构规划、保留范围、道路 / 水岸接入意图和后续功能区归类线索。
 - 禁止同一城市范围内原版自然结构生成抢占 D4 已规划区域。
 - active endpoint 名称继续复用 `city_plan_d4`，但 required payload 改为 `runId`、`citySeedId`、`terrasenseProfileSource`、`structureAnchorPlan`。
@@ -82,6 +83,44 @@ D4 不做：
 - 不默认 dry-run jigsaw 再交给后续阶段重新 place。
 - 不要求非固定结构精确等于最终 bbox。
 
+## Structure Envelope Facts
+
+在 Trek 等结构包测试链路中，D4 前先对顶层 configured structure 做非写世界 bbox 采样，产出 `structure_envelope_facts.json`。这里的“顶层”指可通过 `/place structure <id>` 触发的 `worldgen/structure/*.json` registry entry，不把 `trek:village/.../houses|streets|decor` 等子模板当作 D4 anchor。
+
+当前测试套件先固定为：
+
+| 分区 | configured structures |
+| --- | --- |
+| 农业区 | `trek:overworld/medium/farm`、`trek:overworld/medium/plains_cottage`、`trek:overworld/medium/beehive_house` |
+| 居住区 | `trek:overworld/medium/spruce_cottage`、`trek:overworld/common/mushroom_house`、`trek:overworld/medium/dirt_hut` |
+| 商业港口区 | `trek:overworld/medium/dark_oak_trade`、`trek:overworld/medium/small_red_trade`、`trek:overworld/medium/ship_pillager` |
+| 行政区 | `trek:overworld/rare/villager_castle`、`trek:overworld/medium/fort`、`trek:overworld/medium/square_tower` |
+
+默认布局意图：
+
+- 行政城堡居中或高点，作为视觉核心。
+- 居住区贴近行政区。
+- 农业区放在开阔缓坡外圈。
+- 商业港口区沿水岸。
+- D5 / D7 后处理连接行政区到港口的主轴路，并给农业 / 居住区生成支路。
+
+`city_profile_structure_envelopes` 默认每结构采样 256 次，不写世界，输出：
+
+- `localEnvelopeP50/P90/P95/P99`。
+- `maxObservedEnvelope`。
+- piece count / area 的统计区间。
+- invalid ratio、failure summary。
+- TerraSense profile hash、structure config hash、source pack hash。
+- `structure_envelope_profile_preview.png`。
+
+使用规则：
+
+- `collisionEnvelope = localEnvelopeP95 + clearanceBlocks`，用于 D4 防撞。
+- `maskEnvelope = localEnvelopeP99 + vegetationMarginBlocks`，用于 D5 禁植被 / 禁自然结构。
+- `safetyEnvelope = maxObservedEnvelope` 或结构自身 max distance 兜底，用于 trace / 越界诊断。
+- 对本轮 Trek 测试结构，facts 缺失或 hash 不匹配必须 hard fail，不回退到旧大半径。
+- P95 是布局防撞用的统计 envelope，不承诺覆盖全部长尾；D6 preflight 和 worldgen signature gate 负责兜住实际长尾。
+
 ### TerraSense tag 真值
 
 D4 的结构选择必须以 TerraSense 输出为 tag 真值来源：
@@ -97,9 +136,17 @@ D4 的结构选择必须以 TerraSense 输出为 tag 真值来源：
 - 禁止因为某个结构没有命中 City 自定义枚举就把它过滤掉。
 - 禁止让 D4/D6 的结构选择依赖旧式硬编码功能区类型。
 
-### 非固定结构 reservedEnvelope
+### 非固定结构 envelope 策略
 
-非固定大小结构先用保守 envelope 防撞：
+有 envelope facts 时，非固定大小结构使用统计 envelope：
+
+```text
+collisionEnvelope = P95 local bbox + clearance
+maskEnvelope      = P99 local bbox + vegetationMargin
+safetyEnvelope    = maxObserved 或 max_distance_from_center 兜底
+```
+
+没有 envelope facts 的非 Trek 结构，才允许使用保守 envelope 防撞：
 
 ```text
 reservedEnvelope =
@@ -114,7 +161,7 @@ reservedEnvelope =
 - 两个结构的 `reservedEnvelope` 默认不得重叠。
 - 固定结构的 `footprint + clearance` 不得进入其他结构的 `reservedEnvelope`。
 - D4 可以接受结构之间比实际需要更远，以换取稳定性。
-- worldgen hook 真实落地后，用实际 bbox / pieces 更新 ledger，但不能突破 D4 的保留策略。
+- worldgen hook 真实落地后，用实际 bbox / pieces 更新 ledger，但不能突破 D4 的 collision envelope。
 
 ### depth 与规模稳定
 
@@ -149,6 +196,7 @@ D5 根据 D4 的结构规划，把每个结构和道路 / 接入区往外扩一�
 - `reservation_mask_preview.png`：展示结构保留区、禁植被区和禁自然结构区。
 - `city_execute_d5` 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json` 和 `active_planned_structure_registry.json`，并要求 `confirmWorldMutation=true`。
 - active path 不主动执行 WorldEdit 道路 / 清理操作，避免 D5 自己提前生成目标 chunk；这些 operation 作为后处理计划保留。
+- D5 mask 优先使用 D4 `maskEnvelope`，道路 corridor 也进入 noVegetation mask。
 - hook 或 registry 不可用时必须 hard fail，reasonCode 为 `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE` / `CITY_MASK_HOOK_UNAVAILABLE`。
 
 D5 不负责：
@@ -164,12 +212,15 @@ D5 不负责：
 职责：
 
 - `city_plan_d6` 读取 D4 `structure_anchor_map.json` 和 D5 `reservation_mask_plan.json`，输出 `plannedWorldgenStructures[]`、anchor chunk、reserved envelope 和 required chunk range。
-- `city_plan_d6` 不要求目标 chunk loaded；未生成 chunk 返回 `status=planned_worldgen` / `reasonCode=WAITING_FOR_WORLDGEN`。
+- `city_plan_d6` 不写世界，不要求目标 chunk loaded；未执行 `city_execute_d5` 时也可以先产出 planned_worldgen preflight 计划。
+- `city_plan_d6` 对 selected anchor 使用 configured structure registry 做 non-mutating preflight，记录 actual bbox、piece boxes 和 `expectedStartSignature`。
 - 若目标 chunk 已经到 `FEATURES` 或之后且 worldgen ledger 没有记录，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
 - `city_execute_d7 executeStructurePlacement=true` 默认只检查 worldgen ledger / chunk 状态，不调用 `StructureStart.placeInChunk`。
 - 生成期 hook 在 planned anchor chunk 命中时，用 configured structure registry 生成 `StructureStart`，校验 bbox 不突破 D4 `reservedEnvelope` 后写入 `ChunkAccess.setStartForStructure(...)`。
+- 生成期 hook 必须校验 `expectedStartSignature`，不一致时记录 `START_SIGNATURE_MISMATCH`，不得写入成功 ledger。
 - hook 记录 `worldgen_placement_ledger.json`，包含 actual bbox、piece boxes、`startSignature`、anchor、TerraSense terms 和生成 chunk。
 - `city_execute_d7` 看到 ledger 后写 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`。
+- 所有 planned structure 均已有 worldgen ledger 后，`city_execute_d7` 可执行 deferred road surface / clear operations；这只属于道路后处理，不允许 paste structure。
 - `debugLateMaterialize=true` 是显式开发诊断入口，才允许旧 `StructureStart.placeInChunk` 路径；trace 必须标记 `lateMaterialization=true`，不得作为正式验收通过。
 
 关键原则：
@@ -200,9 +251,10 @@ FEATURES
 - D4 能基于 D3 patch 直接规划结构和 anchor，不再生成预设功能区边界。
 - D4 只消费 TerraSense tag 白名单和结构画像，不创建新的 City 语义 tag 枚举。
 - 固定结构用 footprint 防撞，非固定结构用 `reservedEnvelope` 防撞。
+- Trek 测试结构使用 P95 collision envelope、P99 mask envelope；facts 缺失或 hash 不匹配必须 hard fail。
 - jigsaw 结构的 depth / max distance 能进入 reservedEnvelope 推导。
 - D5 能在新生成 chunk 中阻止城市保留区生成植被和自然结构，并激活 planned structure registry。
-- D6 输出 `plannedWorldgenStructures[]`，未生成 chunk 进入 `WAITING_FOR_WORLDGEN`，已生成 chunk 拒绝 late paste。
+- D6 输出 `plannedWorldgenStructures[]`、actual bbox、piece boxes、`expectedStartSignature`，未生成 chunk 进入 `WAITING_FOR_WORLDGEN`，已生成 chunk 拒绝 late paste。
 - chunk 首次生成时 worldgen hook 能记录 actual bbox / pieces；D7 只消费 ledger 并反推功能区。
 - `city_plan_d4` / `city_plan_d5` / `city_plan_d6` / `city_execute_d7` 遇到旧字段或旧 artifact 必须显式失败：`LEGACY_CITY_FUNCTION_ZONE_FLOW_REMOVED`。
 - 预览图能看到 anchor envelope、mask、planned worldgen structures、piece boxes 和 worldgen ledger。
