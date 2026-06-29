@@ -161,7 +161,7 @@ reservedEnvelope =
 - 两个结构的 `reservedEnvelope` 默认不得重叠。
 - 固定结构的 `footprint + clearance` 不得进入其他结构的 `reservedEnvelope`。
 - D4 可以接受结构之间比实际需要更远，以换取稳定性。
-- worldgen hook 真实落地后，用实际 bbox / pieces 更新 ledger，但不能突破 D4 的 collision envelope。
+- worldgen hook 真实落地后，用实际 bbox / pieces 更新 ledger；D6 locked collision envelope 是正式 worldgen 校验边界。
 
 ### depth 与规模稳定
 
@@ -179,30 +179,31 @@ Jigsaw configured structure 自身有 `size` / maxDepth 和 `max_distance_from_c
 
 ## D5 结构保留 mask / feature 抑制
 
-D5 根据 D4 的结构规划，把每个结构和道路 / 接入区往外扩一圈生成 mask。
+D5 根据 D4 的结构规划，把每个结构保留区往外扩一圈生成 mask。道路 / 边界不再由 D5 提前固定，等 D7 拿到真实 worldgen ledger 后再生成。
 
 目标：
 
 - 对新生成 chunk 或尚未跑 biome decoration 的 chunk，阻止城市保留区内生成树、草、花、藤蔓、灌木等 feature。
-- 让道路、结构落地区、clearance 和水岸接入区在植被生成前被保护。
+- 让结构落地区、clearance 和水岸接入区在植被生成前被保护。
 
 输出：
 
 - `noVegetationMask`：禁止树和软植被生成。
 - `vegetationLimitedMask`：允许低风险装饰，但不允许树干 / 树冠进入。
 - `noVanillaStructureMask`：阻止原版自然结构抢占 D4 规划区域。
-- `reservationReason`：记录 mask 来自结构、道路、clearance、水岸接入还是已有占用。
-- `road_access_plan.json` / `build_operation_plan.json`：道路围绕结构 envelope 和入口连接生成，不围绕功能区边界生成。
+- `reservationReason`：记录 mask 来自结构、clearance、水岸接入还是已有占用。
+- `road_access_plan.json` / `build_operation_plan.json`：占位产物，标记 `roadPlanningStage=d7_after_worldgen_ledger`，不得包含提前固定路线的道路 operation。
 - `reservation_mask_preview.png`：展示结构保留区、禁植被区和禁自然结构区。
 - `city_execute_d5` 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json` 和 `active_planned_structure_registry.json`，并要求 `confirmWorldMutation=true`。
-- active path 不主动执行 WorldEdit 道路 / 清理操作，避免 D5 自己提前生成目标 chunk；这些 operation 作为后处理计划保留。
-- D5 mask 优先使用 D4 `maskEnvelope`，道路 corridor 也进入 noVegetation mask。
+- active path 不主动执行 WorldEdit 道路 / 清理操作，避免 D5 自己提前生成目标 chunk。
+- D5 plan 阶段可先使用 D4 `maskEnvelope`；`city_execute_d5` 必须读取 D6 locked materialization plan，用 locked collision / mask 信息激活 active registry。
 - hook 或 registry 不可用时必须 hard fail，reasonCode 为 `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE` / `CITY_MASK_HOOK_UNAVAILABLE`。
 
 D5 不负责：
 
 - 不清理已经生成出来的半截树。
 - 不决定结构最终长成什么样。
+- 不决定道路最终怎么走。
 - 不把 mask 当成功能区硬边界。
 
 ## D6/D7 Worldgen-Time 结构落地
@@ -211,22 +212,22 @@ D5 不负责：
 
 职责：
 
-- `city_plan_d6` 读取 D4 `structure_anchor_map.json` 和 D5 `reservation_mask_plan.json`，输出 `plannedWorldgenStructures[]`、anchor chunk、reserved envelope 和 required chunk range。
+- `city_plan_d6` 读取 D4 `structure_anchor_map.json` 和 D5 `reservation_mask_plan.json`，输出 `plannedWorldgenStructures[]`、anchor chunk、locked actual footprint、locked collision envelope 和 required chunk range。
 - `city_plan_d6` 不写世界，不要求目标 chunk loaded；未执行 `city_execute_d5` 时也可以先产出 planned_worldgen preflight 计划。
-- `city_plan_d6` 对 selected anchor 使用 configured structure registry 做 non-mutating preflight，记录 actual bbox、piece boxes 和 `expectedStartSignature`。
+- `city_plan_d6` 对 selected anchor 使用 configured structure registry 做 non-mutating preflight，记录 actual bbox、actual bbox group、piece boxes 和 `expectedStartSignature`，并用 `actualFootprint + collisionClearanceBlocks` 做最终防撞。
 - 若目标 chunk 已经到 `FEATURES` 或之后且 worldgen ledger 没有记录，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
 - `city_execute_d7 executeStructurePlacement=true` 默认只检查 worldgen ledger / chunk 状态，不调用 `StructureStart.placeInChunk`。
-- 生成期 hook 在 planned anchor chunk 命中时，用 configured structure registry 生成 `StructureStart`，校验 bbox 不突破 D4 `reservedEnvelope` 后写入 `ChunkAccess.setStartForStructure(...)`。
+- 生成期 hook 在 planned anchor chunk 命中时，用 configured structure registry 生成 `StructureStart`，校验 signature、D6 locked collision envelope 和 ledger overlap 后写入 `ChunkAccess.setStartForStructure(...)`。
 - 生成期 hook 必须校验 `expectedStartSignature`，不一致时记录 `START_SIGNATURE_MISMATCH`，不得写入成功 ledger。
 - hook 记录 `worldgen_placement_ledger.json`，包含 actual bbox、piece boxes、`startSignature`、anchor、TerraSense terms 和生成 chunk。
 - `city_execute_d7` 看到 ledger 后写 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`。
-- 所有 planned structure 均已有 worldgen ledger 后，`city_execute_d7` 可执行 deferred road surface / clear operations；这只属于道路后处理，不允许 paste structure。
+- 所有 planned structure 均已有 worldgen ledger 后，`city_execute_d7` 基于真实 `actualFootprint` 生成道路 / 边界后处理；这只属于道路后处理，不允许 paste structure。
 - `debugLateMaterialize=true` 是显式开发诊断入口，才允许旧 `StructureStart.placeInChunk` 路径；trace 必须标记 `lateMaterialization=true`，不得作为正式验收通过。
 
 关键原则：
 
 - active path 不支持“森林已经生成后再补贴结构”。
-- D5 只激活生成期 mask / planned structure registry，不主动触发目标 chunk 生成。
+- D5 只激活生成期 mask / planned structure registry，不主动触发目标 chunk 生成；D5 execute 必须依赖 D6 locked plan。
 - 植被处理只保留生成期 feature 抑制，不新增清树兜底。
 - 若 worldgen hook 无法稳定写入 structure start storage，必须 hard fail `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`，不能静默退回 late paste。
 
@@ -250,12 +251,12 @@ FEATURES
 - D3 作为已完善的地形 patch 真值层被复用，不重复实现。
 - D4 能基于 D3 patch 直接规划结构和 anchor，不再生成预设功能区边界。
 - D4 只消费 TerraSense tag 白名单和结构画像，不创建新的 City 语义 tag 枚举。
-- 固定结构用 footprint 防撞，非固定结构用 `reservedEnvelope` 防撞。
+- D4 只产出 anchor / envelope 候选；D6 用 actual footprint + clearance 锁定最终防撞 envelope。
 - Trek 测试结构使用 P95 collision envelope、P99 mask envelope；facts 缺失或 hash 不匹配必须 hard fail。
 - jigsaw 结构的 depth / max distance 能进入 reservedEnvelope 推导。
 - D5 能在新生成 chunk 中阻止城市保留区生成植被和自然结构，并激活 planned structure registry。
-- D6 输出 `plannedWorldgenStructures[]`、actual bbox、piece boxes、`expectedStartSignature`，未生成 chunk 进入 `WAITING_FOR_WORLDGEN`，已生成 chunk 拒绝 late paste。
-- chunk 首次生成时 worldgen hook 能记录 actual bbox / pieces；D7 只消费 ledger 并反推功能区。
+- D6 输出 `plannedWorldgenStructures[]`、locked actual bbox、locked bbox group、locked collision envelope、piece boxes、`expectedStartSignature`，未生成 chunk 进入 `WAITING_FOR_WORLDGEN`，已生成 chunk 拒绝 late paste。
+- chunk 首次生成时 worldgen hook 能记录 actual bbox / pieces；D7 只消费 ledger，反推功能区，并按真实 footprint 生成道路 / 边界。
 - `city_plan_d4` / `city_plan_d5` / `city_plan_d6` / `city_execute_d7` 遇到旧字段或旧 artifact 必须显式失败：`LEGACY_CITY_FUNCTION_ZONE_FLOW_REMOVED`。
 - 预览图能看到 anchor envelope、mask、planned worldgen structures、piece boxes 和 worldgen ledger。
 - trace 能回答为什么等待、失败、重叠、越界或签名不一致。

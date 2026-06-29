@@ -14,8 +14,8 @@ Node MCP：`country_designer_mcp`
 | --- | --- | --- |
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
-| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 P95/P99/maxObserved facts。 |
-| `city_plan_d4` | `POST /realm/city/plan_d4` | 提交 `StructureAnchorPlan`，生成结构 anchor / envelope。 |
+| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
+| `city_plan_d4` | `POST /realm/city/plan_d4` | 提交 `StructureAnchorPlan`，生成结构 anchor / envelope；固定结构走 bbox group，非固定结构走 P95/P99。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry 与 planned structure worldgen registry，不主动生成目标 chunk。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
@@ -41,6 +41,9 @@ Node MCP：`country_designer_mcp`
 - 只采样 `/place structure <id>` 可触发的顶层 configured structure。
 - 不写世界，不生成正式 ledger。
 - 输出 `structure_envelope_facts.json`，供 D4 推导 `collisionEnvelope` / `maskEnvelope`。
+- facts 同时包含 `validSamples[]`、`bboxGroups[]`、`generationConfigHash`。
+- 固定 / 近固定结构使用 dominant `bboxGroups[]` 或 anchor 指定的 `envelopeGroupKey`。
+- 非固定结构继续使用固定生成配置下的 P95 / P99 / maxObserved。
 
 返回 artifact：
 
@@ -60,6 +63,8 @@ Node MCP：`country_designer_mcp`
 可选：
 
 - `structureEnvelopeFactsSource`，形如 `{ "factsPath": "..." }`；未传时读取当前 run/city 默认产物。
+- anchor 可选 `envelopeGroupKey` 指定 profiling bbox group。
+- anchor 可选 `smallClearanceBlocks` 指定固定结构 bbox group 小间距，默认 4。
 
 `terrasenseProfileSource` 支持：
 
@@ -76,6 +81,8 @@ Node MCP：`country_designer_mcp`
 - `structureAnchorPreview`
 - `qualityReport`
 - `sourceD3Package`
+
+`structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95/P99。
 
 ## city_plan_d5 / city_execute_d5
 
@@ -98,11 +105,12 @@ Node MCP：`country_designer_mcp`
 
 执行语义：
 
+- 必须已存在 D6 locked `structure_materialization_plan.json`；未跑 D6 或 locked plan 不完整时 hard fail。
 - 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
-- 同步激活 `active_planned_structure_registry.json`。
+- 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
-- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`。
+- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`。
 
 ## city_plan_d6
 
@@ -131,6 +139,10 @@ Node MCP：`country_designer_mcp`
 
 chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
 
+D6 会做 non-mutating probe-and-lock，输出 `locked=true`、`lockedActualFootprint`、`lockedBBoxGroupKey`、`lockedCollisionEnvelope`、`expectedStartSignature`。若 actual group 与 D4 selected/dominant group 不一致，但 facts 中存在该 group 且最终防撞通过，D6 锁定实际 group，不再直接失败。
+
+D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey`、`lockedCollisionEnvelope`、`envelopeMode`、`selectedEnvelopeGroupKey`，用于解释 fixed bbox group 是否匹配本次实际生成形态。默认 `collisionClearanceBlocks=4`。
+
 ## city_execute_d7
 
 必填参数：
@@ -149,6 +161,7 @@ chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTU
 
 - `executeStructurePlacement=false`：只查看 worldgen ledger / 当前 chunk 状态。
 - `executeStructurePlacement=true`：正式路径仍只查看 worldgen ledger / 当前 chunk 状态，不 late paste。
+- 当所有 planned structures 都有 ledger 时，D7 基于 ledger 真实 `actualFootprint` 生成道路 / 边界后处理；道路避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3。
 - `debugLateMaterialize=true`：显式开发模式，才允许旧 `StructureStart.placeInChunk` 路径；trace 标记 `lateMaterialization=true`，不作为验收通过。
 
 返回 artifact：
@@ -159,6 +172,13 @@ chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTU
 - `placedStructurePreview`
 - `qualityReport`
 - `sourceStructureMaterializationPlan`
+
+响应 / report 增加：
+
+- `roadPostprocessSource=worldgen_ledger_actual_footprint`
+- `roadAvoidanceMarginBlocks`
+- `roadBlockedByStructureCount`
+- `boundarySource=actual_footprint_union`
 
 ## 推荐调用流程
 
