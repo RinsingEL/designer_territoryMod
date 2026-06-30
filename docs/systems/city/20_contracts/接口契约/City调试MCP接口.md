@@ -15,7 +15,9 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
 | `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
-| `city_plan_d4` | `POST /realm/city/plan_d4` | 提交 `StructureAnchorPlan`，生成结构 anchor / envelope；固定结构走 bbox group，非固定结构走 P95/P99。 |
+| `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | 提交 `DesignSlotPlan`，按 D3 patch / 关系意图生成少量 anchor 候选点和预览。 |
+| `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | 提交 `AnchorSelectionPlan`，把候选选择转换为标准 `StructureAnchorPlan` 并生成 D4 anchor artifact。 |
+| `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry 与 planned structure worldgen registry，不主动生成目标 chunk。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
@@ -83,6 +85,55 @@ Node MCP：`country_designer_mcp`
 - `sourceD3Package`
 
 `structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95/P99。
+
+## city_plan_d4_candidates / city_select_d4_candidates
+
+`city_plan_d4_candidates` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `designSlotPlan`
+
+可选：
+
+- `structureEnvelopeFactsSource`，形如 `{ "factsPath": "..." }`；未传时读取当前 run/city 默认产物。
+
+语义：
+
+- `slotId` / `displayRole` 只表示本次设计槽位，不是 City 全局功能枚举。
+- `candidatePatchRefs` 是候选搜索依据，不是硬边界；结构真实 hard gate 仍由 D6 actual footprint 决定。
+- slot 可使用 `structureId` 表示单一顶层 configured structure，也可使用 `structureIds[]` 表示多个备选结构。
+- 每个 slot 默认输出最多 5 个候选，候选包含 `candidateKind`、`anchorBlock`、`estimatedCollisionEnvelope`、`estimatedMaskEnvelope`、`scoreBreakdown`、`placementReason`、`risks`。
+- `candidateId` 在同一 slot 内稳定且唯一，用于 `city_select_d4_candidates` 精确回选。
+- `distanceBand` 首版固定为 `near=32-96`、`medium=96-224`、`far=>224` blocks；`targetAnchorId` 只引用已选 anchor，`targetSlotId` 只作为软提示。
+
+返回 artifact：
+
+- `designSlotPlan`
+- `anchorCandidateSet`
+- `anchorCandidatePreview`
+- `qualityReport`
+- `sourceD3Package`
+- `sourceStructureEnvelopeFacts`
+
+`city_select_d4_candidates` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `anchorSelectionPlan`
+
+可选：
+
+- `anchorCandidateSetSource`，形如 `{ "candidateSetPath": "..." }`；未传时读取当前 run/city 默认候选产物。
+- `structureEnvelopeFactsSource`，同 `city_plan_d4`。
+
+语义：
+
+- 读取 `anchor_candidate_set.json`，把 `selectedCandidates[]` 转换为标准 `StructureAnchorPlan`。
+- 转换后立即复用 `city_plan_d4` 的硬校验与 artifact 输出；后续 D5/D6/D7 不需要知道候选层存在。
+- 旧 `patchGroupPlan`、`functionType`、`functionTag`、`function_candidates` 等字段同样必须失败：`LEGACY_CITY_FUNCTION_ZONE_FLOW_REMOVED`。
 
 ## city_plan_d5 / city_execute_d5
 
@@ -185,7 +236,8 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 ```text
 city_plan_d3
 city_profile_structure_envelopes { terrasenseProfileSource, structureIds }
-city_plan_d4 { terrasenseProfileSource, structureAnchorPlan }
+city_plan_d4_candidates { terrasenseProfileSource, designSlotPlan }
+city_select_d4_candidates { terrasenseProfileSource, anchorSelectionPlan }
 city_plan_d5
 city_plan_d6
 city_execute_d5 { confirmWorldMutation: true }

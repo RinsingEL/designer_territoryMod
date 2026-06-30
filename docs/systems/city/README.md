@@ -9,6 +9,7 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 ```text
 D3 地形 patch 真值
   -> configured structure envelope profiling
+  -> D4 设计 slot 候选生成 / 候选选择（推荐路径）
   -> D4 StructureAnchorPlan / StructureAnchorMap
   -> D5 reservation mask 预案
   -> D6 planned_worldgen probe-and-lock
@@ -44,6 +45,7 @@ D3 地形 patch 真值
 
 当前主线之后的分阶段小案子：
 
+- `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
 - `10_product/案子/城市边界与城墙-v0.1/README.md`：把调试边界逐步升级为城墙、栅栏、码头线等城市边界表达。
@@ -57,6 +59,7 @@ D3 地形 patch 真值
 | D2 | `citySiteContext` |
 | D3 | `city_landform_review_package.json`、`landform_review_map.png` |
 | envelope profiling | `structure_envelope_facts.json`、`structure_envelope_profile_preview.png`、`quality_report.json` |
+| D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
 | D5 | `reservation_mask_plan.json`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |
 | execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json` |
