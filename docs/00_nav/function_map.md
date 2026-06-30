@@ -57,17 +57,26 @@
 ## City 系统
 
 - 总入口：`../systems/city/README.md`
-- 系统概述：`../systems/city/10_product/系统概述.md`
-- C1-C4 城市规划过程：`../systems/city/10_product/过程设计/C1-C4城市规划过程.md`
-- C5-C8 结构落地交接过程：`../systems/city/10_product/过程设计/C5-C8结构落地交接过程.md`
-- v0.1 City 城市构造最小闭环开发计划：`../systems/city/10_product/开发计划-v0.1-City城市构造最小闭环.md`
-- v0.2 D7 受控 Jigsaw 物化开发计划：`../systems/city/10_product/开发计划-v0.2-D7受控Jigsaw物化.md`
-- v0.3 D7 计划驱动 Jigsaw 拓展开发计划：`../systems/city/10_product/开发计划-v0.3-D7计划驱动Jigsaw拓展.md`
-- v0.4 D7 受控 Jigsaw 真实粘贴与验收开发计划：`../systems/city/10_product/开发计划-v0.4-D7受控Jigsaw真实粘贴与验收.md`
-- v0.5 D7 Jigsaw 落地拦截与规则增强开发计划：`../systems/city/10_product/开发计划-v0.5-D7Jigsaw落地拦截与规则增强.md`
-- D6 结构选择与固定落点规划案：`../systems/city/10_product/案子/D6结构池规划-v0.1/README.md`
-- D7 条件包装结构生成案：`../systems/city/10_product/案子/D7条件包装结构生成-v0.1/README.md`
-- D7 剩余结构起点候选案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
+- 案子状态索引：`../systems/city/10_product/案子/README.md`
+- 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
+- D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
+- 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
+- 后续案：`../systems/city/10_product/案子/RoadWeaver结构连接-v0.1/README.md`
+- 后续案：`../systems/city/10_product/案子/结构地形兼容适配-v0.1/README.md`
+- 后续案：`../systems/city/10_product/案子/城市边界与城墙-v0.1/README.md`
+- 后续案：`../systems/city/10_product/案子/结构语义重标记-v0.1/README.md`
+- 后续案：`../systems/city/10_product/案子/City结构风格化换皮-v0.1/README.md`
+- 历史概述：`../systems/city/10_product/系统概述.md`
+- 历史过程：`../systems/city/10_product/过程设计/C1-C4城市规划过程.md`
+- 历史过程：`../systems/city/10_product/过程设计/C5-C8结构落地交接过程.md`
+- 历史计划：`../systems/city/10_product/开发计划-v0.1-City城市构造最小闭环.md`
+- 历史计划：`../systems/city/10_product/开发计划-v0.2-D7受控Jigsaw物化.md`
+- 历史计划：`../systems/city/10_product/开发计划-v0.3-D7计划驱动Jigsaw拓展.md`
+- 历史计划：`../systems/city/10_product/开发计划-v0.4-D7受控Jigsaw真实粘贴与验收.md`
+- 历史计划：`../systems/city/10_product/开发计划-v0.5-D7Jigsaw落地拦截与规则增强.md`
+- 历史案：`../systems/city/10_product/案子/D6结构池规划-v0.1/README.md`
+- 历史案：`../systems/city/10_product/案子/D7条件包装结构生成-v0.1/README.md`
+- 历史案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
 - 代码导览：`../systems/city/30_code_guide/代码导览.md`

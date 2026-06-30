@@ -31,19 +31,26 @@ D3 地形 patch 真值
 
 ## 阅读顺序
 
-1. `10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
-2. `20_contracts/数据契约/结构落地交接契约.md`
-3. `20_contracts/接口契约/City调试MCP接口.md`
-4. `30_code_guide/代码导览.md`
-5. `40_tests/测试入口.md`
+1. `10_product/案子/README.md`
+2. `10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
+3. `20_contracts/数据契约/结构落地交接契约.md`
+4. `20_contracts/接口契约/City调试MCP接口.md`
+5. `30_code_guide/代码导览.md`
+6. `40_tests/测试入口.md`
 
 历史方案可读但不作为当前实现依据：
 
+- `10_product/系统概述.md`
+- `10_product/过程设计/C1-C4城市规划过程.md`
+- `10_product/过程设计/C5-C8结构落地交接过程.md`
+- `10_product/案子/城市构造流程-v0.1/README.md`
+- `10_product/案子/C5锚点与保留区-v0.1/README.md`
 - `10_product/案子/D6结构池规划-v0.1/README.md`
 - `10_product/案子/D7条件包装结构生成-v0.1/README.md`
+- `10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 - `10_product/开发计划-v0.2~v0.5-*`
 
-当前主线之后的分阶段小案子：
+已并入主线和后续待做的分阶段小案子：
 
 - `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
@@ -51,6 +58,7 @@ D3 地形 patch 真值
 - `10_product/案子/城市边界与城墙-v0.1/README.md`：把调试边界逐步升级为城墙、栅栏、码头线等城市边界表达。
 - `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：让结构之间的道路连接交给成熟道路能力处理。
 - `10_product/案子/结构地形兼容适配-v0.1/README.md`：处理悬空、硬切、台基和地形融合问题。
+- `10_product/案子/City结构风格化换皮-v0.1/README.md`：在结构真实落地后按国度 / 城市 palette 做材料主题化替换。
 
 ## 当前产物
 
