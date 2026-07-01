@@ -1,66 +1,90 @@
-# City 案子：Road Weaver 结构连接 v0.1
+# City 案子：RoadWeaver 结构连接 v0.1
 
-## 定位
+## 状态
 
-本案用于把结构之间的道路连接交给成熟道路生成能力处理。City 不重新发明完整道路生成算法，只输出结构 anchor、入口、连接意图和约束。
+已完成 v0.1 接入并并入当前 City 主线。
 
-## 核心目标
+本案把“结构之间的正式道路连接”从 D7 WorldEdit 调试后处理，迁移到生成期 RoadWeaver optional adapter。City 不强绑 RoadWeaver；缺少 RoadWeaver 时仍可保留 WorldEdit debug fallback，但 trace 必须明确这不是正式道路验收。
 
-- 结构落地后，结构之间能形成自然连接。
-- D5 / D7 当前道路后处理保留为调试路径。
-- 后续接入 Road Weaver 或同类辅助 mod，处理真实道路曲线、坡度、桥、岸线等问题。
+## 当前口径
 
-## City 输出给 Road Weaver 的信息
+- RoadWeaver 是可选依赖，不是 mandatory mod。
+- 开发运行可用 `-PgeomantiaDevUseRoadWeaver=true` 拉取 `maven.modrinth:roadweaver:2.2.2-1.20.1`。
+- Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
+- `city_execute_d5` 是 RoadWeaver 注册点，必须发生在目标 chunk 首次生成前。
+- endpoint 和 MCP 新增 `roadProvider=auto|roadweaver|worldedit_debug|none`：
+  - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则保留 D7 debug fallback。
+  - `roadweaver`：RoadWeaver 缺失时 hard fail `ROADWEAVER_UNAVAILABLE`。
+  - `worldedit_debug`：显式走 D7 WorldEdit 调试道路。
+  - `none`：禁用道路生成。
 
-- structure anchor。
-- actual bbox / maskEnvelope。
-- entrance candidates。
-- roadAccessIntent。
-- D3 地形 patch、坡度、水岸、禁行区域。
-- noVegetationMask / noVanillaStructureMask。
-- 已有道路或桥梁片段。
-
-## 初版流程
+## 当前流程
 
 ```text
-D6/D7 worldgen ledger
-  -> actual bbox / pieces
-  -> infer entrance candidates
-  -> build road connection graph
-  -> call Road Weaver
-  -> road ledger / preview
+D6 locked plan
+  -> lockedActualFootprint / priority
+  -> city_execute_d5
+  -> roadweaver_connection_plan.json
+  -> RoadNetworkApi.registerStructureEndpoint(...)
+  -> RoadNetworkApi.ensureConnection(..., generateImmediately=false)
+  -> chunk 首次生成时由 RoadWeaver 自己生成道路
+  -> city_execute_d7 只查询 ledger，不覆盖 RoadWeaver 结果
 ```
 
-## 接入边界
+## 当前 artifacts
 
-City 负责：
+`city_execute_d5` 新增：
 
-- 确定哪些结构需要连。
-- 给出入口、优先级、不可穿越区域。
-- 记录 road trace 和验收结果。
+- `roadweaver_connection_plan.json`
+- `roadweaver_registration_report.json`
+- `road_provider_state.json`
 
-Road Weaver 负责：
+`road_provider_state.json` 至少说明：
 
-- 路径规划。
-- 地表铺装。
-- 坡度 / 水体 / 桥梁适配。
-- 道路装饰。
+- `roadProvider`
+- `roadWeaverRegistered`
+- `useWorldEditDebugFallback`
+- `roadWeaverAvailable`
+- `reasonCode`
+
+## City 输出给 RoadWeaver 的信息
+
+v0.1 只输出最小可用连接：
+
+- `anchorId`
+- `structureId`
+- `priority`
+- `lockedActualFootprint`
+- `roadPoint`
+- connection chain
+- `generateImmediately=false`
+
+后续可扩展：
+
+- entrance candidates
+- roadAccessIntent
+- D3 坡度 / 水岸 / 禁行区域
+- actual footprint avoidance
+- bridge / shore policy
+- road style palette
 
 ## 验收
 
-- Road Weaver 不会穿过结构 actual bbox。
-- Road Weaver 不会破坏 D5 mask 或 planned structure registry。
-- 道路连接能解释来源：行政到港口主轴、居住支路、农业支路等。
-- 失败时返回明确 reason，而不是回退到直线 gravel 路。
+- 缺 RoadWeaver 时 `roadProvider=auto` 不崩溃，trace 标记 debug fallback。
+- 缺 RoadWeaver 时 `roadProvider=roadweaver` hard fail `ROADWEAVER_UNAVAILABLE`。
+- RoadWeaver 注册发生在 `city_execute_d5`，早于目标 chunk 首次生成。
+- RoadWeaver 模式下 D7 不再默认生成 WorldEdit road operation。
+- `roadweaver_connection_plan.json` 能解释哪些结构被连接、连接顺序和端点。
 
 ## 暂不处理
 
-- 不在本案实现 Road Weaver 本体。
-- 不定义最终道路美术。
-- 不做玩家导航 AI。
+- 不实现 RoadWeaver 本体。
+- 不保证 RoadWeaver 最终道路美术符合 City 设计风格。
+- 不做 RoadWeaver non-mutating preview。
+- 不处理 RoadWeaver 已加载 chunk 无法补路的问题；该限制由“D5 生成期注册”规避。
 
-## 待定
+## 后续方向
 
-- 选用哪个具体道路辅助 mod。
-- Road Weaver 调用方式：API、数据包、命令、MCP 还是文件协议。
-- 是否需要 Road Weaver 的 non-mutating preview。
+- 从结构 profile 中读取入口候选，而不是只用 bbox 外侧点。
+- 把 D3 坡度、水岸、桥梁意图交给 RoadWeaver 或 adapter。
+- 道路 style / palette 与后续 City 结构风格化换皮联动。

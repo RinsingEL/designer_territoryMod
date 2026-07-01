@@ -1,69 +1,72 @@
 # City 案子：城市边界与城墙 v0.1
 
-## 定位
+## 状态
 
-本案处理结构落地后的城市边界表达。当前阶段边界可以继续使用道路 / mask / preview 范围；后续逐步替换为更有城市感的城墙、栅栏、挡墙、码头线或自然边界。
+已完成 v0.1 临时城墙闭环，并入当前 City 主线。
 
-## 核心目标
+本案不恢复“先画功能区硬边界再塞结构”。城墙只在 D7 ledger 完整后，以真实落地结构的 `actualFootprint` 并集为来源，生成临时正交矩形外圈。
 
-- 不回到旧式“先画功能区硬边界再塞结构”。
-- 边界由已规划结构、reservation mask、道路连接和地形共同反推。
-- 初期保留当前道路边界作为调试表达。
-- 后续可将部分边界升级为城墙或其他主题边界。
+## 当前口径
 
-## 边界来源
+- 新增 `city_plan_city_walls` / `city_execute_city_walls` HTTP 与 MCP 入口。
+- `city_plan_city_walls` 读取 D7 `placed_structure_ledger.json`。
+- 默认 `wallMarginBlocks=24`，`segmentLengthBlocks=15`，`gateWidthBlocks=7`。
+- 边界来源是所有 `actualFootprint` 的 union 外扩，不是旧功能区边界。
+- v0.1 只生成临时矩形 / 正交边界，snap 到 15 格段。
+- 城门是“7 格缺口 + 两侧小塔楼”，不做完整门楼。
+- 执行后端为 `vanilla_setblock`，不依赖 WorldEdit。
+- 单段高度差超过 5 blocks 跳过并报告 `WALL_TERRAIN_TOO_STEEP`。
 
-- 结构 `maskEnvelope` 的并集。
-- 道路 corridor。
-- 水岸 / 山脊 / 崖壁等 D3 地形 patch 边缘。
-- 结构群之间的功能归类结果。
-- noVegetation / noVanillaStructure mask。
+## 模板
 
-## 初版策略
+模板来自用户提供的 `GPT城墙设计.txt` 口径，当前内置：
 
-```text
-placed structures
-  -> union(maskEnvelope + road corridor)
-  -> simplify boundary
-  -> classify boundary segment
-  -> debug road / gravel / marker
-```
+- `wall_straight_15`
+- `wall_tower_small`
+- `wall_gap_gate_7`
 
-边界类型先只分：
+`CityWallTemplateLibrary` 会导出：
 
-- 调试道路边界
-- 水岸边界
-- 山体 / 崖壁边界
-- 开放农田边界
-- 预留城墙边界
+- `city_wall_templates/wall_template_library.json`
+- `city_wall_templates/wall_straight_15.nbt`
+- `city_wall_templates/wall_tower_small.nbt`
+- `city_wall_templates/wall_gap_gate_7.nbt`
 
-## 城墙升级方向
+这些 `.nbt` 是 vanilla structure-template 风格的压缩 NBT artifact；v0.1 执行时仍使用 setBlock 几何后端，后续可切换到 `StructureTemplate.placeInWorld`。
 
-当结构密度、Road Weaver 和地形适配稳定后，再把部分边界替换为：
+## 当前 artifacts
 
-- 城墙
-- 木栅栏
-- 农田篱笆
-- 码头岸线
-- 山体挡墙
-- 城门 / 门楼
+`city_plan_city_walls` 输出：
+
+- `city_wall_plan.json`
+- `city_wall_preview.png`
+- `city_wall_templates/*`
+
+`city_execute_city_walls` 输出：
+
+- `city_wall_placement_report.json`
 
 ## 验收
 
-- 边界不会先于结构决定城市形状。
-- preview 能显示边界来源：结构、道路、水岸、地形。
-- 边界不会穿过结构 actual bbox。
-- 调试道路边界可被后续城墙系统替换，不写死为最终城市形态。
+- 城墙 plan 必须在 D7 ledger 完整后生成。
+- `boundaryMode=temporary_rectilinear_actual_footprint_union`。
+- `sourceActualFootprintUnion` 来自真实 `actualFootprint`。
+- 城墙 preview 能显示 source footprint、wall bounds、wall segments、tower 和 gate gap。
+- 城墙段不得压结构 actual footprint。
+- 陡坡段必须跳过并写 `WALL_TERRAIN_TOO_STEEP`。
+- `.nbt` 模板 artifact 可被 MC NBT 读取。
 
 ## 暂不处理
 
-- 不生成完整城墙。
-- 不处理复杂城门寻路。
+- 不做最终边界算法。
+- 不做复杂城门、门楼、转角美化、破损变体。
 - 不做军事防御逻辑。
-- 不把边界当作功能区硬边界。
+- 不把城墙边界反向作为 D4 功能区硬边界。
+- 不接 RoadWeaver 或地形适配结果做墙体曲线。
 
-## 待定
+## 后续方向
 
-- 城墙结构来源：自建模板、Trek、其他结构包或专用 mod。
-- 边界简化算法。
-- 水岸边界和港口码头的优先级。
+- 用 D3 水岸、山脊、崖壁和 RoadWeaver 道路结果替换矩形边界。
+- 增加角楼、门楼、破损墙、木栅栏、农田篱笆、码头岸线等主题边界。
+- 城墙执行从 setBlock 后端升级为 `StructureTemplate.placeInWorld`。
+- 城墙与 terrain adaptation 联动，补挡墙、台基和坡道。

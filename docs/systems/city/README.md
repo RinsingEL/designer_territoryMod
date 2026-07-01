@@ -11,12 +11,14 @@ D3 地形 patch 真值
   -> configured structure envelope profiling
   -> D4 设计 slot 候选生成 / 候选选择（推荐路径）
   -> D4 StructureAnchorPlan / StructureAnchorMap
-  -> D5 reservation mask 预案
+  -> D5 reservation mask 预案（含 D3 patch 贴边 wall reservation）
   -> D6 planned_worldgen probe-and-lock
   -> execute_d5 激活 locked planned structure 生成期注册
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
   -> city_execute_d7 查询 worldgen ledger
-  -> 根据已落结构 ledger 反推 inferred function area，并按真实 actualFootprint 生成道路 / 边界
+  -> 根据已落结构 ledger 反推 inferred function area
+  -> RoadWeaver / debug fallback 道路
+  -> city walls v2 扫描真实道路并按 D3 patch 贴边墙带裁门 / 放墙
 ```
 
 旧的“先画功能区再塞结构”主链不再是当前真值。active endpoint 不再默认产出或消费：
@@ -53,11 +55,13 @@ D3 地形 patch 真值
 已并入主线和后续待做的分阶段小案子：
 
 - `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
+- `10_product/案子/D4设计构图候选闭环-v0.2/README.md`：将 v0.1 批量候选升级为逐 slot session：每选定一个 anchor 后冻结 occupied set，再为下一个 slot 重新生成候选，降低 D6 才发现碰撞后的回退成本。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
-- `10_product/案子/城市边界与城墙-v0.1/README.md`：把调试边界逐步升级为城墙、栅栏、码头线等城市边界表达。
-- `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：让结构之间的道路连接交给成熟道路能力处理。
-- `10_product/案子/结构地形兼容适配-v0.1/README.md`：处理悬空、硬切、台基和地形融合问题。
+- `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；缺 mod 时保留 debug fallback 并在 trace 中标明。
+- `10_product/案子/结构地形兼容适配-v0.1/README.md`：已加入 terrain adaptation / Beardifier 诊断 trace，用于判断浮空等问题来源。
+- `10_product/案子/城市边界与城墙-v0.1/README.md`：已加入 D7 ledger 后的临时城墙 plan / execute 闭环，输出石墙 NBT artifact。
+- `10_product/案子/城市边界与城墙-v0.2/README.md`：已进入当前默认城墙口径，D5 早期生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation；v0.1 矩形墙仅保留为 `wallVersion=v1_debug`。
 - `10_product/案子/City结构风格化换皮-v0.1/README.md`：在结构真实落地后按国度 / 城市 palette 做材料主题化替换。
 
 ## 当前产物
@@ -69,10 +73,11 @@ D3 地形 patch 真值
 | envelope profiling | `structure_envelope_facts.json`、`structure_envelope_profile_preview.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
-| D5 | `reservation_mask_plan.json`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |
-| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json` |
+| D5 | `reservation_mask_plan.json`、`wall_reservation_plan.json`、`wall_reservation_preview.png`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |
+| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json`、`roadweaver_connection_plan.json`、`road_provider_state.json` |
 | D6 | `structure_materialization_plan.json`（`plannedWorldgenStructures[]`，含 locked actual footprint / bbox group / collision envelope / signature）、空 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`structure_materialization_preview.png` |
-| execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 actual-footprint road/boundary report |
+| execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 RoadWeaver-aware road report 与 terrain adaptation report |
+| city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json` |
 
 ## 上下游
 
@@ -80,7 +85,7 @@ D3 地形 patch 真值
 | --- | --- | --- |
 | 上游 | 国度规划系统 | `CitySeedRegistry`、城市候选坐标、国度归属。 |
 | 上游 | GIS / TerraSense | D3 地形 patch 真值、TerraSense `StructureProfile.jsonl` / debug catalog、TerraSense tag 白名单。 |
-| 本系统 | City | 顶层 configured structure envelope facts、结构 anchor、locked actual footprint、reservation mask、planned structure registry、worldgen ledger、actual-footprint road/boundary。 |
+| 本系统 | City | 顶层 configured structure envelope facts、结构 anchor、locked actual footprint、reservation mask、planned structure registry、worldgen ledger、RoadWeaver endpoint plan、terrain trace、D3 patch wall reservation、actual-road gated wall boundary。 |
 | 下游 | 世界生成 / Materialization | feature / vanilla structure 抑制 hook、planned structure worldgen hook、原版 `StructureStart` 生成期落地、ledger 与 trace。 |
 
 ## 目录说明

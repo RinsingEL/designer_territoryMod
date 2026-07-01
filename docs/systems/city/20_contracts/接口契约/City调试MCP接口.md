@@ -15,13 +15,19 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
 | `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
-| `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | 提交 `DesignSlotPlan`，按 D3 patch / 关系意图生成少量 anchor 候选点和预览。 |
-| `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | 提交 `AnchorSelectionPlan`，把候选选择转换为标准 `StructureAnchorPlan` 并生成 D4 anchor artifact。 |
+| `city_create_d4_candidate_session` | `POST /realm/city/create_d4_candidate_session` | D4 v2 推荐入口：创建逐 slot 候选 session，开始记录设计耗时。 |
+| `city_plan_d4_next_candidates` | `POST /realm/city/plan_d4_next_candidates` | D4 v2：只为当前未选择 slot 生成候选，避开已冻结 occupied envelope。 |
+| `city_select_d4_candidate` | `POST /realm/city/select_d4_candidate` | D4 v2：选择当前 slot 的一个 candidate，冻结占用并进入下一个 slot。 |
+| `city_finalize_d4_candidate_session` | `POST /realm/city/finalize_d4_candidate_session` | D4 v2：所有 slot 选完后生成标准 D4 `StructureAnchorPlan` / `StructureAnchorMap`。 |
+| `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | v0.1 debug batch 入口：一次性生成全部 slot 候选，`planningMode=all_slots_tentative_order_debug`。 |
+| `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
-| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry 与 planned structure worldgen registry，不主动生成目标 chunk。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
+| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger actualFootprint union，生成临时城墙 plan、preview 和 NBT 模板。 |
+| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼。 |
 
 ## city_profile_structure_envelopes
 
@@ -86,6 +92,96 @@ Node MCP：`country_designer_mcp`
 
 `structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95/P99。
 
+## city_create_d4_candidate_session / city_plan_d4_next_candidates / city_select_d4_candidate / city_finalize_d4_candidate_session
+
+D4 v2 推荐使用顺序候选 session：
+
+```text
+city_create_d4_candidate_session
+city_plan_d4_next_candidates
+city_select_d4_candidate
+... repeat until all slots selected ...
+city_finalize_d4_candidate_session
+```
+
+`city_create_d4_candidate_session` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `designSlotPlan`
+
+可选：
+
+- `sessionId`
+- `structureEnvelopeFactsSource`
+
+`city_plan_d4_next_candidates` 必填参数：
+
+- `runId`
+- `citySeedId`
+
+语义：
+
+- 每次只返回当前 `currentSlotId` 的候选。
+- 候选基于 session 中已经冻结的 `selectedAnchors[]` / `occupiedEnvelopes[]` 重新生成。
+- 返回 `slot_candidate_set.json`、`anchor_candidate_preview.png`、`d4_candidate_session_trace.json`。
+- `anchor_candidate_preview.png` 必须叠加 D3 patch member-cell 底图；已冻结 anchor 用 `S1/S2...` 标注，当前 slot 候选用 `C1/C2...` 标注，候选完整 id / score / role 放入右侧 legend，避免把同一 slot 的多个候选重叠误读为最终落地重叠。
+
+`city_select_d4_candidate` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `slotId`
+- `candidateId`
+
+可选：
+
+- `sessionId`
+- `anchorId`
+- `selectionReason`
+- `quickPreflight`
+
+语义：
+
+- `slotId` 必须等于当前 session `currentSlotId`，否则返回 `D4_SLOT_ORDER_VIOLATION`。
+- 选择成功后优先冻结 `estimatedSafetyEnvelope` 作为 `occupiedEnvelopes[].blockBounds`，缺失时回退 `estimatedCollisionEnvelope`；后续 slot 候选必须避开该冻结 envelope。
+- 本轮 `quickPreflight` 只记录请求，返回 `quickPreflightStatus=deferred_to_d6`；MC actual bbox 仍由 D6 负责。
+- 每次 selection 会累计 `agentThinkTimeMs`。
+
+`city_finalize_d4_candidate_session` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+
+可选：
+
+- `sessionId`
+- `structureEnvelopeFactsSource`
+
+语义：
+
+- 必须所有 placementOrder slot 都已选择，否则返回 `D4_SESSION_NOT_FINALIZABLE`。
+- finalize 会把 session `selectedAnchors[]` 转换为标准 `StructureAnchorPlan`，并调用现有 D4 hard validation。
+- 输出 `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_anchor_preview.png`、`d4_design_time_report.json`。
+- `structure_anchor_preview.png` 同样必须叠加 D3 patch 底图，用于复核最终 anchor 与 patch / 水岸 / 山脊 / 崖壁等地形关系。
+
+新增 artifacts：
+
+- `d4_candidate_session.json`
+- `slot_candidate_set.json`
+- `d4_candidate_session_trace.json`
+- `d4_design_time_report.json`
+
+`d4_design_time_report.json` 至少包含：
+
+- `totalWallClockMs`
+- `toolRuntimeMs`
+- `agentThinkTimeMs`
+- `stepTimings[]`
+- `failureReasons`
+
 ## city_plan_d4_candidates / city_select_d4_candidates
 
 `city_plan_d4_candidates` 必填参数：
@@ -101,6 +197,8 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
+- 这是 v0.1 debug batch path；active 推荐路径是 D4 v2 session。
+- 返回 `planningMode=all_slots_tentative_order_debug`。
 - `slotId` / `displayRole` 只表示本次设计槽位，不是 City 全局功能枚举。
 - `candidatePatchRefs` 是候选搜索依据，不是硬边界；结构真实 hard gate 仍由 D6 actual footprint 决定。
 - slot 可使用 `structureId` 表示单一顶层 configured structure，也可使用 `structureIds[]` 表示多个备选结构。
@@ -142,17 +240,30 @@ Node MCP：`country_designer_mcp`
 返回 artifact：
 
 - `reservationMaskPlan`
+- `wallReservationPlan`
 - `roadAccessPlan`
 - `buildOperationPlan`
 - `reservationMaskPreview`
+- `wallReservationPreview`
 - `qualityReport`
 - `sourceStructureAnchorMap`
+
+可选参数：
+
+- `wallVersion=v2|v1_debug`，默认 `v2`；`v2` 生成 D3 patch 贴边 wall reservation，`v1_debug` 保留旧矩形调试墙。
+- `wallMarginBlocks`，默认 24。
+- `segmentLengthBlocks`，默认 15。
+- `wallCorridorHalfWidthBlocks`，默认 4。
 
 `city_execute_d5` required：
 
 - `runId`
 - `citySeedId`
 - `confirmWorldMutation=true`
+
+可选：
+
+- `roadProvider=auto|roadweaver|worldedit_debug|none`，默认 `auto`。
 
 执行语义：
 
@@ -161,7 +272,16 @@ Node MCP：`country_designer_mcp`
 - 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
-- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`。
+- RoadWeaver 存在且 `roadProvider=auto|roadweaver` 时，D5 生成 `roadweaver_connection_plan.json` 并反射调用 `RoadNetworkApi.registerStructureEndpoint` / `ensureConnection(..., generateImmediately=false)`。
+- RoadWeaver 缺失且 `roadProvider=roadweaver` 时 hard fail `ROADWEAVER_UNAVAILABLE`。
+- RoadWeaver 缺失且 `roadProvider=auto` 时保留 D7 WorldEdit debug fallback，并写入 `road_provider_state.json`。
+- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`、`roadProvider`、`roadWeaverAvailable`。
+
+返回 artifact 增加：
+
+- `roadWeaverConnectionPlan`
+- `roadWeaverRegistrationReport`
+- `roadProviderState`
 
 ## city_plan_d6
 
@@ -212,7 +332,7 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 
 - `executeStructurePlacement=false`：只查看 worldgen ledger / 当前 chunk 状态。
 - `executeStructurePlacement=true`：正式路径仍只查看 worldgen ledger / 当前 chunk 状态，不 late paste。
-- 当所有 planned structures 都有 ledger 时，D7 基于 ledger 真实 `actualFootprint` 生成道路 / 边界后处理；道路避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3。
+- 当所有 planned structures 都有 ledger 时，若 RoadWeaver 已注册，D7 不再覆盖 RoadWeaver 道路；若显式 `worldedit_debug` 或 `auto` fallback，D7 基于 ledger 真实 `actualFootprint` 生成调试道路 / 边界后处理，避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3。
 - `debugLateMaterialize=true`：显式开发模式，才允许旧 `StructureStart.placeInChunk` 路径；trace 标记 `lateMaterialization=true`，不作为验收通过。
 
 返回 artifact：
@@ -230,6 +350,64 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `roadAvoidanceMarginBlocks`
 - `roadBlockedByStructureCount`
 - `boundarySource=actual_footprint_union`
+- `roadProviderState`
+- `terrainAdaptationReport`
+
+## city_plan_city_walls / city_execute_city_walls
+
+`city_plan_city_walls` 必填参数：
+
+- `runId`
+- `citySeedId`
+
+可选：
+
+- `wallVersion=v2|v1_debug`，默认 `v2`。
+- `wallMarginBlocks`，默认 24。
+- `segmentLengthBlocks`，默认 15。
+- `gateWidthBlocks`，默认 9。
+- `roadScanMarginBlocks`，默认 8。
+- `roadProtectionMarginBlocks`，默认 2。
+- `maxFoundationDepthBlocks`，默认 8。
+- `maxSegmentHeightDeltaBlocks`，默认 7。
+
+语义：
+
+- 默认 `wallVersion=v2`，读取 D5 `wall_reservation_plan.json`、D7 `placed_structure_ledger.json` 和世界实际方块。
+- v2 扫描 wall corridor 附近 actual road mask，按 road-wall intersection 生成 `generatedGates[]`，墙段不得覆盖真实道路。
+- `wallVersion=v1_debug` 才使用 v0.1 的 `actualFootprint` union 外扩矩形城墙。
+- 输出 `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png` 和 `city_wall_templates/*.nbt`。
+
+返回 artifact：
+
+- `cityWallPlan`
+- `actualRoadMask`
+- `cityWallPreview`
+- `cityWallTemplateDirectory`
+- `sourcePlacedStructureLedger`
+
+`city_execute_city_walls` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `confirmWorldMutation=true`
+
+可选：
+
+- `dimensionId`
+- `playerName`
+
+语义：
+
+- 使用 `city_wall_plan.json` 放置临时石砖城墙、角塔和 gate gap 两侧塔楼。
+- 后端为 `vanilla_setblock`，不依赖 WorldEdit。
+- 默认 v2 硬保护 `actualRoadMask`、gate gap 和 structure `actualFootprint`，不覆盖 RoadWeaver 道路或建筑。
+- 单段高度差超过 `maxSegmentHeightDeltaBlocks` 返回 `WALL_TERRAIN_TOO_STEEP` 并跳过该段；低洼处按 `maxFoundationDepthBlocks` 补 foundation。
+
+返回 artifact：
+
+- `cityWallPlan`
+- `cityWallPlacementReport`
 
 ## 推荐调用流程
 
@@ -240,9 +418,11 @@ city_plan_d4_candidates { terrasenseProfileSource, designSlotPlan }
 city_select_d4_candidates { terrasenseProfileSource, anchorSelectionPlan }
 city_plan_d5
 city_plan_d6
-city_execute_d5 { confirmWorldMutation: true }
+city_execute_d5 { confirmWorldMutation: true, roadProvider: "auto" }
 city_execute_d7 { executeStructurePlacement: false }
 city_execute_d7 { executeStructurePlacement: true }
+city_plan_city_walls
+city_execute_city_walls { confirmWorldMutation: true }
 ```
 
 真实执行如果返回 `WAITING_FOR_WORLDGEN`，从目标 chunk 外侧靠近 / TP 触发 chunk 首次生成；生成后重复 `city_execute_d7 { executeStructurePlacement: true }` 查询 ledger。若返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，说明该 chunk 已错过生成期，正式路径不得补贴结构。

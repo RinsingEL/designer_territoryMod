@@ -20,8 +20,9 @@
 
 1. `D3-D6结构落地驱动城市重构-v0.1/README.md`
 2. `D4设计构图候选闭环-v0.1/README.md`
-3. `结构Envelope精修-v0.1/README.md`
-4. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+3. `D4设计构图候选闭环-v0.2/README.md`
+4. `结构Envelope精修-v0.1/README.md`
+5. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
 
 ## 案子状态表
 
@@ -29,11 +30,13 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前 City 主线：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger / actual-footprint road。旧功能区优先链路不再兼容。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
+| `D4设计构图候选闭环-v0.2` | 后续待做 | 将 v0.1 的批量候选改为逐 slot session：只为当前 slot 生成候选，选中后冻结 occupied set，再生成下一个 slot，减少 D6 probe 才发现碰撞后的整轮回退。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
-| `RoadWeaver结构连接-v0.1` | 后续待做 | 方向有效：用成熟道路能力替换当前 D7 简单后处理道路。当前只作为后续集成案。 |
-| `结构地形兼容适配-v0.1` | 后续待做 | 方向有效：验证 Beardifier / terrain adaptation / 结构地形融合，处理浮空、硬切、台基等观感问题。 |
-| `城市边界与城墙-v0.1` | 后续待做 | 方向有效：把当前调试边界升级成城墙、栅栏、码头线等城市边界表达。 |
+| `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection，缺 mod 时按 `roadProvider` 明确失败或进入 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
+| `结构地形兼容适配-v0.1` | 已完成并入主线 | 已完成 terrain adaptation / Beardifier 诊断 trace：D7 trace 能报告 hook unavailable、terrain adaptation none、beardifier seen / not seen。后续才做真正台基、削坡、填土或第三方地形兼容接入。 |
+| `城市边界与城墙-v0.1` | 已完成并入主线 | 已完成 D7 ledger 后临时城墙闭环：按真实 actualFootprint union 外扩生成矩形墙、塔楼、7 格门洞、预览图和 NBT 模板，执行走 vanilla setBlock。后续是边界算法、门楼、转角和地形融合。 |
+| `城市边界与城墙-v0.2` | 已完成并入主线 | 当前默认城墙口径：D5 生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation，避免城墙砍断道路；v0.1 矩形墙仅为 `wallVersion=v1_debug`。 |
 | `City结构风格化换皮-v0.1` | 后续待做 | 方向有效：D7 ledger 完整后按国度 / 城市 palette 对结构真实 footprint 内的方块做主题化替换，保护功能方块和 blockstate，优先摆脱 WorldEdit 依赖。 |
 | `城市构造流程-v0.1` | 已替代 | 旧“功能区优先”总流程，涉及 `FunctionZoneMap`、`BuildableAreaMap` 等旧主线，只作历史背景。 |
 | `C5锚点与保留区-v0.1` | 已替代 | 旧功能区边界 / 保留区案，已被 D4 anchor + D5 reservation mask + D6 locked footprint 替代。 |
@@ -52,6 +55,7 @@
 - D3 patch 作为地形事实输入，不重复做功能区真值层。
 - Trek 顶层 configured structure 可做 envelope profiling。
 - D4 可通过候选闭环选择结构落脚点，不要求 AI 直接手算坐标和防撞。
+- D4 v0.2 的逐 slot session 尚未实现；当前已验收能力仍是 v0.1 批量候选，真实测试中需要人工回退重选。
 - D5 可激活 reservation mask 和 planned structure registry。
 - 结构可在 worldgen structure 阶段落地，植被在 feature 阶段被 mask 抑制。
 - D6 可 probe-and-lock actual footprint / bbox group / signature，并用 locked footprint 做最终防撞。
@@ -59,8 +63,8 @@
 
 ## 当前未完成方向
 
-- Road Weaver 接入，让道路更自然、更像真实城市连接。
-- Beardifier / terrain adaptation 验证，解决结构悬空、硬切和地形融合。
-- 城墙 / 边界表达，把 debug boundary 变成可玩的城市外观。
+- Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
+- Beardifier / terrain adaptation 深度接入：真正观察 hook、台基 / 削坡 / 填土和结构 profile foundation policy。
+- 城墙 / 边界深化：v0.2 已实现墙带早期 mask、D3 patch 贴边非矩形边界、RoadWeaver 真实道路裁门、道路保护和基础地形贴合；后续再做完整门楼、转角、破损变体和更强边界美术节奏。
 - TerraSense 结构语义重标记，先用少量高质量结构套件验证“国度 / 城市设计感”。
 - 结构风格化换皮 / 方块替换，基于真实落地结构做国度主题化。
