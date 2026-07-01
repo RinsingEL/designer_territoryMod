@@ -26,8 +26,8 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
-| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger actualFootprint union，生成临时城墙 plan、preview 和 NBT 模板。 |
-| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼。 |
+| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门。 |
+| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼；v3 可开启 debug scan 输出缺口原因。 |
 
 ## city_profile_structure_envelopes
 
@@ -250,10 +250,14 @@ city_finalize_d4_candidate_session
 
 可选参数：
 
-- `wallVersion=v2|v1_debug`，默认 `v2`；`v2` 生成 D3 patch 贴边 wall reservation，`v1_debug` 保留旧矩形调试墙。
+- `wallVersion=v3|v2|v1_debug`，默认 `v2`；`v3` 生成结构种子 patch region hull，`v2` 生成 D3 patch 贴边 wall reservation，`v1_debug` 保留旧矩形调试墙。
 - `wallMarginBlocks`，默认 24。
 - `segmentLengthBlocks`，默认 15。
 - `wallCorridorHalfWidthBlocks`，默认 4。
+- `wallBreathingRoomBlocks`，v3 默认 24。
+- `patchExpansionMaxRounds`，v3 默认 4。
+- `concavityOpeningMaxBlocks`，v3 默认 64。
+- `concavityDepthRatioMin`，v3 默认 0.6。
 
 `city_execute_d5` required：
 
@@ -362,7 +366,8 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 
 可选：
 
-- `wallVersion=v2|v1_debug`，默认 `v2`。
+- `wallVersion=v3|v2|v1_debug`，默认 `v2`。
+- `wallBoundaryMode=structure_seeded_patch_region_hull`，v3 兼容字段。
 - `wallMarginBlocks`，默认 24。
 - `segmentLengthBlocks`，默认 15。
 - `gateWidthBlocks`，默认 9。
@@ -370,10 +375,13 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `roadProtectionMarginBlocks`，默认 2。
 - `maxFoundationDepthBlocks`，默认 8。
 - `maxSegmentHeightDeltaBlocks`，默认 7。
+- `gateClusterRadiusBlocks`，v3 默认 24。
+- `terrainFitUnitLengthBlocks`，v3 默认 5。
 
 语义：
 
 - 默认 `wallVersion=v2`，读取 D5 `wall_reservation_plan.json`、D7 `placed_structure_ledger.json` 和世界实际方块。
+- `wallVersion=v3` 读取 v3 wall reservation 的 `cityDomainMask` / `outerWallRing`，对 actual road mask 进行 road component 分类，内部路不裁门，外部入城路按 cluster 裁门。
 - v2 扫描 wall corridor 附近 actual road mask，按 road-wall intersection 生成 `generatedGates[]`，墙段不得覆盖真实道路。
 - `wallVersion=v1_debug` 才使用 v0.1 的 `actualFootprint` union 外扩矩形城墙。
 - 输出 `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png` 和 `city_wall_templates/*.nbt`。
@@ -396,18 +404,24 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 
 - `dimensionId`
 - `playerName`
+- `debugScan`，v3 调试开关，默认 false。
+- `debugScanStepBlocks`，默认 1。
 
 语义：
 
 - 使用 `city_wall_plan.json` 放置临时石砖城墙、角塔和 gate gap 两侧塔楼。
 - 后端为 `vanilla_setblock`，不依赖 WorldEdit。
 - 默认 v2 硬保护 `actualRoadMask`、gate gap 和 structure `actualFootprint`，不覆盖 RoadWeaver 道路或建筑。
-- 单段高度差超过 `maxSegmentHeightDeltaBlocks` 返回 `WALL_TERRAIN_TOO_STEEP` 并跳过该段；低洼处按 `maxFoundationDepthBlocks` 补 foundation。
+- v3 按 `terrainFitUnitLengthBlocks` 把墙段拆成小 unit，按 unit/column 采样地形，输出 `placementUnitResults[]` 与 `terrainFitMode`，避免因局部高差整段消失。
+- `debugScan=true` 时输出 `wall_terrain_debug_scan.json`、`wall_mask_conflict_report.json`、`wall_gap_debug_report.json`，用于手工 TP 复核缺口原因。
 
 返回 artifact：
 
 - `cityWallPlan`
 - `cityWallPlacementReport`
+- `wallTerrainDebugScan`
+- `wallMaskConflictReport`
+- `wallGapDebugReport`
 
 ## 推荐调用流程
 
