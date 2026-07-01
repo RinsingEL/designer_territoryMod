@@ -256,6 +256,42 @@ SKIPPED_PROTECTED_MASK
 
 默认不再因为整段某个局部高差过大就跳过完整 segment。
 
+### wallTerrainPolicy v3.1
+
+`wallVersion=v3` 只表示城市外环 hull / 道路聚类裁门这条边界算法。`wallTerrainPolicy=v3.1` 是 v3 的执行层地形策略，不重命名、不替换 v3 边界。
+
+默认阈值：
+
+```text
+flatMaxDeltaBlocks = 7
+steppedMaxDeltaBlocks = 16
+mountainProbeDistanceBlocks = 6
+naturalBoundaryMinDeltaBlocks = 17
+embeddedSlopeTower = true
+```
+
+执行口径：
+
+- 高差 `<=7`：沿用 `FLAT_PLACED` / `FOUNDATION_FILLED` / 低坡 stepped 行为。
+- 高差 `8-16`：生成 `STEPPED_WALL_PLACED`，按 2-5 格 step slice 分级落地，不再输出 `WALL_UNIT_SKIPPED_TERRAIN`。
+- 高差 `>16` 且一侧 6 格内判定为连续山体：输出 `WALL_EMBEDDED_IN_SLOPE`，墙端嵌入山体并放塔楼或石砌封头。
+- 高差 `>16` 且无法嵌坡：输出 `NATURAL_CLIFF_BOUNDARY`，不放连续墙，只放边界塔 / 石砌标记；这类天然边界不应作为普通 gap 处理。
+
+保护优先级不变：`actualRoadMask`、gate gap 和 structure `actualFootprint` 高于任何地形策略；阶梯墙 / 嵌坡墙不得覆盖道路或建筑。
+
+v3.1 的执行层必须使用 `city_wall_plan.wallSegments[].wallAxis` 作为墙段长度主轴。`terrainFitUnit` 和 `stepSlices[]` 都沿该主轴切分，墙体厚度、山体侧 probe 和嵌坡封头也以该主轴为准。不得在 unit 拆碎后再用 unit 的长宽推断主轴，因为 9x8 这类近方形 unit 会把厚度方向误判为长度方向，现场表现为墙上叠墙、错朝向墙片、墙体缺洞和局部悬空。
+
+v3.1 的 foundation 有效深度应覆盖中等坡策略：当 `steppedMaxDeltaBlocks=16` 时，执行层至少能向下补到 16 格，避免 8-16 高差的阶梯墙合法放置但低侧悬空。地形采样还应忽略本轮临时城墙材料的连续顶部，避免重复执行同一 plan 时把旧墙当作地面继续向上叠。
+
+v3.1 report 扩展：
+
+- `terrainPolicyVersion`
+- `terrainDeltaBand=LOW|MID|HIGH`
+- `terrainFitMode=FLAT_PLACED|FOUNDATION_FILLED|STEPPED_WALL_PLACED|EMBEDDED_IN_SLOPE|NATURAL_CLIFF_BOUNDARY|SKIPPED_UNSUITABLE`
+- `stepSlices[]`
+- `mountainProbe`
+- debug scan 的 `policyDecision`
+
 ### Foundation
 
 foundation 从“统一 baseY 向下补”升级为按 column / unit 补：
@@ -392,6 +428,10 @@ WALL_UNIT_FOUNDATION_FILLED
 WALL_UNIT_EMBEDDED_IN_SLOPE
 WALL_UNIT_SKIPPED_TERRAIN
 WALL_UNIT_SKIPPED_MASK
+STEPPED_WALL_PLACED
+WALL_EMBEDDED_IN_SLOPE
+NATURAL_CLIFF_BOUNDARY
+WALL_UNIT_SKIPPED_UNSUITABLE
 WALL_GAP_DEBUG_TERRAIN_CONFIRMED
 WALL_GAP_DEBUG_MASK_CONFIRMED
 WALL_GAP_DEBUG_PLANNER_CONFIRMED
@@ -429,6 +469,12 @@ WALL_GATE_GAP
   "appendageWidthMaxBlocks": 32,
   "gateClusterRadiusBlocks": 24,
   "terrainFitUnitLengthBlocks": 5,
+  "wallTerrainPolicy": "v3.1",
+  "flatMaxDeltaBlocks": 7,
+  "steppedMaxDeltaBlocks": 16,
+  "mountainProbeDistanceBlocks": 6,
+  "naturalBoundaryMinDeltaBlocks": 17,
+  "embeddedSlopeTower": true,
   "debugScan": false,
   "debugScanStepBlocks": 1
 }
@@ -456,6 +502,7 @@ WALL_GATE_GAP
 - gate 数量经过聚类后明显少于 v0.2。
 - 城墙不覆盖 RoadWeaver 道路和 structure actualFootprint。
 - 城墙遇小坡能 stepped / foundation 放置，不因整段高差超过阈值整段消失。
+- 显式 `wallTerrainPolicy=v3.1` 时，8-16 高差应生成 `STEPPED_WALL_PLACED`；高差更大处应输出 `WALL_EMBEDDED_IN_SLOPE` 或 `NATURAL_CLIFF_BOUNDARY`，而不是继续产生大量 `WALL_UNIT_SKIPPED_TERRAIN`。
 - 每个最终缺口都能在 `wall_gap_debug_report.json` 中找到：
   - 坐标范围
   - 主原因
@@ -472,6 +519,7 @@ WALL_GATE_GAP
 - road classification：内部道路不生成 gate，外部穿墙道路生成 gate cluster。
 - gate clustering：多个相邻 raw intersections 合并成一个 gate。
 - terrain fit：长墙段切成 placement units，小高差 stepped 放置，不整段跳过。
+- terrain policy v3.1：8-16 高差生成阶梯墙；高差更大时优先嵌坡，失败后标记天然峭壁边界。
 - debug scan：terrain / mask / gap 三类 report 均输出坐标和 reason。
 - preview：v3 preview 包含 D3 patch、domain hull、gate cluster、debug gap 图层。
 
@@ -495,7 +543,8 @@ D3
 - 城市外环比 v0.2 更完整，少锯齿和少内部凹陷。
 - 墙不会围出奇怪口袋，也不会让内部道路反复穿墙。
 - 少块时能直接从 debug report 找到坐标和原因。
-- 陡坡处若仍跳过，应有 step=1 地形采样证明。
+- v3.1 中等坡应变成阶梯墙；极端坡应能看到嵌山体封头 / 边界塔，或在 report 中标记天然峭壁边界。
+- 当前 gate 仍是裁洞式结果，验收时只要求道路不被完全砍断；若出现外侧已开、内侧未开全，记录为后续独立城门结构问题。
 
 ## 暂不处理
 
@@ -507,6 +556,7 @@ D3
 
 ## 后续方向
 
+- 独立城门结构：城门不再只是墙段裁洞，而是独立 gate template / gatehouse，负责内外两侧完整开口、门洞高度、门侧塔楼和道路衔接。
 - 城门楼模板、转角模板、斜墙模板。
 - 城墙风格化换皮，与 City palette 联动。
 - 天然边界类型：水岸防波堤、崖壁不筑墙、木栅栏农区边界。

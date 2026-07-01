@@ -37,7 +37,7 @@
 | `结构地形兼容适配-v0.1` | 已完成并入主线 | 已完成 terrain adaptation / Beardifier 诊断 trace：D7 trace 能报告 hook unavailable、terrain adaptation none、beardifier seen / not seen。后续才做真正台基、削坡、填土或第三方地形兼容接入。 |
 | `城市边界与城墙-v0.1` | 已完成并入主线 | 已完成 D7 ledger 后临时城墙闭环：按真实 actualFootprint union 外扩生成矩形墙、塔楼、7 格门洞、预览图和 NBT 模板，执行走 vanilla setBlock。后续是边界算法、门楼、转角和地形融合。 |
 | `城市边界与城墙-v0.2` | 已完成并入主线 | 当前默认城墙口径：D5 生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation，避免城墙砍断道路；v0.1 矩形墙仅为 `wallVersion=v1_debug`。 |
-| `城市边界与城墙-v0.3` | 后续待做 | 已接入显式 `wallVersion=v3` 开发路径，待真实验收：从结构 actualFootprint / sourcePatch 出发，在 D3 patch 邻接图上扩张城市占地区域，填掉小凹陷 / 小洞 / 内部道路口袋，再生成单一城市外环；同时增加 step=1 地形 debug 扫描、mask 冲突坐标和 gap debug report，让现场缺口可复盘。 |
+| `城市边界与城墙-v0.3` | 显式开发路径 | 已接入 `wallVersion=v3`：从结构 actualFootprint / sourcePatch 出发，在 D3 patch 邻接图上扩张城市占地区域，填掉小凹陷 / 小洞 / 内部道路口袋，再生成单一城市外环；同时增加 step=1 地形 debug 扫描、mask 冲突坐标和 gap debug report。`wallTerrainPolicy=v3.1` 负责阶梯墙、嵌坡和天然峭壁边界，仍需真实验收后再考虑切默认。 |
 | `City结构风格化换皮-v0.1` | 后续待做 | 方向有效：D7 ledger 完整后按国度 / 城市 palette 对结构真实 footprint 内的方块做主题化替换，保护功能方块和 blockstate，优先摆脱 WorldEdit 依赖。 |
 | `城市构造流程-v0.1` | 已替代 | 旧“功能区优先”总流程，涉及 `FunctionZoneMap`、`BuildableAreaMap` 等旧主线，只作历史背景。 |
 | `C5锚点与保留区-v0.1` | 已替代 | 旧功能区边界 / 保留区案，已被 D4 anchor + D5 reservation mask + D6 locked footprint 替代。 |
@@ -66,6 +66,6 @@
 
 - Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
 - Beardifier / terrain adaptation 深度接入：真正观察 hook、台基 / 削坡 / 填土和结构 profile foundation policy。
-- 城墙 / 边界深化：v0.2 已实现墙带早期 mask、D3 patch 贴边非矩形边界、RoadWeaver 真实道路裁门、道路保护和基础地形贴合；v0.3 待实现结构种子驱动的城市外环 hull、凹陷填充、道路聚类裁门和 step=1 debug 扫描。
+- 城墙 / 边界深化：v0.2 已实现墙带早期 mask、D3 patch 贴边非矩形边界、RoadWeaver 真实道路裁门、道路保护和基础地形贴合；v0.3 已进入显式开发路径，下一步重点是真实验收 `wallTerrainPolicy=v3.1` 的阶梯墙、嵌坡和天然峭壁边界效果。
 - TerraSense 结构语义重标记，先用少量高质量结构套件验证“国度 / 城市设计感”。
 - 结构风格化换皮 / 方块替换，基于真实落地结构做国度主题化。
