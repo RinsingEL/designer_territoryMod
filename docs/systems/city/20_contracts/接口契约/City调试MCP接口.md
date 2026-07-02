@@ -26,8 +26,8 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
-| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门。 |
-| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼；v3 可开启 debug scan 输出缺口原因。 |
+| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2` 增加天然边界、道路趋势开门和独立 gatehouse。 |
+| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3 可开启 debug scan 输出缺口原因。 |
 
 ## city_profile_structure_envelopes
 
@@ -378,6 +378,10 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `gateClusterRadiusBlocks`，v3 默认 24。
 - `terrainFitUnitLengthBlocks`，v3 默认 5。
 - `wallTerrainPolicy=v3|v3.1`，v3 城墙执行层地形策略，默认 `v3`。
+- `wallDesignPolicy=v3|v3.2`，v3 城墙规划层设计策略，默认 `v3`；`v3.2` 启用天然边界、道路趋势开门、独立 gatehouse 和可用塔节点。
+- `minGateSpacingBlocks`，v3.2 城门最小间距，默认 48。
+- `minGateRoadLengthBlocks`，v3.2 道路趋势最小长度，默认 24。
+- `naturalWaterBoundaryMinAreaBlocks`，v3.2 大片水体天然边界最小 patch 面积，默认 4096。
 - `flatMaxDeltaBlocks`，v3.1 默认 7。
 - `steppedMaxDeltaBlocks`，v3.1 默认 16。
 - `mountainProbeDistanceBlocks`，v3.1 默认 6。
@@ -389,10 +393,12 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - 默认 `wallVersion=v2`，读取 D5 `wall_reservation_plan.json`、D7 `placed_structure_ledger.json` 和世界实际方块。
 - `wallVersion=v3` 读取 v3 wall reservation 的 `cityDomainMask` / `outerWallRing`，对 actual road mask 进行 road component 分类，内部路不裁门，外部入城路按 cluster 裁门。
 - `wallTerrainPolicy=v3.1` 不改变 v3 外环边界，只改变执行层地形策略：8-16 高差生成阶梯墙，高差更大时尝试嵌坡或标记天然峭壁边界。
+- `wallDesignPolicy=v3.2` 不改变 v3 外环边界或 v3.1 地形策略，只改变规划层设计语义：大片水体 / shore / cliff 可生成 `natural_boundary` 段并跳过连续墙；外部道路必须满足趋势和长度才生成 `gatehouse`；贴墙 / 擦边 / 碎路进入 `roadTrendSkippedIntersections[]`；城门按 `minGateSpacingBlocks` 合并。
 - v2 扫描 wall corridor 附近 actual road mask，按 road-wall intersection 生成 `generatedGates[]`，墙段不得覆盖真实道路。
 - `wallVersion=v1_debug` 才使用 v0.1 的 `actualFootprint` union 外扩矩形城墙。
 - 输出 `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png` 和 `city_wall_templates/*.nbt`。
 - v3 / v3.1 的 `wallSegments[]` 必须带 `wallAxis=X|Z`，作为执行层拆 unit、生成阶梯切片、判断墙体厚度和嵌坡方向的唯一主轴来源。
+- v3.2 的 `wallSegments[]` 允许出现 `segmentType=gatehouse` 和 `segmentType=natural_boundary`；`gatehouse` 使用 `gatehouse_9` / `gatehouse_13`，`natural_boundary` 使用 `natural_water_boundary` / `natural_cliff_boundary` 空模板作为 artifact 标记，不放连续墙。
 
 返回 artifact：
 
@@ -417,11 +423,12 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 
 语义：
 
-- 使用 `city_wall_plan.json` 放置临时石砖城墙、角塔和 gate gap 两侧塔楼。
+- 使用 `city_wall_plan.json` 放置临时石砖城墙、可用塔节点、gate gap 或 v3.2 独立 gatehouse。
 - 后端为 `vanilla_setblock`，不依赖 WorldEdit。
 - 默认 v2 硬保护 `actualRoadMask`、gate gap 和 structure `actualFootprint`，不覆盖 RoadWeaver 道路或建筑。
 - v3 按 `wallAxis` 和 `terrainFitUnitLengthBlocks` 把墙段拆成小 unit，按 unit/column 采样地形，输出 `placementUnitResults[]` 与 `terrainFitMode`，避免因局部高差整段消失；执行层不得用拆碎后的 unit 长宽反推朝向。
 - `wallTerrainPolicy` 从 `city_wall_plan.json.terrainFitPolicy.policyVersion` 读取；`v3.1` report 额外输出 `terrainPolicyVersion`、`terrainDeltaBand`、`stepSlices[]`、`mountainProbe` 和 debug sample 的 `policyDecision`。
+- `segmentType=natural_boundary` 必须跳过连续墙并在 gap debug 中说明 `NATURAL_WATER_BOUNDARY` / `NATURAL_CLIFF_BOUNDARY`；`segmentType=gatehouse` 必须清出完整门洞并放置石木混合门楼。
 - `debugScan=true` 时输出 `wall_terrain_debug_scan.json`、`wall_mask_conflict_report.json`、`wall_gap_debug_report.json`，用于手工 TP 复核缺口原因。
 
 返回 artifact：

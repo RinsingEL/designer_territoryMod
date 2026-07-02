@@ -201,6 +201,7 @@ v0.3 的道路裁门先区分内部道路和外部道路。
 - road component 的端点是否在 domain 外。
 - road 与 structure actualFootprint / RoadWeaver endpoint 的连接关系。
 - road crossing 与 outerWallRing 的交点聚类。
+- 后续 v3.2 不应只看道路方块是否碰到墙，而应拟合 road component 的趋势：只有道路主体从外部进入内部、且穿越距离足够时才开门；贴墙、擦边、零散路面点只进入 debug / skip。
 
 ### 城门聚类
 
@@ -553,6 +554,70 @@ D3
 - 不做复杂曲线墙体模板。
 - 不把 RoadWeaver 内部 graph API 作为必须依赖；首版仍可扫描真实路面。
 - 不把 city domain hull 恢复成旧功能区真值；它只服务墙体、mask 和边界。
+
+## v3.2 后续设计口径
+
+v3.1 的目标是让墙体能在复杂地形上稳定落地。v3.2 的目标应转向“边界系统设计感”：墙不再是唯一边界，城门和塔也不再是墙段副产物，而是独立节点。
+
+### 天然边界
+
+大片水体、海湾、湖泊和高峭崖壁应作为天然屏障，不强行筑连续石墙。v3.2 应把外环边界段分类为：
+
+```text
+STONE_WALL
+NATURAL_WATER_BOUNDARY
+NATURAL_CLIFF_BOUNDARY
+QUAY_OR_SEAWALL
+BRIDGE_OR_WATER_GATE
+```
+
+设计规则：
+
+- 大湖 / 海湾：默认不筑墙，只在码头、桥、浅滩、渡口放 gate / tower / quay。
+- 河流穿城：可作为内部运河，不因河岸生成连续城墙。
+- 河流穿过外边界：在桥、渡口或道路穿越处生成 `BRIDGE_OR_WATER_GATE`。
+- 狭窄溪流：可忽略、涵洞化或短桥化，不额外制造碎墙。
+
+### 可用塔节点
+
+当前 v3.1 的小塔 / 烽火台仍可能退化成一两片墙柱。v3.2 应废弃“碎片塔”，改成有独立 footprint 和内部空间的节点模板：
+
+```text
+watchtower_5x5
+watchtower_7x7
+beacon_5x5
+beacon_7x7
+slope_cap_tower
+```
+
+最小可用塔应至少有 5x5 footprint、内部 3x3 可站立空间、入口或梯子 / 楼梯。空间不足时宁可不放塔，也不放一两片违和墙柱。塔的触发点应限于：外环角点、长墙间隔、城门两侧、天然边界端点、陡坡封头。
+
+### 独立城门结构
+
+城门不应继续只是裁洞式 gate。v3.2 应把城门变成独立结构模板，负责完整切断墙段、保护道路通廊、生成木制 / 石制混合门楼、门洞高度、门侧塔楼和内外道路衔接。
+
+首批模板建议：
+
+```text
+gatehouse_9
+gatehouse_13
+bridge_gate
+water_gate
+harbor_gate
+```
+
+验收重点：不能再出现外侧已开、内侧未开全；门洞必须覆盖道路在城墙厚度方向上的完整穿越范围。
+
+### 道路趋势与门密度
+
+v3.2 的开门逻辑应从“方块命中”升级为“道路趋势”：
+
+- 扫描 road mask 后做连通域。
+- 对每个 road component 拟合主方向和穿越向量。
+- 只有 component 从 domain 外部进入内部，且在墙两侧都有足够长度支撑时，才生成 gate candidate。
+- 多条道路在城墙附近交汇时合并成一个 gate cluster。
+- 引入 `minGateSpacingBlocks`，避免城门太密。
+- 贴墙平行、擦边、只有少量方块触碰墙的道路，不开门，只记录 `WALL_ROAD_TANGENT_SKIP` / `WALL_ROAD_TOUCH_ONLY_SKIP`。
 
 ## 后续方向
 
