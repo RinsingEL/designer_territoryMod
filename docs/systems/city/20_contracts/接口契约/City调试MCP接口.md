@@ -378,10 +378,11 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `gateClusterRadiusBlocks`，v3 默认 24。
 - `terrainFitUnitLengthBlocks`，v3 默认 5。
 - `wallTerrainPolicy=v3|v3.1`，v3 城墙执行层地形策略，默认 `v3`。
-- `wallDesignPolicy=v3|v3.2`，v3 城墙规划层设计策略，默认 `v3`；`v3.2` 启用天然边界、道路趋势开门、独立 gatehouse 和可用塔节点。
-- `minGateSpacingBlocks`，v3.2 城门最小间距，默认 48。
-- `minGateRoadLengthBlocks`，v3.2 道路趋势最小长度，默认 24。
-- `naturalWaterBoundaryMinAreaBlocks`，v3.2 大片水体天然边界最小 patch 面积，默认 4096。
+- `wallDesignPolicy=v3|v3.2|v3.3`，v3 城墙规划层设计策略，默认 `v3`；`v3.2` 启用天然边界、道路趋势开门、独立 gatehouse 和可用塔节点；`v3.3` 增加近路投影开门。
+- `minGateSpacingBlocks`，v3.2 / v3.3 城门最小间距，默认 48。
+- `minGateRoadLengthBlocks`，v3.2 / v3.3 道路趋势最小长度，默认 24。
+- `roadProjectionMaxDistanceBlocks`，v3.3 近路投影开门最大距离，默认 32。
+- `naturalWaterBoundaryMinAreaBlocks`，v3.2 / v3.3 大片水体天然边界最小 patch 面积，默认 4096。
 - `flatMaxDeltaBlocks`，v3.1 默认 7。
 - `steppedMaxDeltaBlocks`，v3.1 默认 16。
 - `mountainProbeDistanceBlocks`，v3.1 默认 6。
@@ -394,11 +395,13 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `wallVersion=v3` 读取 v3 wall reservation 的 `cityDomainMask` / `outerWallRing`，对 actual road mask 进行 road component 分类，内部路不裁门，外部入城路按 cluster 裁门。
 - `wallTerrainPolicy=v3.1` 不改变 v3 外环边界，只改变执行层地形策略：8-16 高差生成阶梯墙，高差更大时尝试嵌坡或标记天然峭壁边界。
 - `wallDesignPolicy=v3.2` 不改变 v3 外环边界或 v3.1 地形策略，只改变规划层设计语义：大片水体 / shore / cliff 可生成 `natural_boundary` 段并跳过连续墙；外部道路必须满足趋势和长度才生成 `gatehouse`；贴墙 / 擦边 / 碎路进入 `roadTrendSkippedIntersections[]`；城门按 `minGateSpacingBlocks` 合并。
+- `wallDesignPolicy=v3.3` 继承 v3.2；外部道路未真正穿墙但靠近墙体、距离不超过 `roadProjectionMaxDistanceBlocks` 且能投影到墙段时，生成 `WALL_GATE_FROM_ROAD_PROJECTION` gatehouse；内部道路仍不裁门，touch-only 碎路仍跳过。
 - v2 扫描 wall corridor 附近 actual road mask，按 road-wall intersection 生成 `generatedGates[]`，墙段不得覆盖真实道路。
 - `wallVersion=v1_debug` 才使用 v0.1 的 `actualFootprint` union 外扩矩形城墙。
 - 输出 `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png` 和 `city_wall_templates/*.nbt`。
 - v3 / v3.1 的 `wallSegments[]` 必须带 `wallAxis=X|Z`，作为执行层拆 unit、生成阶梯切片、判断墙体厚度和嵌坡方向的唯一主轴来源。
 - v3.2 的 `wallSegments[]` 允许出现 `segmentType=gatehouse` 和 `segmentType=natural_boundary`；`gatehouse` 使用 `gatehouse_9` / `gatehouse_13`，`natural_boundary` 使用 `natural_water_boundary` / `natural_cliff_boundary` 空模板作为 artifact 标记，不放连续墙。
+- v3.3 的 `city_wall_plan.json` 额外包含 `projectedRoadGateCandidates[]`、`roadProjectionSkippedIntersections[]` 和 `roadProjectionMaxDistanceBlocks`；没有直接门或投影门时，fallback 原因为 `NO_VALID_GATE_CANDIDATE_AFTER_FILTER`。
 
 返回 artifact：
 
