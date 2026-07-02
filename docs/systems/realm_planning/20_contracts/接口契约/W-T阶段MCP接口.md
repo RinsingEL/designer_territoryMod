@@ -23,6 +23,7 @@
 | `realm_t4_build_registry` | T4 | 生成 `CitySeedRegistry`。 |
 | `realm_run_acceptance` | 验收 | 用固定配置跑完整 W -> T4 调试链，并输出验收报告。 |
 | `realm_tag_audit` | W 调试 | 对已有 sealed W run 单独执行 Tag Audit 抽样局部精扫，不重跑 W/T 主链。 |
+| `realm_debug_command` | 开发调试 | 对已启动的 MC 集成服务端执行单条 Minecraft 命令，用于 TP、时间、天气、游戏模式等真实验收辅助操作。 |
 
 ## 通用返回字段
 
@@ -292,6 +293,41 @@
 - 如果 run 不在内存中，必须从 `world_survey_manifest.json`、tile snapshots 和 `world_feature_grid.json` 恢复 sealed W 结果；缺少 sealed manifest 或 tile cache 时返回失败，不静默重扫 W。
 - 输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，并更新返回的 `artifacts`。
 
+## realm_debug_command
+
+开发调试命令入口。该工具不属于 W/T 或 City 主链阶段，只用于真实游玩验收时从 MCP / HTTP 执行一条 Minecraft 命令，避免通过键盘聊天框输入。
+
+请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `command` | string | 是 | 单条 Minecraft 命令，可带或不带开头 `/`。 |
+| `confirmCommandExecution` | boolean | 是 | 必须为 `true`，确认这是有副作用的调试命令。 |
+| `sourceMode` | string | 否 | `auto` / `player` / `server`，默认 `auto`；`player` 使用玩家上下文，`server` 使用服务端上下文。 |
+| `playerName` | string | 否 | 玩家名；用于 `sourceMode=player` 或 `auto` 下选择玩家上下文。 |
+| `dimensionId` | string | 否 | 维度 ID；省略时使用玩家维度或 overworld。 |
+| `saveAfter` | boolean | 否 | 执行后是否请求保存世界，默认 false；TP 通常不需要。 |
+| `allowUnsafeCommand` | boolean | 否 | 默认 false。执行 `stop`、`reload`、`op`、`ban` 等高风险管理命令时必须显式为 true。 |
+
+行为：
+
+- command 会规范化为单行命令并去掉开头 `/`，执行时再补回 `/`。
+- 未传 `confirmCommandExecution=true` 时必须拒绝执行。
+- 多行命令必须拒绝，避免一次请求执行多条命令。
+- 默认拦截服务端管理类高风险命令；如确需执行，必须传 `allowUnsafeCommand=true`。
+- 返回 `result` 为 Minecraft command dispatcher 的执行结果，`ok=true` 表示 `result > 0`。
+
+示例：
+
+```json
+{
+  "command": "/tp Rinsing 775 200 -6552",
+  "confirmCommandExecution": true,
+  "sourceMode": "player",
+  "playerName": "Rinsing"
+}
+```
+
 ## 建议 HTTP 对应路径
 
 | MCP 工具 | HTTP 路径 |
@@ -304,6 +340,7 @@
 | `realm_t4_build_registry` | `POST /realm/t4/build_registry` |
 | `realm_run_acceptance` | `POST /realm/acceptance/run` |
 | `realm_tag_audit` | `POST /realm/tag_audit` |
+| `realm_debug_command` | `POST /realm/debug/command` |
 
 ## 实现优先级
 
