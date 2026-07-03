@@ -26,7 +26,7 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
-| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先的陆侧闭环墙图。 |
+| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
 | `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> D4 v2 session -> D5 -> D6 -> execute_d5 -> execute_d7，可选 plan/execute 城墙；记录每步时间戳、耗时、失败原因，遇到确认或等待 worldgen 时暂停。 |
 
@@ -115,6 +115,8 @@ Node MCP：`country_designer_mcp`
 
 - `schemaVersion=city_wall_plan.v0.4`
 - `wallBoundaryMode=actual_footprint_land_ring`
+- `wallContourMode=terrain_adaptive_domain_guided_land_ring`
+- `terrainContourEvents[]`：记录 unit 因 D5 `cityDomainMask` 外缘 guide 而发生的有限偏移，以及为连接偏移 unit 插入的短 `terrain_contour_link`。
 - `wallNodes[]`：节点类型包括 `corner_tower`、`beacon_tower`、`gatehouse`、`terrace_node`、`natural_boundary_endpoint`。
 - `wallUnits[]`：16 格左右的短墙 unit；普通墙不得依赖执行层再任意切成长短不一的重叠片。
 - `nodeConnectorUnits[]`：墙体到塔 / 门楼 / terrace 的连接单元，输出 `connectorStatus=connected|stepped|blocked|skipped`。
@@ -124,6 +126,7 @@ Node MCP：`country_designer_mcp`
 v4 行为口径：
 
 - 边界必须包住 D7 `actualFootprint`，不得被 D3 source patch 锁死。
+- 规划层先用 `actualFootprint + structureWallBreathingRoomBlocks` 生成保守外圈，再读取 D5 `cityDomainMask[]` 中的 `maskType=city_domain_cell` 外缘作为地形 / 城市域 guide；每个 unit 只允许小幅偏移，且必须仍在 `knownPatchBounds` 内、不能压结构 footprint 或水体。相邻 unit 偏移后用 `terrain_contour_link` 连接，避免预览继续呈现纯四边形。
 - D5 `seedPatches[]` 若带 `memberCells[]`，v4 水体判定必须优先按真实成员 cell 判断，不能把大型 water patch 的 envelope 当作整片硬水体；`shore` 不应直接等同于普通墙禁止落点。
 - 连续水体 run 达阈值时优先退回陆地侧；退避失败时输出天然水体边界 gap，而不是把普通墙落入湖 / 海。
 - `actualRoadMask` 只用于真实道路开门；复跑或实机验收时不得把本系统已放置的石砖 / 圆石 / 安山岩等城墙或结构材料反扫成道路并造成大面积 `ROAD_MASK_GATEHOUSE_OPENING`。
