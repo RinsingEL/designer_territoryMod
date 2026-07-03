@@ -18,10 +18,12 @@ D3 地形 patch 真值
   -> city_execute_d7 查询 worldgen ledger
   -> 根据已落结构 ledger 反推 inferred function area
   -> RoadWeaver / debug fallback 道路
-  -> city walls v2 扫描真实道路并按 D3 patch 贴边墙带裁门 / 放墙
+  -> city walls v2/v3/v4 扫描真实道路并规划 / 放置城墙
 ```
 
-城墙 v0.2 仍是当前默认口径；v0.3 已接入显式 `wallVersion=v3` 开发路径，从结构 actualFootprint / sourcePatch 出发生成城市外环 hull，填掉凹陷和内部道路口袋，并增加 step=1 地形 / mask debug 扫描。`wallTerrainPolicy=v3.1` 是 v3 的执行层地形策略，用于把 8-16 高差转成阶梯墙、更大高差转成嵌坡或天然峭壁边界；`wallDesignPolicy=v3.2` 是 v3 的规划层设计策略，用于把大片水体 / 峭壁转成天然边界、按道路趋势生成独立 gatehouse、限制城门密度并使用可用 5x5 塔节点。
+`city_run_workflow` 是当前调试 / 验收快跑入口，用于串联上述阶段、记录每步耗时和暂停原因；它不改变单步接口的真值，也不允许绕过 worldgen-time placement 或 D5/D7 状态检查。
+
+城墙 v0.2 仍是默认兼容口径；v0.3 已接入显式 `wallVersion=v3` 开发路径，从结构 actualFootprint / sourcePatch 出发生成城市外环 hull，填掉凹陷和内部道路口袋，并增加 step=1 地形 / mask debug 扫描。`wallTerrainPolicy=v3.1` 是 v3 的执行层地形策略，用于把 8-16 高差转成阶梯墙、更大高差转成嵌坡或天然峭壁边界；`wallDesignPolicy=v3.2/v3.3` 是 v3 的规划层设计策略，用于把大片水体 / 峭壁转成天然边界、按道路趋势或近路投影生成独立 gatehouse、限制城门密度并使用可用 5x5 塔节点。`wallVersion=v4` 是当前新增测试路径：D5 仍产出 reservation/mask 上下文，D7 ledger 后以 `actualFootprint` 为主生成 `actual_footprint_land_ring` 墙图，输出 `wallNodes[]`、`wallUnits[]`、`nodeConnectorUnits[]`、`cityWallDatumY` 和 `wallGraphValidation`，并对连续水体做陆侧退避、对高度差生成 stepped/terrace connector。
 
 旧的“先画功能区再塞结构”主链不再是当前真值。active endpoint 不再默认产出或消费：
 
@@ -80,7 +82,8 @@ D3 地形 patch 真值
 | execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json`、`roadweaver_connection_plan.json`、`road_provider_state.json` |
 | D6 | `structure_materialization_plan.json`（`plannedWorldgenStructures[]`，含 locked actual footprint / bbox group / collision envelope / signature）、空 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`structure_materialization_preview.png` |
 | execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 RoadWeaver-aware road report 与 terrain adaptation report |
-| city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json`；v3.2 额外要求 `gatehouse_9.nbt` / `gatehouse_13.nbt` / `watchtower_5x5.nbt` / `beacon_5x5.nbt` |
+| city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json`；v3.2+ 额外要求 `gatehouse_9.nbt` / `gatehouse_13.nbt` / `watchtower_5x5.nbt` / `beacon_5x5.nbt`；v4 计划额外输出 `wallNodes[]` / `wallUnits[]` / `nodeConnectorUnits[]` / `cityWallDatumY` / `wallGraphValidation` |
+| workflow | `city_workflow_<citySeedId>/city_workflow_report.json`，记录 D3 -> D7 / 可选城墙阶段的时间戳、耗时、artifact、暂停 / 失败原因 |
 
 ## 上下游
 

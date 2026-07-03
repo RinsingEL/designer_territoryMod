@@ -2,7 +2,7 @@
 
 ## 版本
 
-v0.2 — City D3-D6 结构落地驱动主线。
+v0.3 — City D3-D6 结构落地驱动主线 + 快速验收 workflow。
 
 Java HTTP：`127.0.0.1:5000`
 Node MCP：`country_designer_mcp`
@@ -26,8 +26,109 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
-| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2` 增加天然边界、道路趋势开门和独立 gatehouse。 |
-| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3 可开启 debug scan 输出缺口原因。 |
+| `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先的陆侧闭环墙图。 |
+| `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
+| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> D4 v2 session -> D5 -> D6 -> execute_d5 -> execute_d7，可选 plan/execute 城墙；记录每步时间戳、耗时、失败原因，遇到确认或等待 worldgen 时暂停。 |
+
+## city_run_workflow
+
+这是 City 真实验收提速入口，不替代单步调试接口。它按当前 active path 调用现有 endpoint handler，并写出 `city_workflow_report.json`。
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+
+首次完整运行通常还需要：
+
+- `terrasenseProfileSource`
+- `designSlotPlan`
+- `structureIds[]`
+
+常用可选参数：
+
+- `skipExisting`，默认 `true`。已有 artifact 时跳过对应步骤，用于等待 chunk worldgen 后复跑。
+- `sampleCount`，默认 256。
+- `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
+- `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
+- `roadProvider=auto|roadweaver|worldedit_debug|none`。
+- `planWalls` / `executeWalls`，默认 `false`。
+- `wallVersion`、`wallTerrainPolicy`、`wallDesignPolicy` 及对应城墙参数，会透传给 D5 / CityWalls；`wallVersion=v4` 时额外可传 `wallUnitLengthBlocks`、`waterRunMinUnits`、`waterRetreatMaxCells`、`structureWallBreathingRoomBlocks`、`heightDatumClampBlocks`、`localMedianWindowUnits`。
+- `debugScan`，执行城墙时默认 `true`。
+- `dimensionId` / `playerName`。
+
+语义：
+
+- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 v2 session 自动选择最高分候选 -> `city_plan_d5` -> `city_plan_d6` -> `city_execute_d5` -> `city_execute_d7`。
+- D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
+- 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
+- 若 D7 返回 `WAITING_FOR_WORLDGEN`，workflow 返回 `status=waiting_for_worldgen`。玩家或 debug command 加载目标 chunk 后，用相同请求复跑；已存在 artifact 会被跳过。
+- `planWalls=true` 时 ledger 完整后继续调用 `city_plan_city_walls`。
+- `executeWalls=true` 时继续调用 `city_execute_city_walls`；成功完成后 HTTP controller 才请求保存世界。
+- 每个 step 都记录 `startedAt`、`endedAt`、`durationMs`、`status`、`reasonCode`、`artifacts`。
+- `skipExisting=true` 复跑城墙时，workflow 必须校验已有 `city_wall_plan.json` 的 `wallVersion` / `wallDesignPolicy` / `wallTerrainPolicy` 与请求匹配；不匹配时不得跳过旧 plan。
+
+返回 artifact：
+
+- `city_workflow_<citySeedId>/city_workflow_report.json`
+
+质量口径：
+
+- workflow 报告只用于提速和留痕；任何结构越界、重叠、worldgen ledger 不完整、墙体缺口等最终判断仍以各阶段 artifact / trace 为准。
+- 不允许 workflow 在正式路径绕过 `city_execute_d5` / `city_execute_d7` 的 worldgen-time placement 规则；不得回退 late paste。
+
+## city_plan_d3
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+
+可选参数：
+
+- `cellStepBlocks`，未传时从 run manifest 恢复。
+- `patchScanPaddingBlocks`，默认 128。
+- `dimensionId`
+- `playerName`
+
+语义：
+
+- D3 的 `grid` 仍表示城市核心规划域，D4 候选不得因为 padding 扩大而离开该 grid。
+- `patchScanPaddingBlocks` 只扩大 patch 上下文：实现必须刷新覆盖 `grid.blockBounds + padding` 的所有 GIS region，并把这些 region 的 `LandformPatch` / `memberCells` 合并进同一个 `CityLandformReviewPackage`。
+- 目的：当 AI 选择靠近城市核心边界的 patch 时，D6 `actualFootprint`、D5/D7 reservation 和 v4 城墙 `structureWallBreathingRoomBlocks` 仍有已扫描 patch 背景，不允许墙体静默长到未知 patch 外。
+- D3 package 必须写出 `patchScanPaddingBlocks`、`patchContextBounds`、`refreshedRegions[]`，用于判断 patch coverage 是否足够。
+
+## city_plan_city_walls v4
+
+`wallVersion=v4` 为当前 City Walls 新测试路径。
+
+新增 / 关键参数：
+
+- `wallUnitLengthBlocks`：默认 16，墙图基础 unit 长度，和 step 对齐。
+- `waterRunMinUnits`：默认 3，连续多少个 unit 命中水体后判定为湖 / 海并尝试陆侧退避。
+- `waterRetreatMaxCells`：默认 4，水体退避最多尝试多少个 unit 步长。
+- `structureWallBreathingRoomBlocks`：默认 32，以 D7 `actualFootprint` union 为核心外扩生成墙圈。
+- `heightDatumClampBlocks`：默认 6，`targetY` 相对全局 `cityWallDatumY` 的夹取范围。
+- `localMedianWindowUnits`：默认 3，局部高度 median 采样窗口。
+
+输出要求：
+
+- `schemaVersion=city_wall_plan.v0.4`
+- `wallBoundaryMode=actual_footprint_land_ring`
+- `wallNodes[]`：节点类型包括 `corner_tower`、`beacon_tower`、`gatehouse`、`terrace_node`、`natural_boundary_endpoint`。
+- `wallUnits[]`：16 格左右的短墙 unit；普通墙不得依赖执行层再任意切成长短不一的重叠片。
+- `nodeConnectorUnits[]`：墙体到塔 / 门楼 / terrace 的连接单元，输出 `connectorStatus=connected|stepped|blocked|skipped`。
+- `cityWallDatumY`：整圈候选墙线的 trimmed median 高度基准。
+- `wallGraphValidation`：记录水体退避、mask skip、height break、闭环候选和断点。
+
+v4 行为口径：
+
+- 边界必须包住 D7 `actualFootprint`，不得被 D3 source patch 锁死。
+- D5 `seedPatches[]` 若带 `memberCells[]`，v4 水体判定必须优先按真实成员 cell 判断，不能把大型 water patch 的 envelope 当作整片硬水体；`shore` 不应直接等同于普通墙禁止落点。
+- 连续水体 run 达阈值时优先退回陆地侧；退避失败时输出天然水体边界 gap，而不是把普通墙落入湖 / 海。
+- `actualRoadMask` 只用于真实道路开门；复跑或实机验收时不得把本系统已放置的石砖 / 圆石 / 安山岩等城墙或结构材料反扫成道路并造成大面积 `ROAD_MASK_GATEHOUSE_OPENING`。
+- 相邻节点高差 `<=2` 走普通平墙，`3..6` 走 `stepped_wall_unit` 或 `stair_link`，`>6` 插入 `terrace_node`；仍无法缓解时在 validation 中输出明确 reason。
+- 执行层按 `wallUnits[]` / `nodeConnectorUnits[]` 放置，并在地形采样时忽略本系统已经放置的墙 / 塔 / 门楼材料，避免重复执行叠高。
 
 ## city_profile_structure_envelopes
 

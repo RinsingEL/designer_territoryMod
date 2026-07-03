@@ -19,6 +19,9 @@
 | `grid` | object | 是 | 局部网格，继承 CitySiteContext |
 | `targetScale` | object | 是 | `{ scale, radiusBlocks, cellStepBlocks }` |
 | `reviewMapImage` | string | D3 端点必填 | 预览图路径；D3 HTTP/MCP 输出必须指向 `landform_review_map.png`，纯 builder 单测可为空 |
+| `patchScanPaddingBlocks` | int | D3 端点必填 | patch 上下文相对 `grid.blockBounds` 的额外扫描 padding；默认 128 |
+| `patchContextBounds` | object | D3 端点必填 | D3 实际用于收集 patch/memberCells 的 bounds，等于 city grid 外扩 padding |
+| `refreshedRegions[]` | object[] | D3 端点必填 | 本次 D3 刷新的 GIS region 列表，至少含 `regionId`、`regionX`、`regionZ`、`patchCount` |
 | `legend` | array | 是 | 图例，颜色/标签/地貌类型 |
 | `landformPatches` | array | 是 | GIS patch 摘要列表 |
 | `planningContext` | array | 是 | City 补充的规划上下文 |
@@ -64,6 +67,8 @@
 - 碎片 patch（FRAGMENT flag）会在 facts 中标记
 - C1.5 的主输入是 `landform_review_map.png`；JSON 是图上 `mapLabel` 到 GIS patch / 成员 cell / metrics 的索引，不替代看图
 - C1.5 只复述 GIS metrics/tag/adjacency 事实，不输出“适合建设”“建议建设区域”等 C2 功能区决策文案
+- `grid` 是城市核心规划域；`patchContextBounds` 是额外 patch 覆盖域。D4 候选必须受 `grid` 约束，不能把 padding 区当成新的城市核心可选域。
+- D3 必须按 `patchContextBounds` 覆盖多个 GIS region。只刷新中心 region 会导致靠近 region 边界的结构 / v4 城墙缺少 patch 背景。
 
 ## 面积分级
 
@@ -91,5 +96,6 @@
 
 - `reviewMapImage` 指向该 PNG。
 - `debugRefs` 至少包含该 PNG 与 D3 输出目录。
+- `patchScanPaddingBlocks`、`patchContextBounds`、`refreshedRegions[]` 必须可用于复核 patch coverage。
 - `landformPatches[].mapLabel` 必须能在 PNG 中对应显示。
 - `landformPatches[].memberCells` 必须能回查预览图中的 patch 形状；缺失时只能显式降级到 envelope。
