@@ -67,6 +67,7 @@ D3 地形 patch 真值
 - `10_product/案子/城市边界与城墙-v0.1/README.md`：已加入 D7 ledger 后的临时城墙 plan / execute 闭环，输出石墙 NBT artifact。
 - `10_product/案子/城市边界与城墙-v0.2/README.md`：已进入当前默认城墙口径，D5 早期生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation；v0.1 矩形墙仅保留为 `wallVersion=v1_debug`。
 - `10_product/案子/城市边界与城墙-v0.3/README.md`：已接入显式 `wallVersion=v3` 开发路径；从结构种子和 D3 patch 邻接图生成城市外环 hull，填充小凹陷 / 小洞 / 内部道路口袋，聚类外部道路裁门，并为墙体缺口输出 step=1 地形扫描、mask 冲突坐标和 gap debug report；`wallTerrainPolicy=v3.1` 增加阶梯墙 / 嵌坡 / 天然峭壁边界执行策略；`wallDesignPolicy=v3.2` 增加天然水体边界、道路趋势开门、独立门楼和可用塔节点。
+- `10_product/案子/城市边界与城墙-v5/README.md`：草案；将城墙职责收紧为 D5 决定平面和 mask、worldgen 保护 corridor 并记录真实地表、D7 后城墙只做高度适配和落地判断。
 - `10_product/案子/City结构风格化换皮-v0.1/README.md`：在结构真实落地后按国度 / 城市 palette 做材料主题化替换。
 
 ## 当前产物
