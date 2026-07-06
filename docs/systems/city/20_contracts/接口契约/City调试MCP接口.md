@@ -21,7 +21,9 @@ Node MCP：`country_designer_mcp`
 | `city_finalize_d4_candidate_session` | `POST /realm/city/finalize_d4_candidate_session` | D4 v2：所有 slot 选完后生成标准 D4 `StructureAnchorPlan` / `StructureAnchorMap`。 |
 | `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | v0.1 debug batch 入口：一次性生成全部 slot 候选，`planningMode=all_slots_tentative_order_debug`。 |
 | `city_plan_d4_array_candidates` | `POST /realm/city/plan_d4_array_candidates` | D4 阵列候选入口：按 patch / envelope facts 生成 3-5 组批量结构候选，组内已做估算防撞，并内嵌可直接交给 `city_plan_d4` 的 `expandedStructureAnchorPlan`。 |
+| `city_plan_d4_structure_cluster_groups` | `POST /realm/city/plan_d4_structure_cluster_groups` | D4 整组候选调试入口：按 `DesignSlotPlan` 一次生成多组完整结构群落脚方案；预览图颜色代表整组，bbox 默认不画在主图里。 |
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
+| `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
@@ -29,7 +31,7 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
-| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> D4 v2 session -> D5 -> D6 -> execute_d5 -> execute_d7，可选 plan/execute 城墙；记录每步时间戳、耗时、失败原因，遇到确认或等待 worldgen 时暂停。 |
+| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> D4 -> D5 -> D6 -> execute_d5 -> execute_d7；默认 D4 `key_then_array`，先放关键结构，再按阵列填充重复结构。 |
 
 ## city_run_workflow
 
@@ -52,6 +54,7 @@ Node MCP：`country_designer_mcp`
 - `sampleCount`，默认 256。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
+- `d4CandidateMode=key_then_array|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
 - `roadProvider=auto|roadweaver|worldedit_debug|none`；默认 `auto` 只在 RoadWeaver 存在时注册真实道路，缺 RoadWeaver 时跳过道路，旧 debug 道路必须显式 `worldedit_debug`。
 - `planWalls` / `executeWalls`，默认 `false`。
 - `wallVersion`、`wallTerrainPolicy`、`wallDesignPolicy` 及对应城墙参数，会透传给 D5 / CityWalls；`wallVersion=v4` 时额外可传 `wallUnitLengthBlocks`、`waterRunMinUnits`、`waterRetreatMaxCells`、`structureWallBreathingRoomBlocks`、`heightDatumClampBlocks`、`localMedianWindowUnits`。
@@ -60,7 +63,8 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 v2 session 自动选择最高分候选 -> `city_plan_d5` -> `city_plan_d6` -> `city_execute_d5` -> `city_execute_d7`。
+- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` -> `city_plan_d6` -> `city_execute_d5` -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。
+- `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
 - 若 D7 返回 `WAITING_FOR_WORLDGEN`，workflow 返回 `status=waiting_for_worldgen`。玩家或 debug command 加载目标 chunk 后，用相同请求复跑；已存在 artifact 会被跳过。
@@ -72,6 +76,8 @@ Node MCP：`country_designer_mcp`
 返回 artifact：
 
 - `city_workflow_<citySeedId>/city_workflow_report.json`
+- `city_d4_staged_<citySeedId>/d4_staged_plan.json`
+- `city_d4_staged_<citySeedId>/d4_staged_trace.json`
 
 质量口径：
 
@@ -212,15 +218,59 @@ v4 行为口径：
 - `occupiedStructureAnchorMapSource`，形如 `{ "anchorMapPath": "city_d4_x/structure_anchor_map.json" }`
 - `occupiedEnvelopes[]`
 
-`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`。
+`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`。可选 `variantSelectionMode=round_robin|seeded_random|weighted_random`、`variantSeed`、`structureWeights`。
 
 语义：
 
-- `structureIds[]` 按稳定 round-robin 分配到 `arrayCount` 个 item。
+- `structureIds[]` 可按稳定 round-robin、seeded random 或 weighted random 分配到 `arrayCount` 个 item；单独 endpoint 缺省 `round_robin`，workflow 从 `array_fill` slot 构造阵列计划时缺省 `seeded_random`。
 - `arrayCount` 必须完整满足；容量不足返回 `D4_ARRAY_COUNT_UNSATISFIED`，不输出部分候选组。
 - 不读取或生成道路，只输出 item 级 `roadPoint` / `roadAccessIntent` 作为 D7 后处理提示。
 - 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`。
 - 每个 `arrayCandidates[]` 内含 `expandedStructureAnchorPlan`，调用方选中整组后直接传给 `city_plan_d4`。
+
+## city_plan_d4_structure_cluster_groups / city_select_d4_structure_cluster_group
+
+`city_plan_d4_structure_cluster_groups` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `designSlotPlan`
+
+可选参数：
+
+- `structureEnvelopeFactsSource`
+- `groupCount`，默认 5。
+- `candidatesPerSlot`，默认 5。
+- `beamWidth`，默认 `groupCount * candidatesPerSlot`。
+
+语义：
+
+- 读取与 D4 v2 session 相同的 `DesignSlotPlan`。
+- 这是显式调试 / 整城构图实验入口，不再是 workflow 默认推荐路径；默认推荐路径是 `city_run_workflow d4CandidateMode=key_then_array`。
+- 内部复用顺序候选 session 的 `planNext/selectSession/finalizeSession` 规则做 beam search；每扩展一个 slot，就用 selection 同口径的 `estimatedSafetyEnvelope` 优先冻结 occupied，缺失时回退 `estimatedCollisionEnvelope`。
+- 只输出完整组；若无法生成任何完整非重叠组，返回 `D4_STRUCTURE_CLUSTER_GROUP_UNSATISFIED`。
+- 输出 `structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json`。
+- `structure_cluster_group_candidates.png` 是给 AI 选择用的主图：一种颜色代表一整组候选，点标签是 slot 简写，不绘制 bbox / mask / collision envelope。bbox 仍保留在 JSON 里供 debug 和验证使用。
+- 每个 `groupCandidates[]` 内含 `items[]`、`groupCollisionEnvelope` / `groupMaskEnvelope` / `groupSafetyEnvelope`、`scoreBreakdown`、`risks[]` 和 `expandedStructureAnchorPlan`。
+
+`city_select_d4_structure_cluster_group` 必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `groupCandidateId`
+
+可选参数：
+
+- `structureClusterGroupCandidateSetSource`，形如 `{ "candidateSetPath": "..." }` 或 `{ "structureClusterGroupCandidateSetPath": "..." }`；未传时读取当前 run/city 默认产物。
+- `structureEnvelopeFactsSource`
+
+语义：
+
+- 读取 `structure_cluster_group_candidate_set.json`，按 `groupCandidateId` 找到整组候选。
+- 取该组 `expandedStructureAnchorPlan` 调用标准 `city_plan_d4`，输出 `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_anchor_preview.png` 等标准 D4 artifact。
+- 后续 D5/D6/D7 不需要知道候选层存在。
 
 ## city_create_d4_candidate_session / city_plan_d4_next_candidates / city_select_d4_candidate / city_finalize_d4_candidate_session
 
@@ -576,17 +626,21 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 ## 推荐调用流程
 
 ```text
-city_plan_d3
-city_profile_structure_envelopes { terrasenseProfileSource, structureIds }
-city_plan_d4_candidates { terrasenseProfileSource, designSlotPlan }
-city_select_d4_candidates { terrasenseProfileSource, anchorSelectionPlan }
-city_plan_d5
-city_plan_d6
-city_execute_d5 { confirmWorldMutation: true, roadProvider: "auto" }
-city_execute_d7 { executeStructurePlacement: false }
-city_execute_d7 { executeStructurePlacement: true }
-city_plan_city_walls
-city_execute_city_walls { confirmWorldMutation: true }
+city_run_workflow {
+  runId,
+  citySeedId,
+  terrasenseProfileSource,
+  designSlotPlan,
+  structureIds,
+  patchScanPaddingBlocks: 128,
+  skipExisting: true,
+  d4CandidateMode: "key_then_array",
+  confirmWorldMutation: false
+}
+检查 d4_staged_plan.json / d4_staged_trace.json 和 structure_anchor_map.json
+city_run_workflow { 同上, confirmWorldMutation: true, roadProvider: "auto" }
+若 status=waiting_for_worldgen，按 D7 trace / workflow report TP 到目标 chunk 外侧加载
+city_run_workflow { 同上, confirmWorldMutation: true, roadProvider: "auto", planWalls: true, executeWalls: true }
 ```
 
 真实执行如果返回 `WAITING_FOR_WORLDGEN`，从目标 chunk 外侧靠近 / TP 触发 chunk 首次生成；生成后重复 `city_execute_d7 { executeStructurePlacement: true }` 查询 ledger。若返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，说明该 chunk 已错过生成期，正式路径不得补贴结构。

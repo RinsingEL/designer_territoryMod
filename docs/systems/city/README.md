@@ -9,7 +9,9 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 ```text
 D3 地形 patch 真值
   -> configured structure envelope profiling
-  -> D4 设计 slot 候选生成 / 候选选择（推荐路径）
+  -> D4 key_then_array 分阶段主流程（关键结构逐个定锚 / 冻结 occupied，再按阵列填充批量结构）
+  -> 可选 D4 v2 顺序候选 session（逐 slot 生成 / 选择 / 冻结）
+  -> 可选 D4 结构群整组候选 / 整组选定（整城构图调试路径）
   -> 可选 D4 阵列候选组（批量结构候选组，输出标准 StructureAnchorPlan）
   -> D4 StructureAnchorPlan / StructureAnchorMap
   -> D5 reservation mask 预案（含 D3 patch 贴边 wall reservation）
@@ -61,6 +63,8 @@ D3 地形 patch 真值
 
 - `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
 - `10_product/案子/D4设计构图候选闭环-v0.2/README.md`：将 v0.1 批量候选升级为逐 slot session：每选定一个 anchor 后冻结 occupied set，再为下一个 slot 重新生成候选，降低 D6 才发现碰撞后的回退成本。
+- D4 key_then_array：`city_run_workflow` 默认路径；`placementStrategy=key_structure|single_ai_selected` 的关键结构必须先走逐 slot session，选中后冻结 occupied envelope；`placementStrategy=array_fill` 的填充结构随后逐组调用阵列候选，并读取上一阶段 `StructureAnchorMap` 避让已落结构。
+- D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
 - `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；`auto` 缺 mod 时跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，旧 debug 道路只允许显式 `worldedit_debug`。
@@ -78,6 +82,8 @@ D3 地形 patch 真值
 | D2 | `citySiteContext` |
 | D3 | `city_landform_review_package.json`、`landform_review_map.png`；patch 含 `biomeSummary` 群系摘要 |
 | envelope profiling | `structure_envelope_facts.json`、`structure_envelope_profile_preview.png`、`quality_report.json` |
+| D4 staged workflow | `d4_staged_plan.json`、`d4_staged_trace.json`；关键结构阶段复用 D4 v2 session artifact，阵列阶段按 `arrayId` 输出独立阵列候选 artifact，最终仍写标准 `structure_anchor_plan.json` / `structure_anchor_map.json` |
+| D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 array candidates | `d4_array_candidate_plan.json`、`d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json` |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
