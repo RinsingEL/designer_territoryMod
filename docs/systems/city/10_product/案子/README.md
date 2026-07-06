@@ -33,7 +33,7 @@
 | `D4设计构图候选闭环-v0.2` | 后续待做 | 将 v0.1 的批量候选改为逐 slot session：只为当前 slot 生成候选，选中后冻结 occupied set，再生成下一个 slot，减少 D6 probe 才发现碰撞后的整轮回退。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
-| `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection，缺 mod 时按 `roadProvider` 明确失败或进入 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
+| `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection；缺 mod 时 `roadProvider=roadweaver` hard fail、`auto` 跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，只有显式 `worldedit_debug` 进入旧 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
 | `结构地形兼容适配-v0.1` | 已完成并入主线 | 已完成 terrain adaptation / Beardifier 诊断 trace：D7 trace 能报告 hook unavailable、terrain adaptation none、beardifier seen / not seen。后续才做真正台基、削坡、填土或第三方地形兼容接入。 |
 | `城市边界与城墙-v0.1` | 已完成并入主线 | 已完成 D7 ledger 后临时城墙闭环：按真实 actualFootprint union 外扩生成矩形墙、塔楼、7 格门洞、预览图和 NBT 模板，执行走 vanilla setBlock。后续是边界算法、门楼、转角和地形融合。 |
 | `城市边界与城墙-v0.2` | 已完成并入主线 | 当前默认城墙口径：D5 生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation，避免城墙砍断道路；v0.1 矩形墙仅为 `wallVersion=v1_debug`。 |

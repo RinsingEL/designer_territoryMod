@@ -4,16 +4,16 @@
 
 已完成 v0.1 接入并并入当前 City 主线。
 
-本案把“结构之间的正式道路连接”从 D7 WorldEdit 调试后处理，迁移到生成期 RoadWeaver optional adapter。City 不强绑 RoadWeaver；缺少 RoadWeaver 时仍可保留 WorldEdit debug fallback，但 trace 必须明确这不是正式道路验收。
+本案把“结构之间的正式道路连接”从 D7 WorldEdit 调试后处理，迁移到生成期 RoadWeaver optional adapter。City 不强绑 RoadWeaver；缺少 RoadWeaver 且 `roadProvider=auto` 时跳过道路并写明 `ROADWEAVER_UNAVAILABLE`，不再自动铺 WorldEdit debug fallback。旧 debug 道路只允许通过 `roadProvider=worldedit_debug` 显式启用。
 
 ## 当前口径
 
 - RoadWeaver 是可选依赖，不是 mandatory mod。
-- 开发运行可用 `-PgeomantiaDevUseRoadWeaver=true` 拉取 `maven.modrinth:roadweaver:2.2.2-1.20.1`。
+- 开发运行标准启动需禁用 RTF、启用结构包并启用 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseReTerraForged=false -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
 - `city_execute_d5` 是 RoadWeaver 注册点，必须发生在目标 chunk 首次生成前。
 - endpoint 和 MCP 新增 `roadProvider=auto|roadweaver|worldedit_debug|none`：
-  - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则保留 D7 debug fallback。
+  - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则跳过道路，记录 `status=skipped` / `reasonCode=ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
   - `roadweaver`：RoadWeaver 缺失时 hard fail `ROADWEAVER_UNAVAILABLE`。
   - `worldedit_debug`：显式走 D7 WorldEdit 调试道路。
   - `none`：禁用道路生成。
@@ -70,8 +70,9 @@ v0.1 只输出最小可用连接：
 
 ## 验收
 
-- 缺 RoadWeaver 时 `roadProvider=auto` 不崩溃，trace 标记 debug fallback。
+- 缺 RoadWeaver 时 `roadProvider=auto` 不崩溃、不生成旧 debug 道路，state / trace 标记 `skipped`、`ROADWEAVER_UNAVAILABLE` 和 `useWorldEditDebugFallback=false`。
 - 缺 RoadWeaver 时 `roadProvider=roadweaver` hard fail `ROADWEAVER_UNAVAILABLE`。
+- 只有显式 `roadProvider=worldedit_debug` 时，D7 才允许生成旧 WorldEdit 调试道路。
 - RoadWeaver 注册发生在 `city_execute_d5`，早于目标 chunk 首次生成。
 - RoadWeaver 模式下 D7 不再默认生成 WorldEdit road operation。
 - `roadweaver_connection_plan.json` 能解释哪些结构被连接、连接顺序和端点。

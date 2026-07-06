@@ -20,6 +20,7 @@ Node MCP：`country_designer_mcp`
 | `city_select_d4_candidate` | `POST /realm/city/select_d4_candidate` | D4 v2：选择当前 slot 的一个 candidate，冻结占用并进入下一个 slot。 |
 | `city_finalize_d4_candidate_session` | `POST /realm/city/finalize_d4_candidate_session` | D4 v2：所有 slot 选完后生成标准 D4 `StructureAnchorPlan` / `StructureAnchorMap`。 |
 | `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | v0.1 debug batch 入口：一次性生成全部 slot 候选，`planningMode=all_slots_tentative_order_debug`。 |
+| `city_plan_d4_array_candidates` | `POST /realm/city/plan_d4_array_candidates` | D4 阵列候选入口：按 patch / envelope facts 生成 3-5 组批量结构候选，组内已做估算防撞，并内嵌可直接交给 `city_plan_d4` 的 `expandedStructureAnchorPlan`。 |
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
@@ -51,7 +52,7 @@ Node MCP：`country_designer_mcp`
 - `sampleCount`，默认 256。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
-- `roadProvider=auto|roadweaver|worldedit_debug|none`。
+- `roadProvider=auto|roadweaver|worldedit_debug|none`；默认 `auto` 只在 RoadWeaver 存在时注册真实道路，缺 RoadWeaver 时跳过道路，旧 debug 道路必须显式 `worldedit_debug`。
 - `planWalls` / `executeWalls`，默认 `false`。
 - `wallVersion`、`wallTerrainPolicy`、`wallDesignPolicy` 及对应城墙参数，会透传给 D5 / CityWalls；`wallVersion=v4` 时额外可传 `wallUnitLengthBlocks`、`waterRunMinUnits`、`waterRetreatMaxCells`、`structureWallBreathingRoomBlocks`、`heightDatumClampBlocks`、`localMedianWindowUnits`。
 - `debugScan`，执行城墙时默认 `true`。
@@ -195,6 +196,31 @@ v4 行为口径：
 - `sourceD3Package`
 
 `structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95/P99。
+
+## city_plan_d4_array_candidates
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `arrayCandidatePlan`
+
+可选参数：
+
+- `structureEnvelopeFactsSource`
+- `occupiedStructureAnchorMapSource`，形如 `{ "anchorMapPath": "city_d4_x/structure_anchor_map.json" }`
+- `occupiedEnvelopes[]`
+
+`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`。
+
+语义：
+
+- `structureIds[]` 按稳定 round-robin 分配到 `arrayCount` 个 item。
+- `arrayCount` 必须完整满足；容量不足返回 `D4_ARRAY_COUNT_UNSATISFIED`，不输出部分候选组。
+- 不读取或生成道路，只输出 item 级 `roadPoint` / `roadAccessIntent` 作为 D7 后处理提示。
+- 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`。
+- 每个 `arrayCandidates[]` 内含 `expandedStructureAnchorPlan`，调用方选中整组后直接传给 `city_plan_d4`。
 
 ## city_create_d4_candidate_session / city_plan_d4_next_candidates / city_select_d4_candidate / city_finalize_d4_candidate_session
 
@@ -382,7 +408,8 @@ city_finalize_d4_candidate_session
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
 - RoadWeaver 存在且 `roadProvider=auto|roadweaver` 时，D5 生成 `roadweaver_connection_plan.json` 并反射调用 `RoadNetworkApi.registerStructureEndpoint` / `ensureConnection(..., generateImmediately=false)`。
 - RoadWeaver 缺失且 `roadProvider=roadweaver` 时 hard fail `ROADWEAVER_UNAVAILABLE`。
-- RoadWeaver 缺失且 `roadProvider=auto` 时保留 D7 WorldEdit debug fallback，并写入 `road_provider_state.json`。
+- RoadWeaver 缺失且 `roadProvider=auto` 时跳过道路并写入 `road_provider_state.json`，状态为 `skipped` / `ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
+- 只有显式 `roadProvider=worldedit_debug` 时才允许 D7 WorldEdit debug fallback。
 - 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`、`roadProvider`、`roadWeaverAvailable`。
 
 返回 artifact 增加：
@@ -440,7 +467,7 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 
 - `executeStructurePlacement=false`：只查看 worldgen ledger / 当前 chunk 状态。
 - `executeStructurePlacement=true`：正式路径仍只查看 worldgen ledger / 当前 chunk 状态，不 late paste。
-- 当所有 planned structures 都有 ledger 时，若 RoadWeaver 已注册，D7 不再覆盖 RoadWeaver 道路；若显式 `worldedit_debug` 或 `auto` fallback，D7 基于 ledger 真实 `actualFootprint` 生成调试道路 / 边界后处理，避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3。
+- 当所有 planned structures 都有 ledger 时，若 RoadWeaver 已注册，D7 不再覆盖 RoadWeaver 道路；若显式 `worldedit_debug`，D7 基于 ledger 真实 `actualFootprint` 生成调试道路 / 边界后处理，避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3；若 `auto` 缺 RoadWeaver，则跳过道路并报告 `ROADWEAVER_UNAVAILABLE`。
 - `debugLateMaterialize=true`：显式开发模式，才允许旧 `StructureStart.placeInChunk` 路径；trace 标记 `lateMaterialization=true`，不作为验收通过。
 
 返回 artifact：

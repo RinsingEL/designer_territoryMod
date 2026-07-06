@@ -4,6 +4,17 @@
 
 草案。本文先只记录一个最小流程口径，后续由人工继续掌控细化。
 
+## 给下一个 AI 的短口径
+
+- v5 是显式实验路径，不替换 v3/v4 默认行为。
+- 主 mod 的 D5 负责城市级 reservation / mask 调度；城墙只是一个内置 feature，向 D5 提交 wall reservation contribution。
+- D5 可以处理墙的 mask，但 D5 不应承载墙高、烽火台、门楼、坑洞地板等执行细节。
+- v5 必须从 `city_plan_d5 { wallVersion: "v5" }` 开始；如果前面 D5 是 v4，后面不能直接切 `city_plan_city_walls wallVersion=v5`。
+- `WALL_V5_REQUIRES_D5_V5_RESERVATION` 是正确 hard stop，不要为了跑通偷偷退回 v4。
+- D5 v5 锁定 `wallLine` / `wallCorridorMask` / `gateSlots` / `wallNodeSlots`；D7 后城墙只能做高度适配、落地 / 跳过 / 降级，不得改线。
+- D3 patch 只做语义和覆盖检查；覆盖不足时扩大 D3/D5 扫描，不允许 D7 后临时移动墙。
+- 测试版允许视觉小瑕疵，但 artifact 必须写清楚原因，例如 `NATURAL_CLIFF_BOUNDARY_NO_WALL`、`D5_V5_GATE_SLOT_OPENING`、`WALL_UNIT_SKIPPED_MASK` 或门楼 / 烽火台降级原因。
+
 v5 的核心目标不是继续让城墙系统在 D7 后重新找路，而是把职责拆清：
 
 ```text
@@ -110,10 +121,11 @@ D7 不重新设计城墙。
 城墙执行阶段读取 D5 墙线和真实地表，只判断如何落地：
 
 - 平地：直接放墙。
-- 普通起伏：按中位数高度放墙并补地基。
+- 普通起伏：按分段中位数统一墙顶高度并补地基。
 - 凸起：墙接到凸起地面 / 山体上。
 - 凹陷 / 大坑：只在 wall corridor 内填水平地板 / 台基。
 - 连续水体：不落连续城墙，标记天然水体边界。
+- 高差超过阈值：不强行拉墙，标记天然高差屏障。
 - 保护冲突：跳过并记录原因。
 
 这一步不改路、不改线、不为了节点成功而绕开。
@@ -227,21 +239,35 @@ maskQueryPaddingBlocks = 2
 
 ## 高度策略
 
-墙体高度使用 **中位数**，不使用平均值。
+墙体高度使用 **分段中位数**，不使用平均值。
 
-目标是尽量让同一段墙的顶部高度接近：
+目标是尽量让同一高度段墙的顶部高度一致：
 
 ```text
-wallTopY = median(surfaceY samples) + nominalWallHeight
+segmentWallTopY = median(segment unitMedianSurfaceY) + nominalWallHeight
 ```
 
-每个 placement unit 先取 corridor 内地表 sample 的中位数，得到 `unitMedianSurfaceY`。墙体按这个中位数落基准，再让墙顶尽量贴近同一个 `wallTopY`。
+每个 placement unit 先取 corridor 内地表 sample 的中位数，得到 `unitMedianSurfaceY`。执行层沿 D5 wall line 把相邻 unit 合并为高度段，段内使用同一个 `segmentMedianSurfaceY` / `segmentWallTopY`；段间只做过渡或断墙，不改线。
+
+默认阈值：
+
+```text
+heightSegmentMaxDeltaBlocks = 7
+heightSteppedTransitionMaxDeltaBlocks = 16
+naturalBoundaryMinDeltaBlocks = 17
+```
+
+段间过渡：
+
+- 相邻 unit / 段高差 `<= 7`：并入同一高度段，墙顶统一。
+- 相邻段高差 `8..16`：保留为相邻高度段，标记 `stepped_transition_*`，现场表现为阶梯式过渡；不为了拉平而改线。
+- 相邻段高差 `>= 17`，或某个 unit 内部真实地表落差超过阈值：该高段 / unit 标记 `NATURAL_CLIFF_BOUNDARY_NO_WALL`，高山作为天然屏障，不落连续墙。
 
 处理规则：
 
-- 普通起伏：以 `unitMedianSurfaceY` 为基准放墙，逐列补 foundation。
+- 普通起伏：以 `segmentMedianSurfaceY` 为基准放墙，逐列补 foundation。
 - 凸起地形：不削山、不改线；墙体直接接到凸起地面 / 山体上，必要时变短或形成嵌入感。
-- 凹陷 / 大坑：不按平均值把整段拉低；在 wall corridor 内填一个水平地板 / 台基到 `unitMedianSurfaceY`，再放墙。
+- 凹陷 / 大坑：不按平均值把整段拉低；在 wall corridor 内填一个水平地板 / 台基到 `segmentMedianSurfaceY`，再放墙。
 - 凹陷 / 大坑的台基必须按原始 surface cache 填实到水平地板，不能让刚铺的地板反过来成为新的地表高度，避免墙底边缘出现小悬空洞。
 - 连续水体：不落连续城墙，标记为天然水体边界。
 - 零散小水坑：按普通凹陷处理或记录为局部 fill，不能因此改线。
@@ -250,6 +276,8 @@ wallTopY = median(surfaceY samples) + nominalWallHeight
 
 ```text
 WALL_PLACED_MEDIAN_HEIGHT
+V5_SEGMENTED_WALL_PLACED
+NATURAL_CLIFF_BOUNDARY_NO_WALL
 WALL_CONNECTED_TO_RAISED_GROUND
 WALL_PIT_FLOOR_FILLED
 NATURAL_WATER_BOUNDARY_NO_WALL
