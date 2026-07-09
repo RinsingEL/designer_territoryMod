@@ -50,7 +50,7 @@ Node MCP：`country_designer_mcp`
 
 常用可选参数：
 
-- `skipExisting`，默认 `true`。已有 artifact 时跳过多数阶段，用于等待 chunk worldgen 后复跑；profiling step 仍会进入 cache-backed `city_profile_structure_envelopes`，由 cache key 判断 hit / stale / recompute。
+- `skipExisting`，默认 `true`。已有 artifact 时跳过多数阶段，用于等待 chunk worldgen 后复跑；若已有 `structure_envelope_facts.json` 且未传 `forceRefresh=true` / `cacheMode=rescan`，profiling step 也跳过。`forceRefresh=true` 或 `cacheMode=rescan` 时必须进入 cache-backed `city_profile_structure_envelopes` 并刷新 cache。
 - `sampleCount`，默认 256。
 - `cacheMode=use_cache|rescan`，默认 `use_cache`；`rescan` 强制 profiling cache 重算。
 - `forceRefresh`，默认 `false`；true 时忽略本地 profile cache。
