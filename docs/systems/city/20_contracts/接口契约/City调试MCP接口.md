@@ -201,7 +201,7 @@ v4 行为口径：
 - `qualityReport`
 - `sourceD3Package`
 
-`structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95/P99。
+`structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`maskMarginBlocks`、`collisionEnvelope`、`maskEnvelope`、`safetyEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95 collision，mask 由 collision + maskMargin 派生。
 
 ## city_plan_d4_array_candidates
 
@@ -248,7 +248,7 @@ v4 行为口径：
 
 - 读取与 D4 v2 session 相同的 `DesignSlotPlan`。
 - 这是显式调试 / 整城构图实验入口，不再是 workflow 默认推荐路径；默认推荐路径是 `city_run_workflow d4CandidateMode=key_then_array`。
-- 内部复用顺序候选 session 的 `planNext/selectSession/finalizeSession` 规则做 beam search；每扩展一个 slot，就用 selection 同口径的 `estimatedSafetyEnvelope` 优先冻结 occupied，缺失时回退 `estimatedCollisionEnvelope`。
+- 内部复用顺序候选 session 的 `planNext/selectSession/finalizeSession` 规则做 beam search；每扩展一个 slot，就用 selection 同口径的 `estimatedCollisionEnvelope` 冻结 occupied，`estimatedSafetyEnvelope` 仅保留诊断。
 - 只输出完整组；若无法生成任何完整非重叠组，返回 `D4_STRUCTURE_CLUSTER_GROUP_UNSATISFIED`。
 - 输出 `structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json`。
 - `structure_cluster_group_candidates.png` 是给 AI 选择用的主图：一种颜色代表一整组候选，点标签是 slot 简写，不绘制 bbox / mask / collision envelope。bbox 仍保留在 JSON 里供 debug 和验证使用。
@@ -325,7 +325,7 @@ city_finalize_d4_candidate_session
 语义：
 
 - `slotId` 必须等于当前 session `currentSlotId`，否则返回 `D4_SLOT_ORDER_VIOLATION`。
-- 选择成功后优先冻结 `estimatedSafetyEnvelope` 作为 `occupiedEnvelopes[].blockBounds`，缺失时回退 `estimatedCollisionEnvelope`；后续 slot 候选必须避开该冻结 envelope。
+- 选择成功后冻结 `estimatedCollisionEnvelope` 作为 `occupiedEnvelopes[].blockBounds`；后续 slot 候选必须避开该 collision envelope，`estimatedSafetyEnvelope` 仅用于 JSON/debug 诊断。
 - 本轮 `quickPreflight` 只记录请求，返回 `quickPreflightStatus=deferred_to_d6`；MC actual bbox 仍由 D6 负责。
 - 每次 selection 会累计 `agentThinkTimeMs`。
 
