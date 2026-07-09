@@ -14,7 +14,7 @@ Node MCP：`country_designer_mcp`
 | --- | --- | --- |
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
-| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | 对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
+| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | cache-backed dry-run profiling：对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
 | `city_create_d4_candidate_session` | `POST /realm/city/create_d4_candidate_session` | D4 v2 推荐入口：创建逐 slot 候选 session，开始记录设计耗时。 |
 | `city_plan_d4_next_candidates` | `POST /realm/city/plan_d4_next_candidates` | D4 v2：只为当前未选择 slot 生成候选，避开已冻结 occupied envelope。 |
 | `city_select_d4_candidate` | `POST /realm/city/select_d4_candidate` | D4 v2：选择当前 slot 的一个 candidate，冻结占用并进入下一个 slot。 |
@@ -50,8 +50,10 @@ Node MCP：`country_designer_mcp`
 
 常用可选参数：
 
-- `skipExisting`，默认 `true`。已有 artifact 时跳过对应步骤，用于等待 chunk worldgen 后复跑。
+- `skipExisting`，默认 `true`。已有 artifact 时跳过多数阶段，用于等待 chunk worldgen 后复跑；profiling step 仍会进入 cache-backed `city_profile_structure_envelopes`，由 cache key 判断 hit / stale / recompute。
 - `sampleCount`，默认 256。
+- `cacheMode=use_cache|rescan`，默认 `use_cache`；`rescan` 强制 profiling cache 重算。
+- `forceRefresh`，默认 `false`；true 时忽略本地 profile cache。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
 - `d4CandidateMode=key_then_array|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
@@ -152,15 +154,18 @@ v4 行为口径：
 可选：
 
 - `sampleCount`，默认 256。
+- `cacheMode=use_cache|rescan`，默认 `use_cache`。
+- `forceRefresh`，默认 false。
 - `dimensionId`
 - `playerName`
 
 语义：
 
 - 只采样 `/place structure <id>` 可触发的顶层 configured structure。
+- 默认先读取本地 profile cache；cache miss 现场 dry-run，cache key / hash stale 时自动重算；`cacheMode=rescan` 或 `forceRefresh=true` 强制重算。
 - 不写世界，不生成正式 ledger。
 - 输出 `structure_envelope_facts.json`，供 D4 推导 `collisionEnvelope` / `maskEnvelope`。
-- facts 同时包含 `validSamples[]`、`bboxGroups[]`、`generationConfigHash`。
+- facts 同时包含 `validSamples[]`、`bboxGroups[]`、`generationConfigHash`、`profileCache`、结构级 `cacheIdentity`、`cacheKey`、`cacheStatus` 和 `cacheReason`。
 - 固定 / 近固定结构使用 dominant `bboxGroups[]` 或 anchor 指定的 `envelopeGroupKey`。
 - 非固定结构继续使用固定生成配置下的 P95 / P99 / maxObserved。
 
@@ -168,6 +173,7 @@ v4 行为口径：
 
 - `structureEnvelopeFacts`
 - `structureEnvelopeProfilePreview`
+- `structureProfileCacheDirectory`
 - `qualityReport`
 
 ## city_plan_d4
