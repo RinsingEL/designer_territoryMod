@@ -25,13 +25,17 @@ Node MCP：`country_designer_mcp`
 | `city_read_d4_design_loop_state` | `POST /realm/city/read_d4_design_loop_state` | D4 多轮设计 loop state 读取：返回 state、occupied field、zones、patch availability、summary 和 trace。 |
 | `city_append_d4_design_loop_round` | `POST /realm/city/append_d4_design_loop_round` | D4 多轮设计 loop 追加一轮：写入本轮 anchors / placed structures / zones，并用 `collisionEnvelope` / `bodyEnvelope` 回写 occupied field。 |
 | `city_write_d4_design_loop_state` | `POST /realm/city/write_d4_design_loop_state` | D4 多轮设计 loop state 显式写回：校验并重写 state 及拆分 artifact。 |
+| `city_create_d4_array_layout_loop` | `POST /realm/city/create_d4_array_layout_loop` | D4 v0.2/v0.3 阵列布局 loop 显式入口：创建程序侧 loop state，读取关键结构 D4 anchor 作为 occupied。 |
+| `city_execute_d4_array_layout_item` | `POST /realm/city/execute_d4_array_layout_item` | D4 v0.2/v0.3：每轮只执行一个 `nextArrayLayoutPlanItem`；v0.3 `composite_array` 可在单 item 内展开 parent zone / subZones / child arrays。 |
+| `city_finalize_d4_array_layout_loop` | `POST /realm/city/finalize_d4_array_layout_loop` | D4 v0.2/v0.3：把 base key anchors + array loop anchors 合并成标准 D4 `StructureAnchorPlan` 并调用 `city_plan_d4`。 |
 | `city_plan_d4_structure_cluster_groups` | `POST /realm/city/plan_d4_structure_cluster_groups` | D4 整组候选调试入口：按 `DesignSlotPlan` 一次生成多组完整结构群落脚方案；预览图颜色代表整组，bbox 默认不画在主图里。 |
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
-| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
+| `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 装饰填充层 v0.1：读取 D4/D5/D6 与 array zones，按拆分 item schema 生成 surface operation、小型 prefab 落点和局部放大预览。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry 和可选装饰 worldgen 计划，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
@@ -60,7 +64,9 @@ Node MCP：`country_designer_mcp`
 - `forceRefresh`，默认 `false`；true 时忽略本地 profile cache。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
-- `d4CandidateMode=key_then_array|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
+- `d4CandidateMode=key_then_array|array_layout_loop_v0_2|array_layout_loop_v0_3|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`array_layout_loop_v0_2` / `array_layout_loop_v0_3` 是显式路径：先跑关键结构 session，再按 `arrayLayoutPlan.layoutPlans[]` 逐个 replay；若没有 item，返回 `waiting_for_array_layout_input`。v0.3 允许 `plannerType=composite_array` 的 item 携带 `childLayoutPlans[]`。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
+- `enableDressingLayer=true|false`，默认 `false`；为 `true` 时必须提供 `dressingBrushPlan`，workflow 会在 D6 后调用 `city_plan_city_dressing`，再由 `city_execute_d5` 激活装饰 worldgen 计划。
+- `dressingBrushPlan`，`schemaVersion=city_dressing_brush_plan.v0.1`；`dressingLayoutItems[]` 使用拆分 item schema。
 - `roadProvider=auto|roadweaver|worldedit_debug|none`；默认 `auto` 只在 RoadWeaver 存在时注册真实道路，缺 RoadWeaver 时跳过道路，旧 debug 道路必须显式 `worldedit_debug`。
 - `planWalls` / `executeWalls`，默认 `false`。
 - `wallVersion`、`wallTerrainPolicy`、`wallDesignPolicy` 及对应城墙参数，会透传给 D5 / CityWalls；`wallVersion=v4` 时额外可传 `wallUnitLengthBlocks`、`waterRunMinUnits`、`waterRetreatMaxCells`、`structureWallBreathingRoomBlocks`、`heightDatumClampBlocks`、`localMedianWindowUnits`。
@@ -69,7 +75,7 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` -> `city_plan_d6` -> `city_execute_d5` -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。
+- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` -> `city_plan_d6` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
 - `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
@@ -84,6 +90,8 @@ Node MCP：`country_designer_mcp`
 - `city_workflow_<citySeedId>/city_workflow_report.json`
 - `city_d4_staged_<citySeedId>/d4_staged_plan.json`
 - `city_d4_staged_<citySeedId>/d4_staged_trace.json`
+- `city_d4_array_layout_<citySeedId>/d4_array_layout_plan.json`、`d4_array_layout_loop_state.json`、`d4_array_layout_execution_trace.json`、`d4_array_occupied_field.json`、`d4_array_patch_availability.json`、`d4_functional_array_zones.json`、`d4_array_layout_preview.png`（仅显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3`）
+- `city_dressing_<citySeedId>/city_dressing_brush_plan.json`、`city_dressing_effective_mask.json`、`city_dressing_surface_operation_plan.json`、`city_dressing_decoration_placement_plan.json`、`city_dressing_occupied_field.json`、`city_dressing_zones.json`、`city_dressing_preview_index.json`、`city_dressing_preview_<itemId>.png`（仅显式 `enableDressingLayer=true` 或单独调用 `city_plan_city_dressing`）
 
 质量口径：
 
@@ -230,15 +238,16 @@ v4 行为口径：
 - `occupiedStructureAnchorMapSource`，形如 `{ "anchorMapPath": "city_d4_x/structure_anchor_map.json" }`
 - `occupiedEnvelopes[]`
 
-`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`。可选 `variantSelectionMode=round_robin|seeded_random|weighted_random`、`variantSeed`、`structureWeights`。
+`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`；显式可传 `compound_cluster`、`grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`。可选 `compoundCluster={shape,rows,columns,spacingBlocks}`、`variantSelectionMode=round_robin|seeded_random|weighted_random`、`variantSeed`、`structureWeights`。
 
 语义：
 
 - `structureIds[]` 可按稳定 round-robin、seeded random 或 weighted random 分配到 `arrayCount` 个 item；单独 endpoint 缺省 `round_robin`，workflow 从 `array_fill` slot 构造阵列计划时缺省 `seeded_random`。
 - `arrayCount` 必须完整满足；容量不足返回 `D4_ARRAY_COUNT_UNSATISFIED`，不输出部分候选组。
 - 不读取或生成道路，只输出 item 级 `roadPoint` / `roadAccessIntent` 作为 D7 后处理提示。
-- 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`。
+- 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`；每个候选组写 `arrayPattern`、`arrayShape`、`spacingBlocks`，item 也写 `arrayShape` / `spacingBlocks`。
 - 每个 `arrayCandidates[]` 内含 `expandedStructureAnchorPlan`，调用方选中整组后直接传给 `city_plan_d4`。
+- D4 阵列 hard conflict 只看 `estimatedCollisionEnvelope` 与 occupied collision/body；`estimatedMaskEnvelope`、旧 safety 字段、道路 / 装饰 / 植被 margin 不得撑大 spacing。
 
 ## city_create_d4_design_loop_state / city_read_d4_design_loop_state / city_append_d4_design_loop_round / city_write_d4_design_loop_state
 
@@ -305,7 +314,6 @@ v4 行为口径：
 返回 artifact：
 
 - `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`
-- `d4_design_loop_state.json`
 - `d4_design_loop_occupied_field.json`
 - `d4_design_loop_function_zones.json`
 - `d4_design_loop_array_zones.json`
@@ -313,6 +321,119 @@ v4 行为口径：
 - `d4_design_loop_next_ai_context_summary.json`
 - `d4_design_loop_execution_trace.json`
 - `quality_report.json`
+
+## city_create_d4_array_layout_loop / city_execute_d4_array_layout_item / city_finalize_d4_array_layout_loop
+
+D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then_array`。
+
+`city_create_d4_array_layout_loop` 必填：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `arrayLayoutPlan`
+
+可选：
+
+- `structureEnvelopeFactsSource`
+- `baseStructureAnchorPlanSource`
+- `occupiedStructureAnchorMapSource`
+
+语义：
+
+- 创建 `city_d4_array_layout_<citySeedId>/d4_array_layout_loop_state.json`。
+- 若已有 `city_d4_<citySeedId>/structure_anchor_plan.json` / `structure_anchor_map.json`，默认作为 base key anchors 和 occupied。
+- `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.3` 或 `planningMode=array_layout_loop_v0_3` 时，state / trace 也使用 v0.3 口径。
+- 输出 `d4_array_layout_preview.png`，主图只显示已执行 zone、点、连接线和 RoadWeaver gateway，不绘制 bbox。
+
+`city_execute_d4_array_layout_item` 必填：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+- `nextArrayLayoutPlanItem`
+
+可选：
+
+- `stateId`
+- `arrayLayoutLoopStateSource`
+- `structureEnvelopeFactsSource`
+
+语义：
+
+- 每次只接受一个 `nextArrayLayoutPlanItem`。
+- `plannerType` 支持 `plaza_ring`、`compound_cluster`、`guide_line_dual_side`、`riverbank_dual_side`、`contour_band`、`composite_array`。
+- `layoutPlans[]` 不能直接放进 `nextArrayLayoutPlanItem`；v0.3 只有 `composite_array.childLayoutPlans[]` 可以在同轮展开子阵列。
+- `composite_array` 会输出 `zoneKind=parent_composite` 的父 zone、`subZones[]` 和 `zoneKind=child_array` 的子 zone，子阵列结构 anchor 才进入最终 `StructureAnchorPlan`。
+- `stateId` 若不是当前 state，返回 `D4_ARRAY_LAYOUT_LOOP_STATE_STALE`。
+- required item 失败 hard block；fill item 冲突时跳过，最终必须满足 `countPolicy.minCount`。
+- `compound_cluster` 读取 `compoundCluster.shape|rows|columns|spacingBlocks`，支持 `grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`；zone / item / trace 写 `arrayShape` 与实际 `spacingBlocks`。
+- 防撞只使用 collision envelope / body envelope；occupied 来自 base key anchors 和已执行 array items，profile/debug 结构大小诊断不进入正式 array zone 字段。`maskEnvelope` 可以重叠，不得撑大 D4 anchor 间距。
+
+`city_finalize_d4_array_layout_loop` 必填：
+
+- `runId`
+- `citySeedId`
+- `terrasenseProfileSource`
+
+可选：
+
+- `stateId`
+- `arrayLayoutLoopStateSource`
+- `structureEnvelopeFactsSource`
+
+语义：
+
+- 合并 `baseStructureAnchorPlan.anchors[]` 与 `arrayAnchors[]`。
+- 调用标准 `city_plan_d4`，最终输出 `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_anchor_preview.png`。
+- 后续 D5/D6/D7 不需要知道 array layout loop 存在。
+
+## city_plan_city_dressing
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+- `dressingBrushPlan`
+
+可选参数：
+
+- `d4FunctionalArrayZonesSource`
+- `roadCorridorSource`
+- `dimensionId`
+- `playerName`
+
+语义：
+
+- 读取 D3 / D4 / D5 / D6 artifact，以及可选 D4 `functionalArrayZones`。
+- 生成 `effective_dressing_mask`：高优先级结构、墙体、道路 corridor、水体和高风险坡地从装饰区域扣除。
+- `dressingBrushPlan.dressingLayoutItems[]` 按拆分 schema 执行：`parallel_rows_dressing_item`、`parcel_fields_dressing_item`、`formal_axis_garden_dressing_item`、`courtyard_dressing_item`、`roadside_edge_dressing_item`、`corner_clutter_dressing_item`、`boundary_frame_dressing_item`。
+- 每个 item 只接受自己的参数；跨 schema 参数返回 `CITY_DRESSING_ITEM_FIELD_UNSUPPORTED`。
+- 装饰只输出 surface operation、局部占用、prefab placement、zones 和预览；不注册结构，不注册 RoadWeaver endpoint。
+- 预览按 item/zone 单独裁切放大，不画城市全图，不画 debug bbox。
+
+返回 artifact：
+
+- `cityDressingBrushPlan`
+- `cityDressingEffectiveMask`
+- `cityDressingSurfaceOperationPlan`
+- `cityDressingDecorationPlacementPlan`
+- `cityDressingOccupiedField`
+- `cityDressingZones`
+- `cityDressingPreviewIndex`
+- `cityDressingPreviewImages[]`
+- `cityDressingTemplateLibrary`
+- `qualityReport`
+
+常见 reason code：
+
+- `CITY_DRESSING_BRUSH_PLAN_REQUIRED`
+- `CITY_DRESSING_ITEM_FIELD_UNSUPPORTED`
+- `CITY_DRESSING_FILL_ALGORITHM_UNSUPPORTED`
+- `CITY_DRESSING_TARGET_AREA_EMPTY`
+- `CITY_DRESSING_DECORATION_POOL_EMPTY`
+- `CITY_DRESSING_MIN_DECORATION_UNSATISFIED`
+- `CITY_DRESSING_COLLISION_CONFLICT`
 
 ## city_plan_d4_structure_cluster_groups / city_select_d4_structure_cluster_group
 

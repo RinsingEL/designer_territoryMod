@@ -61,7 +61,10 @@
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
 - D4 设计构图候选闭环 v0.2：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.2/README.md`
+- D4 阵列布局 Agent Loop v0.2 / v0.3：`../systems/city/10_product/案子/D4阵列布局AgentLoop-v0.2-v0.3/README.md`；v0.2 为当前显式 loop，v0.3 已接入 `composite_array` 嵌套阵列显式路径。
+- City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；已接入 `plan_city_dressing` 显式路径和 worldgen 装饰刷入。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
+- 结构 Envelope 瘦身：`../systems/city/10_product/案子/结构Envelope瘦身-v0.1/README.md`；当前推进到 04 D4 阵列形态首切片，补 `compound_cluster` 参数化和 grid / courtyard / l_shape / u_shape / organic_compact 验收。
 - 后续案：`../systems/city/10_product/案子/RoadWeaver结构连接-v0.1/README.md`
 - 后续案：`../systems/city/10_product/案子/结构地形兼容适配-v0.1/README.md`
 - 后续案：`../systems/city/10_product/案子/城市边界与城墙-v0.1/README.md`
