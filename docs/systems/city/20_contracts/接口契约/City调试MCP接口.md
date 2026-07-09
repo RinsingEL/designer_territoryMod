@@ -166,6 +166,8 @@ v4 行为口径：
 - 不写世界，不生成正式 ledger。
 - 输出 `structure_envelope_facts.json`，供 D4 推导 `collisionEnvelope` / `maskEnvelope`。
 - facts 同时包含 `validSamples[]`、`bboxGroups[]`、`generationConfigHash`、`profileCache`、结构级 `cacheIdentity`、`cacheKey`、`cacheStatus` 和 `cacheReason`。
+- facts 同时输出结构稳定性分类与 bbox 选择事实：`stabilityClassification`、`dominantBBoxGroup`、`stableMaxEnvelope`、`profileConfidence`、`bboxVarianceSummary`、`placementRecommendation`、`requiresReview`。
+- village / 强随机扩张 / bbox 分布过散结构必须标记 `exception` 或 `requiresReview=true`，且不得默认进入常规紧凑阵列。
 - 固定 / 近固定结构使用 dominant `bboxGroups[]` 或 anchor 指定的 `envelopeGroupKey`。
 - 非固定结构继续使用固定生成配置下的 P95 / P99 / maxObserved。
 
