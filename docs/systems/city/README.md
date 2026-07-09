@@ -82,6 +82,7 @@ D3 地形 patch 真值
 | D2 | `citySiteContext` |
 | D3 | `city_landform_review_package.json`、`landform_review_map.png`；patch 含 `biomeSummary` 群系摘要 |
 | envelope profiling | `structure_envelope_facts.json`、`structure_envelope_profile_preview.png`、`quality_report.json` |
+| D4 design loop state | `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`、`d4_design_loop_occupied_field.json`、`d4_design_loop_function_zones.json`、`d4_design_loop_array_zones.json`、`d4_design_loop_patch_availability.json`、`d4_design_loop_next_ai_context_summary.json`、`d4_design_loop_execution_trace.json` |
 | D4 staged workflow | `d4_staged_plan.json`、`d4_staged_trace.json`；关键结构阶段复用 D4 v2 session artifact，阵列阶段按 `arrayId` 输出独立阵列候选 artifact，最终仍写标准 `structure_anchor_plan.json` / `structure_anchor_map.json` |
 | D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |

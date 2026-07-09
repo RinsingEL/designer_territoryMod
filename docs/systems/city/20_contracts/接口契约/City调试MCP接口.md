@@ -21,6 +21,10 @@ Node MCP：`country_designer_mcp`
 | `city_finalize_d4_candidate_session` | `POST /realm/city/finalize_d4_candidate_session` | D4 v2：所有 slot 选完后生成标准 D4 `StructureAnchorPlan` / `StructureAnchorMap`。 |
 | `city_plan_d4_candidates` | `POST /realm/city/plan_d4_candidates` | v0.1 debug batch 入口：一次性生成全部 slot 候选，`planningMode=all_slots_tentative_order_debug`。 |
 | `city_plan_d4_array_candidates` | `POST /realm/city/plan_d4_array_candidates` | D4 阵列候选入口：按 patch / envelope facts 生成 3-5 组批量结构候选，组内已做估算防撞，并内嵌可直接交给 `city_plan_d4` 的 `expandedStructureAnchorPlan`。 |
+| `city_create_d4_design_loop_state` | `POST /realm/city/create_d4_design_loop_state` | D4 多轮设计 loop state：基于 D3 patch 创建状态 artifact；只写状态，不触发提交阶段。 |
+| `city_read_d4_design_loop_state` | `POST /realm/city/read_d4_design_loop_state` | D4 多轮设计 loop state 读取：返回 state、occupied field、zones、patch availability、summary 和 trace。 |
+| `city_append_d4_design_loop_round` | `POST /realm/city/append_d4_design_loop_round` | D4 多轮设计 loop 追加一轮：写入本轮 anchors / placed structures / zones，并用 `collisionEnvelope` / `bodyEnvelope` 回写 occupied field。 |
+| `city_write_d4_design_loop_state` | `POST /realm/city/write_d4_design_loop_state` | D4 多轮设计 loop state 显式写回：校验并重写 state 及拆分 artifact。 |
 | `city_plan_d4_structure_cluster_groups` | `POST /realm/city/plan_d4_structure_cluster_groups` | D4 整组候选调试入口：按 `DesignSlotPlan` 一次生成多组完整结构群落脚方案；预览图颜色代表整组，bbox 默认不画在主图里。 |
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
@@ -235,6 +239,80 @@ v4 行为口径：
 - 不读取或生成道路，只输出 item 级 `roadPoint` / `roadAccessIntent` 作为 D7 后处理提示。
 - 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`。
 - 每个 `arrayCandidates[]` 内含 `expandedStructureAnchorPlan`，调用方选中整组后直接传给 `city_plan_d4`。
+
+## city_create_d4_design_loop_state / city_read_d4_design_loop_state / city_append_d4_design_loop_round / city_write_d4_design_loop_state
+
+这一组接口是 D4 多轮城市设计 loop 的 state / artifact 基础设施。它们只读写 JSON artifact，不搜索候选结构、不自动选结构、不执行阵列形态扩展、不触发 D5 / D6 / dressing / roads / worldgen / D7。
+
+`city_create_d4_design_loop_state` 必填：
+
+- `runId`
+- `citySeedId`
+
+可选：
+
+- `planningMode` 或 `designLoopOptions.planningMode`，默认 `d4_multi_round_design_loop_v0_1`。
+- `designLoopOptions.cityId`
+- `baseStructureAnchorMapSource`，形如 `{ "anchorMapPath": "city_d4_x/structure_anchor_map.json" }`，用于从既有 anchor map 初始化 `anchors[]` 与 `occupiedField`。
+
+`city_read_d4_design_loop_state` 必填：
+
+- `runId`
+- `citySeedId`
+
+可选：
+
+- `designLoopStateSource`，形如 `{ "designLoopStatePath": "city_d4_design_loop_x/d4_design_loop_state.json" }`；未传时读取默认路径。
+
+`city_append_d4_design_loop_round` 必填：
+
+- `runId`
+- `citySeedId`
+- `designLoopRound`
+
+可选：
+
+- `stateId`：与当前 state 不一致时返回 `D4_DESIGN_LOOP_STATE_STALE`。
+- `designLoopStateSource`
+
+`designLoopRound` 可含：
+
+- `roundId`
+- `anchors[]`
+- `placedStructures[]`
+- `functionZones` 或 `{zones[]}`
+- `arrayZones` 或 `{arrayZones[]}`
+- `functionalArrayZones.arrayZones[]`
+- `nextAiContextSummary`
+- `executionTrace`
+
+规则：
+
+- `anchors[]` / `placedStructures[]` 每项必须有 `collisionEnvelope` 或 `bodyEnvelope`，否则返回 `D4_DESIGN_LOOP_OCCUPIED_ENVELOPE_REQUIRED`。
+- `occupiedField.occupied[].envelopeSource` 只能是 `collisionEnvelope` 或 `bodyEnvelope`。
+- 输入中若存在退场 envelope 字段，写入 state 时必须剥离，不得进入正式 artifact。
+
+`city_write_d4_design_loop_state` 必填：
+
+- `runId`
+- `citySeedId`
+- `designLoopState`
+
+可选：
+
+- `stateId`：用于 stale state 校验。
+
+返回 artifact：
+
+- `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`
+- `d4_design_loop_state.json`
+- `d4_design_loop_occupied_field.json`
+- `d4_design_loop_function_zones.json`
+- `d4_design_loop_array_zones.json`
+- `d4_design_loop_patch_availability.json`
+- `d4_design_loop_next_ai_context_summary.json`
+- `d4_design_loop_execution_trace.json`
+- `quality_report.json`
 
 ## city_plan_d4_structure_cluster_groups / city_select_d4_structure_cluster_group
 
