@@ -2,7 +2,7 @@
 
 ## 版本
 
-v0.3 — City D3-D6 结构落地驱动主线 + 快速验收 workflow。
+v0.3 主线 + D4 阵列候选选择闭环 v0.4 显式开发接口。
 
 Java HTTP：`127.0.0.1:5000`
 Node MCP：`country_designer_mcp`
@@ -25,9 +25,12 @@ Node MCP：`country_designer_mcp`
 | `city_read_d4_design_loop_state` | `POST /realm/city/read_d4_design_loop_state` | D4 多轮设计 loop state 读取：返回 state、occupied field、zones、patch availability、summary 和 trace。 |
 | `city_append_d4_design_loop_round` | `POST /realm/city/append_d4_design_loop_round` | D4 多轮设计 loop 追加一轮：写入本轮 anchors / placed structures / zones，并用 `collisionEnvelope` / `bodyEnvelope` 回写 occupied field。 |
 | `city_write_d4_design_loop_state` | `POST /realm/city/write_d4_design_loop_state` | D4 多轮设计 loop state 显式写回：校验并重写 state 及拆分 artifact。 |
-| `city_create_d4_array_layout_loop` | `POST /realm/city/create_d4_array_layout_loop` | D4 v0.2/v0.3 阵列布局 loop 显式入口：创建程序侧 loop state，读取关键结构 D4 anchor 作为 occupied。 |
+| `city_create_d4_array_layout_loop` | `POST /realm/city/create_d4_array_layout_loop` | D4 阵列布局 loop 显式入口：v0.2/v0.3 创建直接执行 state；v0.4 创建候选选择 state，读取关键结构 D4 anchor 作为 occupied。 |
 | `city_execute_d4_array_layout_item` | `POST /realm/city/execute_d4_array_layout_item` | D4 v0.2/v0.3：每轮只执行一个 `nextArrayLayoutPlanItem`；v0.3 `composite_array` 可在单 item 内展开 parent zone / subZones / child arrays。 |
-| `city_finalize_d4_array_layout_loop` | `POST /realm/city/finalize_d4_array_layout_loop` | D4 v0.2/v0.3：把 base key anchors + array loop anchors 合并成标准 D4 `StructureAnchorPlan` 并调用 `city_plan_d4`。 |
+| `city_query_d4_array_expansion_space` | `POST /realm/city/query_d4_array_expansion_space` | D4 v0.4 只读外扩空间：常规返回 focus 周边空间；显式新功能区返回全局 patch 候选与入口。 |
+| `city_plan_d4_array_expansion_candidates` | `POST /realm/city/plan_d4_array_expansion_candidates` | D4 v0.4 生成 3-5 组完整阵列候选与预览，不提交 loop state。 |
+| `city_select_d4_array_expansion_candidate` | `POST /realm/city/select_d4_array_expansion_candidate` | D4 v0.4 选择完整候选后原子更新 occupied、array zones、剩余空间和 trace。 |
+| `city_finalize_d4_array_layout_loop` | `POST /realm/city/finalize_d4_array_layout_loop` | D4 v0.2/v0.3/v0.4：把 base key anchors + 已提交 array anchors 合并成标准 D4 `StructureAnchorPlan` 并调用 `city_plan_d4`。 |
 | `city_plan_d4_structure_cluster_groups` | `POST /realm/city/plan_d4_structure_cluster_groups` | D4 整组候选调试入口：按 `DesignSlotPlan` 一次生成多组完整结构群落脚方案；预览图颜色代表整组，bbox 默认不画在主图里。 |
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
@@ -344,6 +347,7 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - 创建 `city_d4_array_layout_<citySeedId>/d4_array_layout_loop_state.json`。
 - 若已有 `city_d4_<citySeedId>/structure_anchor_plan.json` / `structure_anchor_map.json`，默认作为 base key anchors 和 occupied。
 - `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.3` 或 `planningMode=array_layout_loop_v0_3` 时，state / trace 也使用 v0.3 口径。
+- `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4` + `planningMode=array_candidate_selection_loop_v0_4` 时，`layoutPlans[]` 必须为空；创建后只能走 v0.4 query / plan / select，`city_execute_d4_array_layout_item` 返回 `D4_ARRAY_LAYOUT_V04_CANDIDATE_SELECTION_REQUIRED`。
 - 输出 `d4_array_layout_preview.png`，主图只显示已执行 zone、点、连接线和 RoadWeaver gateway，不绘制 bbox。
 
 `city_execute_d4_array_layout_item` 必填：
@@ -387,6 +391,27 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - 合并 `baseStructureAnchorPlan.anchors[]` 与 `arrayAnchors[]`。
 - 调用标准 `city_plan_d4`，最终输出 `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_anchor_preview.png`。
 - 后续 D5/D6/D7 不需要知道 array layout loop 存在。
+
+## D4 阵列候选选择闭环 v0.4
+
+v0.4 是显式开发路径，不加入 `city_run_workflow` 默认 `key_then_array`，也不改变 v0.2/v0.3 的直接 execute 语义。
+
+共同前提：`city_create_d4_array_layout_loop` 传 `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4`、`planningMode=array_candidate_selection_loop_v0_4`、空 `layoutPlans[]`；可选 `occupiedStructureAnchorMapSource` 提供已 Plan 的 collision occupied。所有 v0.4 endpoint 都接受 `runId`、`citySeedId`、可选 `stateId` / `arrayLayoutLoopStateSource`；plan 另需 `terrasenseProfileSource`，可选 `structureEnvelopeFactsSource`。
+
+`city_query_d4_array_expansion_space` 的 `arrayExpansionRequest` 有两种互斥路径：
+
+- 常规外扩必须传 `focusRef={anchorId|arrayId}`、`direction=north|south|east|west|northeast|northwest|southeast|southwest`、`targetPatchRef`。响应 `searchScope=focus_nearby_expansion`，给出 focus collision、方向可用区、入口、容量和 nearby patch。
+- 新功能区必须显式传 `newFunctionalArea=true`，且不传 `focusRef`、`direction`、`targetPatchRef`。响应 `searchScope=explicit_global_new_functional_area`、`selectedGlobalPatchRequired=true`、按可用性后容量排序的 `globalPatchCandidates[]`；每项含 `patchRef`、`remainingCapacity`、`available`、`availabilityReason` 和可用时的 `expansionEntryPoint`。查询不预留任何空间。
+
+`city_plan_d4_array_expansion_candidates` 必须传一个 `nextArrayLayoutPlanItem`（支持 `compound_cluster`、`guide_line_dual_side`、`plaza_ring`、`composite_array`）。常规路径继续使用 focus / direction / target patch；新功能区路径必须传 `newFunctionalArea=true` + 来自 query 的 `selectedGlobalPatchRef`，不接受旧 `targetPatchRef` 代替选择。成功返回 `schemaVersion=city_d4_array_expansion_candidate_set.v0.4`、`sourceStateId`、`arrayCandidates[]`、`expansionSpace` 和 quality。每组候选必须完整、collision 不重叠旧 occupied，候选生成不得修改 loop state、occupied、zones 或剩余空间。
+
+`city_select_d4_array_expansion_candidate` 默认必须传 `candidateId`；只有显式 `autoSelectHighestScore=true` 时才按最高分选择，trace 必须写 `decisionSource=auto_highest_score_explicit`，默认人工 / AI 选择写 `ai_or_human_selected`。选择后才原子写入 loop state 的 anchors、occupied envelopes、functional array zones、remaining expansion space 和 trace；候选集 `sourceStateId` 不匹配当前 state 返回 stale。
+
+`city_finalize_d4_array_layout_loop` 只合并已经 select 的 array anchors；未选 `arrayCandidates[]` 不得进入标准 `structure_anchor_plan.json` / `structure_anchor_map.json`。
+
+v0.4 artifact：`d4_array_expansion_space.json`、`d4_array_expansion_candidate_set.json`、`d4_array_expansion_candidates.png`、`d4_array_expansion_candidate_quality_report.json`，加既有 loop state / occupied / zones / trace artifact。
+
+关键失败码：`D4_ARRAY_LAYOUT_FOCUS_REQUIRED`、`D4_ARRAY_LAYOUT_FOCUS_NOT_OCCUPIED`、`D4_ARRAY_LAYOUT_TARGET_PATCH_REQUIRED`、`D4_ARRAY_LAYOUT_EXPANSION_DIRECTION_UNAVAILABLE`、`D4_ARRAY_LAYOUT_GLOBAL_PATCH_SELECTION_REQUIRED`、`D4_ARRAY_LAYOUT_GLOBAL_PATCH_UNAVAILABLE`、`D4_ARRAY_LAYOUT_GLOBAL_PATCH_NO_CAPACITY`、`D4_ARRAY_LAYOUT_CANDIDATES_UNSATISFIED`、`D4_ARRAY_LAYOUT_CANDIDATE_SELECTION_REQUIRED`、`D4_ARRAY_LAYOUT_CANDIDATE_SET_STALE`。
 
 ## city_plan_city_dressing
 

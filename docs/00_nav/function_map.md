@@ -62,6 +62,7 @@
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
 - D4 设计构图候选闭环 v0.2：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.2/README.md`
 - D4 阵列布局 Agent Loop v0.2 / v0.3：`../systems/city/10_product/案子/D4阵列布局AgentLoop-v0.2-v0.3/README.md`；v0.2 为当前显式 loop，v0.3 已接入 `composite_array` 嵌套阵列显式路径。
+- D4 阵列候选选择闭环 v0.4：`../systems/city/10_product/案子/D4阵列候选选择闭环-v0.4/README.md`；已接入显式 `create -> query -> plan -> select -> finalize` 闭环。常规外扩仍需 focus / direction / target patch；仅 `newFunctionalArea=true` 先做全局 patch 搜索，再用 `selectedGlobalPatchRef` 生成候选，不切默认 workflow。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；已接入 `plan_city_dressing` 显式路径和 worldgen 装饰刷入。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
 - 结构 Envelope 瘦身：`../systems/city/10_product/案子/结构Envelope瘦身-v0.1/README.md`；当前推进到 04 D4 阵列形态首切片，补 `compound_cluster` 参数化和 grid / courtyard / l_shape / u_shape / organic_compact 验收。
