@@ -10,6 +10,17 @@ v0.2 将 D4 候选闭环从 v0.1 的“一次性为全部 slot 生成候选，�
 
 同时，本案要求 D4 明确记录设计耗时。后续真实验收不只看最终城市是否漂亮，还要回答“从创建 D4 session 到完成 6 个结构 slot 的设计，一共花了多久，每一步慢在哪里”。
 
+## Current Implementation Status
+
+本案已完成并入当前 City 主线：
+
+- 已有 `city_create_d4_candidate_session` / `city_plan_d4_next_candidates` / `city_select_d4_candidate` / `city_finalize_d4_candidate_session` 四段接口。
+- `city_run_workflow` 默认 `key_then_array` 的关键结构阶段会复用该 sequential session，逐 slot 生成、选择并冻结 occupied。
+- D4 结构群整组候选也复用该 session 的 `planNext/select/finalize` 口径做 beam search。
+- v0.1 批量候选仍保留为 debug / 兼容入口，不再是推荐主路径。
+
+因此本案不是废案；它已经变成 D4 关键结构逐个定锚的基础能力。后续新增能力应优先围绕 array_fill、嵌套阵列、RoadWeaver corridor 和装饰填充层继续推进。
+
 ## Problem In v0.1
 
 v0.1 已经证明“设计 slot + D3 patch + envelope facts + 少量候选”是正确方向，但本轮真实测试暴露出一个结构性问题：

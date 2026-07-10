@@ -9,7 +9,7 @@
 ## 当前口径
 
 - RoadWeaver 是可选依赖，不是 mandatory mod。
-- 开发运行标准启动需禁用 RTF、启用结构包并启用 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseReTerraForged=false -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
+- 开发运行标准启动不再加载 RTF / ReTerraForged，只启用结构包和 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
 - `city_execute_d5` 是 RoadWeaver 注册点，必须发生在目标 chunk 首次生成前。
 - endpoint 和 MCP 新增 `roadProvider=auto|roadweaver|worldedit_debug|none`：

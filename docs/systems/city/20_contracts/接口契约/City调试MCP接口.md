@@ -32,14 +32,14 @@ Node MCP：`country_designer_mcp`
 | `city_select_d4_candidates` | `POST /realm/city/select_d4_candidates` | v0.1 debug batch 选择入口。推荐使用 D4 v2 session。 |
 | `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
-| `city_plan_d5` | `POST /realm/city/plan_d5` | 生成 reservation mask、road access、build operation plan。 |
-| `city_plan_d6` | `POST /realm/city/plan_d6` | planned_worldgen 校验，不要求 chunk loaded，不改世界。 |
+| `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
+| `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5，执行 planned_worldgen probe-and-lock；不要求 chunk loaded，不改世界。 |
 | `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 装饰填充层 v0.1：读取 D4/D5/D6 与 array zones，按拆分 item schema 生成 surface operation、小型 prefab 落点和局部放大预览。 |
-| `city_execute_d5` | `POST /realm/city/execute_d5` | 激活 mask registry、planned structure worldgen registry 和可选装饰 worldgen 计划，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 必须依赖完整 D6 locked plan，使用 D6 locked collision 激活 mask registry、planned structure worldgen registry 和可选装饰 worldgen 计划，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
-| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> D4 -> D5 -> D6 -> execute_d5 -> execute_d7；默认 D4 `key_then_array`，先放关键结构，再按阵列填充重复结构。 |
+| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> final D4 -> plan_d5 轻量预案 -> D6 lock -> execute_d5 locked 激活 -> execute_d7；默认 D4 `key_then_array`，先放关键结构，再按阵列填充重复结构。 |
 
 ## city_run_workflow
 
@@ -75,7 +75,7 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` -> `city_plan_d6` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
+- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` locked preflight -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
 - `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
@@ -622,7 +622,7 @@ city_finalize_d4_candidate_session
 
 ## city_plan_d5 / city_execute_d5
 
-`city_plan_d5` 无 AI payload，只读取 D3/D4 artifact。
+`city_plan_d5` 无 AI payload，只读取 D3 / 最终 D4 artifact；D4 design loop state 不能作为正式输入。
 
 返回 artifact：
 
@@ -658,7 +658,7 @@ city_finalize_d4_candidate_session
 
 执行语义：
 
-- 必须已存在 D6 locked `structure_materialization_plan.json`；未跑 D6 或 locked plan 不完整时 hard fail。
+- 必须已存在完整 D6 locked `structure_materialization_plan.json`；缺 `actualFootprint`、`lockedActualFootprint`、`pieceBoxes`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey` 或 `expectedStartSignature` 时 hard fail。
 - 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
 - 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
@@ -702,7 +702,7 @@ city_finalize_d4_candidate_session
 
 chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
 
-D6 会做 non-mutating probe-and-lock，输出 `locked=true`、`lockedActualFootprint`、`lockedBBoxGroupKey`、`lockedCollisionEnvelope`、`expectedStartSignature`。若 actual group 与 D4 selected/dominant group 不一致，但 facts 中存在该 group 且最终防撞通过，D6 锁定实际 group，不再直接失败。
+D6 会做 non-mutating probe-and-lock，输出 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`pieceBoxes`、`lockedBBoxGroupKey`、`lockedCollisionEnvelope`、`expectedStartSignature`，并按 `lockedCollisionEnvelope + maskMarginBlocks` 写入 `maskEnvelope`。若 actual group 与 D4 selected/dominant group 不一致，但 facts 中存在该 group 且最终防撞通过，D6 锁定实际 group，不再直接失败。
 
 D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey`、`lockedCollisionEnvelope`、`envelopeMode`、`selectedEnvelopeGroupKey`，用于解释 fixed bbox group 是否匹配本次实际生成形态。默认 `collisionClearanceBlocks=4`。
 

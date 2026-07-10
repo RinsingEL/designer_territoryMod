@@ -13,10 +13,12 @@ D3 地形 patch 真值
   -> 可选 D4 v2 顺序候选 session（逐 slot 生成 / 选择 / 冻结）
   -> 可选 D4 结构群整组候选 / 整组选定（整城构图调试路径）
   -> 可选 D4 阵列候选组（批量结构候选组，输出标准 StructureAnchorPlan）
+  -> 可选 D4 阵列布局 loop v0.3（composite_array 父分区 / subZones / child arrays）
   -> D4 StructureAnchorPlan / StructureAnchorMap
-  -> D5 reservation mask 预案（含 D3 patch 贴边 wall reservation）
-  -> D6 planned_worldgen probe-and-lock
-  -> execute_d5 激活 locked planned structure 生成期注册
+  -> city_plan_d5 轻量 reservation mask 预案（只读最终 D4 collision + maskMargin，含 D3 patch 贴边 wall reservation）
+  -> city_plan_d6 planned_worldgen probe-and-lock（锁定 actualFootprint / pieceBoxes / lockedCollisionEnvelope）
+  -> 可选 plan_city_dressing 生成装饰填充计划与局部预览
+  -> execute_d5 以 D6 locked collision 激活 active mask / planned structure 生成期注册 / 装饰 worldgen 刷入计划
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
   -> city_execute_d7 查询 worldgen ledger
   -> 根据已落结构 ledger 反推 inferred function area
@@ -62,9 +64,11 @@ D3 地形 patch 真值
 已并入主线和后续待做的分阶段小案子：
 
 - `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
-- `10_product/案子/D4设计构图候选闭环-v0.2/README.md`：将 v0.1 批量候选升级为逐 slot session：每选定一个 anchor 后冻结 occupied set，再为下一个 slot 重新生成候选，降低 D6 才发现碰撞后的回退成本。
+- `10_product/案子/D4设计构图候选闭环-v0.2/README.md`：已完成并入主线；将 v0.1 批量候选升级为逐 slot session：每选定一个 anchor 后冻结 occupied set，再为下一个 slot 重新生成候选，降低 D6 才发现碰撞后的回退成本。`key_then_array` 的关键结构阶段复用该 session；v0.1 批量候选仅保留为 debug / 兼容入口。
 - D4 key_then_array：`city_run_workflow` 默认路径；`placementStrategy=key_structure|single_ai_selected` 的关键结构必须先走逐 slot session，选中后冻结 occupied envelope；`placementStrategy=array_fill` 的填充结构随后逐组调用阵列候选，并读取上一阶段 `StructureAnchorMap` 避让已落结构。
+- `10_product/案子/D4阵列布局AgentLoop-v0.2-v0.3/README.md`：D4 阵列布局同一版本线；v0.2 已接入显式阵列层开发路径，v0.3 已补 `composite_array` 嵌套阵列能力。AI 每轮仍只提交一个 `nextArrayLayoutPlanItem`，但该 item 可用 `childLayoutPlans[]` 描述父 zone 内的子阵列；程序同轮生成 parent zone、subZones、child zones、occupied field 和 preview。当前不切默认，需显式调用三段 endpoint 或 `d4CandidateMode=array_layout_loop_v0_3`。
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
+- `10_product/案子/City装饰填充层Plan-v0.1/README.md`：已接入显式装饰层路径；`plan_city_dressing` 在 D4/D5/D6 稳定后读取结构 anchor、array zones、reservation mask、wall corridor 和预估 road corridor，扣出 effective dressing mask，再按独立 item schema 生成葡萄棚、农田、水渠、院落、路边灯、围栏、酒桶、干草堆、长椅、推车等 surface operation / 小型 prefab 落点。装饰不进入 `StructureAnchorPlan`、planned structure registry 或 RoadWeaver endpoint；`execute_d5` 激活装饰计划后由 worldgen feature hook 幂等刷入。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
 - `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；`auto` 缺 mod 时跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，旧 debug 道路只允许显式 `worldedit_debug`。
@@ -87,9 +91,11 @@ D3 地形 patch 真值
 | D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 array candidates | `d4_array_candidate_plan.json`、`d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json` |
+| D4 array layout loop | `city_d4_array_layout_<citySeedId>/d4_array_layout_plan.json`、`d4_array_layout_loop_state.json`、`d4_array_layout_execution_trace.json`、`d4_array_occupied_field.json`、`d4_array_patch_availability.json`、`d4_functional_array_zones.json`、`d4_array_layout_preview.png` |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
+| City dressing | `city_dressing_brush_plan.json`、`city_dressing_effective_mask.json`、`city_dressing_surface_operation_plan.json`、`city_dressing_decoration_placement_plan.json`、`city_dressing_occupied_field.json`、`city_dressing_zones.json`、`city_dressing_preview_index.json`、多张 `city_dressing_preview_<itemId>.png`、`city_dressing_templates/*.nbt` |
 | D5 | `reservation_mask_plan.json`、`wall_reservation_plan.json`、`wall_reservation_preview.png`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |
-| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json`、`roadweaver_connection_plan.json`、`road_provider_state.json` |
+| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`、可选 `active_city_dressing_plan.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json`、`active_city_dressing_summary.json`、`roadweaver_connection_plan.json`、`road_provider_state.json` |
 | D6 | `structure_materialization_plan.json`（`plannedWorldgenStructures[]`，含 locked actual footprint / bbox group / collision envelope / signature）、空 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`structure_materialization_preview.png` |
 | execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 RoadWeaver-aware road report 与 terrain adaptation report |
 | city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json`；v3.2+ 额外要求 `gatehouse_9.nbt` / `gatehouse_13.nbt` / `watchtower_5x5.nbt` / `beacon_5x5.nbt`；v4 计划额外输出 `wallNodes[]` / `wallUnits[]` / `nodeConnectorUnits[]` / `cityWallDatumY` / `terrainContourEvents[]` / `wallGraphValidation` |

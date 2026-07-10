@@ -21,8 +21,9 @@
 1. `D3-D6结构落地驱动城市重构-v0.1/README.md`
 2. `D4设计构图候选闭环-v0.1/README.md`
 3. `D4设计构图候选闭环-v0.2/README.md`
-4. `结构Envelope精修-v0.1/README.md`
-5. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+4. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
+5. `结构Envelope精修-v0.1/README.md`
+6. 需要后续方向时，再读 Road Weaver、City 装饰填充层、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
 
 ## 案子状态表
 
@@ -30,7 +31,9 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前 City 主线：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger / actual-footprint road。旧功能区优先链路不再兼容。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
-| `D4设计构图候选闭环-v0.2` | 后续待做 | 将 v0.1 的批量候选改为逐 slot session：只为当前 slot 生成候选，选中后冻结 occupied set，再生成下一个 slot，减少 D6 probe 才发现碰撞后的整轮回退。 |
+| `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
+| `D4阵列布局AgentLoop-v0.2-v0.3` | 显式开发路径 | 同一条 D4 阵列布局版本线：v0.2 已接入三段 endpoint 与显式 workflow 模式 `array_layout_loop_v0_2`；v0.3 已接入 `array_layout_loop_v0_3` 和 `composite_array`，一个 item 可生成 parent zone / subZones / child arrays。AI 每轮仍只提交一个阵列 item，程序执行后更新 state / occupied field / preview。当前不切默认。 |
+| `City装饰填充层Plan-v0.1` | 显式开发路径 | 已接入 `plan_city_dressing`：读取 D4 结构 anchor / array zones、D5 reservation / wall corridor、D6 locked footprint 和预估 RoadWeaver corridor，扣出 effective dressing mask，再用七种拆分 item schema 生成地表整理、农田、水渠、花园、葡萄园、院落、路边灯、围栏和小型装饰 prefab。装饰件不进入 `StructureAnchorPlan`、planned structure registry 或 RoadWeaver endpoint；`execute_d5` 激活后由 worldgen feature hook 幂等刷入。AI 只配置用途、风格、密度、装饰池和算法，不写具体装饰坐标。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
 | `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection；缺 mod 时 `roadProvider=roadweaver` hard fail、`auto` 跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，只有显式 `worldedit_debug` 进入旧 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
@@ -57,7 +60,9 @@
 - D3 patch 作为地形事实输入，不重复做功能区真值层。
 - Trek 顶层 configured structure 可做 envelope profiling。
 - D4 可通过候选闭环选择结构落脚点，不要求 AI 直接手算坐标和防撞。
-- D4 v0.2 的逐 slot session 尚未实现；当前已验收能力仍是 v0.1 批量候选，真实测试中需要人工回退重选。
+- D4 v0.2 逐 slot session 已实现并被 `key_then_array` 关键结构阶段复用；当前 v0.1 批量候选只作为 debug / 兼容路径。
+- D4 阵列布局 Agent Loop v0.2/v0.3 已作为显式开发路径接入；当前默认 `key_then_array` 的 array_fill 仍以 v0.1 阵列候选为准，显式 endpoint / workflow 可每轮执行一个 patch / sector 驱动的阵列 item，v0.3 `composite_array` 可在同轮展开 parent/subZones/child arrays。
+- City 装饰填充层 v0.1 已作为显式路径接入；`plan_city_dressing` 输出 effective mask、surface operation、decoration placement、局部 occupied field、模板库和 per-item 局部预览，`execute_d5` 激活装饰 worldgen plan。
 - D5 可激活 reservation mask 和 planned structure registry。
 - 结构可在 worldgen structure 阶段落地，植被在 feature 阶段被 mask 抑制。
 - D6 可 probe-and-lock actual footprint / bbox group / signature，并用 locked footprint 做最终防撞。
@@ -66,6 +71,8 @@
 ## 当前未完成方向
 
 - Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
+- D4 阵列布局 Agent Loop 后续：真实测试 v0.3 `composite_array` 的紧凑度、preview 可读性和 child zone repair 质量，决定是否把默认 array_fill 从 v0.1 阵列候选升级。
+- City 装饰填充层后续：接 RoadWeaver 真实 locked corridor、正式 D5 dressing reservation mask、更丰富模板库、真实游玩密度与性能验收。
 - Beardifier / terrain adaptation 深度接入：真正观察 hook、台基 / 削坡 / 填土和结构 profile foundation policy。
 - 城墙 / 边界深化：v0.2 已实现墙带早期 mask、D3 patch 贴边非矩形边界、RoadWeaver 真实道路裁门、道路保护和基础地形贴合；v0.3 已进入显式开发路径；v5 草案把后续方向收紧为 D5 定平面、worldgen 保护、D7 后只做垂直适配。
 - TerraSense 结构语义重标记，先用少量高质量结构套件验证“国度 / 城市设计感”。
