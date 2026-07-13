@@ -110,30 +110,30 @@ D6 locked plan、planned structure registry、worldgen ledger 和 D7 placed arti
 - 禁止为了兼容旧 artifact 在新输出中继续写 `safetyEnvelope`。
 - 禁止把 `lockedCollisionEnvelope` 扩成旧 safety 范围。
 
-## 验收卡 5：Dressing 不再依赖 groupSafetyEnvelope
+## 验收卡 5：DecorationProgram 不再依赖 groupSafetyEnvelope
 
 ### 验收目标
 
-City dressing 的占用和扣除区域只能来自结构 / 阵列的 collision、mask、actual footprint 或 dressing 自己的局部策略，不再优先读取 `groupSafetyEnvelope`。
+City decoration 的 hard obstacles 只能来自结构 / 阵列的 collision、mask、actual footprint 或装饰自身策略，不得读取 `groupSafetyEnvelope`。
 
 ### 必须检查
 
-- `CityDressingLayerPlanner`
-- `city_dressing_effective_mask.json`
-- `city_dressing_occupied_field.json`
-- dressing tests
+- `CityDecorationProgramPlanner`
+- `city_decoration_compiled_program_plan.json`
+- `city_decoration_planning_trace.json`
+- decoration planner / chunk compiler tests
 
 ### 通过条件
 
-1. dressing 读取 array zone 时优先使用 `groupMaskEnvelope` 或 `groupCollisionEnvelope`。
-2. dressing 输出不含 `groupSafetyEnvelope`。
+1. decoration 解析 array zone 时只使用 `groupMaskEnvelope` 或 `groupCollisionEnvelope`。
+2. compiled plan、planning trace 和 hard obstacles 不含 `groupSafetyEnvelope`。
 3. 装饰 body 不与结构 collision / locked actual footprint / road corridor 重叠。
-4. 需要装饰缓冲时，由 dressing item policy 自己声明 margin，不借 safety 字段。
+4. 需要装饰缓冲时，由 conflict / content policy 声明 margin，不借 safety 字段。
 
 ### 禁止事项
 
-- 禁止继续使用 `groupSafetyEnvelope` 作为 dressing 扣除区。
-- 禁止让 dressing 的局部 margin 反向修改 D4 结构 anchor。
+- 禁止继续使用 `groupSafetyEnvelope` 生成 decoration hard obstacle。
+- 禁止让 decoration margin 反向修改 D4 结构 anchor。
 
 ## 验收卡 6：Preview 不再显示 safety 层
 

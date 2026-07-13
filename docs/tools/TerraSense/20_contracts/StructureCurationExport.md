@@ -123,6 +123,22 @@ StructureBinder 侧消费的产物必须是冻结快照：
 | `debug_structure_profile_catalog.json` | 显式 debug catalog，可包含未审核 / proposed 信息，但必须 `catalogMode=debug`。 |
 | `TerraSenseStructureProfileSource.debug.json` | City D6 debug 输入来源描述，`sourceType=debug_catalog`。 |
 
+`TerraSenseStructureProfileSource.official.json` 至少写入：
+
+```json
+{
+  "schemaVersion": "terrasense_structure_profile_source.v0.1",
+  "sourceType": "structure_profile_jsonl",
+  "catalogMode": "official",
+  "profilePath": "StructureProfile.jsonl",
+  "vocabularySnapshotPath": "StructureVocabulary.snapshot.json"
+}
+```
+
+`vocabularySnapshotPath` 是可选但推荐随正式 source 冻结的相对路径。City D4-D7 只读取 profile；`city_query_structure_catalog` 额外使用它把 `label` / `aliases[]` 解析回 canonical `term_id`。未提供时，查询接口只接受 profile 中存在的 canonical termId，绝不按文件名、旧 C3.5 catalog 或 City 映射表猜标签。
+
+导入 StructureBinder 本地运行配置时，必须复制 `StructureProfile.jsonl`、词表快照与 source 描述，不得让 City 继续引用客户端或 TerraSense 工程目录。City 请求仍显式携带 source 描述；当前 v0.1 的只读查询与 D4/D6 请求工作目录不同，因此导入 source 的 `profilePath` / `vocabularySnapshotPath` 必须写为 StructureBinder 本地运行配置的绝对路径，不使用跨 endpoint 的相对路径。
+
 旧 `C3_5_FunctionEnumTable.json`、`C3_5_StructureCatalog.preprocessed.json`、`function_candidates` 和 `functionTags` 不再属于当前 City D6 / D7 主链。
 
 ## Structure Envelope Facts

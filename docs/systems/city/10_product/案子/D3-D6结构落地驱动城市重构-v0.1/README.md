@@ -115,6 +115,8 @@ D4 不做：
 
 使用规则：
 
+- 有有效 D2 facts 时，`placementRecommendation.collisionEnvelopeSource` 是 D4 的唯一几何真值：`dominantBBoxGroup` 用 dominant group、`stableMaxEnvelope` 用 stable max、其余使用 P95。该规则同时驱动 key anchor、普通阵列和外扩阵列的自动间距；TerraSense 静态 footprint 不得覆盖它。
+
 - `collisionEnvelope = localEnvelopeP95 + clearanceBlocks`，用于 D4 防撞。
 - `maskEnvelope = localEnvelopeP99 + vegetationMarginBlocks`，用于 D5 禁植被 / 禁自然结构。
 - `safetyEnvelope = maxObservedEnvelope` 或结构自身 max distance 兜底，用于 trace / 越界诊断。
