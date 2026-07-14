@@ -16,6 +16,7 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
 | `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | cache-backed dry-run profiling：对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
 | `city_query_structure_catalog` | `POST /realm/city/query_structure_catalog` | 只读检索 TerraSense 结构画像；支持 canonical termId，以及来源冻结词表的中文标签 / alias；不触发 D4-D7 或世界写入。 |
+| `city_query_template_metadata` | `POST /realm/city/query_template_metadata` | 从当前游戏的 `StructureTemplateManager` 只读校验给定 `templateRefs[]`，返回实际 NBT 尺寸、content hash 与来源；不加载区块、不放置结构。 |
 | `city_create_d4_candidate_session` | `POST /realm/city/create_d4_candidate_session` | D4 v2 推荐入口：创建逐 slot 候选 session，开始记录设计耗时。 |
 | `city_plan_d4_next_candidates` | `POST /realm/city/plan_d4_next_candidates` | D4 v2：只为当前未选择 slot 生成候选，避开已冻结 occupied envelope。 |
 | `city_select_d4_candidate` | `POST /realm/city/select_d4_candidate` | D4 v2：选择当前 slot 的一个 candidate，冻结占用并进入下一个 slot。 |
@@ -39,9 +40,10 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5，执行 planned_worldgen probe-and-lock；不要求 chunk loaded，不改世界。 |
 | `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | 读取运行时 config 并返回当前 `catalogHash`、prefab summaries 与可选风格档案的 id/hash/语义键；仅 config 根目录缺失时一次性安装打包基础目录，不返回原始 NBT 或 block operation。 |
+| `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 显式升级带 Geomantia 默认 manifest 的旧基础目录；必须传 `confirmConfigMutation=true`。仅当旧水渠条目仍与打包旧默认一致且只缺 `terrainDropFallbackContentRef` 时追加该字段，先备份原 index，再停用旧 hash 的 active decoration plans；不改 ledger 或已落地方块。 |
 | `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 通用装饰阵列 v0.2：读取 D3-D6、内容目录与风格档案，校验 `DecorationProgram` 判别联合、冻结 content/style hash，将语义 content 解析为具体 prefab 后生成全局装饰程序和意图预览，最后发布 planning completion。 |
 | `city_probe_decoration_terrain` | `POST /realm/city/probe_decoration_terrain` | activation 前只读地形探针：读取已编译装饰槽位，只采样当前已加载真实区块，报告高度、邻接高差、未加载覆盖和线性槽位连续带 profile；不生成 chunk、不写世界。 |
-| `city_execute_d5` | `POST /realm/city/execute_d5` | 必须依赖完整 D6 locked plan；compiled + completion 成对存在时激活 v0.2 装饰程序，两者均不存在时注销旧 active decoration plan；同时激活 mask / planned structure registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 必须依赖完整 D6 locked plan；compiled、slot projection、completion 完整存在时才激活 v0.2 装饰程序，并逐项校验 projection；每个 program 的实际 slot 包络同时加入 `noVegetationMask` 与 `noVanillaStructureMask`，两者均为 `decoration_projection`，再激活 mask / planned structure registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
@@ -250,6 +252,19 @@ term 输入优先使用 TerraSense canonical termId，例如 `function.agricultu
 
 本地运行时导入必须把 `StructureProfile.jsonl`、`StructureVocabulary.snapshot.json` 与正式 source 描述一并复制到 `run/config/structureTemplate/terrasense/<importId>/`，不得在 City 请求中继续引用客户端或 TerraSense 工程目录。接口不自动发现 source；调用方仍须将该描述文件内容作为 `terrasenseProfileSource` 传入。当前 v0.1 的只读查询与 D4/D6 请求工作目录不同，导入 source 的 `profilePath` / `vocabularySnapshotPath` 必须写为 StructureBinder 本地运行配置的绝对路径；不得使用跨 endpoint 的相对路径。
 
+## city_query_template_metadata
+
+必填参数：
+
+- `templateRefs[]`：1-32 个 Minecraft `ResourceLocation`，例如 `geomantia:d6d7_fixture/house`。
+
+可选参数：
+
+- `dimensionId`：省略时使用 `playerName` 当前维度。
+- `playerName`：用于解析当前维度。
+
+返回每个模板的 `readable`、`failureCode`、`failureDetail`；可读模板额外返回 `rawSize={width,height,depth}`、`templateHash`、`sourceId`。该接口只能读取当前运行时 `StructureTemplateManager`，不得创建 ticket、加载或生成 chunk，不得执行 D4-D7 或写入世界 / run artifact。它用于在组装 `city_template_catalog.v0.1` 前冻结真实 NBT 尺寸和 hash，不替代 D5 前的身份漂移校验。
+
 ## city_plan_d4_array_candidates
 
 必填参数：
@@ -373,6 +388,7 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.3` 或 `planningMode=array_layout_loop_v0_3` 时，state / trace 也使用 v0.3 口径。
 - `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4` + `planningMode=array_candidate_selection_loop_v0_4` 时，`layoutPlans[]` 必须为空；创建后只能走 v0.4 query / plan / select，`city_execute_d4_array_layout_item` 返回 `D4_ARRAY_LAYOUT_V04_CANDIDATE_SELECTION_REQUIRED`。
 - 输出 `d4_array_layout_preview.png`，主图只显示已执行 zone、点、连接线和 RoadWeaver gateway，不绘制 bbox。
+- `arrayLayoutPlan` 可选内嵌 `templateCatalog`，其 schema 必须为 `city_template_catalog.v0.1`。此时 `requiredItems[]`、`featuredItems[]` 或 `fillPool[]` 的对象可使用 `{templateId,variantId,rotation?,mirror?}` 代替 `structureId`；`variantId` 必填，变换省略时取目录允许集合的首项。
 
 `city_execute_d4_array_layout_item` 必填：
 
@@ -397,6 +413,7 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - required item 失败 hard block；fill item 冲突时跳过，最终必须满足 `countPolicy.minCount`。
 - `compound_cluster` 读取 `compoundCluster.shape|rows|columns|spacingBlocks`，支持 `grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`；zone / item / trace 写 `arrayShape` 与实际 `spacingBlocks`。
 - 防撞只使用 collision envelope / body envelope；occupied 来自 base key anchors 和已执行 array items，profile/debug 结构大小诊断不进入正式 array zone 字段。`maskEnvelope` 可以重叠，不得撑大 D4 anchor 间距。
+- 模板 item 以目录中已由 NBT 校验的 `rawSize` 和 `clearanceBlocks` 计算几何；阵列输入只允许 `{templateId,variantId,rotation?,mirror?}`，拒绝 `templateFootprint`、`bbox`、`footprint`、`actualFootprint`、`templateSize` 或 `rawSize` 等调用方几何。D4 输出最小角 `anchorBlock`、`templateRef`、`templateHash`、`variantId`、rotation / mirror、NBT `templateSize` 与派生 closed `actualFootprint`；D6 才补 `lockedActualFootprint`。`templatePlacementPlan.transformed.roadEntrances[]` 与 footprint 均由 `templateSize + transform + anchor` 推导。RoadWeaver 只能消费这组入口，不能从 bbox 或阵列中心反推道路端点。
 
 `city_finalize_d4_array_layout_loop` 必填：
 
@@ -444,6 +461,8 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 - 常规 outward 只提交父结构引用、方向、阵列方式和 `arrayExpansionRequest.expansionPolicy={actualBodyGapMin,actualBodyGapMax,frontierExpansionStepBlocks?,frontierMaxExpansionRounds?}`；不传 `targetPatchRef` 即进入连续前沿模式。
 - `candidateCount` 仍限制为 3-5，缺省为 5；`minCandidateCount` 缺省为 3。仅显式 `minCandidateCount=2` 时可返回 2 组完整合法候选，且不得低于 2 或返回残缺阵列。
 - query 的 `expansionSpace` 以父结构 D2 body / collision bbox 为中心，响应 `focusBodyEnvelope`、`expansionMode=continuous_focus_frontier`、`expansionPolicy` 与 `frontierRings[]`。候选响应 `parentBodyEnvelope`、`parentCollisionEnvelope`、`frontierRing`、`actualBodyGapBlocks`、`terrainPatchRefs` 与 `frontierTrace`；候选集另写 `frontierSearchTrace[]`。D3 patch 仅作为命中地形与评分说明，可跨 patch。
+- `actualBodyGapBlocks` 固定为候选整组结构的最小方向 body gap。连续 `guide_line_dual_side` 先在目标 gap 放内侧首排，再向外放另一侧，不能因双侧横移把首排推到 gap 之外。
+- `expansionPolicy` 的连续前沿按整组 D2 `plannedFootprint` 并集推导，而不是按第一个数组成员；混合尺寸成员均不得回压 `actualBodyGapMin`。
 - 近圈全部不可用前不得进入外圈；响应 / trace 必须说明 collision、水体、坡度、member-cell 或容量等跳过原因。
 - 候选生成不写 loop state；select / finalize 与 v0.4 保持一致。
 - 预览须提供 `d4_array_expansion_candidates.png` 总览、`d4_array_expansion_candidate_detail.png` 候选局部和 `structure_anchor_cluster_preview.png` 最终锚点最密簇局部。调试局部图显示 D2 body / collision / mask；设计主图使用候选短编号，避免长 ID 遮挡。
@@ -457,6 +476,13 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 - 基础 `medieval_coastal` 的 `semanticRefs[]` 至少含 `crop_tile`、`water_channel_tile`、`field_border`、`gravel_path_tile`。
 - content 摘要只暴露 `contentRef`、`contentKind=prefab`、size、allowedRotations、supportMode、placementMode、replacePolicy、maxFootprintHeightSpreadBlocks、comfortMarginBlocks、tags 和 contentHash；不返回原始 NBT、blocks、实体或任意 block operation。
 - AI 必须先查询目录，再把返回的 `catalogHash`、`styleProfileId`、`styleProfileHash` 写入 `decorationProgramPlan`；program 内 `contentRef` 只能填写该 profile 的语义键，不能填写 concrete prefab id。
+
+## city_upgrade_default_decoration_catalog
+
+- 仅用于首次 bootstrap 过的默认目录升级，不接管无 manifest、非 Geomantia source，或水渠条目已被用户改写的 config；这些情况返回 `CITY_DECORATION_DEFAULT_CATALOG_UPGRADE_UNSAFE`，由内容作者自行维护。
+- 请求必须是 `{"confirmConfigMutation":true}`。响应给出升级前后 catalog hash、backupPath、是否需要重规划，以及被停用的 active plan 数量。
+- 当 `catalogChanged=true` 时，旧 plan hash 不得继续 activation。重新 `city_query_decoration_catalog` 取得新 hash 后，用同一 city 的原始 DecorationProgram intent 调用 `city_plan_city_dressing`，再 `city_execute_d5`；同 city 新 hash 是合法替换，不应手改 active plan 或 ledger。
+- 验收必须选择未生成目标 chunk；历史田地、ledger 和已落地方块均不被升级入口回写。
 
 ## city_probe_decoration_terrain
 
@@ -773,6 +799,7 @@ city_finalize_d4_candidate_session
 - `city_decoration_compiled_program_plan.json` 与 `city_decoration_planning_complete.json` 必须同时存在；缺一返回 `CITY_DECORATION_PLAN_INCOMPLETE`。两者均不存在时按 dimension + city 注销旧 active decoration plan。
 - `city_dressing_<citySeedId>/` 中的 v0.1 artifact 必须显式拒绝 `CITY_DRESSING_LEGACY_SCHEMA_REMOVED`，不得参与激活或跳过判断。
 - 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
+- decoration compiled plan、slot projection、completion 完整存在时，D5 必须校验 projection 的 schema / city / catalog / program / slot 身份，并与 compiled plan 的确定性投影逐项一致。随后每个有 slot 的 program 以实际 slot min/max 包络额外进入该 active plan 的 `noVegetationMask` 和 `noVanillaStructureMask`，两者均为 `maskType=decoration_projection`；前者抑制植被，后者阻止普通原版 / 模组结构起始。不得扩大为整块 patch；分别返回 `decorationVegetationMaskCount`、`decorationStructureMaskCount`。
 - 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
@@ -780,7 +807,7 @@ city_finalize_d4_candidate_session
 - RoadWeaver 缺失且 `roadProvider=roadweaver` 时 hard fail `ROADWEAVER_UNAVAILABLE`。
 - RoadWeaver 缺失且 `roadProvider=auto` 时跳过道路并写入 `road_provider_state.json`，状态为 `skipped` / `ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
 - 只有显式 `roadProvider=worldedit_debug` 时才允许 D7 WorldEdit debug fallback。
-- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`、`roadProvider`、`roadWeaverAvailable`。
+- 响应包含 `activePlannedStructureCount`、`plannedStructureRegistryPath`、`worldgenPlacementMode=true`、`decorationVegetationMaskCount`、`requiresLockedMaterializationPlan=true`、`roadPlanningStage=d7_after_worldgen_ledger`、`roadProvider`、`roadWeaverAvailable`。
 
 返回 artifact 增加：
 

@@ -9,6 +9,7 @@
 ## 当前口径
 
 - RoadWeaver 是可选依赖，不是 mandatory mod。
+- 当前开发验收固定验证 Forge `2.3.0-1.20.1`；City 仍只经反射调用 API，升级后必须复核 `RoadNetworkApi.registerStructureEndpoint` 与 `ensureConnection` 签名。
 - 开发运行标准启动不再加载 RTF / ReTerraForged，只启用结构包和 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
 - `city_execute_d5` 是 RoadWeaver 注册点，必须发生在目标 chunk 首次生成前。
@@ -16,7 +17,8 @@
   - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则跳过道路，记录 `status=skipped` / `reasonCode=ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
   - `roadweaver`：RoadWeaver 缺失时 hard fail `ROADWEAVER_UNAVAILABLE`。
   - `worldedit_debug`：显式走 D7 WorldEdit 调试道路。
-  - `none`：禁用道路生成。
+- `none`：禁用道路生成。
+- 实机道路验收把 `run/config/roadweaver/roadweaver.json` 的 `roadAppearance.roadsEnabled=true`；同时固定 `spawnCabinEnabled=false`、`roadsideStructure.enabled=false`，避免 RoadWeaver 在道路附近额外生成小屋或 roadside 结构干扰 City 结构 / 道路验收。
 
 ## 当前流程
 
@@ -52,16 +54,19 @@ D6 locked plan
 v0.1 只输出最小可用连接：
 
 - `anchorId`
-- `structureId`
+- `templateRef`
+- `templateHash`
+- `variant`
+- `rotation`
+- `mirror`
 - `priority`
-- `lockedActualFootprint`
-- `roadPoint`
+- `lockedActualFootprint` / `footprint`
+- `roadEntrances[]`：模板局部入口经 rotation / mirror 变换后的世界入口，至少包含 `entranceId`、`worldPosition`、`direction`
 - connection chain
 - `generateImmediately=false`
 
 后续可扩展：
 
-- entrance candidates
 - roadAccessIntent
 - D3 坡度 / 水岸 / 禁行区域
 - actual footprint avoidance
@@ -86,6 +91,6 @@ v0.1 只输出最小可用连接：
 
 ## 后续方向
 
-- 从结构 profile 中读取入口候选，而不是只用 bbox 外侧点。
+- 继续扩展模板 `roadEntrances[]` 的道路通行语义；不恢复从 bbox 外侧点生成伪入口。
 - 把 D3 坡度、水岸、桥梁意图交给 RoadWeaver 或 adapter。
 - 道路 style / palette 与后续 City 结构风格化换皮联动。

@@ -47,6 +47,7 @@
 
 - 程序读取 `config/geomantia/city_decoration/content_index.json`、`templates/*.nbt` 和 `styles/*.json`。内容目录登记可落地的 prefab；风格档案把 AI-facing 语义键映射到一个或多个 prefab 变体。
 - 运行时 `config/geomantia/city_decoration/` 是唯一真值。首次 `city_query_decoration_catalog` 发现该根目录不存在时，才安装打包基础目录：`content_index.json`、`styles/medieval_coastal.json` 和 4 个有效 NBT 模板；根目录已存在时绝不覆盖、合并或修复其中任何文件，后续只按现有 config 校验。
+- 旧版 Geomantia 默认目录需要补充基础水渠下坡收尾时，只有显式 `city_upgrade_default_decoration_catalog(confirmConfigMutation=true)` 可升级：它仅接受带默认 manifest、且水渠条目仍未被用户改写的目录，先备份 index、停用旧 active plan，再要求以新 catalog hash 重新规划和激活；不改已落地方块或 ledger。
 - 基础 `medieval_coastal` 必须提供 `crop_tile`、`water_channel_tile`、`field_border`、`gravel_path_tile` 四个语义映射；AI 仍只使用这些语义键，不感知模板文件名。
 - AI 的 `contentRef` 是语义键，如 `market_stall`、`crop_tile`、`flower_ground_cover`，不是 `geomantia:oak_market_stall_a` 或 NBT 文件名；规划时按 `styleProfileId` 解析为具体内容与权重，compiled plan 不保留语义键。
 - 规划开始时冻结规范化内容目录的 `catalogHash` 与所选风格档案的 `styleProfileHash`；intent、compiled plan、completion 和 active plan 必须携带二者。
@@ -160,9 +161,10 @@
 - 首期 `Content` 只接受 `contentKind=prefab` 和 config `nbtFile`；`contentKind=surface` / block palette 属于第二切片。
 - `content_index.json` 只登记具体 prefab；`styles/<styleProfileId>.json` 以 `semanticRef -> variants[{contentRef,weight}]` 映射到 catalog 内容。一个语义键可映射多个同风格变体，语义权重与变体权重相乘后写入 compiled plan。
 - `styleProfileId`、`styleProfileHash` 和语义 `contentRef` 缺失、过期或未映射均 hard fail；不得回退第一件模板或草方块。
-- `content_index.json` 首期只登记 prefab，允许字段为 `contentId`、`contentKind=prefab`、`nbtFile=templates/*.nbt`、`placementMode`、`allowedRotations`（角度）、`supportMode=full_footprint`、`replacePolicy`、`maxFootprintHeightSpreadBlocks`、`comfortMarginBlocks`、allowed / blocked surface tags 和 tags；size / envelope 从 NBT 派生，配置不得覆盖。
+- `content_index.json` 首期只登记 prefab，允许字段为 `contentId`、`contentKind=prefab`、`nbtFile=templates/*.nbt`、`placementMode`、`allowedRotations`（角度）、`supportMode=full_footprint`、`replacePolicy`、`maxFootprintHeightSpreadBlocks`、`comfortMarginBlocks`、allowed / blocked surface tags、tags 和可选 `terrainDropFallbackContentRef`；size / envelope 从 NBT 派生，配置不得覆盖。
 - `placementMode=above_surface` 只允许 `replacePolicy=replaceable_only`，用于摊位、栅栏、灯具等放在地表上方的 prefab。
 - `placementMode=replace_surface` 只允许 `replacePolicy=surface_replaceable`，用于 `farmland_wheat_tile`、`water_channel_tile`、`gravel_path_tile` 等替换地表的 1x1 / 1xN tile。
+- 单格 `replace_surface` 内容可配置 `terrainDropFallbackContentRef`。当落点比任一可通行相邻地表高出超过 Program `maxSlopeDelta` 时，`invalidTerrainAction=clip` 改为落地该 fallback tile，作为台地收尾；`skip` 不落地。source/fallback 必须同为 1x1 且 placementMode / replacePolicy 一致。基础水渠将 fallback 指向 `crop_tile`，避免裸水源从陡坎外流。
 - 非法组合在 catalog load 阶段 hard fail；AI 仍只引用 `contentRef`，不得覆盖 placementMode 或 replacePolicy。
 - 农田、水渠、石路等地表内容首期注册为 `geomantia:prefab/*_tile` 的 1x1 / 1xN NBT；AI 仍只提交 `contentRef`。
 - prefab 只读取 `templates/*.nbt` 的方块 palette / blocks；禁止携带或落地实体 NBT，`entities[]` 非空时返回 `CITY_DECORATION_PREFAB_ENTITY_NBT_FORBIDDEN`。
@@ -195,14 +197,14 @@
 - 规划 artifact 固定写入 `city_decoration_<citySeedId>/`：`city_decoration_program_plan.json`、`city_decoration_compiled_program_plan.json`、`city_decoration_slot_projection.json`、`city_decoration_planning_trace.json`、`city_decoration_style_resolution.json`、`quality_report.json`、`city_decoration_preview_index.json` 和 `city_decoration_preview_<programId>.png`。
 - 全部规划产物成功写完后，最后发布 `city_decoration_planning_complete.json`；schema 为 `city_decoration_planning_complete.v0.2`，含 `cityId`、`catalogHash`、`styleProfileId`、`styleProfileHash`、`completedAt`。workflow 只以该标记判断 `skipExisting`，不得以 compiled 文件存在替代完成态。
 - v0.2 active plan 保存全局程序；预展开的 surface operation / placement 只能作为调试产物，不是运行时真值。
-- `city_execute_d5` 要求 compiled plan 与 planning completion 同时存在；只存在一个时返回 `CITY_DECORATION_PLAN_INCOMPLETE`。提交结构 registry 前必须无副作用预检 server active decoration plans、catalog 和 ledger；两者均不存在时按 dimension + city 注销旧 active decoration plan，禁止沿用上次装饰。
+- `city_execute_d5` 要求 compiled plan、slot projection 与 planning completion 同时存在；compiled 存在但 projection / completion 缺失时返回 `CITY_DECORATION_PLAN_INCOMPLETE`。激活前必须用 compiled program 重新核对 slot projection 的逐项确定性结果；不匹配返回 `CITY_DECORATION_D5_SLOT_PROJECTION_MISMATCH`，禁止把旧 projection 当作本轮保护范围。提交结构 registry 前必须无副作用预检 server active decoration plans、catalog 和 ledger；compiled 与 completion 均不存在时按 dimension + city 注销旧 active decoration plan，禁止沿用上次装饰。
 - Worldgen 由 feature origin 所属 owner chunk 触发；一次只能编译、预检并写入该 owner 的 fragment，禁止从 `WorldGenRegion` 向其他 owner chunk 写方块。
 - 当前 owner 的 READY fragment 必须在当前 feature 回调继续前登记 `suppressionBounds`；D5 activation 必须发生在目标 chunk 首次生成前，防止树、草和花先占用装饰目标。
 - 当前 owner 的 target state 不可用或预检失败时，只延后该 fragment；其他 owner 在各自回调按同一 `programId + seed + coordinateFrame` 继续落地和记 ledger。无 configured feature 的 owner chunk 仍是单列已知限制。
 - 每个 chunk 使用同一世界坐标公式和种子；跨 chunk 行列、圆环和边界不得断线、错位、重复或在 chunk 边缘重启。
 - ledger 键至少包含 `dimensionId + cityId + programId + catalogHash + chunkX + chunkZ + fragmentId`，避免重入和版本串用。
 - active 文件固定为 server-root `geomantia_city_masks/active_city_decoration_program_plans.json`，schema 为 `city_active_decoration_program_plans.v0.2`；ledger 固定为同目录 `city_decoration_worldgen_ledger.json`，schema 为 `city_decoration_worldgen_ledger.v0.2`。
-- 首期 worldgen 仍由 `ConfiguredFeature.place` mixin 触发 decoration registry；registry 执行后用 `suppressionBounds` 抑制同范围后续植被 feature。
+- 首期 worldgen 仍由 `ConfiguredFeature.place` mixin 触发 decoration registry；D5 激活时按每个 program 的实际 slot projection 计算 min/max 包络，分别写入同一 `maskType=decoration_projection` 的 `noVegetationMask` 与 `noVanillaStructureMask`，再激活 registry。前者避免树木、草丛等先占用目标，后者阻止原版或模组常规世界生成结构在同一投影内起始；不得使用 D3 target patch bbox。registry 执行后仍用 `suppressionBounds` 抑制同范围后续植被 feature。
 - 这是首期限制，不是已解决的可靠 chunk 生命周期 hook：若某个 chunk 没有任何 configured feature 调用，装饰可能漏执行。真实验收必须专门覆盖无 feature chunk；未验证前不得声称所有 chunk 必达。
 
 9、activation 前地形探针：
@@ -225,9 +227,9 @@
 - 通用性：同一 `cross_section_repeat` 只替换 Content 即可表达农田带、花坛带和道路分隔带。
 - 形状：`target_mask`、rectangle、ellipse、ring、polygon 结果连续可读，且不会把 patch envelope 当完整可刷矩形。
 - 内容：未知语义键、未知具体 content、catalog / style hash 漂移、含实体 NBT prefab 均 hard fail；同一语义键可通过切换风格档案换皮而不改变 Program 构图。
-- 地形：水体、陡坡、高差、结构、道路和城墙处正确裁剪或跳过；prefab 无逐列变形。
+- 地形：水体、陡坡、高差、结构、道路和城墙处正确裁剪或跳过；配置了下坡 fallback 的单格水渠在陡坎处改为收尾田地，prefab 无逐列变形。
 - 放置语义：farmland / path / water tile 替换地表，摊位 / 栅栏在统一 datum 上方放置；placementMode / replacePolicy 非法组合 hard fail。
-- 跨 chunk：分 chunk 编译结果与同一范围整体编译一致，ledger 无漏刷、重复和旧版本串用。
+- 跨 chunk：分 chunk 编译结果与同一范围整体编译一致，ledger 无漏刷、重复和旧版本串用；D5 的植被 / 普通结构保护范围必须等于每个 program 实际 slot 的包络，不得退化为 target patch。
 - 触发限制：分别验证有 feature 和无 feature chunk；无 feature chunk 若未触发 registry 必须作为已知缺口记录，不得用其他 feature 场景代替通过。
 - 预览：明确区分规划意图和 worldgen 实际结果，能显示 Shape、Pattern 槽位、裁剪与跳过原因。
 - 地形探针：完整已加载区域能报告高度范围、邻接高差和长连续带；部分未加载时只报告已采样事实并明确覆盖缺口，绝不生成 chunk 或伪造地形。真实验收在人工审阅该响应后才允许决定是否 activation。

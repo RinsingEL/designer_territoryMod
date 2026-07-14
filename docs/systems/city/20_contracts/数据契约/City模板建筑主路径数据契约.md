@@ -9,17 +9,17 @@ City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目�
 D2、D4、D6、D7 对同一建筑必须保持以下 identity 完全一致：
 
 ```text
-templateRef + templateHash + variant + rotation + mirror + footprint
+templateRef + templateHash + variant + rawSize + rotation + mirror + anchor
 ```
 
-identity 或 footprint 漂移必须 hard fail。旧 `structureId`、configured structure、Jigsaw、StructureStart、旧 profile bbox 和 bbox 外侧伪入口不得被静默转换。
+identity 或由它派生的 world footprint 漂移必须 hard fail。旧 `structureId`、configured structure、Jigsaw、StructureStart、旧 profile bbox 和 bbox 外侧伪入口不得被静默转换。
 
 ## 版本与产物
 
 | 产物 | schemaVersion | 作用 | 主要阶段 |
 | --- | --- | --- | --- |
 | 模板目录 | `city_template_catalog.v0.1` | 登记模板 NBT、hash、变体、变换限制、道路入口和地形策略 | D2 |
-| placement plan | `city_template_placement_plan.v0.1` | 冻结每个建筑的模板 identity、anchor、transformed footprint、碰撞范围和道路入口 | D4 / D6 |
+| placement plan | `city_template_placement_plan.v0.1` | 冻结每个建筑的模板 identity、anchor、NBT size、派生 world footprint、碰撞范围和道路入口 | D4 / D6 |
 | active template placement registry | `city_active_template_placement_registry.v0.1` | D5 -> worldgen 的 City 内部 active 交接 | D5 |
 | placement ledger | `city_template_placement_ledger.v0.1` | 记录 worldgen NBT 放置、跳过、失败和实际 closed footprint，保证幂等 | worldgen / D7 |
 
@@ -133,20 +133,24 @@ identity 或 footprint 漂移必须 hard fail。旧 `structureId`、configured s
 | `rotation` | string | 必须在该变体 `allowedRotations[]` 内 |
 | `mirror` | string | 必须在该变体 `allowedMirrors[]` 内 |
 | `anchor` | object | `{x,y,z}`，transformed footprint 最小角 |
-| `footprint` | object | 必须包含 `rawSize`、`transformedSize`、`actualBBox`、`collisionBBox`、`bboxConvention=closed_inclusive_blocks` |
+| `templateSize` | object | `{width,height,depth}`；从已校验 NBT `rawSize` 原样带入，是 placement 的唯一局部矩形几何 |
+| `actualFootprint` | object | D4/D6 的派生输出快照；由 `templateSize + rotation + mirror + anchor` 计算，closed bounds |
+| `collisionEnvelope` / `maskEnvelope` | object | 从 `actualFootprint` 按 clearance / mask margin 派生，closed bounds |
 | `roadEntrances[]` | object[] | transformed 入口；含 `entranceId`、`relativePosition{x,z}`、`worldPosition{x,y,z}`、`direction` |
 
-`roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。
+`roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
 
 ## Active registry `city_active_template_placement_registry.v0.1`
 
-D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、footprint 和 transformed `roadEntrances[]`，并增加：
+D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、`templateSize` 和 transformed `roadEntrances[]`，并携带 D6 派生并锁定的 world footprint 快照，另外增加：
 
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
 - `roadProvider=auto|roadweaver|worldedit_debug|none`
 
 `roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail；`worldedit_debug` 只授权旧 debug road，不授权旧建筑物化路径。
+
+模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey` 和 `pieceBoxes[]`。因为模板路径明确不生成 `StructureStart`，`expectedStartSignature` 可以为空；D5 只能对非模板 configured-structure item 保持非空 signature 的约束，不能为模板伪造或要求 StructureStart signature。
 
 ## Placement ledger `city_template_placement_ledger.v0.1`
 
@@ -158,7 +162,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 | `templateRef` | string | identity 原样回写 |
 | `templateHash` | string | identity 原样回写 |
 | `variant` / `rotation` / `mirror` | string | identity 原样回写 |
-| `footprint` | object | identity 原样回写，仍为 closed bbox 口径 |
+| `templateSize` | object | identity 原样回写；本地尺寸只能来自 D2 已校验 NBT |
 | `chunk` | object | worldgen owner chunk，含 `x`、`z` |
 | `status` | string | `pending`、`placed`、`skipped`、`failed` |
 | `placementSource` | string | 固定为 `city_template_nbt_worldgen` |
@@ -205,6 +209,6 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 
 - `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。
 - 目录更新必须重新计算 `templateHash`，并使旧 plan / active registry 失效；不能只改文件名、variant 或尺寸字段绕过 hash 校验。
-- active registry、worldgen ledger、D7 汇总均必须保留相同 identity 和 closed footprint；缺字段、hash 漂移、变换漂移和入口漂移均 hard fail。
+- active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
 - RoadWeaver 缺失时，`auto` 的唯一兼容行为是跳过道路并写 `ROADWEAVER_UNAVAILABLE`；只有显式 `worldedit_debug` 可产生旧 debug road，且不能改变模板建筑落地路径。
 - StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据。

@@ -31,7 +31,7 @@ D3 地形 patch 真值
 
 在 City active 主建筑范围内，当前主路径已锁定为 `StructureTemplate` NBT：D2 读取模板目录与 NBT 尺寸 / hash，D4 选择并冻结 `templateRef`、`templateHash`、`variant`、`rotation`、`mirror`、`footprint`，D5 可通过 City 自己的 active template placement registry 交接到 worldgen；模板建筑不查询 `Registries.STRUCTURE`、不生成 `StructureStart`、不使用 Jigsaw pool。
 
-D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity 和 footprint。D5 的 RoadWeaver 注册只使用模板 transformed `roadEntrances[]`，不使用 bbox 外侧伪入口；缺 mod 时 `auto` 跳过、`roadweaver` hard fail，旧 debug road 仅在显式 `worldedit_debug` 下可用。既有 StructureStart / Jigsaw 主线文字继续保留作历史信息和历史测试保护，不作为模板建筑 active 解释。
+D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRef + hash + variant + rawSize + rotation + mirror + anchor`）；world `actualFootprint` 只能由该 identity 推导并校验，不能维护第二份 template bbox。D5 的 RoadWeaver 注册只使用模板 transformed `roadEntrances[]`，不使用 bbox 外侧伪入口；缺 mod 时 `auto` 跳过、`roadweaver` hard fail，旧 debug road 仅在显式 `worldedit_debug` 下可用。既有 StructureStart / Jigsaw 主线文字继续保留作历史信息和历史测试保护，不作为模板建筑 active 解释。
 
 `city_run_workflow` 是当前调试 / 验收快跑入口，用于串联上述阶段、记录每步耗时和暂停原因；它不改变单步接口的真值，也不允许绕过 worldgen-time placement 或 D5/D7 状态检查。
 
