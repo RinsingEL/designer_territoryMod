@@ -27,6 +27,12 @@ D3 地形 patch 真值
   -> city walls v2/v3/v4/v5 扫描真实道路并规划 / 放置城墙
 ```
 
+### 当前主线模板建筑迁移状态
+
+在 City active 主建筑范围内，当前主路径已锁定为 `StructureTemplate` NBT：D2 读取模板目录与 NBT 尺寸 / hash，D4 选择并冻结 `templateRef`、`templateHash`、`variant`、`rotation`、`mirror`、`footprint`，D5 可通过 City 自己的 active template placement registry 交接到 worldgen；模板建筑不查询 `Registries.STRUCTURE`、不生成 `StructureStart`、不使用 Jigsaw pool。
+
+D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity 和 footprint。D5 的 RoadWeaver 注册只使用模板 transformed `roadEntrances[]`，不使用 bbox 外侧伪入口；缺 mod 时 `auto` 跳过、`roadweaver` hard fail，旧 debug road 仅在显式 `worldedit_debug` 下可用。既有 StructureStart / Jigsaw 主线文字继续保留作历史信息和历史测试保护，不作为模板建筑 active 解释。
+
 `city_run_workflow` 是当前调试 / 验收快跑入口，用于串联上述阶段、记录每步耗时和暂停原因；它不改变单步接口的真值，也不允许绕过 worldgen-time placement 或 D5/D7 状态检查。
 
 城墙 v0.2 仍是默认兼容口径；v0.3 已接入显式 `wallVersion=v3` 开发路径，从结构 actualFootprint / sourcePatch 出发生成城市外环 hull，填掉凹陷和内部道路口袋，并增加 step=1 地形 / mask debug 扫描。`wallTerrainPolicy=v3.1` 是 v3 的执行层地形策略，用于把 8-16 高差转成阶梯墙、更大高差转成嵌坡或天然峭壁边界；`wallDesignPolicy=v3.2/v3.3` 是 v3 的规划层设计策略，用于把大片水体 / 峭壁转成天然边界、按道路趋势或近路投影生成独立 gatehouse、限制城门密度并使用可用 5x5 塔节点。`wallVersion=v4` 是当前新增测试路径：D5 仍产出 reservation/mask 上下文，D7 ledger 后以 `actualFootprint` 为硬约束生成 `actual_footprint_land_ring` 墙图，并用 D5 `cityDomainMask` 的 cell 外缘做小幅 `terrain_adaptive_domain_guided_land_ring` 轮廓适配；输出 `wallNodes[]`、`wallUnits[]`、`nodeConnectorUnits[]`、`cityWallDatumY`、`terrainContourEvents[]` 和 `wallGraphValidation`，并对连续水体做陆侧退避、对高度差生成 stepped/terrace connector。`wallVersion=v5` 是显式实验路径：必须从 D5 v5 reservation 开始，D7 后只读取 D5 `wallLine` 做高度适配和落地 / 跳过判断；若前序 D5 不是 v5，`WALL_V5_REQUIRES_D5_V5_RESERVATION` 应 hard stop，不得自动退回 v4。
