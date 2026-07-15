@@ -17,7 +17,25 @@
 5. Landform Patch 不是 Function Zone。一个大平原可以承载多个有名字、有比例、有边界的功能区。
 6. W 阶段可以产出粗尺度 patch，但它只用于国度落脚、首都选点和宏观判断，不替代 C1 的城市局部精细 TerrainPatchMap。
 
-## 总流程
+## City 当前 active 主链补充
+
+下方 C1-C9 图保留宏观职责分层，不代表 City 当前实现仍运行 `FunctionZoneMap -> PoolPlan -> Jigsaw`。City active endpoint 已破坏性移除“先画功能区再塞结构”，当前新增 LandUse 层遵循建筑后置派生：
+
+```text
+D3 patch + LandUseTerrainField
+-> D4 anchors / group provenance
+-> D5 轻量预案
+-> D6 locked actual footprint
+-> 可选 LandUseAreaPlan
+-> 可选 DecorationProgram
+-> execute_d5 激活
+-> 首次 owner-chunk worldgen
+-> RoadWeaver 真实道路后写覆盖
+```
+
+LandUse 是 block 级土地使用归属，不是旧 `FunctionZoneMap` 的恢复，也不自动等于地表替换或植被抑制。workflow 的 bundled settings 默认关闭 LandUse，请求 `enableLandUseLayer` 可覆写；独立规划入口视为显式启用。已到 FEATURES 的旧 chunk 不回填。
+
+## 宏观概念流程
 
 ```mermaid
 flowchart LR
@@ -57,10 +75,10 @@ flowchart LR
 
 | 过程 | 覆盖阶段 | 当前文档归属 | 说明 |
 | --- | --- | --- | --- |
-| 城市规划过程 | C1-C4 | `systems/city/` | 从局部地貌事实生成城市语法、功能区、边界处理和道路网络。 |
-| 结构落地过程 | C5-C8/C9 | 后续 Materialization 系统；当前先在 `systems/city/` 记录交接口径 | 从规划结果生成 anchor、约束场、结构池预算，并执行 jigsaw / prefab 物化。 |
+| 城市规划过程 | C1-C4 | `systems/city/` | 宏观职责参考；当前实现以 D3-D6 建筑先行主链和可选 LandUse 层为准。 |
+| 结构落地过程 | C5-C8/C9 | 当前在 `systems/city/` 内实现 | 模板建筑 active path 使用 StructureTemplate NBT；旧 PoolPlan / bounded jigsaw 只作历史隔离。 |
 
-## 功能区生成规则
+## 功能区生成规则（历史概念参考）
 
 地貌只回答“哪里适合什么”，不直接回答“这里必须是什么”。功能区应按容量、比例、连接性和城市语法生成。
 
@@ -100,7 +118,7 @@ W 粗 patch 不用于决定城市内部边界、功能区、道路和结构落�
 
 W / T 阶段适合在新世界早期或新手村缓冲期异步完成，用大 step 粗扫、粗 patch 和国度配置先定世界基调。T 阶段锁定国度、城市名册、城市数量、理论规模和城市生长种子；城市边界和功能区要等 C 阶段读取局部 GIS 后再确定。
 
-C1-C4 城市规划适合跟随城市候选、玩家推进或规划任务按需生成。它们尽量基于 GIS 先验和缓存，不要求大范围 chunk FULL 预生成。
+C1-C4 宏观职责适合跟随城市候选、玩家推进或规划任务按需生成。当前 D3-D6 / LandUse 实现尽量基于 GIS 先验和缓存，不要求大范围 chunk FULL 预生成。
 
 C5-C8/C9 只在需要生成 anchor、约束场、结构池预算、物化城市、加载相关区域或执行调试任务时进入。执行层要保留 trace，便于判断失败来自地形、边界、池配置、碰撞还是原版 jigsaw 本身。
 

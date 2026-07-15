@@ -65,6 +65,7 @@
 - D4 阵列候选选择闭环 v0.4：`../systems/city/10_product/案子/D4阵列候选选择闭环-v0.4/README.md`；已接入显式 `create -> query -> plan -> select -> finalize` 闭环。常规外扩仍需 focus / direction / target patch；仅 `newFunctionalArea=true` 先做全局 patch 搜索，再用 `selectedGlobalPatchRef` 生成候选，不切默认 workflow。
 - D4 连续外扩候选 v0.5：`../systems/city/10_product/案子/D4连续外扩候选-v0.5/README.md`；当前开发路径。常规外扩以父结构 D2 bbox、方向和目标实体间距生成近中远连续候选，D3 patch 后置筛选 / 评分，可跨界；不再预选 target patch。
 - City 通用装饰阵列系统 v0.2：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.2/README.md`；当前开发案，使用 `DecorationProgram` 判别联合、config content catalog、activation 前只读地形探针与 worldgen 分 chunk 地形编译。
+- City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；当前开发案，D6 locked footprint 后由 group / 单建筑生成 block 级用途区域，随后接 Decoration / execute_d5，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；旧显式实现，七种业务 item 与提前展开刷入计划待 v0.2 破坏性替代，不自动兼容。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
 - 结构 Envelope 瘦身：`../systems/city/10_product/案子/结构Envelope瘦身-v0.1/README.md`；当前推进到 04 D4 阵列形态首切片，补 `compound_cluster` 参数化和 grid / courtyard / l_shape / u_shape / organic_compact 验收。
@@ -89,8 +90,11 @@
 - 历史案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
+- City LandUse 数据契约：`../systems/city/20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
+- City 调试 MCP 接口：`../systems/city/20_contracts/接口契约/City调试MCP接口.md`
 - 代码导览：`../systems/city/30_code_guide/代码导览.md`
 - 测试入口：`../systems/city/40_tests/测试入口.md`
+- 影响面：`../systems/city/40_tests/影响面.md`
 - D6-D7 临时真实结构测试配置：`../systems/city/40_tests/D6-D7临时真实结构测试配置.md`
 
 ## 待重建系统

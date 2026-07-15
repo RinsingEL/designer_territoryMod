@@ -27,7 +27,8 @@
 6. `D4连续外扩候选-v0.5/README.md`
 7. `结构Envelope精修-v0.1/README.md`
 8. `City通用装饰阵列系统-v0.2/README.md`
-9. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+9. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
+10. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
 
 ## 案子状态表
 
@@ -41,6 +42,7 @@
 | `D4连续外扩候选-v0.5` | 当前开发路径 | 取代 v0.4 常规外扩的“先选 target patch”限制：从父结构 D2 body / collision bbox 沿指定方向连续生成近、中、远候选，以目标实体间距控制首户；D3 patch 后置筛选 / 评分，可跨 patch。近圈失败必须写原因，候选和选择闭环仍不改 state 直到 select。精确字段等待实现回填。 |
 | `City装饰填充层Plan-v0.1` | 已替代 | 七种业务 item schema、提前展开矩形 surface operation 和内置测试模板口径已由 v0.2 破坏性替代；旧 payload / artifact 不自动兼容。 |
 | `City通用装饰阵列系统-v0.2` | 当前开发路径 | 当前装饰真值：`DecorationProgram = TargetArea + CoordinateFrame + Shape + Pattern + ContentPalette + TerrainPolicy + ConflictPolicy + Seed`。AI 在 `ContentPalette` 填写 `market_stall` 等语义键，`styles/<profile>.json` 决定具体 NBT 变体与权重；content index / templates 仍是启动时固定的素材库。规划冻结 catalog 与 profile hash，worldgen 按真实 block 地形分 chunk 编译；首期 Shape 为 target mask / rectangle / ellipse / ring / polygon，Pattern 为 fill / cross-section / rows / edge / grid / deterministic scatter。 |
+| `City建筑驱动LandUseAreaPlan-v0.1` | 当前开发路径 | D3 补 LandUse terrain field，D4 v0.2 保留 group provenance；D5 预案和 D6 locked footprint 后才定稿 block 级 LandUseAreaPlan，再交给 Decoration / execute_d5。配置默认关闭、请求可覆写；roads 后写覆盖、旧 chunk 不回填，不恢复旧功能区优先主线。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
 | `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection；缺 mod 时 `roadProvider=roadweaver` hard fail、`auto` 跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，只有显式 `worldedit_debug` 进入旧 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
@@ -80,6 +82,7 @@
 - Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
 - D4 阵列布局 Agent Loop 后续：完成 v0.5 连续外扩候选的真实游玩验收，验证首户间距、近圈回退原因和局部 preview 可读性；默认 `key_then_array` 是否升级仍需单独决策。
 - City 通用装饰阵列后续：完成 v0.2 首期实现与真实游玩验收后，再接 `path_follow`、放射、自由多边形、跨 chunk 大 prefab 和复杂台地适配。
+- 建筑驱动土地使用区域：在 D4 已落建筑和组合关系之后，以 block 级多源行动力扩张生成农田、花海、林场、鱼塘、广场和庭院等连续区域，并向 DecorationProgram、边界与精确生成 mask 交接。
 - Beardifier / terrain adaptation 深度接入：真正观察 hook、台基 / 削坡 / 填土和结构 profile foundation policy。
 - 城墙 / 边界深化：v0.2 已实现墙带早期 mask、D3 patch 贴边非矩形边界、RoadWeaver 真实道路裁门、道路保护和基础地形贴合；v0.3 已进入显式开发路径；v5 草案把后续方向收紧为 D5 定平面、worldgen 保护、D7 后只做垂直适配。
 - TerraSense 结构语义重标记，先用少量高质量结构套件验证“国度 / 城市设计感”。

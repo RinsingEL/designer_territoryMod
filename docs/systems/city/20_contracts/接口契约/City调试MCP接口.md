@@ -2,7 +2,7 @@
 
 ## 版本
 
-v0.3 主线 + D4 阵列候选选择闭环 v0.4 显式开发接口。
+v0.3 主线 + D4 阵列候选选择闭环 v0.4 + 建筑驱动 LandUse v0.1 显式开发接口。
 
 Java HTTP：`127.0.0.1:5000`
 Node MCP：`country_designer_mcp`
@@ -39,6 +39,7 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5，执行 planned_worldgen probe-and-lock；不要求 chunk loaded，不改世界。 |
+| `city_plan_land_use` | `POST /realm/city/plan_land_use` | 读取 D3 terrain field、D4 group provenance 与 D6 locked footprint，生成 block 级 `city_land_use_area_plan.v0.1`；可选严格 intent 只允许 group / ruleRef 覆写，不改世界。 |
 | `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | 读取运行时 config 并返回当前 `catalogHash`、prefab summaries 与可选风格档案的 id/hash/语义键；仅 config 根目录缺失时一次性安装打包基础目录，不返回原始 NBT 或 block operation。 |
 | `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 显式升级带 Geomantia 默认 manifest 的旧基础目录；必须传 `confirmConfigMutation=true`。仅当旧水渠条目仍与打包旧默认一致且只缺 `terrainDropFallbackContentRef` 时追加该字段，先备份原 index，再停用旧 hash 的 active decoration plans；不改 ledger 或已落地方块。 |
 | `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 通用装饰阵列 v0.2：读取 D3-D6、内容目录与风格档案，校验 `DecorationProgram` 判别联合、冻结 content/style hash，将语义 content 解析为具体 prefab 后生成全局装饰程序和意图预览，最后发布 planning completion。 |
@@ -47,7 +48,7 @@ Node MCP：`country_designer_mcp`
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
-| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> final D4 -> plan_d5 轻量预案 -> D6 lock -> execute_d5 locked 激活 -> execute_d7；默认 D4 `key_then_array`，先放关键结构，再按阵列填充重复结构。 |
+| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> final D4 -> plan_d5 轻量预案 -> D6 lock -> 可选 LandUse -> 可选 Decoration -> execute_d5 locked 激活 -> execute_d7；默认 D4 `key_then_array`。 |
 
 ## city_run_workflow
 
@@ -67,12 +68,15 @@ Node MCP：`country_designer_mcp`
 常用可选参数：
 
 - `skipExisting`，默认 `true`。已有 artifact 时跳过多数阶段，用于等待 chunk worldgen 后复跑；装饰规划只能以 `city_decoration_planning_complete.json` 判断可跳过，不得以 compiled 文件存在判断。若已有 `structure_envelope_facts.json` 且未传 `forceRefresh=true` / `cacheMode=rescan`，profiling step 也跳过。`forceRefresh=true` 或 `cacheMode=rescan` 时必须进入 cache-backed `city_profile_structure_envelopes` 并刷新 cache。
+- 发布失效按依赖链传播：D3 或 D6 成功重算后删除旧 LandUse / Decoration completion；LandUse 成功重算后删除旧 Decoration completion。`skipExisting` 只能依据仍存在且在执行期通过 source hash 校验的 completion，不得复用失效的下游 compiled plan。
 - `sampleCount`，默认 256。
 - `cacheMode=use_cache|rescan`，默认 `use_cache`；`rescan` 强制 profiling cache 重算。
 - `forceRefresh`，默认 `false`；true 时忽略本地 profile cache。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
 - `d4CandidateMode=key_then_array|array_layout_loop_v0_2|array_layout_loop_v0_3|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`array_layout_loop_v0_2` / `array_layout_loop_v0_3` 是显式路径：先跑关键结构 session，再按 `arrayLayoutPlan.layoutPlans[]` 逐个 replay；若没有 item，返回 `waiting_for_array_layout_input`。v0.3 允许 `plannerType=composite_array` 的 item 携带 `childLayoutPlans[]`。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
+- `enableLandUseLayer=true|false`；显式请求值优先于 `city_land_use/settings.json.enabledInWorkflow`，bundled 默认关闭。启用后在 D6 locked plan 之后运行 `city_plan_land_use`。
+- `landUseIntentPlan`，可选严格 `city_land_use_intent_plan.v0.1`。省略时服务端归一为空 overrides 并按 D4 semantic 自动选规则；显式提交时未知字段、未知 target / rule、成员冲突、`set_rule` 缺 ruleRef 或 `exclude` 携带 ruleRef 均 hard fail。
 - `enableDressingLayer=true|false`，默认 `false`；为 `true` 时必须提供 `decorationProgramPlan`，workflow 会在 D6 后调用 `city_plan_city_dressing`，再由 `city_execute_d5` 激活装饰 worldgen 程序。
 - `decorationProgramPlan`，`schemaVersion=city_decoration_program_plan.v0.2`；必须带 query 返回的 `catalogHash`、`styleProfileId`、`styleProfileHash`；`programs[]` 使用 Shape / Pattern 判别联合并只引用该风格档案注册的语义 content。
 - `dressingBrushPlan`、`dressingLayoutItems[]` 和 v0.1 七种业务 item 已破坏性移除，传入返回 `CITY_DRESSING_LEGACY_SCHEMA_REMOVED`，不得自动转换。
@@ -84,7 +88,7 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` locked preflight -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
+- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` locked preflight -> 可选 `city_plan_land_use` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
 - `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
@@ -100,6 +104,7 @@ Node MCP：`country_designer_mcp`
 - `city_d4_staged_<citySeedId>/d4_staged_plan.json`
 - `city_d4_staged_<citySeedId>/d4_staged_trace.json`
 - `city_d4_array_layout_<citySeedId>/d4_array_layout_plan.json`、`d4_array_layout_loop_state.json`、`d4_array_layout_execution_trace.json`、`d4_array_occupied_field.json`、`d4_array_patch_availability.json`、`d4_functional_array_zones.json`、`d4_array_layout_preview.png`（仅显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3`）
+- `city_land_use_<citySeedId>/land_use_terrain_field.json`、`city_land_use_area_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`、最后发布的 `city_land_use_planning_complete.json`（workflow 开启 LandUse 或单独调用 `city_plan_land_use`）
 - `city_decoration_<citySeedId>/city_decoration_program_plan.json`、`city_decoration_compiled_program_plan.json`、`city_decoration_slot_projection.json`、`city_decoration_planning_trace.json`、`quality_report.json`、`city_decoration_preview_index.json`、`city_decoration_preview_<programId>.png`、末尾发布的 `city_decoration_planning_complete.json`（仅显式 `enableDressingLayer=true` 或单独调用 `city_plan_city_dressing`）
 
 质量口径：
@@ -799,11 +804,13 @@ city_finalize_d4_candidate_session
 - `city_decoration_compiled_program_plan.json` 与 `city_decoration_planning_complete.json` 必须同时存在；缺一返回 `CITY_DECORATION_PLAN_INCOMPLETE`。两者均不存在时按 dimension + city 注销旧 active decoration plan。
 - `city_dressing_<citySeedId>/` 中的 v0.1 artifact 必须显式拒绝 `CITY_DRESSING_LEGACY_SCHEMA_REMOVED`，不得参与激活或跳过判断。
 - 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
+- `city_land_use_area_plan.json` 与 `city_land_use_planning_complete.json` 必须成对存在，并校验 schema / city / planHash / ruleProfileHash / sourceD6Hash；缺一返回 `CITY_LAND_USE_PLAN_INCOMPLETE`。两者均不存在时按 dimension + city 注销旧 active LandUse plan。几何区域不得自动复制为全域植被 mask。
+- LandUse activation 前只读检查计划覆盖的全部 member / boundary owner：任一 loaded / disk chunk 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，region NBT 读取失败或状态未知返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`；不得申请 chunk ticket、加载或生成目标 chunk，且整体预检通过前不得改 active registry。
 - decoration compiled plan、slot projection、completion 完整存在时，D5 必须校验 projection 的 schema / city / catalog / program / slot 身份，并与 compiled plan 的确定性投影逐项一致。随后每个有 slot 的 program 以实际 slot min/max 包络额外进入该 active plan 的 `noVegetationMask` 和 `noVanillaStructureMask`，两者均为 `maskType=decoration_projection`；前者抑制植被，后者阻止普通原版 / 模组结构起始。不得扩大为整块 patch；分别返回 `decorationVegetationMaskCount`、`decorationStructureMaskCount`。
 - 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
-- RoadWeaver 存在且 `roadProvider=auto|roadweaver` 时，D5 生成 `roadweaver_connection_plan.json` 并反射调用 `RoadNetworkApi.registerStructureEndpoint` / `ensureConnection(..., generateImmediately=false)`。
+- RoadWeaver 存在且 `roadProvider=auto|roadweaver` 时，D5 生成 `roadweaver_connection_plan.json` 并反射调用 `RoadNetworkApi.registerStructureEndpoint` / `ensureConnection(..., generateImmediately=false)`。worldgen 执行顺序为 LandUse surface / boundary -> Decoration -> RoadWeaver 真实道路后写；道路拥有最终地表覆盖权。
 - RoadWeaver 缺失且 `roadProvider=roadweaver` 时 hard fail `ROADWEAVER_UNAVAILABLE`。
 - RoadWeaver 缺失且 `roadProvider=auto` 时跳过道路并写入 `road_provider_state.json`，状态为 `skipped` / `ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
 - 只有显式 `roadProvider=worldedit_debug` 时才允许 D7 WorldEdit debug fallback。
@@ -845,6 +852,36 @@ chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTU
 D6 会做 non-mutating probe-and-lock，输出 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`pieceBoxes`、`lockedBBoxGroupKey`、`lockedCollisionEnvelope`、`expectedStartSignature`，并按 `lockedCollisionEnvelope + maskMarginBlocks` 写入 `maskEnvelope`。若 actual group 与 D4 selected/dominant group 不一致，但 facts 中存在该 group 且最终防撞通过，D6 锁定实际 group，不再直接失败。
 
 D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey`、`lockedCollisionEnvelope`、`envelopeMode`、`selectedEnvelopeGroupKey`，用于解释 fixed bbox group 是否匹配本次实际生成形态。默认 `collisionClearanceBlocks=4`。
+
+## city_plan_land_use
+
+必填参数：
+
+- `runId`
+- `citySeedId`
+
+可选参数：
+
+- `landUseIntentPlan`：严格 `city_land_use_intent_plan.v0.1`；完整字段见 `../数据契约/CityLandUseAreaPlan数据契约.md`。省略时由服务端生成当前 city 的空 overrides 计划。
+
+语义：
+
+- 必须已有 D3 `land_use_terrain_field.json`、最终 D4 provenance、D5 轻量预案和 D6 locked `structure_materialization_plan.json`。
+- 显式 group / array / composite group 作为一个竞争主体，未分组 anchor 各自成为主体；最终 footprint 排除只认 D6 locked plan。
+- `landUseIntentPlan` 只能指定稳定 group / anchor 和 `ruleRef`，不得提交面积、行动力、成本、mask 或世界坐标。
+- 调用只做规划与 artifact 写入，不加载 chunk、不写世界、不激活 registry。独立调用本身视为显式规划，不受 workflow 默认关闭影响。
+- RoadWeaver 最终路线不进入本接口的几何猜测；真实道路后写并可覆盖 LandUse surface。
+
+返回 artifact：
+
+- `landUseTerrainField`
+- `landUseAreaPlan`
+- `landUsePlanTrace`
+- `landUsePreview`
+- `qualityReport`
+- `planningComplete`
+
+固定输入、rules version 和 seed salt 必须生成相同 `planHash`、spans、boundary loops 与 claim trace。未知 target / `ruleRef`、group 成员冲突、city 不一致或 D6 未锁定必须 hard fail；仅无法自动解析的结构语义可 warning 并跳过该主体。
 
 ## city_execute_d7
 
