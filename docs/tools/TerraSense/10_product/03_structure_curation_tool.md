@@ -51,13 +51,13 @@ TerraSense 结构策展工具按 v1-v3 功能包记录为已完成。后续 C �
 - v1：MC 侧固定产出 `single`、`template`、`single_template` 三类结构样本、硬事实、截图与扫描配置。
 - v2：TerraSense Studio 可脱离 MC 读取 workspace，进行人工审核并保存审核结果。
 - v3：Studio 图片识别初标链路已跑通，AI 建议与人工真值分层保存。
-- `StructureProfile.jsonl` 已作为当前 City D6 / D7 主链输入；旧 C3.5 兼容导出不再作为当前真值。
+- `StructureProfile.jsonl` 已作为当前 City 结构目录查询、envelope profiling 与 D4 候选链输入；旧 C3.5 兼容导出不再作为当前真值。
 
 后续工作重心转移到 StructureBinder 侧：
 
 - 接入 TerraSense 最新导出的 `StructureProfile.jsonl` 和 `TerraSenseStructureProfileSource.official.json`。
-- 确认 City D6 使用原始 `semanticTerms/functionTerms/...`，不再投影为 City `functionTags` 或 `function_candidates`。
-- 让 D7 bounded jigsaw 优先消费 runtime jigsaw 真值字段，而不是只依赖压缩后的 connector 摘要。
+- 确认 `CityStructureProfileCatalog` 与 D4 候选使用原始 `semanticTerms/functionTerms/...`，不再投影为 City `functionTags` 或 `function_candidates`。
+- 保留 runtime jigsaw 真值字段作为上游结构画像；当前 City 主链不再包含旧 bounded jigsaw solver。
 
 ## 最小交付能力
 
@@ -138,7 +138,7 @@ TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只�
 这个边界用于同时满足两个目标：
 
 - 标记时允许新增词，避免协作者和 AI 被现有枚举卡住。
-- 导出时统一名词，保证后续索引、检索和 City D6-D7 查询稳定。
+- 导出时统一名词，保证后续索引、检索和 City 结构画像 / D4 候选查询稳定。
 
 动态术语表不是简单白名单，而是可审核的受控词汇表。它至少覆盖：
 
@@ -264,13 +264,13 @@ MC 侧应提供：
 
 ## StructureBinder 消费目标
 
-当前 StructureBinder / City D6 消费：
+当前 StructureBinder / City 结构画像链消费：
 
 - `StructureProfile.jsonl`
 - `TerraSenseStructureProfileSource.official.json`
 - 显式 debug catalog
 
-当前 City D6-D7 主要读取：
+当前 City 结构目录查询、envelope profiling 与 D4 候选主要读取：
 
 | 字段 | 当前用途 |
 | --- | --- |
@@ -280,7 +280,7 @@ MC 侧应提供：
 | `styleTerms` / `placementTerms` / `usageTerms` / `templateRoleTerms` / `qualityTerms` | 风格、位置、用途、jigsaw 角色和质量判断 |
 | `placement` | origin offset、footprint、entry、terrain probe |
 | `constraints` | rotation、水/坡度/solid base 等硬约束 |
-| `connectors` | C8 jigsaw 求解和后续节点展开 |
+| `connectors` | 保留 runtime jigsaw 硬事实；当前 City active path 不执行旧 bounded jigsaw 求解 |
 | `weight_profile` | 排列与权重预留 |
 | `tag_source` | 判断是否可信、是否人工覆盖或扫描来源 |
 
@@ -288,7 +288,7 @@ TerraSense 导出必须优先保证这些字段稳定；旧 `function_candidates
 
 ## 导出格式
 
-当前导出给 City D6 / D7 使用：
+当前导出给 City 结构画像链使用：
 
 - `StructureProfile.jsonl`
 - `StructureVocabulary.snapshot.json`
@@ -311,12 +311,14 @@ TerraSense 导出必须优先保证这些字段稳定；旧 `function_candidates
 - `tag_source`
 - `evidence`
 
-## 与 City D6-D7 的关系
+## 与当前 City 结构落地主链的关系
 
-| 阶段 | 消费方式 |
+| 组件 / 阶段 | 消费方式 |
 | --- | --- |
-| D6 | 按真实入口、尺寸、footprint、可建区和地形摘要过滤候选，并把 TerraSense term 交给 AI 做语义选择 |
-| D7 | 读取 placement、constraints、connectors 和 jigsaw 真值进行 bounded 生成、piece 校验和真实落地 |
+| `CityStructureProfileCatalog` / query | 导入冻结结构画像，并按 canonical TerraSense term 查询 |
+| envelope profiling | 以结构 ID 和运行时 registry 采样 bbox facts；TerraSense 静态字段不覆盖运行时 envelope 真值 |
+| D4 anchor / array | 结合 TerraSense term、envelope facts、地形 patch 与 occupied field 形成候选 |
+| D6 / worldgen | 沿当前 probe-and-lock / planned registry / ledger 链落地，不调用旧 bounded jigsaw solver |
 
 TerraSense 不参与 C7-C9 运行时决策。它只负责在开局前或开发期提供可信结构画像。
 
@@ -395,9 +397,9 @@ v3 必须做到：
 
 ### 后续导出闭环
 
-TerraSense 侧 v1-v3 完成后，下一步推进 StructureBinder / City D6 回灌验证：
+TerraSense 侧 v1-v3 完成后，下一步推进 StructureBinder / City 结构画像回灌验证：
 
 1. 从 `review.json`、`vocabulary.json` 和 `data.json` 导出 `StructureProfile.jsonl`。
 2. 导出 `StructureVocabulary.snapshot.json` 和 `TerraSenseStructureProfileSource.official.json`。
-3. 用 `CityStructureD6Planner` 验证人工审核结构可进入硬约束过滤后的候选。
-4. 用 D7 bounded jigsaw 链路验证 jigsaw 样本的 connector 真值不再漂移。
+3. 用 `CityStructureProfileCatalog` / `CityStructureCatalogQueryService` 验证人工审核结构可导入并按 canonical term 查询。
+4. 用 envelope profiling 与 D4 anchor / array 候选验证结构 ID、运行时 bbox facts 和 TerraSense 语义保持一致。

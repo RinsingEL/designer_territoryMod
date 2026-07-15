@@ -2,7 +2,7 @@
 
 ## 定位
 
-`StructureCurationExport` 是 TerraSense Studio 审核后的结构策展导出结果。它用于生成当前 StructureBinder / City D6 可消费的 `StructureProfile.jsonl` 和显式 debug catalog。
+`StructureCurationExport` 是 TerraSense Studio 审核后的结构策展导出结果。它用于生成当前 StructureBinder / City 结构目录查询、envelope profiling 与 D4 候选链可消费的 `StructureProfile.jsonl` 和显式 debug catalog。
 
 TerraSense Studio 标记阶段使用动态术语表；StructureBinder 消费阶段只接收冻结后的 TerraSense 白名单 term 和静态结构画像，不再把语义投影成 City 功能枚举。
 
@@ -119,9 +119,9 @@ StructureBinder 侧消费的产物必须是冻结快照：
 | --- | --- |
 | `StructureProfile.jsonl` | 正式结构画像，一行一个 approved configured structure，包含 `semanticTerms`、`functionTerms`、`styleTerms`、`placementTerms`、`usageTerms`、`templateRoleTerms`、`qualityTerms`。 |
 | `StructureVocabulary.snapshot.json` | 本次导出采用的冻结术语表快照，只包含正式链路可用的 approved term。 |
-| `TerraSenseStructureProfileSource.official.json` | City D6 正式输入来源描述，`sourceType=structure_profile_jsonl`。 |
+| `TerraSenseStructureProfileSource.official.json` | City 结构画像正式输入来源描述，`sourceType=structure_profile_jsonl`。 |
 | `debug_structure_profile_catalog.json` | 显式 debug catalog，可包含未审核 / proposed 信息，但必须 `catalogMode=debug`。 |
-| `TerraSenseStructureProfileSource.debug.json` | City D6 debug 输入来源描述，`sourceType=debug_catalog`。 |
+| `TerraSenseStructureProfileSource.debug.json` | City 结构画像 debug 输入来源描述，`sourceType=debug_catalog`。 |
 
 `TerraSenseStructureProfileSource.official.json` 至少写入：
 
@@ -135,11 +135,11 @@ StructureBinder 侧消费的产物必须是冻结快照：
 }
 ```
 
-`vocabularySnapshotPath` 是可选但推荐随正式 source 冻结的相对路径。City D4-D7 只读取 profile；`city_query_structure_catalog` 额外使用它把 `label` / `aliases[]` 解析回 canonical `term_id`。未提供时，查询接口只接受 profile 中存在的 canonical termId，绝不按文件名、旧 C3.5 catalog 或 City 映射表猜标签。
+`vocabularySnapshotPath` 是可选但推荐随正式 source 冻结的相对路径。当前 City 结构画像与 D4-D6 链只读取 profile；`city_query_structure_catalog` 额外使用它把 `label` / `aliases[]` 解析回 canonical `term_id`。未提供时，查询接口只接受 profile 中存在的 canonical termId，绝不按文件名、旧 C3.5 catalog 或 City 映射表猜标签。
 
 导入 StructureBinder 本地运行配置时，必须复制 `StructureProfile.jsonl`、词表快照与 source 描述，不得让 City 继续引用客户端或 TerraSense 工程目录。City 请求仍显式携带 source 描述；当前 v0.1 的只读查询与 D4/D6 请求工作目录不同，因此导入 source 的 `profilePath` / `vocabularySnapshotPath` 必须写为 StructureBinder 本地运行配置的绝对路径，不使用跨 endpoint 的相对路径。
 
-旧 `C3_5_FunctionEnumTable.json`、`C3_5_StructureCatalog.preprocessed.json`、`function_candidates` 和 `functionTags` 不再属于当前 City D6 / D7 主链。
+旧 `C3_5_FunctionEnumTable.json`、`C3_5_StructureCatalog.preprocessed.json`、`function_candidates` 和 `functionTags` 不再属于当前 City 结构落地主链。
 
 ## Structure Envelope Facts
 

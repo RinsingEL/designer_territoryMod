@@ -25,7 +25,7 @@
 - `wall_tower_small`
 - `wall_gap_gate_7`
 
-`CityWallTemplateLibrary` 会导出：
+`CityWallTemplateCatalog` 定义纯模板元数据，`MinecraftCityWallArtifactWriter` 会导出：
 
 - `city_wall_templates/wall_template_library.json`
 - `city_wall_templates/wall_straight_15.nbt`

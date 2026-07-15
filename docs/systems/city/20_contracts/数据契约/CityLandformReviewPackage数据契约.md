@@ -8,7 +8,7 @@
 
 ## 定位
 
-`CityLandformReviewPackage` 是 City 系统 D3 (C1.5) 的主输出。消费 GIS 局部 `LandformPatch` 与成员 cell 数据，生成带编号标签的真实预览图、patch 薄索引、AI 上下文和规划上下文，供后续 C2 AI / Codex 看图生成 `PatchGroupPlan`。
+`CityLandformReviewPackage` 是 City 系统 D3 (C1.5) 的主输出。消费 GIS 局部 `LandformPatch` 与成员 cell 数据，生成带编号标签的真实预览图、patch 薄索引、AI 上下文和规划上下文，供当前 D4 anchor / array 候选、设计 loop、城墙 reservation 和预览链路读取。旧 `PatchGroupPlan` 下游已删除。
 
 ## 字段
 
