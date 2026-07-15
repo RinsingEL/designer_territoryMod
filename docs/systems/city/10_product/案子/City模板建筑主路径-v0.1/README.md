@@ -61,14 +61,16 @@
 - D2 只读取模板目录和 `StructureTemplate` NBT 真值，读取尺寸与内容 hash；模板建筑不查询 `Minecraft Registries.STRUCTURE`，不构造 `StructureStart`，不使用 Jigsaw pool。
 - D4 选择 `templateRef`、`templateHash`、`variant`、`rotation`、`mirror` 与 anchor；本地几何只取已校验的 NBT `rawSize`，并派生 world `actualFootprint`，不维护独立 template bbox；AI 仍只提交建筑语义 / 风格意图，不直接提交 NBT 文件名作为选择逻辑。
 - D5 允许保留 City 自己的 active template placement registry，作为 D5 -> worldgen 的交接；该 registry 只登记已锁定的模板计划、占用和入口，不把模板包装成 Minecraft StructureStart。
-- D6 和 D7 必须沿用同一 placement identity：`templateRef`、`templateHash`、`variant`、`rawSize`、`rotation`、`mirror`、anchor；`actualFootprint` 必须由这组字段复算，任何漂移都必须 hard fail，不得用旧 profile、Jigsaw bbox 或默认模板补齐。
+- D6 和 D7 必须沿用同一 placement identity：`templateRef`、`templateHash`、`variant`、`rawSize`、`rotation`、`mirror`、anchor、`templateDatumPolicy`；`actualFootprint` 必须由这组字段复算，任何漂移都必须 hard fail，不得用旧 profile、Jigsaw bbox 或默认模板补齐。worldgen 实际解析的 `templateDatumY` 作为 ledger 运行时事实回写，不伪造为 D6 的未加载区块采样结果。
 - D5 注册 RoadWeaver 的入口必须来自模板 `roadEntrances[]` 的 rotation / mirror 变换结果；不得从 bbox 外侧点伪造道路入口。缺 mod 的 `auto` 跳过道路，`roadweaver` hard fail，旧 debug road 只有显式 `worldedit_debug` 可用。
 
 ## Anchor 与 bbox 约定
 
-- `anchor` 是模板变换后 footprint 的最小角世界方块坐标：`anchor.x / anchor.z` 对应 transformed X/Z footprint 的 `minX / minZ`，`anchor.y` 是模板放置 datum；anchor 不表示 bbox 中心，也不表示 bbox 外的道路点。
+- `anchor` 是模板变换后 footprint 的最小角世界方块坐标：D4/D6 的 `anchor.x / anchor.z` 对应 transformed X/Z footprint 的 `minX / minZ`；目标 chunk 尚未生成时不得为取得高度而加载或生成它，因此 D4/D6 不把 `anchor.y` 当作已采样 datum。anchor 不表示 bbox 中心，也不表示 bbox 外的道路点。
+- 模板 D6 必须写入 `templateDatumPolicy=worldgen_surface_motion_blocking_no_leaves`。owner chunk 的 worldgen 回调以 `MOTION_BLOCKING_NO_LEAVES` 在 `anchor.x / anchor.z` 解析实际 `templateDatumY`，据此落模板并写入 runtime / D7 ledger；缺少或未知 policy 必须 hard fail，绝不回退世界最低高度。
+- 经过 worldgen 解算后，实际建筑 bbox 使用 closed block bounds：`min.x = anchor.x`、`min.y = templateDatumY`、`min.z = anchor.z`，`max.x = anchor.x + transformedWidth - 1`、`max.y = templateDatumY + height - 1`、`max.z = anchor.z + transformedDepth - 1`。
 - 模板原始局部坐标使用 half-open 范围：`[0,width) × [0,height) × [0,depth)`；`roadEntrances[].position` 必须落在原始 X/Z half-open 范围内。
-- 经过 rotation / mirror 后，transformed footprint 仍从相对坐标 `(0,0)` 归一化，世界实际建筑 bbox 使用 closed block bounds：`min = anchor`，`max.x = anchor.x + transformedWidth - 1`，`max.y = anchor.y + height - 1`，`max.z = anchor.z + transformedDepth - 1`。
+- 经过 rotation / mirror 后，transformed footprint 仍从相对坐标 `(0,0)` 归一化；Y 轴 datum 仅由上述 worldgen policy 解算，不从模板原始 anchor 或世界最低高度推断。
 - `collisionBBox` 和 `maskBBox` 也使用 closed bounds；只能在 transformed actual footprint 外按契约声明的 clearance / mask margin 扩展。计划、预览、ledger 不得混用 half-open 与 closed 的 max 值。
 - 每条模板入口先按同一 rotation / mirror 变换局部坐标和方向，再加 anchor 得到 `transformed roadEntrances[]` 的世界位置；入口越界、方向不一致或模板 hash 不匹配均拒绝注册。
 

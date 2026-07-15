@@ -132,17 +132,18 @@ identity 或由它派生的 world footprint 漂移必须 hard fail。旧 `struct
 | `variant` | string | 必须命中 catalog |
 | `rotation` | string | 必须在该变体 `allowedRotations[]` 内 |
 | `mirror` | string | 必须在该变体 `allowedMirrors[]` 内 |
-| `anchor` | object | `{x,y,z}`，transformed footprint 最小角 |
+| `anchor` | object | D4/D6 为 `{x,z}`，transformed footprint 最小角；不得为采样 Y 而加载或生成目标 chunk |
 | `templateSize` | object | `{width,height,depth}`；从已校验 NBT `rawSize` 原样带入，是 placement 的唯一局部矩形几何 |
 | `actualFootprint` | object | D4/D6 的派生输出快照；由 `templateSize + rotation + mirror + anchor` 计算，closed bounds |
 | `collisionEnvelope` / `maskEnvelope` | object | 从 `actualFootprint` 按 clearance / mask margin 派生，closed bounds |
 | `roadEntrances[]` | object[] | transformed 入口；含 `entranceId`、`relativePosition{x,z}`、`worldPosition{x,y,z}`、`direction` |
+| `templateDatumPolicy` | string | 固定为 `worldgen_surface_motion_blocking_no_leaves`；D6 锁定，worldgen 首次生成 owner chunk 时才解析实际 Y |
 
 `roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
 
 ## Active registry `city_active_template_placement_registry.v0.1`
 
-D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、`templateSize` 和 transformed `roadEntrances[]`，并携带 D6 派生并锁定的 world footprint 快照，另外增加：
+D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、`templateSize`、`templateDatumPolicy` 和 transformed `roadEntrances[]`，并携带 D6 派生并锁定的 world footprint 快照，另外增加：
 
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
@@ -150,7 +151,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 `roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail；`worldedit_debug` 只授权旧 debug road，不授权旧建筑物化路径。
 
-模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey` 和 `pieceBoxes[]`。因为模板路径明确不生成 `StructureStart`，`expectedStartSignature` 可以为空；D5 只能对非模板 configured-structure item 保持非空 signature 的约束，不能为模板伪造或要求 StructureStart signature。
+模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey`、`pieceBoxes[]` 和固定 `templateDatumPolicy`。因为模板路径明确不生成 `StructureStart`，`expectedStartSignature` 可以为空；D5 只能对非模板 configured-structure item 保持非空 signature 的约束，不能为模板伪造或要求 StructureStart signature。worldgen 缺失 / 未知 policy 或不能得到高于 `minBuildHeight` 的高度图 datum 时必须失败，不能静默以世界最低高度放置。
 
 ## Placement ledger `city_template_placement_ledger.v0.1`
 
@@ -164,6 +165,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 | `variant` / `rotation` / `mirror` | string | identity 原样回写 |
 | `templateSize` | object | identity 原样回写；本地尺寸只能来自 D2 已校验 NBT |
 | `chunk` | object | worldgen owner chunk，含 `x`、`z` |
+| `templateDatumY` | int | `placed` 时必填；由 `MOTION_BLOCKING_NO_LEAVES(anchor.x,anchor.z)` 在 worldgen 回调中解析，必须高于 `minBuildHeight` |
 | `status` | string | `pending`、`placed`、`skipped`、`failed` |
 | `placementSource` | string | 固定为 `city_template_nbt_worldgen` |
 | `actualFootprint` | object | `placed` 时必填；closed bounds，必须等于或落在计划允许范围内 |
