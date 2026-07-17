@@ -46,13 +46,13 @@ Block 级结果：D3 的 16/32 格 member cell 只作为允许范围和粗地形
 
 生成期边界：规划阶段不得为了读取真实 block 而主动加载未生成 chunk；worldgen 在每个 owner chunk 内使用同一全局区域、坐标系和 seed，并结合当前真实地表逐 block 裁剪，跨 chunk 不重新起算扩张、边界或装饰相位。
 
-几何策略分离：`LandUseAreaPlan` 只提供区域几何、来源和用途；`surfacePolicy`、`vegetationPolicy`、`boundaryPolicy` 和 DecorationProgram 分别决定换地板、保留或清理植被、生成围栏围墙以及布置装饰，禁止把区域成员直接全量复制为 `noVegetationMask`。
+几何策略分离：`LandUseAreaPlan` 只提供区域几何、来源和用途；`surfacePolicy`、`vegetationPolicy`、`boundaryPolicy` 和 DecorationProgram 分别决定换地板、保留或清理植被、生成围栏围墙以及布置装饰，禁止把区域成员直接全量复制为 `noVegetationMask`。`CULTIVATE` 只保留用途语义，不生成 interior farmland surface operation，农田内部由 Decoration tile / prefab 接管。
 
 下游交接：区域输出至少保留 group 来源、成员几何、结构 footprint 排除区、道路排除区、boundary loops、gate slots、claim cost 和来源种子；DecorationProgram 后续增加 LandUseAreaPlan target 引用，D5 只为实际地表替换、边界和装饰投影生成精确 mask。
 
 广场组合：喷泉与中心阵列商铺先组成 `plaza` group，以喷泉、商铺朝内入口和阵列内侧为多源种子，在排除建筑 footprint 与主路后扩张并闭合内部空隙；区域地表可统一替换，边缘和内部再分别布置花坛、长椅、路灯和摊位。
 
-农田花海与林场：农田和花海使用相同区域扩张器但采用不同土地需求、紧凑度、地形成本和 DecorationProgram；林场优先利用已有森林群系并保留自然树木，只生成边界、入口、林间路和少量功能建筑。
+农田花海与林场：农田和花海使用相同区域扩张器但采用不同土地需求、紧凑度、地形成本和 DecorationProgram；CULTIVATE 不由 LandUse 铺 farmland，边界仍可按 policy 生成；林场优先利用已有森林群系并保留自然树木，只生成边界、入口、林间路和少量功能建筑。
 
 鱼塘处理：已有水体鱼塘可以由区域扩张选择连续水面并装饰岸线；需要新挖池塘时，LandUseAreaPlan 只负责平面区域和边界，体积挖掘、池底分层与注水必须交给独立的受控地形改造能力。
 
@@ -106,7 +106,7 @@ D4 anchors 必须携带可重建组合关系的稳定 provenance：显式 placem
 - `city_run_workflow.enableLandUseLayer` 是单次请求覆写，优先于 settings。独立调用 `city_plan_land_use` 本身就是显式规划，不受 workflow 开关阻止。
 - `confirmWorldMutation=false` 时只产出规划与预览，不激活 worldgen registry。激活前必须只读检查所有 member / boundary owner；任一已到 FEATURES 整体拒绝 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，磁盘状态无法证明时整体拒绝 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`。
 - worldgen 只处理尚未经过 FEATURES 的当前 owner chunk。运行期遇非 `WorldGenRegion` 或已生成 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不补 ledger。
-- owner 内按稳定坐标顺序先执行 surface、再执行 boundary，LandUse 完成后才进入 Decoration；任一方块写失败必须逆序回滚，整 owner 成功后才记录 applied ledger。
+- owner 内按稳定坐标顺序先执行非 CULTIVATE surface、再执行 boundary，LandUse 完成后才进入 Decoration；任一方块写失败必须逆序回滚，整 owner 成功后才记录 applied ledger。
 - 首期不回填旧 chunk、不自动回滚已落地 chunk、不挖三维鱼塘、不把整个 LandUse mask 复制成植被抑制区。
 
 ## 七、首期验收

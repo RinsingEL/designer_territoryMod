@@ -18,7 +18,7 @@ D3 地形 patch 真值
   -> city_plan_d5 轻量 reservation mask 预案（只读最终 D4 collision + maskMargin，含 D3 patch 贴边 wall reservation）
   -> city_plan_d6 planned_worldgen probe-and-lock（锁定 actualFootprint / pieceBoxes / lockedCollisionEnvelope）
   -> 可选 city_plan_land_use：用 D3 terrain field、D4 group provenance 和 D6 locked footprint 生成 block 级 LandUseAreaPlan
-  -> 可选 plan_city_dressing 校验 DecorationProgram v0.2、按 style profile 将语义内容解析为 prefab、冻结 content / style hash 并生成意图预览
+  -> 可选 plan_city_dressing 校验 DecorationProgram v0.3、按 style profile 将语义内容解析为 prefab、冻结 content / style hash 并生成意图预览
   -> 可选 city_probe_decoration_terrain 只读已加载真实地形、人工审阅高度 / 连续带 profile / 未加载覆盖
   -> execute_d5 以 D6 locked collision 激活 active mask / planned structure / LandUse / 装饰 worldgen 程序
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
@@ -82,7 +82,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - `10_product/案子/D4阵列候选选择闭环-v0.4/README.md`：已接入显式候选选择闭环：create 后常规外扩查询以已 Plan collision occupied 的 focus、方向和 target patch 划定外侧可用区；显式 `newFunctionalArea=true` 不需要这三项，先返回按容量 / 可用性排序的全局 patch 和入口，再由 `selectedGlobalPatchRef` 生成候选。候选不提交 state，整组选中才原子写 occupied / zones / 剩余空间；默认不自动选择，`composite_array` 父子区继续保留。当前不切默认。
 - `10_product/案子/D4连续外扩候选-v0.5/README.md`：当前开发路径。常规外扩不预选 patch，改以父结构 D2 body / collision bbox、方向和目标实体间距产生近中远连续候选；D3 patch 后置用于地形筛选 / 评分，可跨 patch，近圈不可用才有原因地扩大搜索。
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
-- `10_product/案子/City通用装饰阵列系统-v0.2/README.md`：当前装饰开发真值。`plan_city_dressing` 只接受 AI-facing `city_decoration_program_plan.v0.2`，首期只引用 D3 patch，并用 `type + params` Shape / Pattern 判别联合组合通用布局，程序再编译 member bounds / 世界坐标。含 offset 的 Pattern 从 Shape 局部起始边界计相位，不能受世界坐标或 chunk 边缘影响。`ContentPalette` 的 `contentRef` 是 `market_stall` 等风格语义键，`config/geomantia/city_decoration/styles/*.json` 才映射到 content index / templates 中的具体 prefab；规划冻结 `catalogHash` 和 `styleProfileHash`，worldgen 重载时两者任一漂移均拒绝旧计划。`city_probe_decoration_terrain` 是 activation 前人工审阅入口，只读已加载区块，输出每个槽位的地形覆盖、高度和线性阵列连续带 profile，不生成 chunk 或写世界。农田 / 水渠 / 石路使用 tile NBT；worldgen 每次回调只写当前 owner chunk 的 fragment，并先登记该 fragment 的植被 mask，跨 chunk 连续性由同一 program / seed / coordinate frame 保证，多方块 prefab 使用统一 datum。v0.1 七种业务 item 破坏性退场，不自动兼容。
+- `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
 - `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；显式 group / array / composite group 和未分组单建筑通过 block 级多源竞争取得区域，同类可融合、异类竞争并保留自然空地。workflow 配置默认关闭，RoadWeaver 真实道路后写覆盖，旧 chunk 不回填。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。

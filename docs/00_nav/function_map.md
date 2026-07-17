@@ -64,7 +64,7 @@
 - D4 阵列布局 Agent Loop v0.2 / v0.3：`../systems/city/10_product/案子/D4阵列布局AgentLoop-v0.2-v0.3/README.md`；v0.2 为当前显式 loop，v0.3 已接入 `composite_array` 嵌套阵列显式路径。
 - D4 阵列候选选择闭环 v0.4：`../systems/city/10_product/案子/D4阵列候选选择闭环-v0.4/README.md`；已接入显式 `create -> query -> plan -> select -> finalize` 闭环。常规外扩仍需 focus / direction / target patch；仅 `newFunctionalArea=true` 先做全局 patch 搜索，再用 `selectedGlobalPatchRef` 生成候选，不切默认 workflow。
 - D4 连续外扩候选 v0.5：`../systems/city/10_product/案子/D4连续外扩候选-v0.5/README.md`；当前开发路径。常规外扩以父结构 D2 bbox、方向和目标实体间距生成近中远连续候选，D3 patch 后置筛选 / 评分，可跨界；不再预选 target patch。
-- City 通用装饰阵列系统 v0.2：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.2/README.md`；当前开发案，使用 `DecorationProgram` 判别联合、config content catalog、activation 前只读地形探针与 worldgen 分 chunk 地形编译。
+- City 通用装饰阵列系统 v0.3：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.3/README.md`；当前装饰真值，在 v0.2 通用几何上增加内容姿态、全局连续地形 run、fill-only foundation、activation trace / preview 和显式 catalog 升级。
 - City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；当前开发案，D6 locked footprint 后由 group / 单建筑生成 block 级用途区域，随后接 Decoration / execute_d5，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；旧显式实现，七种业务 item 与提前展开刷入计划待 v0.2 破坏性替代，不自动兼容。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`

@@ -40,11 +40,11 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5，执行 planned_worldgen probe-and-lock；不要求 chunk loaded，不改世界。 |
 | `city_plan_land_use` | `POST /realm/city/plan_land_use` | 读取 D3 terrain field、D4 group provenance 与 D6 locked footprint，生成 block 级 `city_land_use_area_plan.v0.1`；可选严格 intent 只允许 group / ruleRef 覆写，不改世界。 |
-| `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | 读取运行时 config 并返回当前 `catalogHash`、prefab summaries 与可选风格档案的 id/hash/语义键；仅 config 根目录缺失时一次性安装打包基础目录，不返回原始 NBT 或 block operation。 |
-| `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 显式升级带 Geomantia 默认 manifest 的旧基础目录；必须传 `confirmConfigMutation=true`。仅当旧水渠条目仍与打包旧默认一致且只缺 `terrainDropFallbackContentRef` 时追加该字段，先备份原 index，再停用旧 hash 的 active decoration plans；不改 ledger 或已落地方块。 |
-| `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 通用装饰阵列 v0.2：读取 D3-D6、内容目录与风格档案，校验 `DecorationProgram` 判别联合、冻结 content/style hash，将语义 content 解析为具体 prefab 后生成全局装饰程序和意图预览，最后发布 planning completion。 |
+| `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | v0.3 返回 catalog hash、content index schema、pose upgrade required / mode、prefab pose summaries 与 style 摘要；不返回原始 NBT。 |
+| `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 仅对 managed 且精确匹配旧打包默认的目录显式备份并升级 v0.3；自定义目录拒绝自动改写，停用旧 active plan但保留 ledger / 已落地方块。 |
+| `city_plan_city_dressing` | `POST /realm/city/plan_city_dressing` | 通用装饰阵列 v0.3：继承 Shape / Pattern 判别联合，增加严格连续落差 / foundation policy；v0.2 只读兼容，新 artifact 输出 v0.3。 |
 | `city_probe_decoration_terrain` | `POST /realm/city/probe_decoration_terrain` | activation 前只读地形探针：读取已编译装饰槽位，只采样当前已加载真实区块，报告高度、邻接高差、未加载覆盖和线性槽位连续带 profile；不生成 chunk、不写世界。 |
-| `city_execute_d5` | `POST /realm/city/execute_d5` | 必须依赖完整 D6 locked plan；compiled、slot projection、completion 完整存在时才激活 v0.2 装饰程序，并逐项校验 projection；每个 program 的实际 slot 包络同时加入 `noVegetationMask` 与 `noVanillaStructureMask`，两者均为 `decoration_projection`，再激活 mask / planned structure registry，并按 `roadProvider` 注册 RoadWeaver 连接计划。 |
+| `city_execute_d5` | `POST /realm/city/execute_d5` | 连续 Decoration run 用目标 ServerLevel generator 采样冻结，不加载 chunk；输出 frozen plan、terrain activation trace / preview，并将同一快照随 v0.3 active plan 激活。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
@@ -477,14 +477,14 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 
 - 无必填参数，使用 GET。
 - 运行时 `config/geomantia/city_decoration/` 是 catalog 真值。仅当该根目录不存在时，本次查询安装打包基础 `content_index.json`、`styles/medieval_coastal.json` 和 4 个有效 NBT 模板；目录已存在时绝不覆盖、合并或修复，目录不完整或非法仍由后续 catalog 校验失败。
-- 返回 `schemaVersion=city_decoration_catalog_query.v0.2`、当前 `catalogHash`、`contents[]` 摘要与 `styleProfiles[]`。每个 style profile 只暴露 `styleProfileId`、`styleProfileHash` 和可选 `semanticRefs[]`。
+- 返回 `schemaVersion=city_decoration_catalog_query.v0.3`、`contentIndexSchemaVersion`、`contentPoseUpgradeRequired`、`upgradeMode=none|explicit_managed_default_only`、当前 `catalogHash`、`contents[]` 摘要与 `styleProfiles[]`。
 - 基础 `medieval_coastal` 的 `semanticRefs[]` 至少含 `crop_tile`、`water_channel_tile`、`field_border`、`gravel_path_tile`。
-- content 摘要只暴露 `contentRef`、`contentKind=prefab`、size、allowedRotations、supportMode、placementMode、replacePolicy、maxFootprintHeightSpreadBlocks、comfortMarginBlocks、tags 和 contentHash；不返回原始 NBT、blocks、实体或任意 block operation。
+- content 摘要额外暴露 `groundPlaneLocalY`、`embedDepthBlocks`、`clearanceMode`；不返回原始 NBT、blocks、实体或任意 block operation。
 - AI 必须先查询目录，再把返回的 `catalogHash`、`styleProfileId`、`styleProfileHash` 写入 `decorationProgramPlan`；program 内 `contentRef` 只能填写该 profile 的语义键，不能填写 concrete prefab id。
 
 ## city_upgrade_default_decoration_catalog
 
-- 仅用于首次 bootstrap 过的默认目录升级，不接管无 manifest、非 Geomantia source，或水渠条目已被用户改写的 config；这些情况返回 `CITY_DECORATION_DEFAULT_CATALOG_UPGRADE_UNSAFE`，由内容作者自行维护。
+- 仅用于首次 bootstrap 过的 managed 默认目录升级；只接受精确匹配打包 v0.2（可含 / 缺旧 fallback）或 v0.3 pre-fallback 的 index，整体备份后写入 v0.3 pose 字段。无 manifest、非 Geomantia source 或任意用户改写均返回 `CITY_DECORATION_DEFAULT_CATALOG_UPGRADE_UNSAFE`。
 - 请求必须是 `{"confirmConfigMutation":true}`。响应给出升级前后 catalog hash、backupPath、是否需要重规划，以及被停用的 active plan 数量。
 - 当 `catalogChanged=true` 时，旧 plan hash 不得继续 activation。重新 `city_query_decoration_catalog` 取得新 hash 后，用同一 city 的原始 DecorationProgram intent 调用 `city_plan_city_dressing`，再 `city_execute_d5`；同 city 新 hash 是合法替换，不应手改 active plan 或 ledger。
 - 验收必须选择未生成目标 chunk；历史田地、ledger 和已落地方块均不被升级入口回写。
@@ -536,14 +536,14 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 
 - 读取 D3 / D4 / D5 / D6 artifact，以及可选 D4 `functionalArrayZones`。
 - 从 `config/geomantia/city_decoration/content_index.json`、`templates/*.nbt` 和 `styles/*.json` 建立 prefab 目录与风格档案；冻结 `catalogHash` 和所选 `styleProfileHash`。农田、水渠和石路首期也必须引用 config 中的 1x1 / 1xN tile NBT，surface catalog 配置化放第二切片。
-- `decorationProgramPlan.schemaVersion` 必须为 `city_decoration_program_plan.v0.2`；每个 program 必须为 `city_decoration_program.v0.2`。
+- 当前 `decorationProgramPlan.schemaVersion=city_decoration_program_plan.v0.3`，program 为 `city_decoration_program.v0.3`；v0.2 以旧 terrain 默认值只读兼容，新输出不回写旧 artifact。
 - `Shape` 首期只接受 `target_mask`、`rectangle`、`ellipse`、`ring`、`polygon`；`Pattern` 首期只接受 `uniform_fill`、`cross_section_repeat`、`parallel_rows`、`edge_repeat`、`grid_repeat`、`deterministic_scatter`。
 - Shape / Pattern 按 `type + params` 判别联合校验；首期 Content 只接受 `contentKind=prefab`。AI 只引用 style profile 的语义 `contentRef`；规划阶段才解析为 config catalog 的 concrete prefab，不得提交 block operation、内联 NBT 路径或 block state。
 - AI-facing program 首期只接受 `targetArea.sourceType=patch`；程序解析后才生成内部 `targetMask.memberBounds[]` 与世界 `coordinateFrame.origin/axisU/axisV`，MCP 不接受 `targetBounds/memberBounds` 或 AI 手写 world coords。
 - prefab NBT 禁止实体；规划时发现 `entities[]` 非空 hard fail。
 - 输出规范化语义 DecorationProgram intent、只含 concrete prefab 的 compiled program、slot projection、planning trace、style resolution trace、quality report 和按 program 裁切的意图预览；不注册结构，不注册 RoadWeaver endpoint。
 - 全部产物成功写完后最后写 `city_decoration_planning_complete.json`：`schemaVersion=city_decoration_planning_complete.v0.2`，含 `cityId`、`catalogHash`、`styleProfileId`、`styleProfileHash`、`completedAt`。
-- `city_execute_d5` 激活后，worldgen 使用同一原点、方向、种子、catalog hash 和 style hash 按 chunk 编译；地表逐格复核，多方块 prefab 使用统一 datum。
+- `city_execute_d5` 先按完整连续 pattern 投影冻结 run / slot outcome / foundation；worldgen chunk compiler 消费同一快照并做局部复检，多方块 prefab 使用统一 pose datum。
 - `dressingBrushPlan`、`dressingLayoutItems[]` 或 v0.1 artifact 进入 v0.2 时 hard fail，不自动兼容。
 
 返回 artifact：
@@ -807,6 +807,7 @@ city_finalize_d4_candidate_session
 - `city_land_use_area_plan.json` 与 `city_land_use_planning_complete.json` 必须成对存在，并校验 schema / city / planHash / ruleProfileHash / sourceD6Hash；缺一返回 `CITY_LAND_USE_PLAN_INCOMPLETE`。两者均不存在时按 dimension + city 注销旧 active LandUse plan。几何区域不得自动复制为全域植被 mask。
 - LandUse activation 前只读检查计划覆盖的全部 member / boundary owner：任一 loaded / disk chunk 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，region NBT 读取失败或状态未知返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`；不得申请 chunk ticket、加载或生成目标 chunk，且整体预检通过前不得改 active registry。
 - decoration compiled plan、slot projection、completion 完整存在时，D5 必须校验 projection 的 schema / city / catalog / program / slot 身份，并与 compiled plan 的确定性投影逐项一致。随后每个有 slot 的 program 以实际 slot min/max 包络额外进入该 active plan 的 `noVegetationMask` 和 `noVanillaStructureMask`，两者均为 `maskType=decoration_projection`；前者抑制植被，后者阻止普通原版 / 模组结构起始。不得扩大为整块 patch；分别返回 `decorationVegetationMaskCount`、`decorationStructureMaskCount`。
+- `cross_section_repeat` / `parallel_rows` 必须在 activation 使用目标 `ServerLevel` 的 `ChunkGenerator.getBaseHeight/getBaseColumn` 编译完整 run；不得加载 / 生成 chunk。缺 level 返回 `CITY_DECORATION_TERRAIN_SAMPLER_LEVEL_REQUIRED`。同一 frozen plan 写 D5 artifact 并进入 active registry。
 - 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
@@ -821,6 +822,9 @@ city_finalize_d4_candidate_session
 - `roadWeaverConnectionPlan`
 - `roadWeaverRegistrationReport`
 - `roadProviderState`
+- `frozenDecorationTerrainPlan`
+- `decorationTerrainActivationTrace`
+- `decorationActivationPreviewIndex`
 
 ## city_plan_d6
 
