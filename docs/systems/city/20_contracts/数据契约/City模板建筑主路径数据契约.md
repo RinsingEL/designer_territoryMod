@@ -47,6 +47,22 @@ identity 或由它派生的 world footprint 漂移必须 hard fail。旧 `struct
 - 对 transformed size `width × height × depth`，实际 world bbox 为：`min=anchor`、`maxX=anchor.x+width-1`、`maxY=anchor.y+height-1`、`maxZ=anchor.z+depth-1`。
 - collision / mask 只能从 actual closed bbox 按声明的 clearance / mask margin 扩展；任何文档或 artifact 都不得把 half-open `maxExclusive` 当作 closed `max`。
 
+### Rotation 与 mirror
+
+City 的 rotation / mirror 名称和变换顺序与 Minecraft 1.20.1 `StructureTemplate` 原生语义一致：先 mirror，再围绕局部零点 rotation，最后把 transformed footprint 规范化到 `anchor=minX/minZ`。
+
+- `LEFT_RIGHT` 翻转局部 Z 轴：`(x,z) -> (x, depth-1-z)`；入口 `NORTH/SOUTH` 互换。
+- `FRONT_BACK` 翻转局部 X 轴：`(x,z) -> (width-1-x, z)`；入口 `EAST/WEST` 互换。
+- `CLOCKWISE_90`：`(x,z) -> (depth-1-z, x)`。
+- `CLOCKWISE_180`：`(x,z) -> (width-1-x, depth-1-z)`。
+- `COUNTERCLOCKWISE_90`：`(x,z) -> (z, width-1-x)`。
+
+worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithTransform(anchor, mirror, rotation)` 作为规范化后的实际 placement origin，`StructurePlaceSettings.rotationPivot` 固定为局部 `ZERO`。禁止把 `getZeroPositionWithTransform(...)` 的返回值再次设为 rotation pivot；该做法会叠加未被 D4/D6 计算的偏移。
+
+运行时必须在写入前逐源坐标或用等价的可验证双射证明：Minecraft transformed footprint、City identity 派生 footprint、D6 `lockedActualFootprint` 和当前 owner fragment 完全一致。任一变换漂移必须 hard fail，不得以 `StructureTemplate.placeInWorld=true` 代替完整性证明。
+
+本次轴语义修正不承诺兼容修复前的非 `NONE` mirror artifact。验收或继续执行前必须重新生成相关 D4/D6 plan 和 active registry；不得仅因 raw size、footprint 尺寸或 template hash 未变就把旧 artifact 作为通过证据。
+
 通用 `BlockBounds` 字段：
 
 | 字段 | 类型 | 必填 | 说明 |
@@ -168,7 +184,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 | `templateDatumY` | int | `placed` 时必填；由 `MOTION_BLOCKING_NO_LEAVES(anchor.x,anchor.z)` 在 worldgen 回调中解析，必须高于 `minBuildHeight` |
 | `status` | string | `pending`、`placed`、`skipped`、`failed` |
 | `placementSource` | string | 固定为 `city_template_nbt_worldgen` |
-| `actualFootprint` | object | `placed` 时必填；closed bounds，必须等于或落在计划允许范围内 |
+| `actualFootprint` | object | `placed` 时必填；closed bounds，必须精确等于 identity 派生结果和 D6 `lockedActualFootprint` |
 | `reasonCode` | string | `skipped` / `failed` 必填；成功可为 `TEMPLATE_PLACED` |
 | `appliedAt` | string | `placed` / `skipped` / `failed` 的完成时间 |
 
@@ -191,6 +207,8 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `CITY_TEMPLATE_CATALOG_MIRROR_INVALID` / `CITY_TEMPLATE_CATALOG_MIRROR_NOT_ALLOWED`：镜像非法或不在允许集合。
 - `CITY_TEMPLATE_BBOX_INVALID`：half-open / closed 转换或 bbox min/max 非法。
 - `CITY_TEMPLATE_PLACEMENT_IDENTITY_DRIFT`：D2、D4、D6、active registry、worldgen 或 D7 identity 不一致。
+- `TEMPLATE_RUNTIME_TRANSFORM_MISMATCH`：Minecraft runtime 变换后的逐点坐标、footprint 或 owner fragment 与 City 规划几何不一致。
+- `TEMPLATE_LOCKED_FOOTPRINT_MISMATCH`：identity 复算 footprint 与 D6 `lockedActualFootprint` 不一致。
 - `CITY_TEMPLATE_ACTIVE_REGISTRY_MISSING`：worldgen 前未找到对应 active template placement registry。
 - `CITY_TEMPLATE_CHUNK_ALREADY_GENERATED`：目标 chunk 已过 worldgen 交接窗口且没有可用 ledger。
 
