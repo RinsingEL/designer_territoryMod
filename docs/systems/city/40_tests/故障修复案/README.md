@@ -12,3 +12,4 @@
 | --- | --- | --- |
 | [20260717 模板 worldgen 高度 datum 暂不可用](./20260717_模板worldgen高度datum暂不可用.md) | 已定位，未修复 | 跨 chunk 的固定模板在部分 owner 的 `FEATURES` 回调中无法读取可靠高度 datum，执行层因保护逻辑跳过写入；手动模板验证地形和 NBT 均可用。 |
 | [20260717 旋转模板 pivot 与规划几何错位导致分片裁剪](./20260717_旋转模板pivot与规划几何错位导致分片裁剪.md) | 已定位，未修复 | D4/D6 的归一化旋转坐标与 worldgen 写入器额外设置的 Minecraft rotation pivot 不一致；实际模板向旋转前轴负方向平移后落在 planned owner fragment 外，因而被裁成局部。道路穿楼是独立风险，不是本案主因。 |
+| [20260720 LandUse 栅栏 WorldGenRegion 半连接](./20260720_LandUse栅栏WorldGenRegion半连接.md) | 已修复，待新区块实机复验 | 第一次修复依赖 `UPDATE_ALL` 反向通知，但 `WorldGenRegion#setBlock` 忽略 flags；现改为显式水平连接回刷和失败快照恢复。 |
