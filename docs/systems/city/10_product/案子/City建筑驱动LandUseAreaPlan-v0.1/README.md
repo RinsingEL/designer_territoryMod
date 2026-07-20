@@ -41,7 +41,9 @@ D4 设计延续：保留 D4 显式 group、array zone 和 composite array 的组
 
 扩张成本：单步成本由基础移动成本、坡度、高差、水体、悬崖、建筑和道路障碍、距种子距离、紧凑度、入口方向、用途亲和与确定性扰动共同组成；成本档案由程序根据用途派生，不让 AI 提交不可解释的裸参数表。
 
-同类融合：不同主体具有相同土地用途且 `mergePolicy` 允许时，扩张前沿接触后合并为连续区域，不再互相挤占，并删除接触处内部边界；主路、河流、围墙或显式分区可以阻止同类融合。
+同类融合：不同主体具有相同土地用途且 `mergeSameType=true` 时，扩张前沿接触后合并为连续区域，不再互相挤占，并删除接触处内部边界；主路、河流、围墙或显式分区可以阻止同类融合。
+
+近邻桥接：常规行动力扩张结束后，同 `ruleRef` 的不同 LandUse 主体可在 `nearbyMergeMaxBridgeBlocks` 限额内，穿过未归属、已采样、平缓且非水体的自然 block 取得最短桥接路径。建筑 footprint、gate / D5 corridor、异类 LandUse claim、未采样格、陡坡与水体都是硬障碍。`[商业] [行政] [商业]` 的行政区域不会被改写；商业仅在存在合规空地路径时绕开它形成连续区域。候选按路径长度、ruleRef、稳定组件 ID 排序，只接受尚未属于同一并查集簇且路径仍未被占用的候选，因此每次规划不会重复处理同一组件或形成桥接环。
 
 异类竞争：不同土地用途到达同一 block 时由累计成本、土地需求完成度和竞争权重决定归属；成本接近时允许记录 contested 边界，已经达到最大面积的主体停止继续争夺。
 
@@ -102,15 +104,15 @@ D4 anchors 必须携带可重建组合关系的稳定 provenance：显式 placem
 
 ## 五、规则与人工覆写边界
 
-- 程序通过 `config/geomantia/city_land_use/profiles/<profileId>.json` 加载 `LandUseRuleCatalog`，由结构语义派生用途、面积范围、成本档案、融合策略和 surface / vegetation / boundary / decoration policy；`settings.json.profileId` 选择档案。规则改动会改变 rule profile hash，既有 LandUse plan 必须重跑后才能激活。
+- 程序通过 `config/geomantia/city_land_use/profiles/<profileId>.json` 加载 `LandUseRuleCatalog`，由结构语义派生用途、面积范围、成本档案、融合 / 近邻桥接策略和 surface / vegetation / boundary / decoration policy；`settings.json.profileId` 选择档案。规则改动会改变 rule profile hash，既有 LandUse plan 必须重跑后才能激活。
 - bundled `default_v0_1` 包含 `industry`：`function.矿业`、`mining`、`mine`、`quarry`、`workshop` 等语义统一派生为工业区域，并使用 `decorationPolicy=industry`。
-- AI / 人工只允许提交稳定 group、成员 anchor 和 `ruleRef`，或对 group / anchor 执行 `set_rule`、`exclude`；不得提交裸面积、行动力、竞争权重或逐项成本。
+- AI / 人工只允许提交稳定 group、成员 anchor 和 `ruleRef`，或对 group / anchor 执行 `set_rule`、`exclude`；不得提交裸面积、行动力、竞争权重、近邻桥接阈值或逐项成本。
 - 规则优先级为 `subjectOverrides` > `groupOverrides.ruleRef` > D4 结构语义自动解析；未知 target、成员冲突或未知规则必须 hard fail，无法从语义解析的主体 warning 并跳过。
 - 固定输入、规则 profile、`seedSalt` 和版本必须得到完全一致的 spans、边界和 claim trace。
 
 ## 六、开关与生成边界
 
-- 外部配置根目录为 `config/geomantia/city_land_use/`：`settings.json` 的 schema 为 `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；同目录 `profiles/default_v0_1.json` 是 `city_land_use_rules.v0.1` 规则真值。目录或缺失的 bundled 文件会补装，但绝不覆盖用户已有 settings / profile。
+- 外部配置根目录为 `config/geomantia/city_land_use/`：`settings.json` 的 schema 为 `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；同目录 `profiles/default_v0_1.json` 是 `city_land_use_rules.v0.2` 规则真值。每条 rule 的 `nearbyMergeMaxBridgeBlocks` 决定一次近邻桥最多可新增多少自然 block，`0` 表示关闭；默认商业 / 工业为 24，农业 / 林场为 32，广场 / 行政为 16，住宅 / 通用聚落为 20，鱼塘为 0。既有 `v0.1` 用户档案兼容读取并映射到同一默认阈值，目录或缺失的 bundled 文件会补装，但绝不覆盖用户已有 settings / profile。
 - `city_run_workflow.enableLandUseLayer` 是单次请求覆写，优先于 settings。独立调用 `city_plan_land_use` 本身就是显式规划，不受 workflow 开关阻止。
 - `confirmWorldMutation=false` 时只产出规划与预览，不激活 worldgen registry。激活前必须只读检查所有 member / boundary owner；任一已到 FEATURES 整体拒绝 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，磁盘状态无法证明时整体拒绝 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`。
 - worldgen 只处理尚未经过 FEATURES 的当前 owner chunk。运行期遇非 `WorldGenRegion` 或已生成 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不补 ledger。
@@ -120,7 +122,7 @@ D4 anchors 必须携带可重建组合关系的稳定 provenance：显式 placem
 ## 七、首期验收
 
 - 显式 group、array / composite group 和未分组单建筑都能得到正确主体，且同组成员不互相竞争。
-- 至少覆盖同类融合、异类竞争、最大面积停止、自然空地、道路后写和固定 seed 确定性。
+- 至少覆盖接触同类融合、近邻同类桥接、绕开异类功能区、最大面积停止、自然空地、道路后写和固定 seed 确定性；三组同类近邻只接受两条桥接，不得形成循环。
 - 输出为 block spans / boundary loops，而不是 chunk 或 D3 cell 形状；跨 chunk 分片执行与整图结果一致。
 - 林场能保留自然植被，农田 / 广场等只按 policy 生成精确 surface、boundary 和 Decoration 投影。
 - active plan hash、owner fragment 和 ledger 幂等；旧 chunk 拒绝、写失败回滚和重启恢复有自动测试。

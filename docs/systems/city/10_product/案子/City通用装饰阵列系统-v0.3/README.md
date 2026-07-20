@@ -27,6 +27,8 @@ placementOriginY = datumY
 
 `embed_surface` 必须配 `surface_replaceable`；它只把模板按声明深度嵌入，不允许逐列变形或隐式挖空。模板空气如何处理只由 `clearanceMode` 决定。
 
+默认 `medieval_coastal` 素材包含显式 `fountain -> geomantia:decoration/fountain_01` 映射。该 prefab 为 `5x5x5` 广场中心水景，使用 `above_surface + replaceable_only`、一格 comfort margin；只在程序显式请求 `fountain` 时进入 palette，不混入通用 `civic_plaza` 随机池。
+
 v0.2 catalog 可只读加载，运行时按 `groundPlaneLocalY=0`、`embedDepthBlocks=0`、`clearanceMode=preserve` 解释，但文件和 hash 均不自动改写。`city_query_decoration_catalog` 必须返回 `contentIndexSchemaVersion`、`contentPoseUpgradeRequired` 和 `upgradeMode`。只有带 Geomantia managed manifest 且内容精确等于旧打包默认的目录，才允许经 `city_upgrade_default_decoration_catalog(confirmConfigMutation=true)` 显式备份并升级到 v0.3；自定义目录一律拒绝自动升级。
 
 ## 连续地形 run

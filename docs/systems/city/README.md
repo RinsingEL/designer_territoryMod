@@ -86,7 +86,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - `10_product/案子/D4连续外扩候选-v0.5/README.md`：当前开发路径。常规外扩不预选 patch，改以父结构 D2 body / collision bbox、方向和目标实体间距产生近中远连续候选；D3 patch 后置用于地形筛选 / 评分，可跨 patch，近圈不可用才有原因地扩大搜索。
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
-- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；显式 group / array / composite group 和未分组单建筑通过 block 级多源竞争取得区域，同类可融合、异类竞争并保留自然空地。workflow 配置默认关闭，RoadWeaver 真实道路后写覆盖，旧 chunk 不回填。
+- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；显式 group / array / composite group 和未分组单建筑通过 block 级多源竞争取得区域，同类接触融合，并可经受限的近邻桥接穿过自然空地形成连续区域；异类功能区、结构、corridor 与水体保持硬障碍。workflow 配置默认关闭，RoadWeaver 真实道路后写覆盖，旧 chunk 不回填。
 - `10_product/案子/City建筑群生活感设计-v0.1/README.md`：当前设计案。使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个临河 / 海综合城镇切片要求能直接读出农业、商业和行政，道路另案。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。

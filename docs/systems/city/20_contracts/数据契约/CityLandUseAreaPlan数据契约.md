@@ -11,7 +11,7 @@
 | 外部 settings | `city_land_use_settings.v0.1` |
 | D3 地形事实 | `city_land_use_terrain_field.v0.1` |
 | 人工 / AI 意图 | `city_land_use_intent_plan.v0.1` |
-| 规则目录 | `city_land_use_rules.v0.1` |
+| 规则目录 | `city_land_use_rules.v0.2`（兼容读取 `v0.1`） |
 | 区域计划 | `city_land_use_area_plan.v0.1` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.1` |
 | active registry | `city_active_land_use_area_plans.v0.1` |
@@ -33,7 +33,7 @@
 
 ```json
 {
-  "schemaVersion": "city_land_use_rules.v0.1",
+  "schemaVersion": "city_land_use_rules.v0.2",
   "profileId": "default_v0_1",
   "rules": [
     {
@@ -52,6 +52,7 @@
       "forestAffinity": 0.0,
       "competitionWeight": 1.0,
       "mergeSameType": true,
+      "nearbyMergeMaxBridgeBlocks": 24,
       "surfacePolicy": "PRESERVE",
       "vegetationPolicy": "SELECTIVE_CLEAR",
       "boundaryPolicy": "LOW_WALL",
@@ -60,6 +61,10 @@
   ]
 }
 ```
+
+`nearbyMergeMaxBridgeBlocks` 是非负整数，表示常规扩张结束后，同 `ruleRef` 不同主体可为形成连续区域而最多取得的自然桥接 block 数；`0` 禁用近邻桥接。桥接只经过未归属、已采样、非水体且满足坡度 / 高差通行条件的 block；结构 footprint、corridor、异类 claim、未采样格与水体不可穿越或改写。候选按路径长度、ruleRef、组件 ID 稳定排序，并查集只接受尚未连通的组件，已被更早候选占用的路径必须跳过。
+
+`city_land_use_rules.v0.1` 仍可严格按旧字段读取；loader 按 `ruleRef` 补默认桥接阈值：农业 / 林场 32、广场 / 行政 16、住宅 / 通用聚落 20、鱼塘 0、其余同类融合 rule 24，`mergeSameType=false` 一律为 0。读取后规划产物的 `ruleVersion` 与 profile hash 均按 v0.2 计算，必须重新规划才可激活；不会写回或覆盖用户 profile。
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
@@ -136,7 +141,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `schemaVersion` | string | `city_land_use_area_plan.v0.1`。 |
-| `ruleVersion` | string | 当前为 `city_land_use_rules.v0.1`。 |
+| `ruleVersion` | string | 当前为 `city_land_use_rules.v0.2`。 |
 | `cityId` | string | 所属 City。 |
 | `planHash` | string | 规范化计划 hash，供 active registry 与 ledger 校验。 |
 | `planningBounds` | BlockBounds | 全局竞争范围。 |
@@ -162,6 +167,12 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `vegetationPolicy` | enum | `PRESERVE|SELECTIVE_CLEAR|CLEAR`。 |
 | `boundaryPolicy` | enum | `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。 |
 | `decorationPolicy` | string | Decoration profile / program 选择引用。 |
+
+近邻桥接取得的 spans 与普通扩张 spans 一样属于对应 `areas[]`，不会新增第二种区域或改变下游 Decoration 输入。桥接完成后，同类 area 的 `sourceGroupIds[]` 会包含两侧主体；异类 area 仍为独立区域和硬障碍，不得因桥接被重标记。
+
+## LandUse 规划 Trace
+
+`land_use_plan_trace.json` 顶层新增 `nearbySameTypeBridges[]`，每项包含 `ruleRef`、按字典序稳定的 `sourceGroupIds[]` 与 `bridgeBlockCount`。该 trace 仅解释本次桥接选择，不是 AI 输入或 worldgen 执行参数；为空表示没有符合阈值且可通行的同类近邻候选。
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 
