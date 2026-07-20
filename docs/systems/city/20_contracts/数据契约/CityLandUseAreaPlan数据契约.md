@@ -27,7 +27,45 @@
 }
 ```
 
-目录缺失时安装 bundled default。`city_run_workflow.enableLandUseLayer` 优先于 settings；独立 `city_plan_land_use` 视为显式规划，不受 workflow 开关阻止。
+规则档案路径固定为 `config/geomantia/city_land_use/profiles/<profileId>.json`。`profileId` 必须匹配 `[a-z0-9][a-z0-9_.-]*`，并且规则文件顶层同名字段必须与 settings 一致；默认档案为 `profiles/default_v0_1.json`。目录或缺失 bundled 文件会补装，但不会覆盖用户已有 settings 或 profile。
+
+规则文件是严格对象：
+
+```json
+{
+  "schemaVersion": "city_land_use_rules.v0.1",
+  "profileId": "default_v0_1",
+  "rules": [
+    {
+      "ruleRef": "military",
+      "landUseType": "military",
+      "semanticTerms": ["military", "barracks", "guard_tower"],
+      "footprintMultiplier": 1.5,
+      "extraAreaBlocks": 96,
+      "minAreaBlocks": 96,
+      "maxAreaBlocks": 2048,
+      "actionBudget": 360,
+      "baseStepCost": 1.0,
+      "slopeCost": 1.1,
+      "reliefCost": 1.1,
+      "waterCost": 8.0,
+      "forestAffinity": 0.0,
+      "competitionWeight": 1.0,
+      "mergeSameType": true,
+      "surfacePolicy": "PRESERVE",
+      "vegetationPolicy": "SELECTIVE_CLEAR",
+      "boundaryPolicy": "LOW_WALL",
+      "decorationPolicy": "military"
+    }
+  ]
+}
+```
+
+`rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
+
+bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
+
+`city_run_workflow.enableLandUseLayer` 优先于 settings；独立 `city_plan_land_use` 视为显式规划，不受 workflow 开关阻止。
 
 ## LandUseTerrainField
 
@@ -111,14 +149,14 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `areaId` | string | 稳定区域 ID。 |
+| `areaId` | string | 稳定逻辑区域 ID；同一 group 被竞争结果拆成多个不连通组件时，多个 `areas[]` 项可共享同一 ID。按该 ID 消费区域的下游必须先合并全部匹配项的成员 spans，再执行 inset 与硬障碍扣除。 |
 | `ruleRef` / `landUseType` | string | 规则引用和用途。 |
 | `sourceGroupIds[]` / `sourceAnchorIds[]` | string[] | 可追溯来源。 |
 | `seedPoints[]` | BlockPoint[] | footprint 外缘、入口或组合内侧等多源起点。 |
 | `spans[]` | ScanlineSpan[] | block 成员；每项为 `z,minX,maxX`，两端包含。 |
 | `structureFootprintExclusions[]` | BlockBounds[] | D6 locked 结构硬排除区。 |
 | `boundaryLoops[]` | object[] | `points[]` 与 `hole`；内部孔洞不得生成外边界。 |
-| `gateSlots[]` | object[] | `gateId`、`block`、`direction`、`sourceAnchorId`。 |
+| `gateSlots[]` | object[] | `gateId`、`block`、`direction`、`sourceAnchorId`。模板入口派生的 `gateId` 必须为 `sourceAnchorId::entranceId`，使同一模板在多个建筑实例中复用时仍全局唯一。 |
 | `claimCostTotal` | number | 解释扩张结果的累计成本，不作为执行参数回传。 |
 | `surfacePolicy` | enum | `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`。 |
 | `vegetationPolicy` | enum | `PRESERVE|SELECTIVE_CLEAR|CLEAR`。 |
@@ -131,11 +169,13 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## Worldgen 交接
 
-- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项冻结 dimension、city、planHash、`paletteHash` 和规范化 `materialPalette={surfaceMaterials,boundaryMaterials,paletteHash}`；重载时 palette hash 漂移必须拒绝旧计划。
+- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项冻结 dimension、city、planHash、`paletteHash` 和规范化 `materialPalette={surfaceMaterials,boundaryMaterials,paletteHash}`；重载时 palette hash 漂移必须拒绝旧计划。新默认 `surfaceMaterials` 含保留键 `MICRO_FILL_SUBGRADE=minecraft:dirt`；旧 active palette 缺少该键时微整地必须关闭。
 - ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`。owner applied 项同时记录 planHash 与 paletteHash。
 - activation preflight 必须枚举全部 member / boundary owner，只读当前 loaded status 或 region NBT；不得申请 ticket。任一 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
-- 编译器用 material palette 把 policy 映射为具体方块，几何 plan 不携带材质。owner 内先 surface、后 boundary，再交给 Decoration；RoadWeaver 真实道路最后写并拥有覆盖权。
+- 编译器用 material palette 把 policy 映射为具体方块，几何 plan 不携带材质。owner fragment v0.2 为 PAVE 携带最多 16 格的同 area 只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。owner 内先 micro-fill subgrade / surface、后 boundary，再交给 Decoration；RoadWeaver 真实道路最后写并拥有覆盖权。
+- PAVE 微整地固定使用 7x7 真实顶层高度的中位数作为局部参考，只接受补高 1..3 格、连通面积 <=16 且 X/Z span <=4 的封闭低洼。连通低洼触及另一 area、footprint、corridor、gate、水体、非自然表面，或超过深度 / 面积 / span 阈值时不得填充；只向上补方块，不削地、不读取或填充地下空洞。基层使用 `MICRO_FILL_SUBGRADE`，目标顶层仍使用原 PAVE surface material。
+- boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
 - 方块写失败逆序回滚；整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / plan hash / palette hash / owner chunk 幂等阻断。
 - 非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。

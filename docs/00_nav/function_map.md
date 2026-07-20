@@ -58,6 +58,7 @@
 
 - 总入口：`../systems/city/README.md`
 - 案子状态索引：`../systems/city/10_product/案子/README.md`
+- 固定模板唯一落地主线：`../systems/city/10_product/案子/City固定模板唯一落地主线-v0.1/README.md`；当前开发路径，破坏性删除 configured structure、StructureStart、Jigsaw、envelope profiling 和建筑 late materialize，City active 建筑只使用固定 NBT `StructureTemplate`。
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
 - D4 设计构图候选闭环 v0.2：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.2/README.md`
@@ -66,6 +67,7 @@
 - D4 连续外扩候选 v0.5：`../systems/city/10_product/案子/D4连续外扩候选-v0.5/README.md`；当前开发路径。常规外扩以父结构 D2 bbox、方向和目标实体间距生成近中远连续候选，D3 patch 后置筛选 / 评分，可跨界；不再预选 target patch。
 - City 通用装饰阵列系统 v0.3：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.3/README.md`；当前装饰真值，在 v0.2 通用几何上增加内容姿态、全局连续地形 run、fill-only foundation、activation trace / preview 和显式 catalog 升级。
 - City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；当前开发案，D6 locked footprint 后由 group / 单建筑生成 block 级用途区域，随后接 Decoration / execute_d5，RoadWeaver 后写覆盖，旧 chunk 不回填。
+- City 建筑群生活感设计 v0.1：`../systems/city/10_product/案子/City建筑群生活感设计-v0.1/README.md`；当前设计案，使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个切片为临河 / 海的农业、商业、行政综合城镇，道路另案。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；旧显式实现，七种业务 item 与提前展开刷入计划待 v0.2 破坏性替代，不自动兼容。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
 - 结构 Envelope 瘦身：`../systems/city/10_product/案子/结构Envelope瘦身-v0.1/README.md`；当前推进到 04 D4 阵列形态首切片，补 `compound_cluster` 参数化和 grid / courtyard / l_shape / u_shape / organic_compact 验收。

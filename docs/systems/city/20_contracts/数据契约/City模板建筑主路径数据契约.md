@@ -4,7 +4,7 @@
 
 本文是 City 固定模板建筑主路径的当前数据真值，覆盖 D2 模板目录、D4 placement plan、D5 active registry、worldgen 交接和 D7 ledger。
 
-City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询 `Minecraft Registries.STRUCTURE`，不生成 `StructureStart`，不使用 Jigsaw pool。City 自己的 active template placement registry 可以作为 D5 -> worldgen 的交接，但它不是 Minecraft StructureStart，也不允许携带 Jigsaw 展开结果。
+City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询外部 `Minecraft Registries.STRUCTURE`，不使用 Jigsaw pool。`templateId` 或 `templateRef` 属于 `geomantia:` 命名空间时，目录模型与 D6 必须把有效 `terrainPosePolicy` 归一为 `structure_start_beard_thin`；其他命名空间只有显式选择该 policy 才创建 City 单-piece `StructureStart`，以 `beard_thin` 适配地形。City active registry 仍不是外部 configured structure，也不允许携带 Jigsaw 展开结果。
 
 D2、D4、D6、D7 对同一建筑必须保持以下 identity 完全一致：
 
@@ -12,7 +12,7 @@ D2、D4、D6、D7 对同一建筑必须保持以下 identity 完全一致：
 templateRef + templateHash + variant + rawSize + rotation + mirror + anchor
 ```
 
-identity 或由它派生的 world footprint 漂移必须 hard fail。旧 `structureId`、configured structure、Jigsaw、StructureStart、旧 profile bbox 和 bbox 外侧伪入口不得被静默转换。
+identity 或由它派生的 world footprint 漂移必须 hard fail。`terrainPosePolicy` 是 D4 -> D6 -> D5 -> worldgen 的冻结 lifecycle 快照，不能由旧 active registry 或运行时目录改写。旧 `structureId`、外部 configured structure、Jigsaw、外部 StructureStart、旧 profile bbox 和 bbox 外侧伪入口不得被静默转换。
 
 ## 版本与产物
 
@@ -93,7 +93,7 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
 | `allowedRotations[]` | string[] | `NONE`、`CLOCKWISE_90`、`CLOCKWISE_180`、`COUNTERCLOCKWISE_90` 中的非空子集 |
 | `allowedMirrors[]` | string[] | `NONE`、`LEFT_RIGHT`、`FRONT_BACK` 中的非空子集 |
 | `roadEntrances[]` | object[] | 模板局部道路入口；每项含 `entranceId`、`position{x,z}`、`direction` |
-| `terrainPosePolicy` | string | 模板地形姿态策略 |
+| `terrainPosePolicy` | string | 模板地形姿态策略，也是 placement lifecycle 配置；`geomantia:` 模板无条件归一为 `structure_start_beard_thin`，其他命名空间精确填写该值时使用 City 单-piece `StructureStart` + Beardifier，其余为 direct-template 路径 |
 | `supportPolicy` | string | 支撑 / 基础策略 |
 | `clearanceBlocks` | int | 非负；只用于从 actual footprint 派生 collision bbox |
 
@@ -117,7 +117,7 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
       "roadEntrances": [
         {"entranceId": "front", "position": {"x": 4, "z": 11}, "direction": "SOUTH"}
       ],
-      "terrainPosePolicy": "flat_or_small_step",
+      "terrainPosePolicy": "structure_start_beard_thin",
       "supportPolicy": "full_footprint_support",
       "clearanceBlocks": 2
     }
@@ -153,13 +153,14 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
 | `actualFootprint` | object | D4/D6 的派生输出快照；由 `templateSize + rotation + mirror + anchor` 计算，closed bounds |
 | `collisionEnvelope` / `maskEnvelope` | object | 从 `actualFootprint` 按 clearance / mask margin 派生，closed bounds |
 | `roadEntrances[]` | object[] | transformed 入口；含 `entranceId`、`relativePosition{x,z}`、`worldPosition{x,y,z}`、`direction` |
-| `templateDatumPolicy` | string | 固定为 `worldgen_surface_motion_blocking_no_leaves`；D6 锁定，worldgen 首次生成 owner chunk 时才解析实际 Y |
+| `terrainPosePolicy` | string | 从目录冻结；`geomantia:` 身份在目录模型和 D6 规划期强制归一为 `structure_start_beard_thin`，不得由 D4 item 或 worldgen 覆盖。该冻结值是唯一可创建 City terrain start 的值 |
+| `templateDatumPolicy` | string | D6 按 `terrainPosePolicy` 锁定：普通模板为 `worldgen_surface_motion_blocking_no_leaves`，`structure_start_beard_thin` 为 `generator_base_height_motion_blocking_no_leaves` |
 
 `roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
 
 ## Active registry `city_active_template_placement_registry.v0.1`
 
-D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、`templateSize`、`templateDatumPolicy` 和 transformed `roadEntrances[]`，并携带 D6 派生并锁定的 world footprint 快照，另外增加：
+D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交接。顶层必填：`schemaVersion`、`dimensionId`、`cityId`、`planId`、`activatedAt`、`placements[]`。每个 placement 必须原样保留 placement plan 的 identity、anchor、`templateSize`、`terrainPosePolicy`、`templateDatumPolicy` 和 transformed `roadEntrances[]`，并携带 D6 派生并锁定的 world footprint 快照，另外增加：
 
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
@@ -167,7 +168,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 `roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail；`worldedit_debug` 只授权旧 debug road，不授权旧建筑物化路径。
 
-模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey`、`pieceBoxes[]` 和固定 `templateDatumPolicy`。因为模板路径明确不生成 `StructureStart`，`expectedStartSignature` 可以为空；D5 只能对非模板 configured-structure item 保持非空 signature 的约束，不能为模板伪造或要求 StructureStart signature。worldgen 缺失 / 未知 policy 或不能得到高于 `minBuildHeight` 的高度图 datum 时必须失败，不能静默以世界最低高度放置。
+模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey`、`pieceBoxes[]`、`terrainPosePolicy` 和派生的 `templateDatumPolicy`。direct-template 的 `expectedStartSignature` 可以为空；`structure_start_beard_thin` 只允许 City 注册的单-piece terrain start，仍不得要求或伪造外部 configured-structure signature。worldgen 缺失 / 未知 policy 或不能得到高于 `minBuildHeight` 的高度图 datum 时必须失败，不能静默以世界最低高度放置。
 
 ## Placement ledger `city_template_placement_ledger.v0.1`
 
@@ -219,7 +220,7 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `CITY_TEMPLATE_TRANSFORMED_ENTRANCE_INVALID`：transformed entrance 越界、方向或 anchor 不一致。
 - `CITY_TEMPLATE_LEGACY_INPUT_REJECTED`：旧建筑输入被拒绝；响应必须带具体 legacy reason。
 - `CITY_TEMPLATE_LEGACY_STRUCTURE_REGISTRY_INPUT`：试图用 `Registries.STRUCTURE` 作为 active 模板来源。
-- `CITY_TEMPLATE_LEGACY_STRUCTURE_START_INPUT`：试图提交或消费 StructureStart。
+- `CITY_TEMPLATE_LEGACY_STRUCTURE_START_INPUT`：试图提交或消费外部 / configured StructureStart；目录驱动的 City 单-piece terrain start 不属于该输入。
 - `CITY_TEMPLATE_LEGACY_JIGSAW_POOL_INPUT`：试图提交或消费 Jigsaw pool / 展开结果。
 - `CITY_TEMPLATE_LEGACY_BBOX_ENTRANCE_INPUT`：试图用 bbox 外侧伪入口替代模板 `roadEntrances[]`。
 
@@ -227,8 +228,8 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 
 ## 兼容策略与硬规则
 
-- `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。
+- `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、外部 StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。唯一例外是冻结 `terrainPosePolicy=structure_start_beard_thin` 后由 City 创建的单-piece terrain start。
 - 目录更新必须重新计算 `templateHash`，并使旧 plan / active registry 失效；不能只改文件名、variant 或尺寸字段绕过 hash 校验。
 - active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
 - RoadWeaver 缺失时，`auto` 的唯一兼容行为是跳过道路并写 `ROADWEAVER_UNAVAILABLE`；只有显式 `worldedit_debug` 可产生旧 debug road，且不能改变模板建筑落地路径。
-- StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据。
+- 外部 StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据；City 配置化 terrain start 必须单独验证 policy、datum、piece 和 Beardifier 结果。

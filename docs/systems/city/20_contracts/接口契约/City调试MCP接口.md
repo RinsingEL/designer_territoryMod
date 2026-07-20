@@ -419,6 +419,7 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - `compound_cluster` 读取 `compoundCluster.shape|rows|columns|spacingBlocks`，支持 `grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`；zone / item / trace 写 `arrayShape` 与实际 `spacingBlocks`。
 - 防撞只使用 collision envelope / body envelope；occupied 来自 base key anchors 和已执行 array items，profile/debug 结构大小诊断不进入正式 array zone 字段。`maskEnvelope` 可以重叠，不得撑大 D4 anchor 间距。
 - 模板 item 以目录中已由 NBT 校验的 `rawSize` 和 `clearanceBlocks` 计算几何；阵列输入只允许 `{templateId,variantId,rotation?,mirror?}`，拒绝 `templateFootprint`、`bbox`、`footprint`、`actualFootprint`、`templateSize` 或 `rawSize` 等调用方几何。D4 输出最小角 `anchorBlock`、`templateRef`、`templateHash`、`variantId`、rotation / mirror、NBT `templateSize` 与派生 closed `actualFootprint`；D6 才补 `lockedActualFootprint`。`templatePlacementPlan.transformed.roadEntrances[]` 与 footprint 均由 `templateSize + transform + anchor` 推导。RoadWeaver 只能消费这组入口，不能从 bbox 或阵列中心反推道路端点。
+- 阵列 item 可传 `orientationPolicy={mode:auto_frontage,targetRef,frontageEntranceId?,direction?}`。未显式给 `rotation` 的模板会在原候选位置枚举目录 `allowedRotations[]`，按 `array_center`、`nearest_water` 或 cardinal 目标排序，并继续执行既有 grid / collision 检查；item / anchor / trace 输出 `orientationDecision`。模板显式 `rotation` 时保持原行为并优先于自动策略。
 
 `city_finalize_d4_array_layout_loop` 必填：
 
@@ -450,6 +451,8 @@ v0.4 是显式开发路径，不加入 `city_run_workflow` 默认 `key_then_arra
 - 新功能区必须显式传 `newFunctionalArea=true`，且不传 `focusRef`、`direction`、`targetPatchRef`。响应 `searchScope=explicit_global_new_functional_area`、`selectedGlobalPatchRequired=true`、按可用性后容量排序的 `globalPatchCandidates[]`；每项含 `patchRef`、`remainingCapacity`、`available`、`availabilityReason` 和可用时的 `expansionEntryPoint`。查询不预留任何空间。
 
 `city_plan_d4_array_expansion_candidates` 必须传一个 `nextArrayLayoutPlanItem`（支持 `compound_cluster`、`guide_line_dual_side`、`plaza_ring`、`composite_array`）。常规路径继续使用 focus / direction / target patch；新功能区路径必须传 `newFunctionalArea=true` + 来自 query 的 `selectedGlobalPatchRef`，不接受旧 `targetPatchRef` 代替选择。成功返回 `schemaVersion=city_d4_array_expansion_candidate_set.v0.4`、`sourceStateId`、`arrayCandidates[]`、`expansionSpace` 和 quality。每组候选必须完整、collision 不重叠旧 occupied，候选生成不得修改 loop state、occupied、zones 或剩余空间。
+
+`nextArrayLayoutPlanItem.orientationPolicy` 同样适用于 v0.4 候选；每组候选在原点位上完成旋转选择并写出 `orientationDecision`，select 后才把结果写入标准 anchor。
 
 `city_select_d4_array_expansion_candidate` 默认必须传 `candidateId`；只有显式 `autoSelectHighestScore=true` 时才按最高分选择，trace 必须写 `decisionSource=auto_highest_score_explicit`，默认人工 / AI 选择写 `ai_or_human_selected`。选择后才原子写入 loop state 的 anchors、occupied envelopes、functional array zones、remaining expansion space 和 trace；候选集 `sourceStateId` 不匹配当前 state 返回 stale。
 
@@ -539,7 +542,7 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 - 当前 `decorationProgramPlan.schemaVersion=city_decoration_program_plan.v0.3`，program 为 `city_decoration_program.v0.3`；v0.2 以旧 terrain 默认值只读兼容，新输出不回写旧 artifact。
 - `Shape` 首期只接受 `target_mask`、`rectangle`、`ellipse`、`ring`、`polygon`；`Pattern` 首期只接受 `uniform_fill`、`cross_section_repeat`、`parallel_rows`、`edge_repeat`、`grid_repeat`、`deterministic_scatter`。
 - Shape / Pattern 按 `type + params` 判别联合校验；首期 Content 只接受 `contentKind=prefab`。AI 只引用 style profile 的语义 `contentRef`；规划阶段才解析为 config catalog 的 concrete prefab，不得提交 block operation、内联 NBT 路径或 block state。
-- AI-facing program 首期只接受 `targetArea.sourceType=patch`；程序解析后才生成内部 `targetMask.memberBounds[]` 与世界 `coordinateFrame.origin/axisU/axisV`，MCP 不接受 `targetBounds/memberBounds` 或 AI 手写 world coords。
+- AI-facing program 接受 `targetArea.sourceType=patch|land_use_area`；后者 `ref` 必须命中同一 City 已定稿的 `LandUseAreaPlan.areaId`。程序解析后才生成内部 `targetMask.memberBounds[]` 与世界 `coordinateFrame.origin/axisU/axisV`，MCP 不接受 `targetBounds/memberBounds` 或 AI 手写 world coords。
 - prefab NBT 禁止实体；规划时发现 `entities[]` 非空 hard fail。
 - 输出规范化语义 DecorationProgram intent、只含 concrete prefab 的 compiled program、slot projection、planning trace、style resolution trace、quality report 和按 program 裁切的意图预览；不注册结构，不注册 RoadWeaver endpoint。
 - 全部产物成功写完后最后写 `city_decoration_planning_complete.json`：`schemaVersion=city_decoration_planning_complete.v0.2`，含 `cityId`、`catalogHash`、`styleProfileId`、`styleProfileHash`、`completedAt`。

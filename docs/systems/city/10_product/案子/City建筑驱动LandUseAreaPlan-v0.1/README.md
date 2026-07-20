@@ -1,5 +1,10 @@
 # City 案子：建筑驱动 LandUseAreaPlan v0.1
 
+补充文档：
+
+- [建筑素材采集名称表](./建筑素材采集建议表.md)
+- [装饰素材采集与简易制作清单](../City通用装饰阵列系统-v0.2/装饰素材采集与简易制作清单.md)
+
 ## 状态
 
 当前开发案。首期以配置默认关闭的可选层接入现有 City workflow；实现、契约、自动测试完成后再单独决定是否切默认。
@@ -48,6 +53,8 @@ Block 级结果：D3 的 16/32 格 member cell 只作为允许范围和粗地形
 
 几何策略分离：`LandUseAreaPlan` 只提供区域几何、来源和用途；`surfacePolicy`、`vegetationPolicy`、`boundaryPolicy` 和 DecorationProgram 分别决定换地板、保留或清理植被、生成围栏围墙以及布置装饰，禁止把区域成员直接全量复制为 `noVegetationMask`。`CULTIVATE` 只保留用途语义，不生成 interior farmland surface operation，农田内部由 Decoration tile / prefab 接管。
 
+PAVE 微整地：新默认 material palette 以保留键 `MICRO_FILL_SUBGRADE=minecraft:dirt` 开启硬质铺装区的 fill-only 微整地。FEATURES 只读取真实最上层高度，用 7x7 局部中位高度判定目标；仅补高 1..3 格、连通低洼最多 16 格且 X/Z 跨度均不超过 4 格的同 area 封闭小坑。低洼跨出 PAVE mask、进入 footprint / corridor / gate、连接成开放沟谷、邻近水体或需要更深填充时保持原地形。不得削高地、填地下洞穴、填山谷或把整个 LandUse 区域做成 foundation。
+
 下游交接：区域输出至少保留 group 来源、成员几何、结构 footprint 排除区、道路排除区、boundary loops、gate slots、claim cost 和来源种子；DecorationProgram 后续增加 LandUseAreaPlan target 引用，D5 只为实际地表替换、边界和装饰投影生成精确 mask。
 
 广场组合：喷泉与中心阵列商铺先组成 `plaza` group，以喷泉、商铺朝内入口和阵列内侧为多源种子，在排除建筑 footprint 与主路后扩张并闭合内部空隙；区域地表可统一替换，边缘和内部再分别布置花坛、长椅、路灯和摊位。
@@ -95,19 +102,20 @@ D4 anchors 必须携带可重建组合关系的稳定 provenance：显式 placem
 
 ## 五、规则与人工覆写边界
 
-- 程序通过 `LandUseRuleCatalog` 由结构语义派生用途、面积范围、成本档案、融合策略和 surface / vegetation / boundary / decoration policy。
+- 程序通过 `config/geomantia/city_land_use/profiles/<profileId>.json` 加载 `LandUseRuleCatalog`，由结构语义派生用途、面积范围、成本档案、融合策略和 surface / vegetation / boundary / decoration policy；`settings.json.profileId` 选择档案。规则改动会改变 rule profile hash，既有 LandUse plan 必须重跑后才能激活。
+- bundled `default_v0_1` 包含 `industry`：`function.矿业`、`mining`、`mine`、`quarry`、`workshop` 等语义统一派生为工业区域，并使用 `decorationPolicy=industry`。
 - AI / 人工只允许提交稳定 group、成员 anchor 和 `ruleRef`，或对 group / anchor 执行 `set_rule`、`exclude`；不得提交裸面积、行动力、竞争权重或逐项成本。
 - 规则优先级为 `subjectOverrides` > `groupOverrides.ruleRef` > D4 结构语义自动解析；未知 target、成员冲突或未知规则必须 hard fail，无法从语义解析的主体 warning 并跳过。
 - 固定输入、规则 profile、`seedSalt` 和版本必须得到完全一致的 spans、边界和 claim trace。
 
 ## 六、开关与生成边界
 
-- 外部配置为 `config/geomantia/city_land_use/settings.json`，schema `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；目录缺失时安装该默认配置。
+- 外部配置根目录为 `config/geomantia/city_land_use/`：`settings.json` 的 schema 为 `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；同目录 `profiles/default_v0_1.json` 是 `city_land_use_rules.v0.1` 规则真值。目录或缺失的 bundled 文件会补装，但绝不覆盖用户已有 settings / profile。
 - `city_run_workflow.enableLandUseLayer` 是单次请求覆写，优先于 settings。独立调用 `city_plan_land_use` 本身就是显式规划，不受 workflow 开关阻止。
 - `confirmWorldMutation=false` 时只产出规划与预览，不激活 worldgen registry。激活前必须只读检查所有 member / boundary owner；任一已到 FEATURES 整体拒绝 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，磁盘状态无法证明时整体拒绝 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`。
 - worldgen 只处理尚未经过 FEATURES 的当前 owner chunk。运行期遇非 `WorldGenRegion` 或已生成 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不补 ledger。
-- owner 内按稳定坐标顺序先执行非 CULTIVATE surface、再执行 boundary，LandUse 完成后才进入 Decoration；任一方块写失败必须逆序回滚，整 owner 成功后才记录 applied ledger。
-- 首期不回填旧 chunk、不自动回滚已落地 chunk、不挖三维鱼塘、不把整个 LandUse mask 复制成植被抑制区。
+- owner 内按稳定坐标顺序先执行 PAVE 微填基层与抬高 surface、再执行 boundary，LandUse 完成后才进入 Decoration；任一方块写失败必须逆序回滚，整 owner 成功后才记录 applied ledger。
+- 首期不回填旧 chunk、不自动回滚已落地 chunk、不削地、不挖三维鱼塘、不把整个 LandUse mask 复制成植被抑制区。旧 active palette 没有 `MICRO_FILL_SUBGRADE` 时保持原行为，不静默启用微整地。
 
 ## 七、首期验收
 

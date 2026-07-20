@@ -12,6 +12,7 @@
 | --- | --- |
 | 当前真值 | 当前 active path 的主方案，改实现和接口前必须先读。 |
 | 当前开发路径 | 契约已经锁定并正在实现，验收通过后进入 active path。 |
+| 当前设计案 | 目标与职责边界已确认，尚未进入契约和实现。 |
 | 已完成并入主线 | 核心能力已进入当前主线，后续只按缺口继续迭代。 |
 | 后续待做 | 方向仍有效，但尚未作为当前实现主线完成。 |
 | 已替代 | 方案被 D3-D6 结构落地驱动主线替代，不再作为实现依据。 |
@@ -20,21 +21,25 @@
 ## 当前阅读顺序
 
 1. `D3-D6结构落地驱动城市重构-v0.1/README.md`
-2. `D4设计构图候选闭环-v0.1/README.md`
-3. `D4设计构图候选闭环-v0.2/README.md`
-4. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
-5. `D4阵列候选选择闭环-v0.4/README.md`
-6. `D4连续外扩候选-v0.5/README.md`
-7. `结构Envelope精修-v0.1/README.md`
-8. `City通用装饰阵列系统-v0.3/README.md`
-9. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
-10. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+2. `City固定模板唯一落地主线-v0.1/README.md`
+3. `D4设计构图候选闭环-v0.1/README.md`
+4. `D4设计构图候选闭环-v0.2/README.md`
+5. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
+6. `D4阵列候选选择闭环-v0.4/README.md`
+7. `D4连续外扩候选-v0.5/README.md`
+8. `结构Envelope精修-v0.1/README.md`
+9. `City通用装饰阵列系统-v0.3/README.md`
+10. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
+11. `City建筑群生活感设计-v0.1/README.md`
+12. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
 
 ## 案子状态表
 
 | 案子 | 状态 | 当前结论 |
 | --- | --- | --- |
-| `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前 City 主线：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger / actual-footprint road。旧功能区优先链路不再兼容。 |
+| `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前实现主线仍含 configured structure：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger。其 configured / StructureStart 分支已确定由固定模板唯一落地主线破坏性替换，完成后本案降为历史参考。 |
+| `City固定模板唯一落地主线-v0.1` | 当前开发路径 | City active 建筑只认固定 NBT `StructureTemplate`；删除 configured structure、外部 StructureStart、Jigsaw、envelope profiling 和 late materialize。D4-D6 使用精确模板尺寸 / hash / 入口，worldgen 做确定性模板粘贴；三个地形适配试验模板保留 City 注册单-piece start。 |
+| `City固定模板StructureStart地形适配试验-v0.1` | 当前试验路径 | 仅 Stubbs 风车、谷仓与肉铺在 `createStructures` 注入一个 City 注册的 `StructureStart` 和一个固定模板 piece，使用 `beard_thin`。固定模板 identity 不变，不恢复 configured 随机选择或 Jigsaw；装饰仍走当前独立路径。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
 | `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
 | `D4阵列布局AgentLoop-v0.2-v0.3` | 显式开发路径 | 同一条 D4 阵列布局版本线：v0.2 已接入三段 endpoint 与显式 workflow 模式 `array_layout_loop_v0_2`；v0.3 已接入 `array_layout_loop_v0_3` 和 `composite_array`，一个 item 可生成 parent zone / subZones / child arrays。AI 每轮仍只提交一个阵列 item，程序执行后更新 state / occupied field / preview。当前不切默认。 |
@@ -44,6 +49,7 @@
 | `City通用装饰阵列系统-v0.3` | 当前真值 | 继承 v0.2 判别联合与全局几何；content index / program 升级 v0.3，显式声明 ground plane、embed depth、clearance，连续线性 pattern 在 activation 编译跨 chunk run，并以冻结 outcome 驱动水域 / 峭壁 / 累计落差终止、end-cap 和 fill-only Beardifier foundation。 |
 | `City通用装饰阵列系统-v0.2` | 已完成并入主线 | Shape / Pattern / ContentPalette 通用几何与语义风格档案基础；由 v0.3 承接当前姿态、连续地形和 foundation 真值。 |
 | `City建筑驱动LandUseAreaPlan-v0.1` | 当前开发路径 | D3 补 LandUse terrain field，D4 v0.2 保留 group provenance；D5 预案和 D6 locked footprint 后才定稿 block 级 LandUseAreaPlan，再交给 Decoration / execute_d5。配置默认关闭、请求可覆写；roads 后写覆盖、旧 chunk 不回填，不恢复旧功能区优先主线。 |
+| `City建筑群生活感设计-v0.1` | 当前设计案 | 使用现有 D4 / LandUse 表达农业、商业、行政结构，增加建筑自动朝向和功能装饰；首个切片为临河 / 海综合城镇，道路另案。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
 | `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection；缺 mod 时 `roadProvider=roadweaver` hard fail、`auto` 跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，只有显式 `worldedit_debug` 进入旧 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |
@@ -80,6 +86,7 @@
 
 ## 当前未完成方向
 
+- 建筑群生活感设计：联动现有 D4 / LandUse、建筑朝向和 Decoration；首个临河 / 海综合城镇切片以可读的农业 / 商业 / 行政关系做视觉验收，道路另案。
 - Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
 - D4 阵列布局 Agent Loop 后续：完成 v0.5 连续外扩候选的真实游玩验收，验证首户间距、近圈回退原因和局部 preview 可读性；默认 `key_then_array` 是否升级仍需单独决策。
 - City 通用装饰阵列后续：完成 v0.3 真实游玩验收后，再接 `path_follow`、放射、自由多边形、跨 chunk 大 prefab、挖方 / 桥梁 / 隧道等复杂地形适配。

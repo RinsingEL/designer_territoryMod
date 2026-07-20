@@ -4,6 +4,8 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 
 ## 当前 Active 主线
 
+目标替换案：[City 固定模板唯一落地主线 v0.1](./10_product/案子/City固定模板唯一落地主线-v0.1/README.md)。该案将破坏性删除下述流程中的 configured structure、Jigsaw 和 envelope profiling 分支；固定模板的受控 `StructureStart` 地形适配试验保留为显式配置能力。在实现与验收完成前，下面流程仍描述当前运行代码。
+
 当前 City D3-D6 已按破坏性重构切换为：
 
 ```text
@@ -31,7 +33,7 @@ D3 地形 patch 真值
 
 ### 当前主线模板建筑迁移状态
 
-在 City active 主建筑范围内，当前主路径已锁定为 `StructureTemplate` NBT：D2 读取模板目录与 NBT 尺寸 / hash，D4 选择并冻结 `templateRef`、`templateHash`、`variant`、`rotation`、`mirror`、`footprint`，D5 可通过 City 自己的 active template placement registry 交接到 worldgen；模板建筑不查询 `Registries.STRUCTURE`、不生成 `StructureStart`、不使用 Jigsaw pool。
+在 City active 主建筑范围内，当前主路径已锁定为 `StructureTemplate` NBT：D2 读取模板目录与 NBT 尺寸 / hash，D4 选择并冻结 `templateRef`、`templateHash`、`variant`、`rotation`、`mirror`、`terrainPosePolicy`、`footprint`，D5 可通过 City 自己的 active template placement registry 交接到 worldgen；模板建筑不查询外部 `Registries.STRUCTURE`、不使用 Jigsaw pool。后续规划的全部 `geomantia:` 模板在目录模型和 D6 强制归一为 `terrainPosePolicy=structure_start_beard_thin`，进入受限的 [StructureStart 地形适配路径](./10_product/案子/City固定模板StructureStart地形适配试验-v0.1/README.md)；非 `geomantia:` 模板仍按显式 policy 选择。D5/worldgen 只消费冻结值，不迁移旧 active plan。
 
 D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRef + hash + variant + rawSize + rotation + mirror + anchor`）；world `actualFootprint` 只能由该 identity 推导并校验，不能维护第二份 template bbox。D5 的 RoadWeaver 注册只使用模板 transformed `roadEntrances[]`，不使用 bbox 外侧伪入口；缺 mod 时 `auto` 跳过、`roadweaver` hard fail，旧 debug road 仅在显式 `worldedit_debug` 下可用。既有 StructureStart / Jigsaw 主线文字继续保留作历史信息和历史测试保护，不作为模板建筑 active 解释。
 
@@ -53,13 +55,14 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 
 1. `10_product/案子/README.md`
 2. `10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
-3. `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`
-4. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
-5. `20_contracts/数据契约/结构落地交接契约.md`
-6. `20_contracts/接口契约/City调试MCP接口.md`
-7. `30_code_guide/代码导览.md`
-8. `40_tests/测试入口.md`
-9. `40_tests/影响面.md`
+3. `10_product/案子/City固定模板唯一落地主线-v0.1/README.md`
+4. `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`
+5. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
+6. `20_contracts/数据契约/结构落地交接契约.md`
+7. `20_contracts/接口契约/City调试MCP接口.md`
+8. `30_code_guide/代码导览.md`
+9. `40_tests/测试入口.md`
+10. `40_tests/影响面.md`
 
 历史方案可读但不作为当前实现依据：
 
@@ -84,6 +87,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
 - `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；显式 group / array / composite group 和未分组单建筑通过 block 级多源竞争取得区域，同类可融合、异类竞争并保留自然空地。workflow 配置默认关闭，RoadWeaver 真实道路后写覆盖，旧 chunk 不回填。
+- `10_product/案子/City建筑群生活感设计-v0.1/README.md`：当前设计案。使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个临河 / 海综合城镇切片要求能直接读出农业、商业和行政，道路另案。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
