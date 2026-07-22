@@ -19,12 +19,13 @@ D3 地形 patch 真值
   -> D4 StructureAnchorPlan / StructureAnchorMap
   -> city_plan_d5 轻量 reservation mask 预案（只读最终 D4 collision + maskMargin，含 D3 patch 贴边 wall reservation）
   -> city_plan_d6 planned_worldgen probe-and-lock（锁定 actualFootprint / pieceBoxes / lockedCollisionEnvelope）
-  -> 可选 city_plan_land_use：用 D3 terrain field、D4 group provenance 和 D6 locked footprint 生成 block 级 LandUseAreaPlan
-  -> 可选 plan_city_dressing 校验 DecorationProgram v0.3、按 style profile 将语义内容解析为 prefab、冻结 content / style hash 并生成意图预览
+  -> 可选 city_plan_land_use：用 D3 terrain field、D4 group provenance 和 D6 locked footprint 生成 block 级 LandUseAreaPlan + SurfacePrintPlan
+  -> 可选 city_plan_decoration_anchor_candidates：为 required 单点 prefab 生成完整 footprint + clearance 候选，Agent 顺序选择并回填相对坐标 patch
+  -> 可选 plan_city_dressing 校验 DecorationProgram intent v0.4、按 style profile 将语义内容解析为 prefab、冻结 content / style hash 并生成意图预览
   -> 可选 city_probe_decoration_terrain 只读已加载真实地形、人工审阅高度 / 连续带 profile / 未加载覆盖
   -> execute_d5 以 D6 locked collision 激活 active mask / planned structure / LandUse / 装饰 worldgen 程序
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
-  -> FEATURES owner-chunk 先执行 LandUse surface / boundary，再执行 Decoration
+  -> FEATURES owner-chunk 执行 LandUse BASE -> NBT -> CROP -> BOUNDARY，再执行稀疏 Decoration
   -> city_execute_d7 查询 worldgen ledger
   -> 根据已落结构 ledger 反推 inferred function area
   -> RoadWeaver 道路；旧 debug 道路仅允许显式 `worldedit_debug`
@@ -57,12 +58,14 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 2. `10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 3. `10_product/案子/City固定模板唯一落地主线-v0.1/README.md`
 4. `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`
-5. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
-6. `20_contracts/数据契约/结构落地交接契约.md`
-7. `20_contracts/接口契约/City调试MCP接口.md`
-8. `30_code_guide/代码导览.md`
-9. `40_tests/测试入口.md`
-10. `40_tests/影响面.md`
+5. `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`
+6. `10_product/案子/City关键装饰锚点候选-v0.1/README.md`
+7. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
+8. `20_contracts/数据契约/结构落地交接契约.md`
+9. `20_contracts/接口契约/City调试MCP接口.md`
+10. `30_code_guide/代码导览.md`
+11. `40_tests/测试入口.md`
+12. `40_tests/影响面.md`
 
 历史方案可读但不作为当前实现依据：
 
@@ -86,12 +89,14 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - `10_product/案子/D4连续外扩候选-v0.5/README.md`：当前开发路径。常规外扩不预选 patch，改以父结构 D2 body / collision bbox、方向和目标实体间距产生近中远连续候选；D3 patch 后置用于地形筛选 / 评分，可跨 patch，近圈不可用才有原因地扩大搜索。
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
-- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；显式 group / array / composite group 和未分组单建筑通过 block 级多源竞争取得区域，同类接触融合，并可经受限的近邻桥接穿过自然空地形成连续区域；异类功能区、结构、corridor 与水体保持硬障碍。workflow 配置默认关闭，RoadWeaver 真实道路后写覆盖，旧 chunk 不回填。
+- `10_product/案子/City关键装饰锚点候选-v0.1/README.md`：当前开发案。required 单点 prefab 在最终 DecorationProgram 前，先按 resolved target mask、真实 prefab footprint、clearance 与结构 / 墙 / 门 / 路口 / LandUse gate 等硬障碍生成 1-8 个稳定候选和预览；Agent 只选择并回填现有相对坐标 patch。
+- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；intent v0.2 让 AI 按需覆写地表印刷、自动连接、方块和方向。64 格内兼容区域由正常扩张相向生长，不再事后补桥；异类功能区、结构、corridor 与水体保持硬障碍，workflow 默认关闭，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - `10_product/案子/City建筑群生活感设计-v0.1/README.md`：当前设计案。使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个临河 / 海综合城镇切片要求能直接读出农业、商业和行政，道路另案。
+- `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业外轮廓必须由 LandUse 扩张形成，水槽只用 lined straight / lined end-cap；同类地表默认在 64 格内相向扩张，城区按 PAVE、广场步行面与真实道路的联合网络验收。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
-- `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；`auto` 缺 mod 时跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，旧 debug 道路只允许显式 `worldedit_debug`。
+- `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；连接计划 v0.2 先生成 placement group 组内空间 MST、再生成组间最近入口 MST，避免局部 priority 跨区串链；`auto` 缺 mod时跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，旧 debug 道路只允许显式 `worldedit_debug`。
 - `10_product/案子/结构地形兼容适配-v0.1/README.md`：已加入 terrain adaptation / Beardifier 诊断 trace，用于判断浮空等问题来源。
 - `10_product/案子/城市边界与城墙-v0.1/README.md`：已加入 D7 ledger 后的临时城墙 plan / execute 闭环，输出石墙 NBT artifact。
 - `10_product/案子/城市边界与城墙-v0.2/README.md`：已进入当前默认城墙口径，D5 早期生成 D3 patch 贴边 wall reservation mask，RoadWeaver 真实道路生成后扫描 actual road mask 并裁出城门，最后放墙 / 塔 / foundation；v0.1 矩形墙仅保留为 `wallVersion=v1_debug`。
@@ -115,9 +120,11 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | D4 array candidate selection v0.4 | 同一 loop 目录中的 `d4_array_expansion_space.json`、`d4_array_expansion_candidate_set.json`、`d4_array_expansion_candidates.png`、`d4_array_expansion_candidate_quality_report.json`；候选集含 `sourceStateId`、`arrayCandidates[]`、全局搜索时的 `globalPatchCandidates[]`，只有 select 后 loop state / occupied / zones 才改变 |
 | D4 continuous outward v0.5 | 沿用 `d4_array_expansion_space.json` / `d4_array_expansion_candidate_set.json` / `d4_array_expansion_candidates.png`，新增 `d4_array_expansion_candidate_detail.png` 和 `structure_anchor_cluster_preview.png`；记录近 / 中 / 远候选、每圈跳过原因和命中 patch 解释。 |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
+| City LandUse | `city_land_use_<citySeedId>/city_land_use_area_plan.json`、`city_land_use_surface_print_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`，最后写含 area / surface / catalog hash 的 `city_land_use_planning_complete.json` |
 | City decoration | `city_decoration_<citySeedId>/city_decoration_program_plan.json`、`city_decoration_compiled_program_plan.json`、`city_decoration_slot_projection.json`、`city_decoration_planning_trace.json`、`city_decoration_style_resolution.json`、`quality_report.json`、`city_decoration_preview_index.json`、多张 `city_decoration_preview_<programId>.png`，最后写 `city_decoration_planning_complete.json`；素材源为 server config 下 content index / templates，语义到 prefab 的映射来自同级 `styles/*.json` |
+| City key decoration candidates | `city_decoration_<citySeedId>/anchor_candidates/<programId>/decoration_anchor_candidate_set.json`、`city_decoration_anchor_candidates_<programId>.png`、`quality_report.json`；只读候选产物，不是最终 Decoration intent 或 active plan |
 | D5 | `reservation_mask_plan.json`、`wall_reservation_plan.json`、`wall_reservation_preview.png`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |
-| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`、可选 `geomantia_city_masks/active_city_decoration_program_plans.json`，写跳过式 `world_mutation_report.json`、`active_mask_summary.json`、`active_city_decoration_summary.json`、`roadweaver_connection_plan.json`、`road_provider_state.json`；worldgen 成功片段另写 `geomantia_city_masks/city_decoration_worldgen_ledger.json` |
+| execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`、可选 `geomantia_city_masks/active_city_land_use_area_plans.json` / `active_city_decoration_program_plans.json`，写跳过式 report 与 active summary；worldgen 成功 owner 分别写 LandUse v0.2 / Decoration ledger |
 | D6 | `structure_materialization_plan.json`（`plannedWorldgenStructures[]`，含 locked actual footprint / bbox group / collision envelope / signature）、空 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`structure_materialization_preview.png` |
 | execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 RoadWeaver-aware road report 与 terrain adaptation report |
 | city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json`；v3.2+ 额外要求 `gatehouse_9.nbt` / `gatehouse_13.nbt` / `watchtower_5x5.nbt` / `beacon_5x5.nbt`；v4 计划额外输出 `wallNodes[]` / `wallUnits[]` / `nodeConnectorUnits[]` / `cityWallDatumY` / `terrainContourEvents[]` / `wallGraphValidation` |
@@ -129,7 +136,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | --- | --- | --- |
 | 上游 | 国度规划系统 | `CitySeedRegistry`、城市候选坐标、国度归属。 |
 | 上游 | GIS / TerraSense | D3 地形 patch 与 LandUse terrain field 真值、TerraSense `StructureProfile.jsonl` / debug catalog、TerraSense tag 白名单。 |
-| 本系统 | City | 顶层 configured structure envelope facts、D4 group provenance、locked actual footprint、block 级 LandUseAreaPlan、reservation mask、planned structure / LandUse registry、worldgen ledger、RoadWeaver endpoint plan、terrain trace、D3 patch wall reservation、actual-road gated wall boundary。 |
+| 本系统 | City | 顶层 configured structure envelope facts、D4 group provenance、locked actual footprint、block 级 LandUseAreaPlan / SurfacePrintPlan、reservation mask、planned structure / LandUse registry、worldgen ledger、RoadWeaver endpoint plan、terrain trace、D3 patch wall reservation、actual-road gated wall boundary。 |
 | 下游 | 世界生成 / Materialization | feature / vanilla structure 抑制 hook、planned structure worldgen hook、原版 `StructureStart` 生成期落地、ledger 与 trace。 |
 
 ## 目录说明

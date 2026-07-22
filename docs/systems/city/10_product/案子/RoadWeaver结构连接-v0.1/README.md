@@ -2,7 +2,7 @@
 
 ## 状态
 
-已完成 v0.1 接入并并入当前 City 主线。
+已完成 v0.1 接入并并入当前 City 主线；连接计划已升级为 v0.2 的 placement group 空间骨架。
 
 本案把“结构之间的正式道路连接”从 D7 WorldEdit 调试后处理，迁移到生成期 RoadWeaver optional adapter。City 不强绑 RoadWeaver；缺少 RoadWeaver 且 `roadProvider=auto` 时跳过道路并写明 `ROADWEAVER_UNAVAILABLE`，不再自动铺 WorldEdit debug fallback。旧 debug 道路只允许通过 `roadProvider=worldedit_debug` 显式启用。
 
@@ -26,7 +26,9 @@
 D6 locked plan
   -> lockedActualFootprint / priority
   -> city_execute_d5
-  -> roadweaver_connection_plan.json
+  -> roadweaver_connection_plan.json v0.2
+  -> placement group 内按入口距离生成最小生成树
+  -> placement group 间按最近入口生成最小生成树
   -> RoadNetworkApi.registerStructureEndpoint(...)
   -> RoadNetworkApi.ensureConnection(..., generateImmediately=false)
   -> chunk 首次生成时由 RoadWeaver 自己生成道路
@@ -51,7 +53,7 @@ D6 locked plan
 
 ## City 输出给 RoadWeaver 的信息
 
-v0.1 只输出最小可用连接：
+当前只输出最小可用连接：
 
 - `anchorId`
 - `templateRef`
@@ -62,7 +64,9 @@ v0.1 只输出最小可用连接：
 - `priority`
 - `lockedActualFootprint` / `footprint`
 - `roadEntrances[]`：模板局部入口经 rotation / mirror 变换后的世界入口，至少包含 `entranceId`、`worldPosition`、`direction`
-- connection chain
+- `placementGroupId`
+- `group_spatial_mst` 连接骨架：组内 `intra_group` 支路与组间 `inter_group` 主干
+- 每条连接的 `distanceBlocks`、两端 group / anchor / endpoint
 - `generateImmediately=false`
 
 后续可扩展：
@@ -81,6 +85,7 @@ v0.1 只输出最小可用连接：
 - RoadWeaver 注册发生在 `city_execute_d5`，早于目标 chunk 首次生成。
 - RoadWeaver 模式下 D7 不再默认生成 WorldEdit road operation。
 - `roadweaver_connection_plan.json` 能解释哪些结构被连接、连接顺序和端点。
+- 同 priority 的不同功能区不得按 anchorId 交替串链；连接数应保持全图 `endpointCount-1`，并分别报告组内 / 组间边数。
 
 ## 暂不处理
 

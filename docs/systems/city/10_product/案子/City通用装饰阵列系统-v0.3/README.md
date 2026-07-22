@@ -6,6 +6,8 @@
 
 本版不修改建筑 Template、StructureStart、Jigsaw、D4/D6 建筑几何或建筑落地主线。
 
+喷泉、雕像、水井等 required 单点 prefab 的设计期落点由 [City 关键装饰锚点候选 v0.1](../City关键装饰锚点候选-v0.1/README.md) 补充：它只返回可回填现有 intent 的相对坐标 patch，不改变本案 DecorationProgram、terrain probe、activation 或 worldgen 契约。
+
 ## 内容姿态 v0.3
 
 `content_index.json` 当前 schema 为 `city_decoration_content_index.v0.3`。每个 prefab 除 v0.2 字段外必须显式声明：

@@ -41,9 +41,9 @@ D4 设计延续：保留 D4 显式 group、array zone 和 composite array 的组
 
 扩张成本：单步成本由基础移动成本、坡度、高差、水体、悬崖、建筑和道路障碍、距种子距离、紧凑度、入口方向、用途亲和与确定性扰动共同组成；成本档案由程序根据用途派生，不让 AI 提交不可解释的裸参数表。
 
-同类融合：不同主体具有相同土地用途且 `mergeSameType=true` 时，扩张前沿接触后合并为连续区域，不再互相挤占，并删除接触处内部边界；主路、河流、围墙或显式分区可以阻止同类融合。
+同类融合：`mergeSameType` 表示规则允许兼容主体在扩张前沿接触后融合；真正是否自动连接由每个主体冻结的 `surfaceSettings.autoConnect` 和兼容类别共同决定。兼容类别相同、两侧都开启自动连接且初次扩张后的边界间距不超过固定 64 格时，程序建立双向引导关系；不同具体石材仍可属于同一 PAVE 类，PAVE 与 CULTIVATE 不会误接。
 
-近邻桥接：常规行动力扩张结束后，同 `ruleRef` 的不同 LandUse 主体可在 `nearbyMergeMaxBridgeBlocks` 限额内，穿过未归属、已采样、平缓且非水体的自然 block 取得最短桥接路径。建筑 footprint、gate / D5 corridor、异类 LandUse claim、未采样格、陡坡与水体都是硬障碍。`[商业] [行政] [商业]` 的行政区域不会被改写；商业仅在存在合规空地路径时绕开它形成连续区域。候选按路径长度、ruleRef、稳定组件 ID 排序，只接受尚未属于同一并查集簇且路径仍未被占用的候选，因此每次规划不会重复处理同一组件或形成桥接环。
+相向扩张：规划先做一次无引导探测扩张，再用 block 边界和 65 格空间桶查找 64 格内的全部兼容近邻，随后重新执行正式扩张。朝任一目标前进降代价，横向略加代价，背离目标明显加代价；坡度、水体、未采样格、结构 footprint、gate / D5 corridor 和异类 claim 仍按原规则扣分或硬阻断。连接只能由正常区域增长自然接触形成，不生成事后桥线，也不以不连通为 hard fail。
 
 异类竞争：不同土地用途到达同一 block 时由累计成本、土地需求完成度和竞争权重决定归属；成本接近时允许记录 contested 边界，已经达到最大面积的主体停止继续争夺。
 
@@ -53,7 +53,7 @@ Block 级结果：D3 的 16/32 格 member cell 只作为允许范围和粗地形
 
 生成期边界：规划阶段不得为了读取真实 block 而主动加载未生成 chunk；worldgen 在每个 owner chunk 内使用同一全局区域、坐标系和 seed，并结合当前真实地表逐 block 裁剪，跨 chunk 不重新起算扩张、边界或装饰相位。
 
-几何策略分离：`LandUseAreaPlan` 只提供区域几何、来源和用途；`surfacePolicy`、`vegetationPolicy`、`boundaryPolicy` 和 DecorationProgram 分别决定换地板、保留或清理植被、生成围栏围墙以及布置装饰，禁止把区域成员直接全量复制为 `noVegetationMask`。`CULTIVATE` 只保留用途语义，不生成 interior farmland surface operation，农田内部由 Decoration tile / prefab 接管。
+几何策略分离：`LandUseAreaPlan` 提供不规则区域几何、来源和用途；独立冻结的 `CityLandUseSurfacePrintPlan` 决定批量地表、作物、水槽 prefab、连续 run、地形落点和 foundation；`boundaryPolicy` 决定围栏围墙；DecorationProgram 只布置稻草人、长椅、灯柱等稀疏内容。禁止把区域成员直接全量复制为 `noVegetationMask`，也禁止同一 LandUse area 同时运行 Decoration 的 `uniform_fill`、`cross_section_repeat` 或 `parallel_rows` 批量程序。
 
 PAVE 微整地：新默认 material palette 以保留键 `MICRO_FILL_SUBGRADE=minecraft:dirt` 开启硬质铺装区的 fill-only 微整地。FEATURES 只读取真实最上层高度，用 7x7 局部中位高度判定目标；仅补高 1..3 格、连通低洼最多 16 格且 X/Z 跨度均不超过 4 格的同 area 封闭小坑。低洼跨出 PAVE mask、进入 footprint / corridor / gate、连接成开放沟谷、邻近水体或需要更深填充时保持原地形。不得削高地、填地下洞穴、填山谷或把整个 LandUse 区域做成 foundation。
 
@@ -61,7 +61,7 @@ PAVE 微整地：新默认 material palette 以保留键 `MICRO_FILL_SUBGRADE=mi
 
 广场组合：喷泉与中心阵列商铺先组成 `plaza` group，以喷泉、商铺朝内入口和阵列内侧为多源种子，在排除建筑 footprint 与主路后扩张并闭合内部空隙；区域地表可统一替换，边缘和内部再分别布置花坛、长椅、路灯和摊位。
 
-农田花海与林场：农田和花海使用相同区域扩张器但采用不同土地需求、紧凑度、地形成本和 DecorationProgram；CULTIVATE 不由 LandUse 铺 farmland，边界仍可按 policy 生成；林场优先利用已有森林群系并保留自然树木，只生成边界、入口、林间路和少量功能建筑。
+农田花海与林场：农田和花海使用相同区域扩张器但采用不同土地需求、紧凑度与地形成本。CULTIVATE 直接在全局不规则 `memberSpans` 内批量铺 farmland、种作物，并按 `5 耕地 + 3 格 lined 水槽带 + 5 耕地` 的全局连续相位裁切；水槽只使用 `water_channel_lined_straight_01` 与 `water_channel_lined_endcap_01`。chunk 只是执行分片，不能把整片田重算成 bbox 或 chunk 矩形。林场优先利用已有森林群系并保留自然树木，只生成边界、入口、林间路和少量功能建筑。
 
 鱼塘处理：已有水体鱼塘可以由区域扩张选择连续水面并装饰岸线；需要新挖池塘时，LandUseAreaPlan 只负责平面区域和边界，体积挖掘、池底分层与注水必须交给独立的受控地形改造能力。
 
@@ -104,25 +104,25 @@ D4 anchors 必须携带可重建组合关系的稳定 provenance：显式 placem
 
 ## 五、规则与人工覆写边界
 
-- 程序通过 `config/geomantia/city_land_use/profiles/<profileId>.json` 加载 `LandUseRuleCatalog`，由结构语义派生用途、面积范围、成本档案、融合 / 近邻桥接策略和 surface / vegetation / boundary / decoration policy；`settings.json.profileId` 选择档案。规则改动会改变 rule profile hash，既有 LandUse plan 必须重跑后才能激活。
+- 程序通过 `config/geomantia/city_land_use/profiles/<profileId>.json` 加载 `LandUseRuleCatalog`，由结构语义派生用途、面积范围、成本档案和 surface / vegetation / boundary / decoration policy；`settings.json.profileId` 选择档案。规则改动会改变 rule profile hash，既有 LandUse plan 必须重跑后才能激活。
 - bundled `default_v0_1` 包含 `industry`：`function.矿业`、`mining`、`mine`、`quarry`、`workshop` 等语义统一派生为工业区域，并使用 `decorationPolicy=industry`。
-- AI / 人工只允许提交稳定 group、成员 anchor 和 `ruleRef`，或对 group / anchor 执行 `set_rule`、`exclude`；不得提交裸面积、行动力、竞争权重、近邻桥接阈值或逐项成本。
+- AI / 人工只允许提交稳定 group、成员 anchor 和 `ruleRef`，对 group / anchor 执行 `set_rule`、`exclude`，并用 `surfaceOverrides[]` 按需覆盖 `surfacePrintEnabled`、`autoConnect`、地表 / 作物方块与方向模式；全部字段都有服务端默认值。不得提交裸面积、行动力、竞争权重、64 格自动连接距离、逐项成本或逐 block 路径。
 - 规则优先级为 `subjectOverrides` > `groupOverrides.ruleRef` > D4 结构语义自动解析；未知 target、成员冲突或未知规则必须 hard fail，无法从语义解析的主体 warning 并跳过。
 - 固定输入、规则 profile、`seedSalt` 和版本必须得到完全一致的 spans、边界和 claim trace。
 
 ## 六、开关与生成边界
 
-- 外部配置根目录为 `config/geomantia/city_land_use/`：`settings.json` 的 schema 为 `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；同目录 `profiles/default_v0_1.json` 是 `city_land_use_rules.v0.2` 规则真值。每条 rule 的 `nearbyMergeMaxBridgeBlocks` 决定一次近邻桥最多可新增多少自然 block，`0` 表示关闭；默认商业 / 工业为 24，农业 / 林场为 32，广场 / 行政为 16，住宅 / 通用聚落为 20，鱼塘为 0。既有 `v0.1` 用户档案兼容读取并映射到同一默认阈值，目录或缺失的 bundled 文件会补装，但绝不覆盖用户已有 settings / profile。
+- 外部配置根目录为 `config/geomantia/city_land_use/`：`settings.json` 的 schema 为 `city_land_use_settings.v0.1`，bundled 默认值为 `enabledInWorkflow=false`、`profileId=default_v0_1`；同目录 `profiles/default_v0_1.json` 使用 `city_land_use_rules.v0.1`。自动连接距离是程序固定默认 64 格，不属于 rule 或 AI 输入。intent 使用严格 v0.2；旧 continuity intent 不自动迁移并明确拒绝。
 - `city_run_workflow.enableLandUseLayer` 是单次请求覆写，优先于 settings。独立调用 `city_plan_land_use` 本身就是显式规划，不受 workflow 开关阻止。
 - `confirmWorldMutation=false` 时只产出规划与预览，不激活 worldgen registry。激活前必须只读检查所有 member / boundary owner；任一已到 FEATURES 整体拒绝 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，磁盘状态无法证明时整体拒绝 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`。
 - worldgen 只处理尚未经过 FEATURES 的当前 owner chunk。运行期遇非 `WorldGenRegion` 或已生成 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不补 ledger。
-- owner 内按稳定坐标顺序先执行 PAVE 微填基层与抬高 surface、再执行 boundary，LandUse 完成后才进入 Decoration；任一方块写失败必须逆序回滚，整 owner 成功后才记录 applied ledger。
+- owner 内按稳定顺序执行 `BASE -> NBT 水槽 / end-cap -> CROP -> BOUNDARY`，边界不得回盖水槽 footprint；整个 owner 共用一次预检、快照与逆序回滚，成功后才记录 applied ledger。LandUse 完成后才进入稀疏 Decoration。
 - 首期不回填旧 chunk、不自动回滚已落地 chunk、不削地、不挖三维鱼塘、不把整个 LandUse mask 复制成植被抑制区。旧 active palette 没有 `MICRO_FILL_SUBGRADE` 时保持原行为，不静默启用微整地。
 
 ## 七、首期验收
 
 - 显式 group、array / composite group 和未分组单建筑都能得到正确主体，且同组成员不互相竞争。
-- 至少覆盖接触同类融合、近邻同类桥接、绕开异类功能区、最大面积停止、自然空地、道路后写和固定 seed 确定性；三组同类近邻只接受两条桥接，不得形成循环。
+- 至少覆盖 64 格内全部兼容近邻自动引导、显式关闭自动连接、超过阈值、PAVE/CULTIVATE 不兼容、地形或硬障碍阻断、最大面积停止、自然空地、道路后写和固定 seed 确定性；不得出现事后桥线。
 - 输出为 block spans / boundary loops，而不是 chunk 或 D3 cell 形状；跨 chunk 分片执行与整图结果一致。
-- 林场能保留自然植被，农田 / 广场等只按 policy 生成精确 surface、boundary 和 Decoration 投影。
+- 林场能保留自然植被；农田 / 广场按 SurfacePrintPlan 生成精确 surface / crop / prefab / boundary，批量农田不进入 Decoration slot；稀疏装饰仍可引用同一 area。
 - active plan hash、owner fragment 和 ledger 幂等；旧 chunk 拒绝、写失败回滚和重启恢复有自动测试。
