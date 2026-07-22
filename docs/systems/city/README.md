@@ -25,7 +25,7 @@ D3 地形 patch 真值
   -> 可选 city_probe_decoration_terrain 只读已加载真实地形、人工审阅高度 / 连续带 profile / 未加载覆盖
   -> execute_d5 以 D6 locked collision 激活 active mask / planned structure / LandUse / 装饰 worldgen 程序
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
-  -> FEATURES owner-chunk 执行 LandUse BASE -> NBT -> CROP -> BOUNDARY，再执行稀疏 Decoration
+  -> FEATURES owner-chunk 裁切 SurfacePrintPlan v0.2 全局 role spans，执行 FIELD / CHANNEL -> CROP -> BOUNDARY，再执行稀疏 Decoration
   -> applyBiomeDecoration TAIL 与 ChunkDataEvent.Save 按 touched positions 读取实际 BlockState
   -> city_execute_d7 查询 worldgen ledger
   -> city_query_worldgen_observations 按 chunk 查询现场匹配 / 缺失证据
@@ -93,9 +93,9 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
 - `10_product/案子/City关键装饰锚点候选-v0.1/README.md`：当前开发案。required 单点 prefab 在最终 DecorationProgram 前，先按 resolved target mask、真实 prefab footprint、clearance 与结构 / 墙 / 门 / 路口 / LandUse gate 等硬障碍生成 1-8 个稳定候选和预览；Agent 只选择并回填现有相对坐标 patch。
-- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；intent v0.2 让 AI 按需覆写地表印刷、自动连接、方块和方向。64 格内兼容区域由正常扩张相向生长，不再事后补桥；异类功能区、结构、corridor 与水体保持硬障碍，workflow 默认关闭，RoadWeaver 后写覆盖，旧 chunk 不回填。
+- `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：当前开发案。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；intent v0.3 在本次规划中传入 `uniform|contour_bands` 材料默认，group 只覆写例外。64 格内兼容区域由正常扩张相向生长，刷地算法在扩张完成后独立消费最终 mask；workflow 默认关闭，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - `10_product/案子/City建筑群生活感设计-v0.1/README.md`：当前设计案。使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个临河 / 海综合城镇切片要求能直接读出农业、商业和行政，道路另案。
-- `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业外轮廓必须由 LandUse 扩张形成，水槽只用 lined straight / lined end-cap；同类地表默认在 64 格内相向扩张，城区按 PAVE、广场步行面与真实道路的联合网络验收。
+- `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业外轮廓由 LandUse 扩张形成，内部由 `CONTOUR_BANDS` 直接冻结顺等高线的 FIELD / BANK / WATER mask；同类区域默认在 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：缩紧稳定结构 bbox，区分 actual / collision / mask。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
@@ -123,7 +123,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | D4 array candidate selection v0.4 | 同一 loop 目录中的 `d4_array_expansion_space.json`、`d4_array_expansion_candidate_set.json`、`d4_array_expansion_candidates.png`、`d4_array_expansion_candidate_quality_report.json`；候选集含 `sourceStateId`、`arrayCandidates[]`、全局搜索时的 `globalPatchCandidates[]`，只有 select 后 loop state / occupied / zones 才改变 |
 | D4 continuous outward v0.5 | 沿用 `d4_array_expansion_space.json` / `d4_array_expansion_candidate_set.json` / `d4_array_expansion_candidates.png`，新增 `d4_array_expansion_candidate_detail.png` 和 `structure_anchor_cluster_preview.png`；记录近 / 中 / 远候选、每圈跳过原因和命中 patch 解释。 |
 | D4 | `structure_anchor_plan.json`、`structure_anchor_map.json`、`structure_profile_catalog.json`、`structure_anchor_preview.png`、`quality_report.json` |
-| City LandUse | `city_land_use_<citySeedId>/city_land_use_area_plan.json`、`city_land_use_surface_print_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`，最后写含 area / surface / catalog hash 的 `city_land_use_planning_complete.json` |
+| City LandUse | `city_land_use_<citySeedId>/city_land_use_area_plan.json`、`city_land_use_surface_print_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`，最后写含 area / surface / rule / D6 hash 的 `city_land_use_planning_complete.json`；旧版本任务状态必须清理后重规划 |
 | City decoration | `city_decoration_<citySeedId>/city_decoration_program_plan.json`、`city_decoration_compiled_program_plan.json`、`city_decoration_slot_projection.json`、`city_decoration_planning_trace.json`、`city_decoration_style_resolution.json`、`quality_report.json`、`city_decoration_preview_index.json`、多张 `city_decoration_preview_<programId>.png`，最后写 `city_decoration_planning_complete.json`；素材源为 server config 下 content index / templates，语义到 prefab 的映射来自同级 `styles/*.json` |
 | City key decoration candidates | `city_decoration_<citySeedId>/anchor_candidates/<programId>/decoration_anchor_candidate_set.json`、`city_decoration_anchor_candidates_<programId>.png`、`quality_report.json`；只读候选产物，不是最终 Decoration intent 或 active plan |
 | D5 | `reservation_mask_plan.json`、`wall_reservation_plan.json`、`wall_reservation_preview.png`、`road_access_plan.json`、`build_operation_plan.json`、`reservation_mask_preview.png`、`quality_report.json`；road/build 为 D7 后处理占位 |

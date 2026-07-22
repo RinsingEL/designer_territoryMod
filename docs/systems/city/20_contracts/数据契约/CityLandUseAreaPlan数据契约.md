@@ -10,13 +10,13 @@
 | --- | --- |
 | 外部 settings | `city_land_use_settings.v0.1` |
 | D3 地形事实 | `city_land_use_terrain_field.v0.1` |
-| 人工 / AI 意图 | `city_land_use_intent_plan.v0.2`；v0.1 明确拒绝 |
+| 人工 / AI 意图 | `city_land_use_intent_plan.v0.3`；v0.1/v0.2 明确拒绝 |
 | 规则目录 | `city_land_use_rules.v0.1` |
 | 区域计划 | `city_land_use_area_plan.v0.1` |
-| 批量地表计划 | `city_land_use_surface_print_plan.v0.1` |
+| 批量地表计划 | `city_land_use_surface_print_plan.v0.2` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.1` |
-| active registry | `city_active_land_use_area_plans.v0.2`；兼容读取 v0.1 legacy palette plan |
-| worldgen ledger | `city_land_use_worldgen_ledger.v0.3`；兼容读取 v0.1/v0.2 |
+| active registry | `city_active_land_use_area_plans.v0.2` |
+| worldgen ledger | `city_land_use_worldgen_ledger.v0.3` |
 
 `config/geomantia/city_land_use/settings.json` 的 bundled 默认值为：
 
@@ -98,9 +98,23 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ```json
 {
-  "schemaVersion": "city_land_use_intent_plan.v0.2",
+  "schemaVersion": "city_land_use_intent_plan.v0.3",
   "cityId": "city_001",
   "seedSalt": "review-a",
+  "surfaceAlgorithmDefaults": [
+    {
+      "surfaceAlgorithm": "uniform",
+      "surfaceBlockId": "minecraft:stone_bricks"
+    },
+    {
+      "surfaceAlgorithm": "contour_bands",
+      "surfaceBlockId": "minecraft:farmland",
+      "cropBlockId": "minecraft:wheat",
+      "channelBankBlockId": "minecraft:dirt",
+      "channelWaterBlockId": "minecraft:water",
+      "channelBankOverlayBlockId": "minecraft:oak_slab"
+    }
+  ],
   "groupOverrides": [
     {
       "groupId": "central_plaza",
@@ -120,10 +134,8 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
       "targetGroupId": "farm_mill_cluster",
       "surfacePrintEnabled": true,
       "autoConnect": true,
-      "surfaceBlockId": "minecraft:farmland",
-      "cropBlockId": "minecraft:wheat",
-      "directionMode": "radial",
-      "directionCenter": {"x": 651600, "z": 652100}
+      "surfaceAlgorithm": "contour_bands",
+      "algorithmAnchor": {"x": 651600, "z": 652100}
     }
   ]
 }
@@ -131,16 +143,30 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `schemaVersion` | string | 是 | `city_land_use_intent_plan.v0.2`。旧 v0.1 不自动迁移。 |
+| `schemaVersion` | string | 是 | `city_land_use_intent_plan.v0.3`。旧 v0.1/v0.2 不自动迁移。 |
 | `cityId` | string | 是 | 必须与请求 `citySeedId` 对应的 City 一致。 |
 | `seedSalt` | string | 否 | 确定性扰动盐。 |
+| `surfaceAlgorithmDefaults[]` | object[] | 否 | 本次城市规划的算法级材料默认；同一 `surfaceAlgorithm` 最多一项。 |
 | `groupOverrides[]` | object[] | 否 | 显式创建 / 修正主体组合。 |
 | `subjectOverrides[]` | object[] | 否 | 对 group 或 anchor 设置规则或排除。 |
-| `surfaceOverrides[]` | object[] | 否 | 对最终 group 覆写地表印刷、自动连接、方块或方向；未配置字段使用 policy 默认值。 |
+| `surfaceOverrides[]` | object[] | 否 | 对最终 group 覆写刷地算法、算法锚点或材料；未配置字段按固定优先级继承。 |
 
 `groupOverrides[]` 必须含 `groupId`、非空且去重的 `memberAnchorIds[]`；`ruleRef` 可选。一个 anchor 不得同时属于多个 group。
 
 `subjectOverrides[]` 必须含 `targetType=group|anchor`、`targetId` 和 `mode=set_rule|exclude`。`set_rule` 必须含 `ruleRef`；`exclude` 禁止出现 `ruleRef`。不得提交面积、行动力、权重、逐项成本、block mask 或世界坐标。
+
+`surfaceAlgorithmDefaults[]` 每项字段如下：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `surfaceAlgorithm` | enum | 是 | `uniform|contour_bands`；同一算法最多一项。 |
+| `surfaceBlockId` | resource id | 是 | `uniform` 的统一地表；`contour_bands` 的 FIELD 地表。 |
+| `cropBlockId` | resource id | 否 | `contour_bands` 的 FIELD 作物；省略时使用该算法的内置 fallback。 |
+| `channelBankBlockId` | resource id | 否 | `contour_bands` 的 BANK 基层；省略时 fallback 为 `minecraft:dirt`。 |
+| `channelWaterBlockId` | resource id | 否 | `contour_bands` 的 WATER 方块；省略时 fallback 为 `minecraft:water`。 |
+| `channelBankOverlayBlockId` | resource id | 否 | `contour_bands` 的 BANK 上层；省略时 fallback 为 `minecraft:oak_slab`。 |
+
+这些字段属于本次 `city_plan_land_use` 运行时输入。服务端 profile / 内置值只提供 fallback，不作为某座城市的材质真值。规划时按 `group surface override > 本次 surfaceAlgorithmDefaults > policy 内置 fallback` 解析，随后将具体 block ID 冻结进 SurfacePrintPlan；worldgen 不重新读取 intent 或配置。
 
 `surfaceOverrides[]` 每项字段如下：
 
@@ -149,15 +175,18 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `targetGroupId` | string | 是 | 指向 group override 归组后或 D4 provenance 派生的最终 group；同一 target 只能出现一次。 |
 | `surfacePrintEnabled` | boolean | 否 | 是否进入 LandUse 批量地表。PAVE / CULTIVATE 默认 true；PRESERVE / WATER 默认 false。 |
 | `autoConnect` | boolean | 否 | 是否参加 64 格内兼容近邻相向扩张；按 policy 默认。 |
-| `surfaceBlockId` | resource id | 否 | 目标地表 block；PAVE 默认 `minecraft:stone_bricks`，CULTIVATE 默认 `minecraft:farmland`。 |
-| `cropBlockId` | resource id | 否 | 批量作物 block；CULTIVATE 默认 `minecraft:wheat`，PAVE 默认空。 |
-| `directionMode` | enum | 否 | `global_axis|radial`；默认 `global_axis`。 |
-| `directionCenter` | BlockPoint | 条件 | 仅 `directionMode=radial` 可提交；省略时由最终 area `memberSpans` 的稳定质心派生。 |
+| `surfaceAlgorithm` | enum | 否 | `uniform|contour_bands`；默认由 policy 映射，PAVE -> uniform、CULTIVATE -> contour_bands。 |
+| `algorithmAnchor` | BlockPoint 或 null | 否 | `contour_bands` 的稳定回退中心；省略或 null 时由最终 area `memberSpans` 的稳定质心派生。不是四象限方向输入。 |
+| `surfaceBlockId` | resource id | 否 | 覆写当前 group 的统一地表或 FIELD 地表。 |
+| `cropBlockId` | resource id | 否 | 覆写当前 group 的 FIELD 作物。 |
+| `channelBankBlockId` | resource id | 否 | 覆写当前 group 的水槽 BANK 基层。 |
+| `channelWaterBlockId` | resource id | 否 | 覆写当前 group 的 WATER 方块。 |
+| `channelBankOverlayBlockId` | resource id | 否 | 覆写当前 group 的 BANK 上层方块。 |
 
-- PAVE 和 CULTIVATE 使用不同 `compatibilityCategory`，不会互相自动连接；同类别允许具体方块不同，例如两种城区石材仍可连接。
+- PAVE 和 CULTIVATE 使用不同 `compatibilityCategory`，不会互相自动连接；同类别允许具体方块不同，例如两种城区石材仍可连接。兼容类别与 `autoConnect` 属于 LandUse 扩张层，不由 `surfaceAlgorithm` 推导连接结果。
 - PRESERVE / WATER 显式 `surfacePrintEnabled=true` 且提供地表方块时提升为 PAVE 兼容类别；`autoConnect` 未显式关闭时随之默认开启。
-- `global_axis` 按最终 area bbox 长轴冻结一个全局 cardinal continuation axis 和 origin，相位跨 chunk 不重启。
-- `radial` 以显式或稳定派生中心为基准；每个 block 按相对中心的主导轴选择横截面方向与符号，使四个象限向外展开。它仍与全局不规则 mask 求交，不生成圆形或矩形新边界。
+- `uniform` 只做最终 mask 内单方块刷地，不改变 LandUse 几何或连接。
+- `contour_bands` 在连续高程场上计算梯度 / 等高线法向距离，按固定 `5 FIELD + 3 CHANNEL + 5 FIELD` 分类，三格 CHANNEL 冻结为 `BANK + WATER + BANK`；法向不稳定的连续平地使用 `algorithmAnchor` 做 `RADIAL_FALLBACK`。旧 v0.2 四象限 `radial` 不再接受。
 - 规则选择优先级为 `subjectOverrides` > `groupOverrides.ruleRef` > D4 semantic 自动解析。未知 target、重复 surface target、group 成员冲突和未知 `ruleRef` hard fail；无法解析规则的主体写 warning 并跳过。
 
 ## LandUseAreaPlan
@@ -198,24 +227,26 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityLandUseSurfacePrintPlan
 
-`city_land_use_surface_print_plan.v0.1` 是与 area plan 分离冻结的执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`catalogHash`、`planHash`、`areas[]`；hash 必须由严格 codec 的规范 JSON 计算。只要存在 CULTIVATE recipe，`catalogHash` 必须非空并与激活目录一致。
+`city_land_use_surface_print_plan.v0.2` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`；hash 必须由严格 codec 的规范 JSON 计算。recipe 判别联合只允许 `uniform|contour_bands`，不包含 catalog、prefab、run、placement 或 foundation 字段。
 
 `areas[]` 每项至少包含：
 
 | 字段 | 说明 |
 | --- | --- |
 | `printAreaId` / `landUseAreaId` / `sourceGroupIds[]` | 稳定执行 ID、来源 area 与 group。不同精确 surface settings 不得在几何编译时误合并。 |
-| `surfaceSettings` | 完整冻结 `surfacePrintEnabled`、`autoConnect`、两个 block id、兼容类别、`directionMode` 与 nullable `directionCenter`。 |
+| `surfaceSettings` | 完整冻结 `surfacePrintEnabled`、LandUse 连接字段、`surfaceAlgorithm`、nullable `algorithmAnchor` 和解析后的全部 block ID。 |
 | `memberSpans[]` / `exclusionSpans[]` | 全局不规则 mask 和硬排除。chunk 只能裁切这份 mask，不得使用 bbox 重建形状。 |
-| `origin` / `continuationAxis` / `directionMode` / `directionCenter` | 全局相位与方向真值；nullable 字段必须显式写 JSON null。 |
-| `recipe` | `uniform` 或 `cultivate_lined` 判别联合。 |
+| `surfaceAlgorithm` / `algorithmAnchor` | `uniform|contour_bands` 与 nullable 回退中心；nullable 字段必须显式写 JSON null。 |
+| `recipe` | `uniform` 或 `contour_bands` 判别联合。 |
 
-`uniform` 只冻结 `surfaceBlockId`。`cultivate_lined` 固定 `repeatPeriodBlocks=13`、`fieldBeforeBlocks=5`、`channelWidthBlocks=3`、`fieldAfterBlocks=5`、`channelOffsetBlocks=5`，并冻结 `cropBlockId`、straight/end-cap prefab spec、terrain policy、`runs[]` 与汇总 `foundationSegments[]`。straight / end-cap contentRef 必须精确为：
+`uniform` 只冻结 `surfaceBlockId`。
 
-- `geomantia:decoration/water_channel_lined_straight_01`
-- `geomantia:decoration/water_channel_lined_endcap_01`
+`contour_bands` 固定 `repeatPeriodBlocks=13`、`fieldBeforeBlocks=5`、`channelWidthBlocks=3`、`fieldAfterBlocks=5`，并冻结 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、`classificationMode`、`anchor` 与 `bandSpans[]`。`classificationMode` 只允许 `CONTOUR_NORMAL|RADIAL_FALLBACK`；`bandSpans[]` 每项为 `{z,minX,maxX,role}`。核心分类器先输出 `field|channel_before_bank|channel_water|channel_after_bank`，planner 再按完整全局 WATER 四邻接把所有开放端点改为 `channel_end_cap`；最终 SurfacePrintPlan 接受这五种 role。
 
-每个 prefab spec 冻结 content hash 和尺寸；每个 run 冻结 continuation axis、cross coordinate、稳定 placements、termination ordinal/reason 与 foundation。placement 冻结粗 `surfaceY/targetY` 的相对偏移、sample point、anchor、rotation、footprint、terrain class、decision 和实际 applied content identity。激活后首次相关 owner 以 `liveSurfaceY + (targetY - surfaceY)` 计算真实 targetY，并在 BASE 前按 surface hash + placement ID 持久化；后续 owner 与重启只复用该 datum，不重跑终止决策。
+- 先对 D3 粗格高程做确定性的连续插值 / 平滑，再计算局部梯度与法向距离；不得直接把粗 cell 边界当等高线。
+- 在完整 member mask 上一次性分类并扣除 exclusions，再冻结全局 spans；chunk 只裁切，不重算梯度、anchor、相位或 role。
+- 把每条三格水槽解释为 `CHANNEL_BEFORE_BANK + CHANNEL_WATER + CHANNEL_AFTER_BANK`；开放 `CHANNEL_WATER` 端点按完整全局邻接冻结 bank 封口，禁止按 owner chunk 局部猜测。
+- 固定输入、算法版本和 seed 得到相同 spans；输入 spans 顺序或 chunk 执行顺序不得改变结果。
 
 同一个 surface-owned `landUseAreaId` 禁止 Decoration 使用 `uniform_fill`、`cross_section_repeat` 或 `parallel_rows`，避免批量地表重复落地；`deterministic_scatter`、`edge_repeat`、`grid_repeat` 等稀疏细节仍允许。
 
@@ -225,19 +256,19 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 
-规划成功后最后发布 `city_land_use_planning_complete.json`，字段为 `schemaVersion`、`cityId`、`planHash`、`surfacePrintPlanHash`、`surfacePrintCatalogHash`、`ruleProfileHash`、`sourceD6Hash`、`completedAt`。新计划必须让 area plan、SurfacePrintPlan 与 completion 三者 identity / hash 一致；旧 completion 未声明 surface hash 时可按 legacy palette 路径读取，声明了 hash 却缺 artifact 必须 hard fail。
+规划成功后最后发布 `city_land_use_planning_complete.json`，字段为 `schemaVersion`、`cityId`、`planHash`、`surfacePrintPlanHash`、`ruleProfileHash`、`sourceD6Hash`、`completedAt`。area plan、SurfacePrintPlan 与 completion 三者 identity / hash 必须一致；缺少当前 SurfacePrintPlan 或 schema 不是 v0.2 时 hard fail。
 
 ## Worldgen 交接
 
-- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`，当前 schema v0.2。surface 项冻结 dimension、city、area plan、SurfacePrintPlan、catalog root/hash、material palette/hash；加载时严格复核三类 hash，并一次构建 area、prefab footprint、prefab placement 与 foundation owner index。v0.1 只含 plan + palette 的 legacy 项可读并显式保持旧执行路径。
-- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项记录 area / surface / palette identity 及 base/crop/boundary/prefab/fallback 数量；`placementDatums[]` 冻结现场 targetY，`placementDecisions[]` 按 surface hash + placement key 冻结 content hash、resolved targetY、`MATERIALIZE|FALLBACK`、reason 与时间。v0.1/v0.2 可读；v0.2 已成功 owner 相交的 placement 迁移为 `MATERIALIZE`。
-- activation preflight 必须枚举全部 member / boundary owner，只读当前 loaded status 或 region NBT；不得申请 ticket。任一 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
+- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`，当前 schema v0.2。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.2、material palette/hash 与 prepared band index，不携带 LandUse catalog、prefab 或 run 状态。
+- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项记录 area / surface / palette identity，以及 FIELD / CHANNEL / crop / boundary 的阶段计数和结果摘要；不保存 placement datum、prefab decision 或旧 schema 迁移状态。
+- SurfacePrintPlan v0.1、旧 active registry、旧 ledger 和旧 completion 都不进入当前 parser / activation。切换版本前必须清理旧任务产物与 server-root LandUse 状态，再重跑 `city_plan_land_use -> city_execute_d5`；不做内存迁移、磁盘迁移或静默降级，历史实现只保留在 Git。
+- activation preflight 必须基于 AreaPlan + SurfacePrintPlan 的当前编译结果，只枚举实际包含 surface 或 boundary 操作的 owner；微整地 mask 只是 surface 操作的上下文，不能单独令 owner relevant，`PRESERVE + OPEN` 等零写入 owner 不得阻断激活。预检只读当前 loaded status 或 region NBT，不得申请 ticket。任一待写 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
-- legacy 编译器仍用 material palette 把 policy 映射为方块；surface 模式严格消费双计划。owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 placements、不读取无关 owner NBT。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。
+- owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 band spans、不读取无关 owner 状态。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。
 - PAVE 微整地固定使用 7x7 真实顶层高度的中位数作为局部参考，只接受补高 1..3 格、连通面积 <=16 且 X/Z span <=4 的封闭低洼。连通低洼触及另一 area、footprint、corridor、gate、水体、非自然表面，或超过深度 / 面积 / span 阈值时不得填充；只向上补方块，不削地、不读取或填充地下空洞。基层使用 `MICRO_FILL_SUBGRADE`，目标顶层仍使用原 PAVE surface material。
-- owner 统一事务顺序为 `BASE -> NBT -> CROP -> BOUNDARY`。首次相关 owner 必须在首写前对 placement 全 footprint 预检并同步持久化共享决议：replace-policy 不适配或目标整体越界冻结为 `FALLBACK`，各 owner 恢复原本被该 placement 抑制且仍满足 member/exclusion 的 CROP 与合法 BOUNDARY；`MATERIALIZE` 才写各自 NBT fragment，重叠 placement 仍抑制作物和边界。不可写、状态/快照不可用、实际写入失败等系统错误仍使整个 owner 逆序回滚；后续 owner 或重启不得重新判定已冻结决议。
+- v0.2 direct-mask owner 先写 FIELD / BANK / WATER base 与 BANK overlay，再只在 FIELD mask 写 CROP，最后写不覆盖 BANK / WATER 的 BOUNDARY；相邻 WATER 状态更新与端点封口必须来自冻结全局邻接。整个 owner 共用一次预检、快照与逆序回滚。
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
-- runtime datum 与 placement decision 查找使用内存 O(1) 索引；缺失 datum 先在 registry 全局锁外采样世界，缺失 decision 以单飞方式完成全 footprint 预检，二者都必须持久化成功后才允许首写。非 `FIRST_WORLDGEN_FEATURES` owner 必须在 datum 前短路，不采样、不写 ledger。
 - 整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / area plan hash / surface plan hash / palette hash / owner chunk 幂等阻断。
 - 非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。
