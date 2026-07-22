@@ -16,7 +16,7 @@
 | 批量地表计划 | `city_land_use_surface_print_plan.v0.1` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.1` |
 | active registry | `city_active_land_use_area_plans.v0.2`；兼容读取 v0.1 legacy palette plan |
-| worldgen ledger | `city_land_use_worldgen_ledger.v0.2`；兼容读取 v0.1 owner 项 |
+| worldgen ledger | `city_land_use_worldgen_ledger.v0.3`；兼容读取 v0.1/v0.2 |
 
 `config/geomantia/city_land_use/settings.json` 的 bundled 默认值为：
 
@@ -230,14 +230,14 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 ## Worldgen 交接
 
 - active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`，当前 schema v0.2。surface 项冻结 dimension、city、area plan、SurfacePrintPlan、catalog root/hash、material palette/hash；加载时严格复核三类 hash，并一次构建 area、prefab footprint、prefab placement 与 foundation owner index。v0.1 只含 plan + palette 的 legacy 项可读并显式保持旧执行路径。
-- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.2。owner applied 项记录 area / surface / palette identity 及 base/crop/boundary/prefab 数量；`placementDatums[]` 按 surface hash + placement ID 冻结现场 targetY。v0.1 owner 项可读。
+- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项记录 area / surface / palette identity 及 base/crop/boundary/prefab/fallback 数量；`placementDatums[]` 冻结现场 targetY，`placementDecisions[]` 按 surface hash + placement key 冻结 content hash、resolved targetY、`MATERIALIZE|FALLBACK`、reason 与时间。v0.1/v0.2 可读；v0.2 已成功 owner 相交的 placement 迁移为 `MATERIALIZE`。
 - activation preflight 必须枚举全部 member / boundary owner，只读当前 loaded status 或 region NBT；不得申请 ticket。任一 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
 - legacy 编译器仍用 material palette 把 policy 映射为方块；surface 模式严格消费双计划。owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 placements、不读取无关 owner NBT。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。
 - PAVE 微整地固定使用 7x7 真实顶层高度的中位数作为局部参考，只接受补高 1..3 格、连通面积 <=16 且 X/Z span <=4 的封闭低洼。连通低洼触及另一 area、footprint、corridor、gate、水体、非自然表面，或超过深度 / 面积 / span 阈值时不得填充；只向上补方块，不削地、不读取或填充地下空洞。基层使用 `MICRO_FILL_SUBGRADE`，目标顶层仍使用原 PAVE surface material。
-- owner 统一事务顺序为 `BASE -> NBT -> CROP -> BOUNDARY`。BASE 铺完整 mask；NBT 使用 catalog replace policy、ground plane 与 preserve-air 语义放 straight/end-cap；CROP 排除实际 PLACE/END_CAP footprint，TERMINATE/DEFER 恢复为可种区域；BOUNDARY 再排除 prefab footprint。全部预检完成后才首写，任一阶段失败逆序恢复 block 与 NBT 快照。
+- owner 统一事务顺序为 `BASE -> NBT -> CROP -> BOUNDARY`。首次相关 owner 必须在首写前对 placement 全 footprint 预检并同步持久化共享决议：replace-policy 不适配或目标整体越界冻结为 `FALLBACK`，各 owner 恢复原本被该 placement 抑制且仍满足 member/exclusion 的 CROP 与合法 BOUNDARY；`MATERIALIZE` 才写各自 NBT fragment，重叠 placement 仍抑制作物和边界。不可写、状态/快照不可用、实际写入失败等系统错误仍使整个 owner 逆序回滚；后续 owner 或重启不得重新判定已冻结决议。
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
-- runtime datum 查找使用内存 O(1) 索引；缺失项先在 registry 全局锁外采样世界，再锁内 double-check 并批量持久化。非 `FIRST_WORLDGEN_FEATURES` owner 必须在 datum 前短路，不采样、不写 ledger。
+- runtime datum 与 placement decision 查找使用内存 O(1) 索引；缺失 datum 先在 registry 全局锁外采样世界，缺失 decision 以单飞方式完成全 footprint 预检，二者都必须持久化成功后才允许首写。非 `FIRST_WORLDGEN_FEATURES` owner 必须在 datum 前短路，不采样、不写 ledger。
 - 整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / area plan hash / surface plan hash / palette hash / owner chunk 幂等阻断。
 - 非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。
