@@ -22,7 +22,7 @@
 
 ## 状态
 
-当前设计案。既有 W 选址、D4 的 14 个 placement group / 52 个建筑布局、D5/D6 锁定结果和道路 group 空间 MST 已通过上一轮设计验收；但旧农业 Decoration 方案已被本轮 SurfacePrintPlan 主线取代，旧 active LandUse / Decoration 产物只作历史快照，必须重跑 `city_plan_land_use -> city_plan_city_dressing -> city_execute_d5` 后才能验收新农田。首次 worldgen 仍必须从目标区外侧触发，规划与激活不得主动生成区块。
+当前设计案。既有 W 选址、D4 的 14 个 placement group / 52 个建筑布局、D5/D6 锁定结果和道路 group 空间 MST 已通过上一轮设计验收；但旧农业 Decoration 方案已被本轮 SurfacePrintPlan 主线取代，旧 LandUse active / ledger 必须清理，并重跑 `city_plan_land_use -> city_plan_city_dressing -> city_execute_d5` 后才能验收新农田。首次 worldgen 仍必须从目标区外侧触发，规划与激活不得主动生成区块。
 
 本文不恢复旧 `FunctionZoneMap`。功能区语义由 D4 建筑 group / array provenance 表达，D6 locked footprint 后再生成 block 级 `LandUseAreaPlan`。旧城镇方案、旧选点和旧分区均不作为本案输入。
 
@@ -31,10 +31,7 @@
 - 旧方案全部废弃，不沿用旧选点、阵列数量、分区或 LandUse 分组。
 - 农田整体外轮廓必须由 LandUse 成本扩张形成不规则面域，禁止用矩形 bbox 直接填满。
 - 农田内部可以存在规则矩形田垄，但整体农业区不得呈完整矩形。
-- 农田水槽一律使用：
-  - 直线段：`geomantia:decoration/water_channel_lined_straight_01`
-  - 收尾段：`geomantia:decoration/water_channel_lined_endcap_01`
-- 本城镇禁止使用 `geomantia:decoration/water_channel_tile` 作为农田水槽。
+- 农田水槽一律由 `CONTOUR_BANDS` 全局 role mask 直接生成：`CHANNEL_BEFORE_BANK + CHANNEL_WATER + CHANNEL_AFTER_BANK`；不再依赖直线 / 端帽 NBT，也禁止回退 `geomantia:decoration/water_channel_tile`。
 - 农业区禁止木栅栏；外边界使用石质矮墙。当前执行能力可用 `boundaryPolicy=LOW_WALL` 映射为 `minecraft:cobblestone_wall`。
 - 同类型功能区不再由 AI 枚举配对。兼容地表两侧默认 `autoConnect=true`，初次边界间距不超过 64 格时自动相向扩张；AI 只在需要隔离时关闭某个 group 的自动连接。
 - 农业区使用 CULTIVATE 兼容类别自动相向扩张；商业、居民等 PAVE 街区也可自动接触，仍允许被硬障碍或真实道路分隔，最终以入口交通可达验收。
@@ -124,20 +121,20 @@ W 只负责宏观选址，D3 patch 与 `16×16` LandUse terrain cell 才是后�
 - D4 程序根据 patch、方向、阵列参数和 occupied field 生成并选择安全候选。
 - D6 锁定 `lockedActualFootprint` 后，LandUse 才能以真实建筑外缘和入口生成区域。
 - Agent 不提交逐 block mask、连接路径、连接宽度、64 格阈值或寻路成本；这些都由程序根据地形和固定 profile 计算。
-- `mergeSameType` 表示接触后允许融合；`surfaceSettings.autoConnect` 表示是否参加 64 格自动近邻。连接由第二遍正常扩张形成，禁止事后补桥。
+- `mergeSameType` 表示接触后允许融合；LandUse 连接设置中的 `autoConnect` 表示是否参加 64 格自动近邻。连接由第二遍正常扩张形成，禁止事后补桥；`UNIFORM` / `CONTOUR_BANDS` 等刷地算法不参与连接判定。
 - 不同 LandUse 类型保持各自语义。需要交通连接时生成道路接缝意图，不把其中一侧强行改写成另一种 LandUse。
 
 ### 4.2 AI 可配置的地表意图
 
-`city_land_use_intent_plan.v0.2` 通过 `surfaceOverrides[]` 对最终 group 做少量高层覆写。PAVE 默认石砖、CULTIVATE 默认耕地与小麦；二者默认开启批量地表和自动连接。PRESERVE / WATER 默认不印刷、不连接；AI 显式为它们启用并给出地表方块时，按 PAVE 兼容类别处理。
+`city_land_use_intent_plan.v0.3` 在本次规划请求中用 `surfaceAlgorithmDefaults[]` 提供每座城市的材料默认，再通过 `surfaceOverrides[]` 对最终 group 做少量覆写。服务端 profile / 内置材料只在请求未给值时兜底，不能替代本次城市规划的材质决定。PAVE / CULTIVATE 仍是 LandUse 用途和连接兼容语义，不再充当刷地算法名称。
 
 | 配置 | 默认语义 | 本城镇用途 |
 | --- | --- | --- |
 | `surfacePrintEnabled` | PAVE / CULTIVATE 为 true | 林场可保持 false；城区和农田保持 true |
 | `autoConnect` | 可印刷区域为 true | 警卫塔排除 LandUse；需要明确隔离的街区可设 false |
-| `surfaceBlockId` | PAVE 石砖、CULTIVATE 耕地 | 可按风格更换城区石材，不改变 PAVE 兼容类别 |
-| `cropBlockId` | CULTIVATE 小麦 | 农业 group 可统一替换作物方块 |
-| 方向模式 / 中心 | 默认全局单轴，可选指定中心辐射 | 大片农田优先审阅辐射方案，城区铺装无方向差异 |
+| `surfaceAlgorithmDefaults[]` | 本次 intent 的算法材料默认优先 | `UNIFORM` 决定城区铺装，`CONTOUR_BANDS` 决定农业 FIELD / CHANNEL 材料 |
+| `surfaceBlockId` / `cropBlockId` | group 覆写优先于本次算法默认 | 只用于广场、特殊农田等少数例外，不改变连接兼容类别 |
+| 刷地算法 | `UNIFORM` 或 `CONTOUR_BANDS` | 城区统一刷地；农业按连续高程的等高线法向生成条带，平地自动径向回退 |
 
 自动相向扩张必须同时满足：两侧 `autoConnect=true`、兼容类别相同、初次边界 gap `<=64`，并且正式扩张路径没有不可通行地形或硬障碍。是否最终接触由扩张预算和地形共同决定；`not_reached` 是可解释结果，不触发桥线或 hard fail。
 
@@ -248,21 +245,16 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 耕地 5 格 | 橡木半砖 | 1 格水 | 橡木半砖 | 耕地 5 格
 ```
 
-锁定 prefab：
-
-| 用途 | contentRef | 运行时尺寸 | 方块组成 |
-| --- | --- | --- | --- |
-| 水槽直线 | `geomantia:decoration/water_channel_lined_straight_01` | `3×2×1` | 水、泥土、橡木半砖及必要空气 |
-| 水槽端盖 | `geomantia:decoration/water_channel_lined_endcap_01` | `3×2×2` | 水、泥土、橡木半砖 |
+`CONTOUR_BANDS` 先在完整农业 member mask 上计算连续高程与局部梯度，再沿等高线法向距离按 13 格周期分类。输出全局冻结的 `FIELD` / `BANK` / `WATER` spans 和方向来源：有稳定梯度时为 `CONTOUR_NORMAL`，连续平地为 `RADIAL_FALLBACK`。三格水槽固定解释为 `BANK + WATER + BANK`。结构 footprint、道路 corridor、gate、既有水体及其他 exclusions 在分类前扣除；owner chunk 只裁切结果，不重算等高线或相位。
 
 实现约束：
 
-- lined straight 的视觉 footprint 为 3 格宽，不能只把旧 `1×1×1 water_channel_tile` 名称替换为 lined prefab。
-- 水槽由 LandUse SurfacePrintPlan 的 CULTIVATE recipe 与 run compiler 直接编译，不生成 Decoration program / slot。
-- LandUse 先铺完整不规则耕地 base，再放置 3 格 lined prefab，再只在非 prefab footprint 批量种作物；作物和边界都不能覆盖半砖衬边。
-- `water_channel_lined_straight_01` 必须把 `water_channel_lined_endcap_01` 冻结为安全 run 终点的 end-cap 内容；不得回退为 crop 或旧 `water_channel_tile`。
-- run 和横截面相位必须按全局方向 / 中心冻结，跨 chunk 保持同一 `runId` 和连续 ordinal；不得在 owner chunk 边界重新开始水槽。
-- 水槽遇到水体、峭壁或累计落差超限时，在最后安全槽放置 lined end-cap 后终止。
+- 水槽由 LandUse SurfacePrintPlan 的 `CONTOUR_BANDS` recipe 直接刷入，不生成 Decoration program、slot 或直线 / 端帽 NBT placement。
+- 默认横截面材料沿用既有视觉：FIELD 为耕地与作物；BANK 底层为泥土并在上层放橡木半砖；中间 WATER 为水。相关材料都可由本次 intent 的运行时算法默认覆写。
+- LandUse 先按冻结 mask 处理 FIELD / BANK / WATER base，再只在 FIELD mask 上批量种作物；作物和 boundary 都不能覆盖 BANK / WATER。
+- FIELD / CHANNEL mask、方向来源和横截面相位必须全局冻结，跨 chunk 保持一致；不得在 owner chunk 边界重新开始条带。
+- 每条 WATER 带的开放端点必须从完整全局邻接关系生成 BANK 封口；不能按 owner chunk 局部判断端点，否则跨 chunk 会出现漏水或重复封口。
+- 直接 mask 执行必须验证转角水密、相邻 WATER 状态更新、地形高差处封口、事务回滚和跨 chunk 拼接；不能只凭分类 mask 正确判定世界落地通过。
 
 ### 5.6 农业装饰
 
@@ -429,8 +421,8 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 ### 阶段 2：目录与关键结构确认
 
 1. 查询并冻结本案全部固定模板的尺寸、hash、rotation 和 road entrance。
-2. 查询装饰 catalog，确认 lined straight、lined end-cap、喷泉、长椅和稻草人可用。
-3. 核对 lined straight 已声明 lined end-cap fallback；缺失或指向旧 tile 时不进入世界激活。
+2. 查询装饰 catalog，确认喷泉、长椅和稻草人可用；水槽不再依赖 Decoration prefab catalog。
+3. 校验本次 LandUse intent 的 FIELD、BANK、WATER 与 BANK overlay block ID 均已注册；非法材料不进入世界激活。
 
 ### 阶段 3：D4 关键结构
 
@@ -479,11 +471,11 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 ### 阶段 9：LandUse
 
 1. 按建筑与 D6 footprint 生成 agriculture、plaza、civic、commercial、residential 探测扩张结果。
-2. Agent 只为需要偏离默认值的 group 冻结 `surfaceOverrides[]`；农业统一 CULTIVATE，城区按 PAVE / PRESERVE 设计选择。
+2. 本次 intent 用 `surfaceAlgorithmDefaults[]` 传入全城 `UNIFORM` / `CONTOUR_BANDS` 材料默认；Agent 只为少数例外 group 冻结 `surfaceOverrides[]`。农业统一 CULTIVATE，城区按 PAVE / PRESERVE 设计选择。
 3. 程序从探测边界用空间桶发现 64 格内全部兼容近邻，并为双方建立 guidance。
 4. 正式扩张按方向、地形代价和硬障碍自然接触，不生成补桥。
 5. 编译最终 LandUse geometry，检查农业单连通、非矩形和石墙只位于最终农业外圈；`not_reached` 回到 D4 调整。
-6. 冻结 SurfacePrintPlan：不规则 member / exclusion spans、全局方向与相位、PAVE/CULTIVATE recipe、lined prefab identity、run、end-cap 与 foundation。
+6. 冻结 SurfacePrintPlan：不规则 member / exclusion spans、解析后的运行时材料、`UNIFORM|CONTOUR_BANDS` recipe，以及 CONTOUR_BANDS 的 FIELD / BANK / WATER spans、`CONTOUR_NORMAL|RADIAL_FALLBACK` 和全局端点封口结果。
 7. 检查规划期交通网络候选连通；不要求不同兼容类别在此阶段直接组成单一面域。
 
 ### 阶段 10：Decoration
@@ -513,8 +505,8 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 
 执行约束：
 
-- LandUse owner 固定按 `BASE -> NBT -> CROP -> BOUNDARY`，水槽 prefab 先于作物，边界最后但必须避让水槽 footprint；任一阶段失败全事务回滚。
-- 水槽连续 run 遇到冻结 terrain drop 时只能把最后安全 placement 替换为 lined end-cap；end-cap 不作为 Decoration 散点 program。
+- SurfacePrintPlan v0.2 owner 直接消费冻结的 FIELD / CHANNEL role spans，先写地表、水槽与 BANK overlay，再只在 FIELD 写作物；边界最后执行且必须避让所有 channel role。任一阶段失败全事务回滚。
+- WATER 开放端点与高差终点使用规划期冻结的全局 BANK 封口，不允许 owner 局部生成端帽或引用 Decoration prefab。
 - 农业石墙来自 LandUse `LOW_WALL` boundary，不重复使用 `field_border` Decoration。
 - fountain 候选必须用完整 footprint + clearance 校验并避开 structure、wall、gate/gateway、LandUse gate/corridor 与已固定关键装饰；Agent 只选择 candidate 并回填相对 patch。若候选为空，回到 plaza 构图或 LandUse 调整，不手写 offset / 世界坐标绕过。
 - 当前 scatter 不保证长椅面向 centroid；preview 先验收数量和位置，朝向若明显不自然列入最后修缮或后续补 `face_target` 语义。
@@ -541,8 +533,8 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 ### 12.2 农田修缮
 
 - 检查整体轮廓是否仍像矩形；不合格时重跑 LandUse，不用装饰删角伪装。
-- 检查所有水槽直线段都使用 lined straight，安全终点都使用 lined end-cap。
-- 检查水槽跨 chunk 不重启、不重叠、不在边界突然断水。
+- 检查弯曲水槽的 BANK / WATER / BANK 横截面连续，转角没有露水或缺边。
+- 检查水槽跨 chunk 不重启、不重叠、不在边界突然断水；开放端点均由全局封口闭合。
 - 检查作物没有覆盖橡木半砖衬边。
 - 检查稻草人稀疏且无规则点阵。
 - 检查石墙只有外圈，内部融合边界没有残墙。
@@ -576,7 +568,7 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 - D4 最终城市构图 preview。
 - LandUse preview，显示 continuity group、同类融合、道路接缝 corridor、农业边界和 gate。
 - 喷泉关键装饰候选集与候选预览，显示完整 footprint、clearance、hard obstacles、固定装饰和 `terrainSampling=not_performed`。
-- Decoration planning / activation preview，显示水槽 run、END_CAP、TERMINATE 和散点装饰。
+- LandUse SurfacePrint preview，显示 FIELD、两侧 BANK、WATER、END_CAP 和跨 chunk 全局相位；Decoration preview 只显示散点装饰。
 - D7 placed structure preview 和 worldgen ledger 摘要。
 - 城镇四向俯视截图、广场视角、农业区视角和居民街坊视角。
 
@@ -590,8 +582,8 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 - 固定 NBT 模板、运行时尺寸 / hash 查询和 D6 footprint 锁定。
 - block 级两遍 LandUse 成本扩张，以及 64 格内兼容地表的自动双向 guidance；不再有事后补桥。
 - LandUse `memberSpans` 驱动的不规则 SurfacePrintPlan 和稀疏 Decoration target mask。
-- PAVE / CULTIVATE 批量地表、作物、`5+3+5` 横截面、全局单轴 / 指定中心辐射方向。
-- 跨 chunk lined 水槽 run、现场高程 datum、地形终止、END_CAP、fill-only foundation、prepared owner index 和 v0.2 ledger。
+- `UNIFORM` 单方块刷地，以及 `CONTOUR_BANDS` 的 `5+3+5` FIELD / CHANNEL 分类、等高线法向和连续平地径向回退。
+- 跨 chunk 全局 FIELD / BANK / WATER mask、端点封口、prepared owner index 和当前 ledger。
 - 喷泉、长椅、稻草人、农具、草垛、市场摊位等运行时装饰素材。
 - required 单点装饰的 footprint + clearance 候选、固定装饰顺序避让和相对坐标 patch。
 - `PAVE -> minecraft:stone_bricks` 和 `LOW_WALL -> minecraft:cobblestone_wall`。
@@ -599,11 +591,12 @@ LandUse 自动近邻使用 65 格空间桶索引 block 边界，只检查周围 
 ### 执行前需要核对或补齐
 
 - 当前程序没有农业矩形度 hard fail；本案先以 preview + 人工指标验收，后续可新增质量校验器。
-- 当前 `city_land_use_intent_plan.v0.2` 已支持 surface booleans、block IDs、`global_axis|radial` 与可选中心；跨区 `road_seam / buffer / separate` 关系仍未进入契约。
+- 当前目标契约为 `city_land_use_intent_plan.v0.3`：运行时算法材料默认优先、group 覆写处理例外；旧 v0.2 `global_axis|radial` 不再作为目标输入。跨区 `road_seam / buffer / separate` 关系仍未进入契约。
 - 自动相向扩张不保证最终单连通；地形或预算导致 `not_reached` 时必须回到 D4 调整农业服务带，不能补桥。
 - 当前 RoadWeaver 连接计划主要消费结构入口，尚未证明能够严格消费冻结的 `road_seam` corridor；实现前必须补齐 corridor 交接或明确受限路线能力。
 - 不同兼容类别不会自动连接；本案以道路接缝和最终实际道路网络解决跨类型可达，不恢复跨类型 LandUse 强制融合。
-- 当前运行时已将 `water_channel_lined_straight_01` 的 terrain-drop fallback 冻结为 `water_channel_lined_endcap_01`；loader 要求横截面一致、只允许沿 run 轴加长，并继续校验 placement / replace policy 一致。
-- lined 水槽的 3 格 footprint、作物与石墙冲突由 LandUse 统一事务和 footprint index 解决，不再依赖 Decoration program 优先级。
+- D3 当前只提供粗格高程；若直接求梯度，等高线可能出现台阶化和方块化。首版必须显式经过连续插值 / 平滑后再分类，并用预览确认轮廓；不能把粗 cell 边界当作真实等高线。
+- 弯曲水槽改为直接 mask 落地后，不再受直线 / 端帽素材限制；新增风险转为 WATER 邻接更新、转角水密、全局端点封口和跨 owner 事务一致性，必须用自动测试与实机共同验收。
+- 三格水槽由 `CONTOUR_BANDS` 的 CHANNEL 角色掩码直接冻结；作物、边界与水槽的冲突由同一 owner 事务中的 exclusion / role 校验解决，不依赖 Decoration program 优先级。
 - `guide_line_dual_side` 的引导线不等于真实道路；RoadWeaver 结果仍需单独验收。
 - 居民院落是否整体石砖化暂按“保留自然地表、道路接入”处理；如改为全铺装，需要单独调整 residential rule profile。

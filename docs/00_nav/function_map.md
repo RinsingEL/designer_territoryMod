@@ -67,9 +67,9 @@
 - D4 连续外扩候选 v0.5：`../systems/city/10_product/案子/D4连续外扩候选-v0.5/README.md`；当前开发路径。常规外扩以父结构 D2 bbox、方向和目标实体间距生成近中远连续候选，D3 patch 后置筛选 / 评分，可跨界；不再预选 target patch。
 - City 通用装饰阵列系统 v0.3：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.3/README.md`；当前装饰真值，在 v0.2 通用几何上增加内容姿态、全局连续地形 run、fill-only foundation、activation trace / preview 和显式 catalog 升级。
 - City 关键装饰锚点候选 v0.1：`../systems/city/10_product/案子/City关键装饰锚点候选-v0.1/README.md`；当前开发案，让喷泉、雕像、水井等 required 单点 prefab 先由程序按完整 footprint、clearance 与硬障碍生成 1-8 个候选，再由 Agent 选择相对坐标 patch，禁止继续手算世界点。
-- City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；当前开发案，D6 locked footprint 后由 group / 单建筑生成 block 级用途区域和 SurfacePrintPlan，64 格内兼容区域自动相向扩张；intent v0.2 只按需覆写地表布尔、方块与方向，随后接稀疏 Decoration / execute_d5，RoadWeaver 后写覆盖，旧 chunk 不回填。
+- City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；当前开发案，D6 locked footprint 后由 group / 单建筑生成 block 级用途区域和 SurfacePrintPlan，64 格内兼容区域自动相向扩张；intent v0.3 运行时传入 `uniform|contour_bands` 算法材料默认，刷地独立消费最终 mask，随后接稀疏 Decoration / execute_d5，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - City 建筑群生活感设计 v0.1：`../systems/city/10_product/案子/City建筑群生活感设计-v0.1/README.md`；当前设计案，使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个切片为临河 / 海的农业、商业、行政综合城镇，道路另案。
-- W 结果驱动大城镇功能区设计 v0.1：`../systems/city/10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`；当前设计案，基于 sealed W 未生成候选定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序与修缮；农田使用不规则 LandUse 扩张和批量地表，水槽锁定 lined straight / lined end-cap；同类兼容地表默认 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
+- W 结果驱动大城镇功能区设计 v0.1：`../systems/city/10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`；当前设计案，基于 sealed W 未生成候选定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序与修缮；农田使用不规则 LandUse 扩张和 `CONTOUR_BANDS` 等高线条带刷地，水槽由全局 FIELD / BANK / WATER mask 直接落地；同类兼容区域默认 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；旧显式实现，七种业务 item 与提前展开刷入计划待 v0.2 破坏性替代，不自动兼容。
 - 结构 Envelope 精修：`../systems/city/10_product/案子/结构Envelope精修-v0.1/README.md`
 - 结构 Envelope 瘦身：`../systems/city/10_product/案子/结构Envelope瘦身-v0.1/README.md`；当前推进到 04 D4 阵列形态首切片，补 `compound_cluster` 参数化和 grid / courtyard / l_shape / u_shape / organic_compact 验收。
