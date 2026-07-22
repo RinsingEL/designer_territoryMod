@@ -2,7 +2,7 @@
 
 ## 版本
 
-v0.3 主线 + D4 阵列候选选择闭环 v0.4 + 建筑驱动 LandUse v0.1 + 关键装饰锚点候选 v0.1 显式开发接口。
+v0.3 主线 + D4 阵列候选选择闭环 v0.4 + 建筑驱动 LandUse v0.1 + 关键装饰锚点候选 v0.1 + worldgen 方块观测 v0.1 显式开发接口。
 
 Java HTTP：`127.0.0.1:5000`
 Node MCP：`country_designer_mcp`
@@ -47,9 +47,14 @@ Node MCP：`country_designer_mcp`
 | `city_probe_decoration_terrain` | `POST /realm/city/probe_decoration_terrain` | activation 前只读地形探针：读取已编译装饰槽位，只采样当前已加载真实区块，报告高度、邻接高差、未加载覆盖和线性槽位连续带 profile；不生成 chunk、不写世界。 |
 | `city_execute_d5` | `POST /realm/city/execute_d5` | 校验并激活 LandUse area + SurfacePrintPlan + catalog identity；连续 Decoration run 仍用目标 ServerLevel generator 采样冻结，不加载 chunk。批量地表与稀疏 Decoration 职责冲突时 hard fail。 |
 | `city_execute_d7` | `POST /realm/city/execute_d7` | 保留入口名，正式路径只查询 worldgen ledger / chunk 状态。 |
+| `city_query_worldgen_observations` | `POST /realm/city/query_worldgen_observations` | 按 dimension + chunk 查询 City 写入在 post-features / retry tick / chunk save 回调中的实际 BlockState；只读 sidecar，不加载 chunk。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
 | `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> final D4 -> plan_d5 轻量预案 -> D6 lock -> 可选 LandUse -> 可选 Decoration -> execute_d5 locked 激活 -> execute_d7；默认 D4 `key_then_array`。 |
+
+## MCP 调用时间日志
+
+所有 City 工具与其他 MCP 工具共用 [MCP 调用日志契约](../../../../00_nav/MCP调用日志契约.md)。City 不另建一份同名日志或人工计时文档。
 
 ## city_run_workflow
 
@@ -988,6 +993,24 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `boundarySource=actual_footprint_union`
 - `roadProviderState`
 - `terrainAdaptationReport`
+
+## city_query_worldgen_observations
+
+必填参数：
+
+- `dimensionId`
+- `chunkX`
+- `chunkZ`
+
+可选参数：
+
+- `phase=post_features|post_retry_tick|chunk_save`
+- `limit=1..100`，默认 10
+- `includeBlocks`，默认 true
+
+非法 dimension、phase 或 limit 必须拒绝，不得静默改写。语义：只读取 server-root `geomantia_city_masks/worldgen_block_observations/.../chunk_<x>_<z>.jsonl`、尚未刷盘的 observation 队列和当前内存中的待 save 检查标记。不得读取 region NBT，不得申请 ticket，不得加载或生成 chunk，不得修改世界。
+
+完整字段与 ledger/现场证据边界见 [CityWorldgenBlockObservation 数据契约](../数据契约/CityWorldgenBlockObservation数据契约.md)。
 
 ## city_plan_city_walls / city_execute_city_walls
 

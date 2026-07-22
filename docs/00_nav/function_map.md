@@ -11,6 +11,7 @@
 - Bug 修复流程：`./Bug修复流程.md`
 - dev_docs 组织规则：`./dev_docs组织规则.md`
 - Git 提交规则：`./Git提交规则.md`
+- MCP 调用日志契约：`./MCP调用日志契约.md`
 
 ## GIS 地貌基础设施
 
@@ -95,6 +96,7 @@
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
 - City LandUse 数据契约：`../systems/city/20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
+- City worldgen 方块观测数据契约：`../systems/city/20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`；区分执行器提交 ledger 与 Minecraft 回调实际 BlockState，按 chunk 查询 post-features / chunk-save 证据。
 - City 调试 MCP 接口：`../systems/city/20_contracts/接口契约/City调试MCP接口.md`
 - 代码导览：`../systems/city/30_code_guide/代码导览.md`
 - 测试入口：`../systems/city/40_tests/测试入口.md`

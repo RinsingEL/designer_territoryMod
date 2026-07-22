@@ -26,7 +26,9 @@ D3 地形 patch 真值
   -> execute_d5 以 D6 locked collision 激活 active mask / planned structure / LandUse / 装饰 worldgen 程序
   -> Minecraft worldgen createStructures 阶段写入 StructureStart
   -> FEATURES owner-chunk 执行 LandUse BASE -> NBT -> CROP -> BOUNDARY，再执行稀疏 Decoration
+  -> applyBiomeDecoration TAIL 与 ChunkDataEvent.Save 按 touched positions 读取实际 BlockState
   -> city_execute_d7 查询 worldgen ledger
+  -> city_query_worldgen_observations 按 chunk 查询现场匹配 / 缺失证据
   -> 根据已落结构 ledger 反推 inferred function area
   -> RoadWeaver 道路；旧 debug 道路仅允许显式 `worldedit_debug`
   -> city walls v2/v3/v4/v5 扫描真实道路并规划 / 放置城墙
@@ -61,11 +63,12 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 5. `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`
 6. `10_product/案子/City关键装饰锚点候选-v0.1/README.md`
 7. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
-8. `20_contracts/数据契约/结构落地交接契约.md`
-9. `20_contracts/接口契约/City调试MCP接口.md`
-10. `30_code_guide/代码导览.md`
-11. `40_tests/测试入口.md`
-12. `40_tests/影响面.md`
+8. `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
+9. `20_contracts/数据契约/结构落地交接契约.md`
+10. `20_contracts/接口契约/City调试MCP接口.md`
+11. `30_code_guide/代码导览.md`
+12. `40_tests/测试入口.md`
+13. `40_tests/影响面.md`
 
 历史方案可读但不作为当前实现依据：
 
@@ -127,6 +130,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | execute_d5 | 激活 server-root `active_reservation_mask_plan.json`、`active_planned_structure_registry.json`、可选 `geomantia_city_masks/active_city_land_use_area_plans.json` / `active_city_decoration_program_plans.json`，写跳过式 report 与 active summary；worldgen 成功 owner 分别写 LandUse v0.2 / Decoration ledger |
 | D6 | `structure_materialization_plan.json`（`plannedWorldgenStructures[]`，含 locked actual footprint / bbox group / collision envelope / signature）、空 `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`structure_materialization_preview.png` |
 | execute_d7 | `placed_structure_ledger.json`、`structure_materialization_trace.json`、`inferred_function_area_map.json`、`placed_structure_preview.png`，ledger 完整后生成 RoadWeaver-aware road report 与 terrain adaptation report |
+| worldgen block observation | server-root `geomantia_city_masks/worldgen_block_observations/dim_<base64url(dimensionId)>/chunk_<x>_<z>.jsonl`，分 `post_features` / `post_retry_tick` / `chunk_save` 记录声明 block ID、`postWriteState` 与回调 `actualState`；不属于完成 ledger |
 | city walls | `actual_road_mask.json`、`city_wall_plan.json`、`city_wall_preview.png`、`city_wall_templates/*.nbt`、`city_wall_placement_report.json`；v3.2+ 额外要求 `gatehouse_9.nbt` / `gatehouse_13.nbt` / `watchtower_5x5.nbt` / `beacon_5x5.nbt`；v4 计划额外输出 `wallNodes[]` / `wallUnits[]` / `nodeConnectorUnits[]` / `cityWallDatumY` / `terrainContourEvents[]` / `wallGraphValidation` |
 | workflow | `city_workflow_<citySeedId>/city_workflow_report.json`，记录 D3 -> D7 / 可选城墙阶段的时间戳、耗时、artifact、暂停 / 失败原因 |
 
@@ -136,7 +140,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | --- | --- | --- |
 | 上游 | 国度规划系统 | `CitySeedRegistry`、城市候选坐标、国度归属。 |
 | 上游 | GIS / TerraSense | D3 地形 patch 与 LandUse terrain field 真值、TerraSense `StructureProfile.jsonl` / debug catalog、TerraSense tag 白名单。 |
-| 本系统 | City | 顶层 configured structure envelope facts、D4 group provenance、locked actual footprint、block 级 LandUseAreaPlan / SurfacePrintPlan、reservation mask、planned structure / LandUse registry、worldgen ledger、RoadWeaver endpoint plan、terrain trace、D3 patch wall reservation、actual-road gated wall boundary。 |
+| 本系统 | City | 顶层 configured structure envelope facts、D4 group provenance、locked actual footprint、block 级 LandUseAreaPlan / SurfacePrintPlan、reservation mask、planned structure / LandUse registry、worldgen ledger、按 chunk 的 worldgen BlockState 观测、RoadWeaver endpoint plan、terrain trace、D3 patch wall reservation、actual-road gated wall boundary。 |
 | 下游 | 世界生成 / Materialization | feature / vanilla structure 抑制 hook、planned structure worldgen hook、原版 `StructureStart` 生成期落地、ledger 与 trace。 |
 
 ## 目录说明
