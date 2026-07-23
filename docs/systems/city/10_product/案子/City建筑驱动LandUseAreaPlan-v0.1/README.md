@@ -29,13 +29,13 @@ D4 设计延续：保留 D4 显式 group、array zone 和 composite array 的组
 
 扩张主体：算法以 `LandUseSeedGroup` 为竞争主体；每个主体包含稳定 group ID、用途、结构引用、种子几何、目标面积范围、行动力预算、成本档案、合并策略、边界策略、植被策略和地表策略。
 
-显式分组：D4 已明确为 group、array zone 或 composite array 的结构先合并成一个 `LandUseSeedGroup`，组内成员不互相竞争；混合类型结构允许由组合关系得到新的整体用途，例如“喷泉 + 朝内商铺”得到 `plaza`。
+显式分组：D4 已明确为 group、array zone 或 composite array 的结构先合并成一个 `LandUseSeedGroup`，组内成员共享用途、竞争权重和融合策略，但每个 D6 anchor 保留独立 growth region 面积额度；混合类型结构允许由组合关系得到新的整体用途，例如“喷泉 + 朝内商铺”得到 `plaza`。
 
 普通建筑：未被显式分组的建筑各自成为独立扩张种子，按建筑实际 footprint 和 TerraSense 用途事实派生土地需求；后续只有在用途和合并策略兼容时才自动融合。
 
 种子几何：多源起点优先使用建筑 footprint 外缘、真实 road entrances 和组内朝向关系，不把建筑中心点作为唯一种子；入口方向、建筑背面和阵列内侧可以获得不同扩张成本。
 
-土地需求：目标面积由“建筑 footprint 面积乘用途倍率 + 用途额外土地需求”派生，同时保留 `min/preferred/max` 范围；农舍可以以较小建筑取得大面积农田，教堂或大建筑也不会仅因 footprint 较大就无限取得外部土地。
+土地需求：每个建筑来源分别由“自身 footprint 面积乘用途倍率 + 用途额外土地需求”派生 `min/preferred/max`；`maxAreaBlocks` 对该 growth region 独立封顶，不是一个功能组所有建筑和碎片共享的总上限。同组来源接触后形成一个最终 area，容量按来源贡献相加；农舍可以以较小建筑取得大面积农田，教堂或大建筑也不会仅因 footprint 较大就无限取得外部土地。
 
 行动力扩张：参考国度 T3 的多源行动力模型，在局部 block 网格上用稳定优先队列按累计成本扩张；LandUseAreaPlan 复用预算停止、地形成本、屏障、竞争和未占区域思想，不直接复用国度粗尺度 WorldCell 实现。
 
@@ -45,7 +45,7 @@ D4 设计延续：保留 D4 显式 group、array zone 和 composite array 的组
 
 相向扩张：规划先做一次无引导探测扩张，再用 block 边界和 65 格空间桶查找 64 格内的全部兼容近邻，随后重新执行正式扩张。朝任一目标前进降代价，横向略加代价，背离目标明显加代价；坡度、水体、未采样格、结构 footprint、gate / D5 corridor 和异类 claim 仍按原规则扣分或硬阻断。连接只能由正常区域增长自然接触形成，不生成事后桥线，也不以不连通为 hard fail。
 
-异类竞争：不同土地用途到达同一 block 时由累计成本、土地需求完成度和竞争权重决定归属；成本接近时允许记录 contested 边界，已经达到最大面积的主体停止继续争夺。
+异类竞争：不同土地用途到达同一 block 时由累计成本、growth region 土地需求完成度和 group 竞争权重决定归属；成本接近时允许记录 contested 边界，达到自身最大面积的 growth region 停止继续争夺，不得令同组另一来源一并停止。
 
 开放空间：算法不要求把城市范围全部分完，未被任何主体取得的 block 保留为 natural、wild、corridor、blocked 或 unreachable，供自然地貌、道路缓冲、未来扩建和野外内容继续使用。
 

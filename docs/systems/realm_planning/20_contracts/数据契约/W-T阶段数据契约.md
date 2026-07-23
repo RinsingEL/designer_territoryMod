@@ -122,6 +122,23 @@ W 调度层还必须写出 `world_survey_manifest.json`，用于断点续扫和�
 | `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleBudget`、`microSampleBudgetPerCell`、`microSampleCount`、`adaptiveSampling`。 |
 | `tiles[]` | array | 是 | 每个 tile / GIS Region 的坐标、状态、cache 路径、`configHash` 和错误信息。 |
 
+## WorldSurveyProgress
+
+开发期 W 扫描可额外写出 `world_survey_progress.json`，并按约 1 秒间隔输出同内容的 debug 日志。该文件用于观察长时间扫描，不是 T 阶段输入，也不替代 sealed 的 `world_survey_manifest.json`。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `status` | enum | `queued`、`running`、`completed`、`failed`。 |
+| `phase` | enum | `tile_scan`、`micro_sampling`、`complete`。 |
+| `elapsedMs` / `phaseElapsedMs` | long | 总耗时和当前阶段耗时。 |
+| `phaseProgressPercent` | number | 当前阶段完成百分比；tile 和 micro-sampling 分开计量。 |
+| `estimatedRemainingMs` | long | 按当前阶段速度估算的剩余时间；无法估算时为 `-1`。 |
+| `tileSpeedPerSecond` | number | 每秒完成的 Region tile 数。 |
+| `microCellsPerSecond` / `microSamplesPerSecond` | number | 当前阶段每秒完成的 W cell / micro sample 数。 |
+| `tiles` | object | `processed`、`total`、`scanned`、`cached`、`failed`。 |
+| `microSampling` | object | `completedCells`、`totalCells`、`completedSamples`、`totalSamples`。 |
+| `currentTile` | object? | 当前 Region tile 的坐标和采样模式。 |
+
 ## WorldPatchMap
 
 T 阶段消费的粗地貌地图。实现可以内部建索引，但落盘契约至少要能按 grid 坐标和 patch id 追溯。

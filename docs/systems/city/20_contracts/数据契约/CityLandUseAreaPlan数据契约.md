@@ -66,6 +66,8 @@
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
+`minAreaBlocks` / `maxAreaBlocks` 的计算粒度是建筑来源 growth region，不是整个 `placementGroupId` 的共享总池。每个 D6 anchor 按自身 locked footprint 计算一份 `min/preferred/max` 并独立封顶；group 顶层面积目标只是其 growth regions 的求和摘要。同组来源接触后可编译为同一最终 area，已连接 area 的可用额度由其中各来源贡献相加；互不连通的来源不得消耗彼此额度。
+
 bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 
 `city_run_workflow.enableLandUseLayer` 优先于 settings；独立 `city_plan_land_use` 视为显式规划，不受 workflow 开关阻止。
@@ -252,7 +254,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## LandUse 规划 Trace
 
-`land_use_plan_trace.json` 当前为 `city_land_use_planning_trace.v0.3`。`automaticSurfaceConnections[]` 记录稳定 group 对、兼容类别、初次边界间距与 `already_connected|connected_by_expansion|not_reached` 结果。该 trace 只解释相向扩张，不是 AI 输入或 worldgen 执行参数。
+`land_use_plan_trace.json` 当前为 `city_land_use_planning_trace.v0.3`。`seedGroups[].growthRegions[]` 按来源记录 `regionId`、anchor、`min/preferred/max` 与实际取得面积，group 顶层数值为求和摘要；quality 同时报告 group 和 growth region 的低于最小面积结果。`automaticSurfaceConnections[]` 记录稳定 group 对、兼容类别、初次边界间距与 `already_connected|connected_by_expansion|not_reached` 结果。该 trace 只解释相向扩张，不是 AI 输入或 worldgen 执行参数。
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 

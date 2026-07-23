@@ -27,7 +27,6 @@ Review 前建议同时打开：
 - `RealmPlanningHttpController`
 - `GisPlatformEvents`
 - `country_designer_mcp/src/realm/*`
-- `DevAutoLoadClient`
 
 检查点：
 
