@@ -8,7 +8,7 @@
 
 - agent 可以通过 MCP 从真实 MC 世界触发 W / T 主链。
 - 每个阶段都能返回结构化状态、产物路径和下一步建议。
-- T2 采用“AI / 人类从带网格坐标候选图直接提交坐标”的新流程。
+- T2 推荐由 AI 先探索感兴趣的 patch 类型，再提交稳定 `patchSelectionRef`；直接提交候选图 grid 坐标保留为兼容入口。
 - MCP 能支撑端到端验收，而不是只跑单元测试。
 
 ## 工具总览
@@ -18,9 +18,16 @@
 | `realm_status` | 通用 | 读取国度规划系统状态、最近 run 和产物目录。 |
 | `realm_w_refresh` | W | 在真实世界或固定测试世界中生成 `WorldSurveyContext`、`WorldPatchMap` 和候选底图。 |
 | `realm_t1_prepare` | T1 | 基于 W 产物和国度配置生成 `RealmProfile` 与 `RealmCandidateMapPackage`。 |
-| `realm_t2_select_coordinate` | T2 | 提交 AI / 人类选择的 grid 坐标，校验并生成 `RealmSeed`、`CapitalCitySeed`。 |
+| `realm_t2_select_coordinate` | T2 | 提交 AI / 人类选择的国度核心 grid 坐标，校验并生成 `RealmSeed`、无坐标 `CapitalCityIntent`。 |
 | `realm_t3_expand` | T3 | 对指定大陆 / 分组运行国度扩张，输出 `RealmTerritoryMap`。 |
-| `realm_t4_build_registry` | T4 | 生成 `CitySeedRegistry`。 |
+| `realm_t4_build_registry` | T4 兼容验收 | 以 `rule_fixture` 模式生成 `CitySeedRegistry`，不是正式 AI 选址主链。 |
+| `patch_explorer_open` | T2 / T4 / City D4 | 打开指定尺度的探索会话并返回类型目录。 |
+| `patch_explorer_show_candidates` | T2 / T4 / City D4 | 按 AI 选择的兴趣类型分页返回每类候选、预览图和候选间稀疏几何关系。 |
+| `patch_explorer_select_candidate` | T2 / T4 / City D4 | 选中已展示候选，返回确认染色图与稳定 `patchSelectionRef`。 |
+| `realm_t4_patch_planning_create` | T4 | 为单个国度创建空城市规划会话，只载入无坐标首都意图。 |
+| `realm_t4_patch_planning_select_capital` | T4 | 消费 `realm_t4` 选择凭证，建立该国唯一首都。 |
+| `realm_t4_patch_planning_add_city` | T4 | 消费 `realm_t4` 选择凭证并添加一座城市种子。 |
+| `realm_t4_patch_planning_finalize` | T4 | 完成单国规划并按国度合并写回全局城市名册。 |
 | `realm_run_acceptance` | 验收 | 用固定配置跑完整 W -> T4 调试链，并输出验收报告。 |
 | `realm_tag_audit` | W 调试 | 对已有 sealed W run 单独执行 Tag Audit 抽样局部精扫，不重跑 W/T 主链。 |
 | `realm_debug_command` | 开发调试 | 对已启动的 MC 集成服务端执行单条 Minecraft 命令，用于 TP、时间、天气、游戏模式等真实验收辅助操作。 |
@@ -28,6 +35,14 @@
 ## 通用返回字段
 
 所有工具返回 JSON 文本。成功时建议包含：
+
+### 运行时 checkpoint 恢复
+
+- `realm_status` 只列当前 `MinecraftServer` 进程已经激活的 run，不在启动时扫描整个 `realm_debug` 目录。
+- `realm_t1_prepare`、`realm_t2_select_coordinate`、`realm_t3_expand`、`realm_t4_build_registry` 和 `realm_tag_audit` 首次按 `runId` 访问内存中不存在的 run 时，必须从磁盘懒恢复。
+- 恢复真值先是 sealed `world_survey_manifest.json`、tile snapshots 和 `world_feature_grid.json`；若完整 T1/T2/T3/T4 checkpoint 存在，再按阶段顺序恢复。T2 必须能继承 T1，T3 必须能继承 T1/T2，T4 必须能继承 T1/T2/T3。
+- 恢复是只读操作：不得调用 W refresh、不得加载或扫描 Minecraft chunk、不得重写 W 或既有 T checkpoint。调用目标阶段自身正常产生的新产物不受此限制。
+- 某阶段只有部分必需文件时，不把它当成完成的 checkpoint；下一阶段按原前置条件拒绝。完整 checkpoint JSON 损坏、来源不一致或引用 sealed W 外坐标时返回 `REALM_CHECKPOINT_INVALID`，不得静默重算或覆盖。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -132,18 +147,30 @@
 | 产物 | 说明 |
 | --- | --- |
 | `RealmProfile[]` | 国度设定，含 `scalePlan` 和 `expansionStyle`。 |
-| `RealmCandidateMapPackage[]` | 每个国度的候选图包。 |
+| `RealmCandidateMapPackage[]` | 每个国度的目标大陆合法 scope 参考图包；同一大陆上的国度可以得到相同图片。 |
 | `t1Manifest` | 国度数量、目标大陆、比例归一化前摘要。 |
+
+成功响应必须同时声明：
+
+| 字段 | 值 / 说明 |
+| --- | --- |
+| `selectionMode` | `patch_explorer_primary`。 |
+| `candidateMapRole` | `continent_scope_reference`，不得把整大陆参考图解释为按文明差异生成的正式候选图。 |
+| `nextActions[]` | 只把 `patch_explorer_open` 作为推荐主动作。 |
+| `compatibilityActions[]` | 可列 `realm_t2_select_coordinate`，但它只表示直接 grid 兼容入口。 |
 
 约束：
 
 - `RealmProfile.scalePlan.normalizationGroup` 必须可归到目标大陆 / 大区。
 - T1 不选择最终坐标。
-- 候选图包必须包含 grid 坐标说明和允许 patch。
+- 参考图包必须包含 grid 坐标说明、允许 patch、`mapRole`、`scopeBasis`、`profileDifferentiated=false` 和主选择流；AI 不得因为图包名称仍含 candidate 就跳过 Patch Explorer。
+- 即使 W 由上一次客户端 / 服务进程生成，只要磁盘 survey 已 sealed，T1 也必须按 `runId` 懒恢复后继续，不要求重新调用 W。
 
 ## realm_t2_select_coordinate
 
 提交坐标选择并生成种子。
+
+正常 AI 主链必须先完成 `patch_explorer_open -> patch_explorer_show_candidates -> patch_explorer_select_candidate` 并提交 `patchSelectionRef`。直接 `gridX/gridZ` 只用于旧调用方或明确的人工调试。
 
 请求：
 
@@ -151,8 +178,9 @@
 | --- | --- | --- | --- |
 | `runId` | string | 是 | 当前 run。 |
 | `realmId` | string | 是 | 国度 ID。 |
-| `gridX` | number | 是 | 候选图上的 grid X。 |
-| `gridZ` | number | 是 | 候选图上的 grid Z。 |
+| `patchSelectionRef` | string | 条件必填 | 推荐入口；来自同一 run、同一 realm 的 `realm_t2` Patch Explorer。传入后由服务端解析建议粗锚点。 |
+| `gridX` | number | 条件必填 | 兼容入口；未传 `patchSelectionRef` 时必填。 |
+| `gridZ` | number | 条件必填 | 兼容入口；未传 `patchSelectionRef` 时必填。 |
 | `alternates[]` | array | 否 | 备选 grid 坐标。 |
 | `reason` | string | 否 | AI / 人类选择理由。 |
 | `selectedBy` | string | 否 | `ai`、`human`、`debug`，默认 `ai`。 |
@@ -164,7 +192,7 @@
 | --- | --- |
 | `RealmCoordinateSelection` | 原始坐标、block 坐标、校验结果。 |
 | `RealmSeed` | T3 扩张种子。 |
-| `CapitalCitySeed` | 首都城市种子。 |
+| `CapitalCityIntent` | 无坐标首都意图；最终点位由 T4 选定。 |
 
 失败情况：
 
@@ -174,6 +202,46 @@
 | 坐标跨大陆 / 跨海 / 禁用 patch | `ok=false`，返回 `errors[]` 和可用备选提示。 |
 | 坐标冲突 | `ok=false` 或使用 `alternates[]` 尝试校验。 |
 | snap 超过阈值 | `ok=false`，不得静默改点。 |
+
+## Patch Explorer
+
+三个工具共用同一交互协议，但候选真值按尺度隔离：`realm_t2` 读取 sealed W 的 `biomeHist` 并在国度候选范围内生成主导群系连续区，`realm_t4` 将群系连续区裁剪到该国 T3 owned territory，`city_d4` 读取 D3 局部地形 patch 并扣除 hard occupied。
+
+`patch_explorer_open` 请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` | string | 是 | 当前 run。 |
+| `scopeType` | enum | 是 | `realm_t2`、`realm_t4`、`city_d4`。 |
+| `scopeId` | string | 条件必填 | 对应 realm / continent / citySeed；也可使用下列显式字段。 |
+| `realmId` / `continentId` / `citySeedId` | string | 条件必填 | 按 scope 提供。 |
+| `sessionId` | string | 否 | 自定义稳定会话 ID；省略时由服务端生成。 |
+
+返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。
+
+`patch_explorer_show_candidates` 请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` / `sessionId` | string | 是 | 打开的探索会话。 |
+| `interestTypes[]` | string[] | 是 | AI 当前主动感兴趣的类型。T2/T4 使用完整 biome ID，例如 `minecraft:plains`；City D4 使用 D3 landform。 |
+| `page` | int | 否 | 从 0 开始的页号。 |
+| `pageToken` | string | 否 | 上一页返回的稳定续页凭证。 |
+| `pageSize` | int | 否 | 每种类型每页数量，默认 3，最大 12。 |
+
+返回 `candidatePage`、彩色候选预览和关系表。T 候选同时返回 `terrainComposition`、`baseLandformComposition` 和最大连续面积；关系只覆盖本次 `interestTypes` 中当页已展示候选，内容限于相邻、距离、方位、共享边界等结构化几何事实；首都、国境、已有城市和 occupied 只参与硬校验，不进入关系表。
+
+`patch_explorer_select_candidate` 请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` / `sessionId` | string | 是 | 当前探索会话。 |
+| `candidateId` | string | 是 | 必须是当前会话中已经展示的候选。 |
+| `selectionReason` | string | 否 | AI 选择理由。 |
+
+返回 `patchSelectionRef` 与 `selectedCandidatePreview`。确认图对选中候选染色并标出建议粗锚点；来源文件、scope 或候选事实变化时，旧选择凭证必须拒绝消费。
+
+HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_candidates`、`/realm/patch_explorer/select_candidate`。
 
 ## realm_t3_expand
 
@@ -232,10 +300,23 @@
 
 约束：
 
-- 首都必须来自 `CapitalCitySeed`。
+- 正式 AI 主链的首都必须来自 `CapitalCityIntent` + `realm_t4` Patch Explorer 选择凭证。
+- `realm_t4_build_registry` 仅为兼容验收入口，其首都必须标记 `source.selectionMode=rule_fixture`。
 - T4 不创建城市实例，不生成城市边界、功能区、道路或结构落点。
 - v1.2 中，有限城市必须有稳定粗锚点或候选编号；不得只输出无坐标条件模板。
 - 除显式复合城市或卫星节点外，城市种子不得同格重叠。
+
+## T4 Patch 规划会话
+
+该路径替代“T2 自动定首都 + 程序按预设角色一次性挑完其他城市”的正式交互方式，但不删除 `realm_t4_build_registry` 兼容验收入口。
+
+1. `realm_t4_patch_planning_create`：传 `runId`、`realmId`，可选 `planningSessionId`。新会话载入 `CapitalCityIntent`，`citySeeds=[]`、`capitalSelectionStatus=awaiting_selection`。
+2. AI 对该国调用 Patch Explorer，查看兴趣类型、候选染色图和候选之间的几何关系。
+3. `realm_t4_patch_planning_select_capital`：传 `runId`、`planningSessionId`、`patchSelectionRef`；可选最小连续面积和选择理由。服务端以 intent 固定首都 ID / 规模，校验 owned territory 和承载量。
+4. `realm_t4_patch_planning_add_city`：只能在首都已选后添加非首都城市；`role=capital` 直接拒绝。
+5. `realm_t4_patch_planning_finalize`：只有会话内恰好一座带 `patchSelectionRef` 的首都时才合并写回全局 `CitySeedRegistry`，并同步重建 T4 派生产物。
+
+对应 HTTP 路径为 `/realm/t4/patch_planning/create`、`/realm/t4/patch_planning/select_capital`、`/realm/t4/patch_planning/add_city`、`/realm/t4/patch_planning/finalize`。
 
 ## realm_run_acceptance
 

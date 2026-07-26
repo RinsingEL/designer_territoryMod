@@ -2,16 +2,16 @@
 
 ## 状态
 
-当前开发路径。按破坏性替换推进，目标是替代当前仍混有 configured structure 的 D3-D6 落地主线；实现、契约、代码导览和真实游玩验收全部完成后，才能标记为当前真值。
+当前实现与契约真值。configured structure / Jigsaw / 动态 bbox 主线已完成破坏性删除；Trek B0.6 的 20 个固定 NBT 已由离线工具导入目标存档。运行时 metadata catalog、潮汐王冠 13 模板重算和真实 `beard_thin` GameTest 仍属于现场验收项，未完成前不得宣称目标城市已落地。
 
 ## 一、架构决策
 
-City active 建筑只允许使用固定 NBT `StructureTemplate` 落地。这里保留的是 Minecraft 对结构模板 NBT 的读取、旋转、镜像和方块粘贴能力，不保留 Minecraft worldgen configured structure 系统。后续规划的 `geomantia:` 模板会强制归一为 `terrainPosePolicy=structure_start_beard_thin`；其他命名空间可显式选择该受限 `StructureStart` 地形适配路径。它不查询或选择 configured structure，不进入 Jigsaw，start 内只有一个 City 固定模板 piece；风车、谷仓和肉铺只是首批已实测样本。
+City active 建筑只允许使用固定 NBT `StructureTemplate` 落地。这里保留的是 Minecraft 对结构模板 NBT 的读取、旋转、镜像和方块粘贴能力，不保留 Minecraft worldgen configured structure 系统。所有进入 City catalog 的模板都强制归一为 `terrainPosePolicy=structure_start_beard_thin`。它不查询或选择 configured structure，不进入 Jigsaw，start 内只有一个 exact-footprint City 固定模板 piece；`StructureStart` 的 terrain-adaptation bbox 只供 Minecraft Beardifier 内部使用。
 
 本案从 City active path 删除：
 
 - `Registries.STRUCTURE` / configured structure 查询与选择。
-- 除冻结 `terrainPosePolicy=structure_start_beard_thin` 的受限地形适配试验外的 `StructureStart` 创建、注入、签名和 piece boxes。
+- 外部 `StructureStart` 创建、注入、签名和 piece boxes；唯一保留的是 City 自有单-piece terrain start。
 - Jigsaw pool、随机展开、depth / `max_distance_from_center` 规模控制。
 - `/place structure` 等价落地和 `StructureStart.placeInChunk` 调试 fallback。
 - P50 / P90 / P95 / P99 / maxObserved envelope 多次采样。
@@ -32,7 +32,7 @@ configured structure 带来的额外成本包括：
 - `StructureStart` 注入、原版结构引用、生成阶段和 ledger 形成另一套复杂生命周期。
 - 外部结构包的随机计划与 City group / array 计划重叠，却缺少 City 的候选、预览、选择和失败解释。
 
-固定模板把“建筑内部长什么样”冻结在 NBT，把“建筑之间如何构成城市”全部交给 City。随机性只允许出现在 City 明确控制的模板变体选择、候选选择和装饰权重中。
+固定模板把“建筑内部长什么样”冻结在 NBT，把“建筑之间如何构成城市”全部交给 City。D4 必须显式给出 `templateId/templateRef + variant`；模板变体不再在 planner 内随机抽样。随机性只允许存在于不会改写建筑 identity 与几何的候选排序或装饰权重中。
 
 ## 三、目标主流程
 
@@ -47,14 +47,15 @@ W / T 城市种子
 -> DecorationProgram 引用 LandUseAreaPlan
 -> confirmWorldMutation=false 人工 review
 -> execute_d5 激活 template placement / mask / LandUse / Decoration / RoadWeaver 计划
--> 首次 FEATURES owner-chunk worldgen 粘贴固定模板
+-> `ChunkGenerator.createStructures` 注入 City 单-piece template start
+-> 原版 structure 阶段按 owner chunk 粘贴固定模板
 -> LandUse surface / boundary
 -> Decoration fragment
 -> template / LandUse / Decoration ledger
 -> RoadWeaver 与城墙后续处理
 ```
 
-默认及非 `structure_start_beard_thin` 的模板不进入 `ChunkGenerator.createStructures` 写入 City `StructureStart`。启用该受限地形适配 policy 的实测模板可写入 City 注册的单-piece start；原版 / 模组自然结构的 start 抑制 hook 可以保留，但它只负责保护 City mask，不再承担 City 建筑落地。
+City 模板只通过 `ChunkGenerator.createStructures` 写入 City 注册的单-piece start。`tryGenerateStructure` 只保留原版 / 模组自然结构 mask 抑制，不生成 City 建筑；FEATURES 阶段也不再存在 direct-template 补贴或 late materialization。
 
 ## 四、输入真值
 
@@ -128,8 +129,8 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 
 ### 5.6 Worldgen 与 ledger
 
-- 由 City 自己的 active template placement registry 驱动 `MinecraftCityTemplateWorldgenPlacer`。
-- owner chunk 首次进入既定生成阶段时，按锁定 identity 读取 NBT、解析地表 datum 并确定性粘贴。
+- 由 City 自己的 active template placement registry 驱动 `MinecraftCityWorldgenStructurePlacer`。
+- anchor owner 首次进入 `createStructures` 时按锁定 identity 读取 NBT，以 generator base height 冻结 datum 并创建唯一单-piece start；piece 再按 owner chunk 确定性粘贴。
 - ledger 记录 template identity、世界 anchor、rotation / mirror、datumY、精确 footprint、hash 和 appliedAt。
 - 重复 hook、重启和 chunk 生成顺序不能导致重复粘贴或不同结果。
 - `city_execute_d7` 若继续保留，只负责读取 template ledger、汇总 actual placement 和驱动道路 / 城墙后处理，不再创建或补放建筑。
@@ -173,8 +174,8 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 - `CityStructureCandidateEnvelope`：删除 P95/P99 / max distance 分支，只从 `CityTemplatePlacementGeometry` 构造精确 envelope。
 - `CityStructureMaterializationPlanner`：删除 configured / jigsaw mode，只生成 template placement。
 - `CityReservationMaskRegistry`：删除 planned configured structure registry；模板 placement registry 应独立命名、独立 schema。
-- `MinecraftCityWorldgenStructurePlacer`：删除 configured / 外部 `StructureStart` 分支；非 `structure_start_beard_thin` 模板调度直接依赖 `MinecraftCityTemplateWorldgenPlacer`，启用该 policy 的模板保留受限 City 注册单-piece terrain start。
-- `ChunkGeneratorStructureMaskMixin`：删除 City `createStructures` 注入；保留自然结构 mask 抑制和 FEATURES 阶段 template / LandUse / Decoration 调用。
+- `MinecraftCityWorldgenStructurePlacer`：删除 configured / 外部 `StructureStart` 分支，只保留 City 注册单-piece terrain start。
+- `ChunkGeneratorStructureMaskMixin`：`tryGenerateStructure` 只做自然结构 mask；`createStructures` 只注入冻结的 City template start；FEATURES 只处理 LandUse / Decoration 与观测。
 - D4 key、array、continuous expansion planner：删除 `structureIds[]` configured 分支，只消费模板 selections。
 
 ### 7.3 保留
@@ -182,7 +183,7 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 - `CityTemplateCatalog` / `CityTemplateCatalogLoader`。
 - `MinecraftCityTemplateReader`。
 - `CityTemplatePlacementGeometry`。
-- `MinecraftCityTemplateWorldgenPlacer`。
+- `CityTemplateRuntimeTransform`。
 - D3、LandUse、Decoration、RoadWeaver、城墙和原版自然结构抑制能力。
 
 ## 八、开发阶段
@@ -208,7 +209,7 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 ### 阶段 D：Worldgen 模板落地
 
 - 激活独立 template placement registry。
-- FEATURES owner chunk 确定性粘贴模板并写 ledger。
+- `createStructures` 注入单-piece start，原版 structure owner chunk 确定性粘贴模板并写 ledger。
 - template -> LandUse -> Decoration 的执行顺序、事务边界和幂等性明确可测。
 
 ### 阶段 E：物理删除与文档收口
@@ -228,7 +229,7 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 - D6 不产出 piece / signature / bbox group 字段。
 - worldgen template placement 幂等，ledger 写失败不提前标记成功。
 - 旧 `structureId`、configured mode、bounded jigsaw 和 envelope source 输入全部 hard fail。
-- active City 代码不查询外部 `Registries.STRUCTURE`，不读取 Jigsaw pool；`geomantia:` 模板在规划期强制冻结为 `terrainPosePolicy=structure_start_beard_thin`，其他命名空间只有显式冻结该值时才可构造 City 注册的单-piece `StructureStart`。
+- active City 代码不查询外部 configured `Registries.STRUCTURE`，不读取 Jigsaw pool；所有 City catalog 模板在规划期强制冻结为 `terrainPosePolicy=structure_start_beard_thin`，且只能构造 City 注册的单-piece `StructureStart`。
 
 ### 真实游玩
 
@@ -262,4 +263,4 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 
 ## 十一、完成定义
 
-只有在默认 `city_run_workflow` 不再执行 envelope profiling、D4-D6 只消费固定模板、非 `structure_start_beard_thin` 模板 worldgen 不再创建 City `StructureStart`、旧 configured payload 全部明确拒绝，并完成“五栋住宅 + 10 格净空 + group LandUse + RoadWeaver”真实游玩验收后，本案才算完成。启用该受限 terrain-start policy 的模板需另按地形适配试验完成真实游玩验收。
+只有在默认 `city_run_workflow` 不再执行 envelope profiling、D4-D6 只消费固定模板、所有 catalog 模板都冻结为 `structure_start_beard_thin`、旧 configured payload 全部明确拒绝，并完成“五栋住宅 + 10 格净空 + group LandUse + RoadWeaver”真实游玩验收后，本案才算完成。City terrain start 仍需按地形适配试验完成真实游玩验收。

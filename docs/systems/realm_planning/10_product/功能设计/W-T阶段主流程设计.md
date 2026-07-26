@@ -12,8 +12,9 @@ WorldSurveyContext
   -> RealmProfile
   -> RealmCandidateMapPackage
   -> RealmCoordinateSelection
-  -> RealmSeed + CapitalCitySeed
+  -> RealmSeed + CapitalCityIntent
   -> RealmTerritoryMap
+  -> T4 AI 首都候选选址
   -> CitySeedRegistry
 ```
 
@@ -25,9 +26,9 @@ v1.1 已验证该主链可以在真实世界中端到端跑通。v1.2 在不改�
 | --- | --- | --- | --- | --- |
 | W | 世界粗扫、大陆 / 海洋摘要、粗 Patch、候选图。 | `W3Stage`、`W4Stage`、`ClusterAnalyzer`。 | 复用聚类、摘要、预览图思路；重写数据来源和产物结构。 | `WorldSurveyContext`、`WorldPatchMap`。 |
 | T1 | 生成国度设定，准备带网格坐标的候选图包。 | `T1Stage`、`TerritoryStageOrchestrator.runT1`。 | 不复用旧选簇；保留阶段产物和状态追踪思想。 | `RealmProfile`、`RealmCandidateMapPackage`。 |
-| T2 | AI 从候选图直接选坐标，程序校验并落盘。 | `T2Stage`、`selectT2Direction`。 | 旧选方向废弃，改成直接坐标选择。 | `RealmCoordinateSelection`、`RealmSeed`、`CapitalCitySeed`。 |
+| T2 | AI 从候选图直接选国度扩张核心，程序校验并落盘。 | `T2Stage`、`selectT2Direction`。 | 旧选方向废弃，改成直接坐标选择。 | `RealmCoordinateSelection`、`RealmSeed`、`CapitalCityIntent`。 |
 | T3 | 多国度统一扩张。 | `T3Stage`、`TerritoryManager`。 | 复用算法思想；重写全局状态、snap、坐标换算和 artifact 边界。 | `RealmTerritoryMap`。 |
-| T4 | 生成城市名册和生成条件。 | `T4Stage`。 | 旧 T4 语义不匹配，不作为主线复用。 | `CitySeedRegistry`。 |
+| T4 | 先由 AI 在单国 owned territory 候选中选定唯一首都，再生成城市名册和条件。 | `RealmT4PatchPlanningService`。 | 旧 T4 语义不匹配，不作为主线复用。 | `CitySeedRegistry`。 |
 
 ## Legacy 取舍表
 
@@ -111,7 +112,7 @@ AI 可以配置 `scalePlan` 和 `expansionStyle`，但不直接配置 T3 的水�
 | --- | --- |
 | 只登记城市 | T4 不创建城市实例，不生成边界、道路、功能区或结构落点。 |
 | 城市存在性前置 | T4 决定有限城市是否存在，不能把有限城市名额留给 C 阶段按 chunk 加载顺序抢占。 |
-| 首都必定存在 | `CapitalCitySeed` 必须进入 registry。 |
+| 首都必定存在 | `CapitalCityIntent` 必须在 T4 经 AI 候选选址转成恰好一座带追溯的 capital CitySeed。 |
 | 单国度候选图 | T4 给 AI / 人类看的图应裁剪到单个国度及少量邻接上下文，避免整张世界图噪声干扰。 |
 | 二级区域 | 城市候选应来自 macro patch、basin / corridor、边境带等二级区域，而不是全境取最高分。 |
 | 空间约束 | 城市间使用规模半径、角色关系和国度内图距离约束，避免撞点和过度集中。 |

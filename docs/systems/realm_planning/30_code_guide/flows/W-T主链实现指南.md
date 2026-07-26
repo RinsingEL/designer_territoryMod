@@ -173,18 +173,18 @@ realm_t4_build_registry
 | --- | --- |
 | 目标 | 校验 AI / 自动流程选择的 grid 坐标，并生成可扩张种子。 |
 | 输入 | `runId`、`realmId`、`gridX/Z`、`alternates[]`、`selectionReason`、`selectedBy`、`allowSnap`。 |
-| 输出 | `RealmCoordinateSelection`、`RealmSeed`、`CapitalCitySeed`、`t2_report.json`。 |
+| 输出 | `RealmCoordinateSelection`、`RealmSeed`、`CapitalCityIntent`、`t2_report.json`。 |
 | 允许读 | T1 `CandidatePackage`、`RealmProfile`、`worldCellsByKey`、已占用 seeds。 |
-| 允许写 | `run.selections`、`run.seeds`、`run.capitals`、T2 产物文件。 |
+| 允许写 | `run.selections`、`run.seeds`、`run.capitalIntents`、T2 产物文件。 |
 | 禁止事项 | 不得静默跨大陆、跨海、跨禁用 patch；不得在 rejected 坐标上继续 T3。 |
 | 失败处理 | 非法坐标返回 rejected selection；允许 snap 时只在小半径内找合法 cell。 |
-| 测试锚点 | `realm_coordinate_selections.json`、`realm_seeds.json`、`capital_city_seeds.json`。 |
+| 测试锚点 | `realm_coordinate_selections.json`、`realm_seeds.json`、`capital_city_intents.json`。 |
 
 当前实现说明：
 
 - `selectT2` 先用 `validateSelection` 校验原坐标。
 - `allowSnap=true` 时，`trySnap` 在附近 cell 中寻找合法候选。
-- accepted 后生成 `RealmSeed.from(profile, selection, cell)` 和 `CapitalCitySeed.from(...)`。
+- accepted 后生成 `RealmSeed.from(profile, selection, cell)` 和无坐标 `CapitalCityIntent.from(profile, selection)`。
 - rejected 会写入 selections 和 T2 report，但不会生成 seed / capital。
 
 ### 6. T3 国度扩张
@@ -276,7 +276,7 @@ W survey sealed
 | `WorldSurveyRunner` | tile cache、survey manifest、`WorldSurveyResult` | RealmProfile、RealmSeed、Territory、CitySeed |
 | W 汇总 | WorldSurveyContext、WorldPatchMap、预览图 | 国度坐标、国境、城市 |
 | T1 | RealmProfile、CandidatePackage、候选图 | RealmSeed、Territory、CitySeed |
-| T2 | Selection、RealmSeed、CapitalCitySeed | 国境、城市名册 |
+| T2 | Selection、RealmSeed、CapitalCityIntent | 国境、最终首都坐标、城市名册 |
 | T3 | RealmTerritoryMap、repair log、territory preview | 城市内部结构、C 阶段对象 |
 | T4 | CitySeedRegistry、城市候选包、city seed preview | 城市实例、道路、功能区、建筑点 |
 | Score / acceptance | score_manifest、acceptance_report | 反向修改 W/T 主数据 |
@@ -296,7 +296,7 @@ W survey sealed
 | W survey | `world_survey_manifest.json`、`tiles/region_<x>_<z>.json` |
 | W | `world_survey_context.json`、`world_patch_map.json`、`world_patch_preview.png`、`grid_overlay_preview.png`、`w_manifest.json` |
 | T1 | `realm_profiles.json`、`candidate_map_packages.json`、`candidates/*_candidate_map.png`、`t1_manifest.json` |
-| T2 | `realm_coordinate_selections.json`、`realm_seeds.json`、`capital_city_seeds.json`、`t2_report.json` |
+| T2 | `realm_coordinate_selections.json`、`realm_seeds.json`、`capital_city_intents.json`、`t2_report.json` |
 | T3 | `realm_territory_map.json`、`territory_preview.png`、`t3_report.json`、`territory_repair_log.json` |
 | T4 | `city_seed_registry.json`、`city_seed_preview.png`、`t4_report.json`、`realm_city_candidate_packages.json` |
 | 验收 | `score_manifest.json`、`acceptance_report.json` |

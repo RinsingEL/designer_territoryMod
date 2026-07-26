@@ -44,8 +44,8 @@ flowchart TD
 
     Q3 --> R["selectT2"]
     R --> R1["validateSelection / trySnap"]
-    R1 --> R2["RealmSeed.from / CapitalCitySeed.from"]
-    R2 --> R3[("realm_seeds.json / capital_city_seeds.json")]
+    R1 --> R2["RealmSeed.from / CapitalCityIntent.from"]
+    R2 --> R3[("realm_seeds.json / capital_city_intents.json")]
 
     R3 --> S["expandT3"]
     S --> S1["buildTerritory"]
@@ -53,8 +53,8 @@ flowchart TD
     S2 --> S3["repairDetachedComponents / rebalanceAreaQuotas"]
     S3 --> S4[("realm_territory_map.json / t3_report.json")]
 
-    S4 --> T["buildT4"]
-    T --> T1["buildRegistry"]
+    S4 --> T["RealmT4PatchPlanningService.create"]
+    T --> T1["Patch Explorer selectCapital / add city / finalize"]
     T1 --> T2["bestCityCandidate / citySpacingOk"]
     T2 --> T3[("city_seed_registry.json / realm_city_candidate_packages.json")]
 

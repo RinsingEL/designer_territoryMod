@@ -34,6 +34,7 @@
 12. `City建筑群生活感设计-v0.1/README.md`
 13. `W结果驱动大城镇功能区设计-v0.1/README.md`
 14. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+15. 当前实例设计案：`潮汐王冠首都-百建筑设计-v0.1/README.md`。
 
 ## 案子状态表
 
@@ -54,6 +55,7 @@
 | `City建筑驱动LandUseAreaPlan-v0.1` | 当前开发路径 | D3 补 LandUse terrain field，D4 v0.2 保留 group provenance；D6 locked footprint 后执行 64 格内相向扩张，再由 intent v0.3 运行时材料驱动 `uniform|contour_bands` 刷地并冻结 SurfacePrintPlan v0.2，随后交给稀疏 Decoration / execute_d5。配置默认关闭；roads 后写覆盖、旧 chunk 不回填。 |
 | `City建筑群生活感设计-v0.1` | 当前设计案 | 使用现有 D4 / LandUse 表达农业、商业、行政结构，增加建筑自动朝向和功能装饰；首个切片为临河 / 海综合城镇，道路另案。 |
 | `W结果驱动大城镇功能区设计-v0.1` | 当前设计案 | 基于 sealed W 重新选取未生成临水候选，定义大城镇农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序与修缮口径；农业使用不规则 LandUse 扩张与 `CONTOUR_BANDS` 等高线条带，水槽按全局 role mask 直接落地，石墙禁用木栅栏。 |
+| `潮汐王冠首都-百建筑设计-v0.1` | 当前实例设计案 | 基于 `realm_w_mryvxhga_62af05d6` 的潮汐王冠首都 `city_realm_tide_crown_capital`，以 block `(4480,256)` 为粗锚点，目标 99 栋；用户已确认按崖岸型继续，本轮 D4 已按真实占用冻结 80 个唯一 anchor，质量通过，尚未进入 D5/D6 或世界写入。 |
 | `结构Envelope精修-v0.1` | 已完成并入主线 | 已完成固定 / 近固定结构 bbox group、D6 锁 actual group、D7 基于真实 footprint 生成道路的口径。后续问题是确定性 group 选择、更多结构 profiling 和更紧的 road avoidance。 |
 | `结构语义重标记-v0.1` | 后续待做 | 方向有效：整理 TerraSense 结构语义白名单和高质量测试 profile。注意不恢复 City 自建枚举。 |
 | `RoadWeaver结构连接-v0.1` | 已完成并入主线 | 已完成 optional RoadWeaver adapter：`city_execute_d5` 生成 connection plan 并注册 endpoint / connection；缺 mod 时 `roadProvider=roadweaver` hard fail、`auto` 跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，只有显式 `worldedit_debug` 进入旧 debug fallback。后续是入口候选、道路风格和水岸 / 桥梁策略。 |

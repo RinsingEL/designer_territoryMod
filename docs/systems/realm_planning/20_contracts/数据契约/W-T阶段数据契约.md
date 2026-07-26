@@ -25,12 +25,24 @@
 | `RealmCandidateMapPackage` | T1 | 给 AI 选坐标的候选图包。 | 旧 T1 候选图 / 候选簇。 | 改成图上直接选坐标。 |
 | `RealmCoordinateSelection` | T2 | 保存 AI 选点和程序校验结果。 | 旧 T1 / T2 selection artifact。 | 新建，替代选簇 / 选方向。 |
 | `RealmSeed` | T2 | T3 扩张种子。 | 旧 territory config。 | 保留用途，结构重写。 |
-| `CapitalCitySeed` | T2 | 首都城市种子。 | 旧 T3 后只有首都语义。 | 保留“首都必定存在”。 |
+| `CapitalCityIntent` | T2 | 无坐标首都意图。 | 旧 T3 后只有首都语义。 | 保留“首都必定存在”，最终坐标交给 T4。 |
 | `RealmTerritoryMap` | T3 | 国度扩张结果。 | `TerritoryManager` 扩张结果。 | 复用算法，重写实现。 |
 | `TerritoryRepairLog` | T3 | v1.2 记录飞地、孔洞和边界修复。 | 旧实现无稳定产物。 | 新增。 |
 | `RealmCityCandidateMapPackage` | T4 | v1.2 单国度城市候选图包。 | 旧实现无稳定产物。 | 新增。 |
 | `CitySeedRegistry` | T4 | 全城市名册。 | 旧 T4 不匹配。 | 新建。 |
 | `ScoreManifest` | 验收 | v1.2 记录质量评分、硬阻断和人工 review。 | 无旧结构。 | 新增。 |
+
+## 持久化 checkpoint 恢复
+
+`RealmRun` 是当前进程内工作状态，不是跨客户端生命周期的唯一真值。服务重启后的恢复顺序为：
+
+1. 以 sealed `world_survey_manifest.json`、tile snapshots 和 `world_feature_grid.json` 重建 W 内存模型。
+2. T1 同时存在 `realm_profiles.json`、`candidate_map_packages.json`、`t1_manifest.json` 时恢复 profiles，并由 sealed W 确定性重建候选内存索引。
+3. T2 同时存在 `realm_coordinate_selections.json`、`realm_seeds.json`、`capital_city_intents.json`、`t2_report.json` 时恢复已完成或已拒绝的选择状态。历史 `capital_city_seeds.json` 只作迁移输入。
+4. T3 同时存在 `realm_territory_map.json`、`t3_report.json` 时恢复 territory、统计、归一化比例、行动预算和地形成本。
+5. T4 同时存在 `city_seed_registry.json`、`t4_report.json` 且 `territoryMapId` 与 T3 一致时恢复城市名册；`score_manifest.json` 存在时一并恢复评分。
+
+恢复不得修改任何来源文件。完整 checkpoint 内部身份、realm、candidate package、grid、continent、patch、survey 或 territory 引用不一致时必须返回 `REALM_CHECKPOINT_INVALID`。缺少一部分阶段文件只表示该阶段未形成可恢复 checkpoint，不允许据此伪造完成状态。
 
 ## v1.2 扩展口径
 
@@ -404,7 +416,7 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 
 ## RealmCandidateMapPackage
 
-T1 产物，供 AI 和程序共同使用。AI 看图选坐标，程序读 manifest 校验坐标。
+T1 产物，供 AI 和程序共同使用。该图包只表达目标大陆的合法 scope，不按国度文化或兴趣类型做差异化；同一大陆的多个国度可以引用内容相同的参考图。正常 AI 主链通过 Patch Explorer 探索并提交选择凭证；直接看图提交 grid 坐标只保留为兼容方式，程序仍以 manifest 做最终校验。
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
@@ -412,13 +424,17 @@ T1 产物，供 AI 和程序共同使用。AI 看图选坐标，程序读 manife
 | `realmId` | string | 是 | 对应国度。 |
 | `surveyId` | string | 是 | 对应 W 粗扫。 |
 | `candidateMapImage` | string | 是 | 候选图路径。 |
+| `mapRole` | enum | 是 | 固定为 `continent_scope_reference`。 |
+| `scopeBasis` | enum | 是 | 当前固定为 `target_continent_assignable_land`。 |
+| `profileDifferentiated` | boolean | 是 | 当前固定为 false，明确参考图不体现文明兴趣差异。 |
+| `selectionMode` | enum | 是 | 固定为 `patch_explorer_primary`。 |
 | `gridLegend.originBlock` | object | 是 | grid 原点。 |
 | `gridLegend.cellStepBlocks` | int | 是 | grid cell 步长。 |
 | `gridLegend.coordinateFormat` | string | 是 | 例如 `gridX,gridZ`。 |
 | `allowedPatches[]` | string[] | 是 | 可选 patch。 |
 | `blockedCells[]` | array | 否 | 禁用 cell 与原因。 |
 | `occupiedSeeds[]` | array | 否 | 已有国度种子，用于距离约束。 |
-| `selectionRules` | object | 是 | AI 选择约束和返回格式。 |
+| `selectionRules` | object | 是 | 必须含 Patch Explorer `primaryFlow`、`directGridSubmission=compatibility_only` 和兼容返回格式。 |
 
 `blockedCells[]` 至少包含：
 
@@ -449,6 +465,33 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 | `validation.warnings[]` | string[] | 否 | 警告。 |
 | `validation.errors[]` | string[] | 拒绝时必填 | 拒绝原因。 |
 
+通过 Patch Explorer 进入 T2 时，`primaryGrid` 由 `PatchSelection.suggestedAnchor` 转换而来，最终仍必须经过现有 `RealmPlanningService.selectT2` 校验与有限 snap；选择凭证不绕过跨大陆、跨海、禁用 patch 和种子冲突校验。
+
+## PatchExplorerSession / CandidatePage / PatchSelection
+
+跨尺度探索产物使用独立 schema：
+
+| 产物 | schemaVersion | 关键字段 |
+| --- | --- | --- |
+| 会话 | `patch_explorer_session.v0.1` | `sessionId`、`runId`、`scopeType`、`scopeId`、`candidateModel`、`candidateBasis`、`sourceArtifacts[]`、`sourceIdentity`、`scopeSnapshotIdentity`、`displayedCandidates[]`。 |
+| 紧凑 scope 快照 | `patch_explorer_scope_snapshot.v0.1` | 候选 cell、来源 patch、scope 裁剪、hard occupied 扣除结果；用于避免每次翻页重读大型 W JSON。 |
+| 候选页 | `patch_explorer_candidate_page.v0.1` | `interestTypes[]`、`page`、`pageSize`、`typePages[]`（各自含 `nextPageToken` 与 `candidates[]`）、`relations[]`、`candidatePreview`。 |
+| 选择 | `patch_selection.v0.1` | `selectionId`、`sessionId`、`scopeType`、`scopeId`、`candidateId`、`candidateType`、`sourcePatchRefs[]`、面积字段、`suggestedAnchor`、来源 identity、`confirmationPreviewPath`。 |
+
+候选字段口径：
+
+- `areaBlocks`：候选当前 scope 内全部可用 cell 的面积；D4 为扣除 hard occupied 后的剩余总面积。
+- `largestContinuousAreaBlocks`：当前候选最大连续可用分量，T4 城市容量和 D4 阵列承载判断以此为准。
+- `originalAreaBlocks`：裁剪或扣除前来源 patch 的原始面积。
+- `sourcePatchRefs[]`：同尺度自然地理真值引用，不得把 T 与 D3 patch ID 混用。
+- `candidateBasis`：T2/T4 固定为 `dominant_biome_contiguous_region`，City D4 固定为 `d3_landform_patch`。
+- `patchType`：T2/T4 为完整主导 biome ID；City D4 为 D3 landform 类型。
+- `terrainComposition` / `baseLandformComposition`：候选内最终地貌和基础地貌的 cell 数与比例。T 阶段以它们说明群系区域的建设条件，不把 `cliff` 当作互斥主目录。
+- `relations[]`：只引用当前兴趣集合、当前页已展示候选；关系只含可计算的相邻、距离、方位和共享边界事实。
+- `suggestedAnchor`：程序按候选内部连通性与硬边界生成的粗锚点，不代表文明叙事上的最佳选择。
+
+`candidateModel=realm_biome_primary_city_landform_v0_1` 必须进入来源 identity。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；任何漂移都返回 stale，不得静默重算成另一个候选。
+
 ## RealmSeed
 
 T3 扩张输入。它是程序消费对象，不保存 AI 原始长文本。
@@ -464,20 +507,22 @@ T3 扩张输入。它是程序消费对象，不保存 AI 原始长文本。
 | `scalePlan` | object | 是 | 从 `RealmProfile` 归一化后的面积比例计划。 |
 | `expansionStyle` | object | 是 | 从 `RealmProfile` 派生或复制的扩张倾向。 |
 
-## CapitalCitySeed
+## CapitalCityIntent
 
-首都一定存在，但还不是城市规划结果。
+首都一定存在，但 T2 只登记存在性与理论规模，不给出最终城市坐标。产物文件为 `capital_city_intents.json`。
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `citySeedId` | string | 是 | 城市种子 ID。 |
 | `realmId` | string | 是 | 所属国度。 |
 | `cityRole` | enum | 是 | 当前固定为 `capital`。 |
-| `anchorGrid.x` / `anchorGrid.z` | int | 是 | 首都锚点 grid 坐标。 |
-| `anchorBlock.x` / `anchorBlock.z` | int | 是 | 首都锚点 block 坐标。 |
 | `theoreticalScale` | enum | 是 | `village`、`town`、`city`、`large_city`、`capital`。 |
-| `growthAnchor` | string | 否 | 例如 `coastal_plain`、`river_mouth`。 |
 | `mustExist` | boolean | 是 | 首都必须为 `true`。 |
+| `requiredConditions[]` | string[] | 是 | 至少包含 `land`、`inside_realm`，供 T4 选址校验。 |
+| `coreFunctions[]` | string[] | 是 | 首都必需的行政、市场、防御等功能。 |
+| `realmCoreSelectionId` | string | 是 | 仅追溯 T2 国度核心选择；不表示首都坐标。 |
+
+历史 `capital_city_seeds.json` 可在 checkpoint 恢复时迁移为 `CapitalCityIntent`，但旧 `anchorGrid` / `anchorBlock` 只能视为 realm core provenance，不能自动进入正式 T4 会话。
 
 ## RealmTerritoryMap
 
@@ -591,6 +636,27 @@ T4 输出，登记城市名册和生成条件。
 | `trigger` | enum/string | 是 | `always`、`player_nearby`、`realm_development`、`story_stage`、`debug`。 |
 | `source` | object | 建议 | 来源说明，例如来自 capital seed、海岸 patch、边境条件。 |
 
+## RealmT4PatchPlanningSession
+
+AI 驱动的单国 T4 会话使用 `realm_t4_patch_planning_session.v0.2`：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `planningSessionId` / `runId` / `realmId` | string | 会话身份与作用域。 |
+| `status` | string | `open` 或 `finalized`。 |
+| `territoryIdentity` | string | T3 owned territory 来源身份。 |
+| `capitalIntent` | object | 当前国度的无坐标首都意图。 |
+| `capitalSelectionStatus` | enum | `awaiting_selection` 或 `selected`。 |
+| `citySeeds[]` | array | 当前会话城市；创建时必须为空。 |
+| `usedPatchSelectionRefs[]` | string[] | 已消费的 `realm_t4` 选择凭证，禁止重复消费。 |
+| `citySeedRegistry` | string | finalize 后合并写回的全局 `CitySeedRegistry` artifact 引用。 |
+
+首都与非首都城市都必须记录 `source.patchSelectionRef`、`source.patchCandidateId`、`source.sourcePatchRefs[]` 和 `source.siteSelectionMode=ai_candidate_selection`。锚点必须在同 realm owned territory 内，并按 `largestContinuousAreaBlocks` 校验规模默认容量与 `minimumAreaBlocks`。会话必须先选且只选一座首都；通用 add city 不接受 `role=capital`。
+
+finalize 前必须校验会话内恰好一座带选择追溯的首都。
+
+finalize 以合并后的完整 `CitySeedRegistry` 为 T4 当前真值，并原样保留上述 `source` 追溯字段。`t4_report.json`、`city_seed_preview.png`、`realm_city_candidate_packages.json`、各国候选预览和 `score_manifest.json` 必须由同一份最终名册同步重建。旧 `acceptance_report.json` 若存在，必须写入 `stale=true`、`status=stale`、`passed=false`、`staleReason=t4_registry_replaced_by_patch_planning`；只有重新执行完整 acceptance 才能恢复通过状态。
+
 ## RealmCityCandidateMapPackage
 
 T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世界图。
@@ -653,22 +719,22 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | `capitalCount` | number | 首都种子数量。 |
 | `duplicateAnchorCount` | number | 非卫星城市同格锚点冲突数，非 0 时 hard block。 |
 | `spacingViolationCount` | number | 非卫星城市规划半径冲突数，非 0 时 hard block。 |
-| `offTerritoryAnchorCount` | number | 城市锚点未落在同 realm owned territory 内的数量，非 0 时 hard block。 |
-| `allAnchorsInOwnedTerritory` | boolean | 是否所有城市锚点都落在同 realm owned territory 内。 |
+| `offTerritoryAnchorCount` | number | 本轮 `RealmProfile` 所属城市锚点未落在同 realm owned territory 内的数量，非 0 时 hard block；按 realm 合并保留的其他规划轮次城市不纳入本轮 T3 领土评分。 |
+| `allAnchorsInOwnedTerritory` | boolean | 本轮 `RealmProfile` 所属城市锚点是否都落在同 realm owned territory 内。 |
 
 ## 关键校验规则
 
 | 规则 | 阶段 | 说明 |
 | --- | --- | --- |
 | grid 转 block 必须可逆追溯 | W / T2 | manifest 中必须有 `gridOriginBlock` 和 `cellStepBlocks`。 |
-| AI 主输入为 grid 坐标 | T2 | 不接受 AI 只给自然语言或只给 block 坐标作为正式选择。 |
+| AI 主输入为选择凭证或 grid 坐标 | T2 | 推荐提交同 run、同 realm 的 `patchSelectionRef`；兼容 grid 坐标。两者都不得只给自然语言或只给 block 坐标。 |
 | 拒绝静默跨域 snap | T2 | 跨大陆、跨海、跨禁用 patch 时必须拒绝或请求重试。 |
 | T3 输入必须全部 accepted | T3 | `RealmCoordinateSelection.validation.status` 未通过的国度不能进入扩张。 |
 | CitySeed 不包含城市内部规划 | T4 | 不出现道路、功能区边界、关键建筑坐标、jigsaw 参数等字段。 |
 | 非海权国领土必须基本连通 | T3 v1.2 | `largestComponentRatio < 0.90` 应进入硬阻断。 |
 | 国度面积弹性 | T3 v1.4 | `quota_frontier` 下仍按 `scalePlan.minAreaRatio/maxAreaRatio` 阻断；`action_budget` 下 `scalePlan` 为软目标，面积偏差进入 `budgetCoherenceScore` / `overExpansionPenalty`，不再单独硬阻断。 |
 | 行动力最低可玩领地 | T3 v1.4 | strict + `action_budget` 下，每个国度必须有 owned territory；极小 owned 结果应进入硬阻断，不能只靠首都点放行。 |
-| 城市锚点必须在 owned territory | T4 v1.4 | `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的国度不能生成首都种子。 |
+| 城市锚点必须在 owned territory | T4 v1.4 | 本轮 `RealmProfile` 所属的 `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的本轮国度不能生成首都种子。全局名册按 realm 合并时可保留其他规划轮次的城市，它们不得用本轮 `RealmTerritoryMap` 误判。 |
 | 高 step cliff 必须有局部证据 | W v1.5 | `cellStepBlocks>=64` 且 `microSamplingImplemented=true` 时，正式 `cliff` / `steep` tag 必须由 `slopeStats` / `steepFrac` 支撑；coarse cliff 不得直接进入正式 cliff tag。 |
 | Tag Audit 抽样精扫 | W v1.5 | 开发期 `runTagAudit=true` 应输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，报告中至少包含 `cliff/steep/coastal` 的 precision / recall。 |
 | 多尺度 rank 不替代真值 | W v1.6 | `relativeHeightRank` / `scanHeightRank` 只能作为辅助特征；`ridge`、`plateau`、`lowland` 判定必须至少可追溯到 local / regional rank、roughness、DEV 或 geomorphon evidence。 |

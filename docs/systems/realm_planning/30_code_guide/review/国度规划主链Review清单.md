@@ -126,21 +126,21 @@ Review 前建议同时打开：
 - `trySnap`
 - `RealmSelection`
 - `RealmSeed`
-- `CapitalCitySeed`
+- `CapitalCityIntent`
 
 检查点：
 
 - 坐标是否合法必须按 continent、patch、水体、禁用规则和占用冲突校验。
-- rejected selection 是否写明 `errors[]`，且不会生成 seed / capital。
+- rejected selection 是否写明 `errors[]`，且不会生成 realm seed / capital intent。
 - snap 是否小范围、可追溯，不跨大陆、跨海或跨禁用 patch。
 - accepted seed 是否继承 `scalePlan` 和 `expansionStyle`。
-- 首都 seed 是否一定存在且稳定 ID。
+- 首都 intent 是否一定存在、具有稳定 ID 且不含最终坐标。
 
 常见风险：
 
 - 非法坐标被静默修正到远处。
 - 多国度选择同一 cell 但没有冲突记录。
-- T2 直接创建除首都外的城市。
+- T2 直接创建最终首都坐标或其他城市。
 
 ## T3 国度扩张
 

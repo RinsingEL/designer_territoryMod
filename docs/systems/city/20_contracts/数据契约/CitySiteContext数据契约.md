@@ -63,6 +63,7 @@ T4 兼容映射：`capital`/`large_city` → city，`town` → town。
 
 - D2/D3 HTTP/MCP 入口未显式传 `cellStepBlocks` 时，必须从 `run/realm_debug/<runId>/world_survey_manifest.json` 的 `config.cellStepBlocks` 恢复 W/T 采样步长。
 - `dimensionId` 优先使用请求参数；未传时从 `world_survey_manifest.json` 的 `config.dimensionId` 恢复；仍缺失时才使用 `minecraft:overworld`。
+- D2 可以离线读取 artifact；D3 及后续任何读取或修改实时世界的入口必须额外读取 `world_survey_context.json`，要求其 `worldSeed` 与 `dimensionId` 同当前 `ServerLevel` 完全一致。该校验是产生实时阶段副作用前的硬前置，不允许用 run 内部 artifact hash 或 selection ref 代替。
 - `anchorBlock` 优先使用 T4 `city_seed_registry.json` 中 seed 的 `anchorBlock`，不得用 MCP 默认步长重算真实锚点。
 - `siteCandidateId` 优先使用 seed 的 `candidateId`，缺失时才回退到 `citySeedId`。
 - `territoryCheckResult` 优先使用 `realm_territory_map.json` 中同 `realmId` 且 `status=owned` 的 territory cells 计算；文件缺失或无匹配 cells 时返回 `unknown`。

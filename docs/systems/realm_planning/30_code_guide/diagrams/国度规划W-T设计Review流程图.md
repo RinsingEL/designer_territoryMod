@@ -26,7 +26,7 @@ flowchart TD
     I --> J["AI / 自动流程选择 grid 坐标"]
     J --> K{坐标 accepted?}
     K -- 否 --> K1["rejected selection + errors"]
-    K -- 是 --> L[("RealmSeed + CapitalCitySeed")]
+    K -- 是 --> L[("RealmSeed + CapitalCityIntent")]
   end
 
   subgraph T3["T3 国度扩张"]
@@ -37,7 +37,7 @@ flowchart TD
   end
 
   subgraph T4["T4 城市种子名册"]
-    O --> P["按国度领土和角色生成 CitySeed"]
+    O --> P["AI 先从单国候选选定唯一首都，再添加其他 CitySeed"]
     P --> Q{城市种子约束通过?}
     Q -- 否 --> Q1["T4 warning / hard block"]
     Q -- 是 --> R[("CitySeedRegistry")]

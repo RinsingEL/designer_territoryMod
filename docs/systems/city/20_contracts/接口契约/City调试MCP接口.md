@@ -2,7 +2,7 @@
 
 ## 版本
 
-v0.3 主线 + D4 阵列候选选择闭环 v0.4 + 建筑驱动 LandUse v0.1 + 关键装饰锚点候选 v0.1 + worldgen 方块观测 v0.1 显式开发接口。
+v0.3 主线 + D4 阵列候选选择闭环 v0.4/v0.5 + Patch 探索式选址 v0.1 + 建筑驱动 LandUse v0.1 + 关键装饰锚点候选 v0.1 + worldgen 方块观测 v0.1 显式开发接口。
 
 Java HTTP：`127.0.0.1:5000`
 Node MCP：`country_designer_mcp`
@@ -14,7 +14,10 @@ Node MCP：`country_designer_mcp`
 | --- | --- | --- |
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
-| `city_profile_structure_envelopes` | `POST /realm/city/profile_structure_envelopes` | cache-backed dry-run profiling：对顶层 configured structure 做非写世界 bbox 采样，输出 validSamples、bboxGroups、generationConfigHash、P95/P99/maxObserved facts。 |
+| `city_review_d3_site` | `POST /realm/city/review_d3_site` | 对 T4 AI 候选选出的首都显式接受当前 D3 选址或要求回 T4 重选。 |
+| `patch_explorer_open` | `POST /realm/patch_explorer/open` | 以 `scopeType=city_d4` 打开 D3 patch 探索会话，返回扣除 hard occupied 后的类型目录。 |
+| `patch_explorer_show_candidates` | `POST /realm/patch_explorer/show_candidates` | 按 AI 兴趣类型分页返回每类候选、染色图和仅限当页兴趣候选的稀疏几何关系。 |
+| `patch_explorer_select_candidate` | `POST /realm/patch_explorer/select_candidate` | 选择已展示候选并返回确认染色图与 `patchSelectionRef`。 |
 | `city_query_structure_catalog` | `POST /realm/city/query_structure_catalog` | 只读检索 TerraSense 结构画像；支持 canonical termId，以及来源冻结词表的中文标签 / alias；不触发 D4-D7 或世界写入。 |
 | `city_query_template_metadata` | `POST /realm/city/query_template_metadata` | 从当前游戏的 `StructureTemplateManager` 只读校验给定 `templateRefs[]`，返回实际 NBT 尺寸、content hash 与来源；不加载区块、不放置结构。 |
 | `city_create_d4_candidate_session` | `POST /realm/city/create_d4_candidate_session` | D4 v2 推荐入口：创建逐 slot 候选 session，开始记录设计耗时。 |
@@ -38,7 +41,7 @@ Node MCP：`country_designer_mcp`
 | `city_select_d4_structure_cluster_group` | `POST /realm/city/select_d4_structure_cluster_group` | D4 结构群整组选中入口：按 `groupCandidateId` 取 `expandedStructureAnchorPlan` 并进入标准 D4 artifact。 |
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
-| `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5，执行 planned_worldgen probe-and-lock；不要求 chunk loaded，不改世界。 |
+| `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5 与当前世界固定 NBT，复核 identity、三层几何和 owner chunks；不要求 chunk loaded，不改世界。 |
 | `city_plan_land_use` | `POST /realm/city/plan_land_use` | 读取 D3 terrain field、D4 group provenance 与 D6 locked footprint，生成 block 级 area plan 和 `city_land_use_surface_print_plan.v0.2`；可选严格 intent v0.3 在本次规划中提供 `uniform|contour_bands` 算法材料默认与 group 例外，不改世界。 |
 | `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | v0.3 返回 catalog hash、content index schema、pose upgrade required / mode、prefab pose summaries 与 style 摘要；不返回原始 NBT。 |
 | `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 仅对 managed 且精确匹配旧打包默认的目录显式备份并升级 v0.3；自定义目录拒绝自动改写，停用旧 active plan但保留 ledger / 已落地方块。 |
@@ -50,7 +53,7 @@ Node MCP：`country_designer_mcp`
 | `city_query_worldgen_observations` | `POST /realm/city/query_worldgen_observations` | 按 dimension + chunk 查询 City 写入在 post-features / retry tick / chunk save 回调中的实际 BlockState；只读 sidecar，不加载 chunk。 |
 | `city_plan_city_walls` | `POST /realm/city/plan_city_walls` | 读取 D7 ledger、D5 wall reservation 和 actual road mask，生成城墙 plan、preview 和 NBT 模板；v3 可生成结构种子城市外环 hull + 道路聚类裁门；`wallDesignPolicy=v3.2/v3.3` 增加天然边界、道路趋势 / 近路投影开门和独立 gatehouse；`wallVersion=v4` 生成 actualFootprint 优先、D5 cityDomain cell 轻量贴形的陆侧墙图。 |
 | `city_execute_city_walls` | `POST /realm/city/execute_city_walls` | 按城墙 plan 使用 vanilla setBlock 后端放置临时石墙 / 塔楼 / gatehouse；v3/v4 可开启 debug scan 输出缺口原因，v4 按 `wallUnits[]` 和 `nodeConnectorUnits[]` 执行。 |
-| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器：串联 D3 -> profiling -> final D4 -> plan_d5 轻量预案 -> D6 lock -> 可选 LandUse -> 可选 Decoration -> execute_d5 locked 激活 -> execute_d7；默认 D4 `key_then_array`。 |
+| `city_run_workflow` | `POST /realm/city/run_workflow` | 调试 / 验收快跑器；新 T4 AI 首都在 D3 后会暂停为 `awaiting_site_review`，审查接受后才继续 D4-D7。 |
 
 ## MCP 调用时间日志
 
@@ -69,15 +72,12 @@ Node MCP：`country_designer_mcp`
 
 - `terrasenseProfileSource`
 - `designSlotPlan`
-- `structureIds[]`
+- `templateCatalogSource`，显式指向 `city_template_catalog.v0.1`
 
 常用可选参数：
 
-- `skipExisting`，默认 `true`。已有 artifact 时跳过多数阶段，用于等待 chunk worldgen 后复跑；装饰规划只能以 `city_decoration_planning_complete.json` 判断可跳过，不得以 compiled 文件存在判断。若已有 `structure_envelope_facts.json` 且未传 `forceRefresh=true` / `cacheMode=rescan`，profiling step 也跳过。`forceRefresh=true` 或 `cacheMode=rescan` 时必须进入 cache-backed `city_profile_structure_envelopes` 并刷新 cache。
+- `skipExisting`，默认 `true`。已有且 source identity 仍有效的 artifact 可跳过对应阶段，用于等待 chunk worldgen 后复跑；装饰规划只能以 `city_decoration_planning_complete.json` 判断可跳过，不得以 compiled 文件存在判断。
 - 发布失效按依赖链传播：D3 或 D6 成功重算后删除旧 LandUse / Decoration completion；LandUse 成功重算后删除旧 Decoration completion。`skipExisting` 只能依据仍存在且在执行期通过 source hash 校验的 completion，不得复用失效的下游 compiled plan。
-- `sampleCount`，默认 256。
-- `cacheMode=use_cache|rescan`，默认 `use_cache`；`rescan` 强制 profiling cache 重算。
-- `forceRefresh`，默认 `false`；true 时忽略本地 profile cache。
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
 - `d4CandidateMode=key_then_array|array_layout_loop_v0_2|array_layout_loop_v0_3|sequential_session|structure_cluster_groups`；默认 `key_then_array`。`key_then_array` 会强制先处理 `placementStrategy=key_structure|single_ai_selected` 的关键结构，再处理 `placementStrategy=array_fill` 的填充阵列。`array_layout_loop_v0_2` / `array_layout_loop_v0_3` 是显式路径：先跑关键结构 session，再按 `arrayLayoutPlan.layoutPlans[]` 逐个 replay；若没有 item，返回 `waiting_for_array_layout_input`。v0.3 允许 `plannerType=composite_array` 的 item 携带 `childLayoutPlans[]`。`sequential_session` / `structure_cluster_groups` 仅作显式调试或兼容路径。
@@ -94,7 +94,7 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> `city_profile_structure_envelopes` -> D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` locked preflight -> 可选 `city_plan_land_use` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。D4 默认使用 `key_then_array`：关键结构阶段复用 D4 v2 session 自动选择最高分候选并冻结 occupied；每个 `array_fill` 阶段读取上一阶段 `structure_anchor_map.json` 做避让，自动选择最高分阵列候选并合并回标准 D4。显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3` 会在关键结构阶段后创建 array layout loop，按请求中 `arrayLayoutPlan.layoutPlans[]` 每轮执行一个 item，最终覆盖 key-only D4 为 key + array 的标准 D4 artifact。
+- workflow 会顺序执行：`city_plan_d3` -> 固定模板 D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` 当前世界 NBT lock -> 可选 `city_plan_land_use` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。D4 必须显式提供 `templateCatalogSource`；关键结构与阵列都只选择 `templateId/templateRef + variant`，阵列模板顺序固定为 `round_robin`，不再运行 seeded / weighted random。
 - `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
@@ -134,10 +134,24 @@ Node MCP：`country_designer_mcp`
 
 语义：
 
+- D3 进入实时 GIS 刷新前，必须读取 run 的 `world_survey_context.json`，并严格比较其中 `worldSeed` / `dimensionId` 与当前 `ServerLevel`。缺少或损坏身份来源时返回 `CITY_RUN_WORLD_IDENTITY_SOURCE_MISSING` / `CITY_RUN_WORLD_IDENTITY_INVALID`；不一致时返回 `CITY_RUN_WORLD_IDENTITY_MISMATCH`。以上拒绝必须发生在创建 D3 / LandUse 目录和刷新 GIS region 之前。
+- 同一 guard 适用于后续所有读取或修改实时世界的 City 入口，包括 template metadata、terrain probe、D6、execute D5/D7、城墙规划/执行和 workflow；离线 D2/D4/D5/LandUse 规划仍只消费 artifact，不要求当前世界已加载。
 - D3 的 `grid` 仍表示城市核心规划域，D4 候选不得因为 padding 扩大而离开该 grid。
 - `patchScanPaddingBlocks` 只扩大 patch 上下文：实现必须刷新覆盖 `grid.blockBounds + padding` 的所有 GIS region，并把这些 region 的 `LandformPatch` / `memberCells` 合并进同一个 `CityLandformReviewPackage`。
 - 目的：当 AI 选择靠近城市核心边界的 patch 时，D6 `actualFootprint`、D5/D7 reservation 和 v4 城墙 `structureWallBreathingRoomBlocks` 仍有已扫描 patch 背景，不允许墙体静默长到未知 patch 外。
 - D3 package 必须写出 `patchScanPaddingBlocks`、`patchContextBounds`、`refreshedRegions[]`，用于判断 patch coverage 是否足够。
+- 若 CitySeed 为 `role=capital` 且 `source.siteSelectionMode=ai_candidate_selection`，D3 必须返回 `siteReviewStatus=awaiting_review`，并删除与新 D3 身份不再匹配的旧审查决策。
+
+## city_review_d3_site
+
+必填参数：`runId`、`citySeedId`、`decision`、`decisionReason`。`decision` 只接受 `accept_selected_site` 或 `reselect_required`。
+
+审查产物 `city_site_review_decision.json` 必须绑定当前 D3 package identity、CitySeed identity 和 T4 `patchSelectionRef`。所有 D4 入口统一校验：
+
+- 缺少决策返回 `CITY_D3_SITE_REVIEW_REQUIRED`。
+- 决策为重选返回 `CITY_D3_SITE_RESELECTION_REQUIRED`，下一步回到 T4 Patch 选址。
+- D3 或 CitySeed 已变更返回 `CITY_D3_SITE_REVIEW_STALE`。
+- 只有当前 identity 下的 `accept_selected_site` 允许进入 D4，不允许默认改变城市原型绕过重选。
 
 ## city_plan_city_walls v4
 
@@ -174,41 +188,9 @@ v4 行为口径：
 - 相邻节点高差 `<=2` 走普通平墙，`3..6` 走 `stepped_wall_unit` 或 `stair_link`，`>6` 插入 `terrace_node`；仍无法缓解时在 validation 中输出明确 reason。
 - 执行层按 `wallUnits[]` / `nodeConnectorUnits[]` 放置，并在地形采样时忽略本系统已经放置的墙 / 塔 / 门楼材料，避免重复执行叠高。
 
-## city_profile_structure_envelopes
+## 已删除接口：city_profile_structure_envelopes
 
-必填参数：
-
-- `runId`
-- `citySeedId`
-- `terrasenseProfileSource`
-- `structureIds`
-
-可选：
-
-- `sampleCount`，默认 256。
-- `cacheMode=use_cache|rescan`，默认 `use_cache`。
-- `forceRefresh`，默认 false。
-- `dimensionId`
-- `playerName`
-
-语义：
-
-- 只采样 `/place structure <id>` 可触发的顶层 configured structure。
-- 默认先读取本地 profile cache；cache miss 现场 dry-run，cache key / hash stale 时自动重算；`cacheMode=rescan` 或 `forceRefresh=true` 强制重算。
-- 不写世界，不生成正式 ledger。
-- 输出 `structure_envelope_facts.json`，供 D4 推导 `collisionEnvelope` / `maskEnvelope`。
-- facts 同时包含 `validSamples[]`、`bboxGroups[]`、`generationConfigHash`、`profileCache`、结构级 `cacheIdentity`、`cacheKey`、`cacheStatus` 和 `cacheReason`。
-- facts 同时输出结构稳定性分类与 bbox 选择事实：`stabilityClassification`、`dominantBBoxGroup`、`stableMaxEnvelope`、`profileConfidence`、`bboxVarianceSummary`、`placementRecommendation`、`requiresReview`。
-- village / 强随机扩张 / bbox 分布过散结构必须标记 `exception` 或 `requiresReview=true`，且不得默认进入常规紧凑阵列。
-- 固定 / 近固定结构使用 dominant `bboxGroups[]` 或 anchor 指定的 `envelopeGroupKey`。
-- 非固定结构继续使用固定生成配置下的 P95 / P99 / maxObserved。
-
-返回 artifact：
-
-- `structureEnvelopeFacts`
-- `structureEnvelopeProfilePreview`
-- `structureProfileCacheDirectory`
-- `qualityReport`
+HTTP 与 MCP 路由均已删除。任何旧 profiling 请求、`structureEnvelopeFactsSource`、bbox group 或 envelope sample 输入都必须返回 `CITY_CONFIGURED_STRUCTURE_FLOW_REMOVED`，不生成兼容 artifact。
 
 ## city_plan_d4
 
@@ -217,13 +199,12 @@ v4 行为口径：
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `structureAnchorPlan`
 
 可选：
 
-- `structureEnvelopeFactsSource`，形如 `{ "factsPath": "..." }`；未传时读取当前 run/city 默认产物。
-- anchor 可选 `envelopeGroupKey` 指定 profiling bbox group。
-- anchor 可选 `smallClearanceBlocks` 指定固定结构 bbox group 小间距，默认 4。
+- anchor 只允许 `templateId`、可选一致的 `templateRef`、显式 `variant`、rotation / mirror、anchor 和 placement provenance。旧 `structureId(s)`、hash/rawSize 手写值、bbox/envelope 输入均拒绝。
 
 `terrasenseProfileSource` 支持：
 
@@ -242,7 +223,33 @@ v4 行为口径：
 - `qualityReport`
 - `sourceD3Package`
 
-`structureAnchorMap.anchors[]` 会输出 `envelopeMode`、`selectedEnvelopeGroupKey`、`smallClearanceBlocks`、`maskMarginBlocks`、`collisionEnvelope`、`maskEnvelope`。其中 `fixed_bbox_group` 表示固定 / 近固定结构走紧 bbox；`fixed_depth_statistics` 表示非固定结构走 P95 collision，mask 由 collision + maskMargin 派生。结构大小诊断回到 `structure_envelope_facts.json` 的 `maxObservedEnvelope` / `bboxGroups`，正式 anchor 不再输出 `safetyEnvelope`。
+`structureAnchorMap.anchors[]` 输出冻结的 template identity、transformed `actualFootprint`、`collisionEnvelope=exact footprint + clearance` 与 `maskEnvelope=collision + maskMargin`。预览必须分层绘制 body、collision、mask；不得读取 `StructureStart.getBoundingBox()` 作为建筑 body。
+
+## D4 Patch Explorer 接入 v0.1
+
+Patch Explorer 是 D4 现有候选器之前的可选地理探索层，不直接生成 anchor、不写 occupied，也不替代 envelope、阵列完整计数和最终防撞。
+
+推荐调用顺序：
+
+1. 调用 `patch_explorer_open`，传 `runId`、`scopeType=city_d4`、`citySeedId`。
+2. AI 从返回的类型目录中选择感兴趣的类型，调用 `patch_explorer_show_candidates`。程序默认每类展示面积前 3 名并返回候选染色图；关系表只描述当前兴趣类型、当页候选之间的相邻、距离、方位和共享边界。
+3. AI 可翻页或更换兴趣类型；确定后调用 `patch_explorer_select_candidate`，获得确认染色图和 `patchSelectionRef`。
+4. 将 `patchSelectionRef` 放入目标 D4 计划对象。服务端验证同一 D3 scope 后，同时派生 `candidatePatchRefs[]` 搜索依据和内部保留的 `candidateLegalRegion` member-cell 硬边界，再调用既有候选器。
+
+支持消费选择凭证的入口：
+
+| 入口 | `patchSelectionRef` 所在对象 | 服务端交接 |
+| --- | --- | --- |
+| `city_plan_d4_candidates`、`city_plan_d4_structure_cluster_groups`、`city_create_d4_candidate_session` | `designSlotPlan.slots[]` | 覆盖该 slot 的 `candidatePatchRefs[]`，并注入组件 member-cell 硬边界，再进入原顺序/整组候选器。 |
+| `city_plan_d4_array_candidates` | `arrayCandidatePlan` | 覆盖 `candidatePatchRefs[]`，注入组件硬边界，再生成 3-5 组完整阵列。 |
+| `city_create_d4_array_layout_loop` | `arrayLayoutPlan.layoutPlans[]` | 为每个带选择凭证 item 覆盖搜索 patch 并注入组件硬边界；复合子阵列继承该边界。 |
+| `city_query_d4_array_expansion_space`、`city_plan_d4_array_expansion_candidates` | `arrayExpansionRequest` | 解析为单个 `selectedGlobalPatchRef`、设置 `newFunctionalArea=true`，并把组件硬边界内部传播到 nested layout item。 |
+
+选择凭证必须来自同一 `runId`、同一 `citySeedId` 的 `city_d4` scope，且来源 D3 与已提交 occupied 几何身份仍一致。只读候选会话中的更新时间、质量结果、候选历史和未选择 envelope 不得令凭证 stale，也不得被当作 occupied；真实选择或 finalize 新增的 occupied 几何必须令旧凭证 stale。`candidatePatchRefs[]` 继续负责定位原 D3 patch 与生成搜索点；真正的完整候选范围硬边界是服务端从已验证选择中注入的 `candidateLegalRegion`。anchor、array、layout、cluster、candidate session 和 expansion 的每个实际 `collisionEnvelope` 必须完全落在该 member-cell union 内，越界候选不得生成或必须拒绝。
+
+`candidateLegalRegion` 是 HTTP 边界内部保留字段，调用方不得在根对象、slot、layout item 或 expansion nested item 中手写。任一外部输入携带该字段都返回 `PATCH_SELECTION_D4_RESERVED_FIELD_FORBIDDEN`；只有 resolver 验证 `patchSelectionRef` 后才能注入，避免伪造较大 mask 绕过选择凭证。
+
+D4 v0.5 常规 outward 保持原行为：已有父结构、方向和目标间距时，不要求 `patchSelectionRef`，仍从父结构 body/collision 外缘连续生长并把 D3 patch 作为后置地形过滤。只有 AI 明确先探索地理或创建新功能区时才走上述选择凭证路径。
 
 ## city_query_structure_catalog
 
@@ -259,7 +266,7 @@ v4 行为口径：
 
 term 输入优先使用 TerraSense canonical termId，例如 `function.agriculture`。当 source 带 `vocabularySnapshotPath` 时，也接受该冻结词表中唯一对应的 `label`（例如 `农业`）或 `aliases[]`；无词表时 display label / alias 必须返回 `CITY_STRUCTURE_QUERY_TERM_UNRESOLVED`，同名歧义返回 `CITY_STRUCTURE_QUERY_TERM_AMBIGUOUS`，不做 City 自建语义映射。
 
-响应只返回可用于设计挑选的摘要：`structureId`、`matchedCanonicalTerms`、各类完整 terms、fixed footprint / expected area / rotations / clearance 等硬事实、`sourceProfileRef`、`catalogMode` 与 `qualityTerms`。请求不依赖 `runId`、`citySeedId` 或 D3-D7 artifact，不生成任何 artifact、状态或世界写入；`readOnly=true` 是固定响应字段。
+响应 schema 为 `city_structure_catalog_query.v0.2`，只返回可用于语义筛选的摘要：`semanticProfileId`、`matchedCanonicalTerms`、各类完整 terms、`sourceProfileRef`、`catalogMode` 与 `qualityTerms`。不得返回 `structureId`、fixed footprint / expected area / rotations / clearance 等几何或 configured identity；模板身份和全部几何必须另由显式 `templateCatalogSource` 提供。请求不依赖 `runId`、`citySeedId` 或 D3-D7 artifact，不生成任何 artifact、状态或世界写入；`readOnly=true` 是固定响应字段。
 
 本地运行时导入必须把 `StructureProfile.jsonl`、`StructureVocabulary.snapshot.json` 与正式 source 描述一并复制到 `run/config/structureTemplate/terrasense/<importId>/`，不得在 City 请求中继续引用客户端或 TerraSense 工程目录。接口不自动发现 source；调用方仍须将该描述文件内容作为 `terrasenseProfileSource` 传入。当前 v0.1 的只读查询与 D4/D6 请求工作目录不同，导入 source 的 `profilePath` / `vocabularySnapshotPath` 必须写为 StructureBinder 本地运行配置的绝对路径；不得使用跨 endpoint 的相对路径。
 
@@ -283,19 +290,19 @@ term 输入优先使用 TerraSense canonical termId，例如 `function.agricultu
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `arrayCandidatePlan`
 
 可选参数：
 
-- `structureEnvelopeFactsSource`
 - `occupiedStructureAnchorMapSource`，形如 `{ "anchorMapPath": "city_d4_x/structure_anchor_map.json" }`
 - `occupiedEnvelopes[]`
 
-`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`structureIds[]`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`；显式可传 `compound_cluster`、`grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`。可选 `compoundCluster={shape,rows,columns,spacingBlocks}`、`variantSelectionMode=round_robin|seeded_random|weighted_random`、`variantSeed`、`structureWeights`。
+`arrayCandidatePlan` 必填 `schemaVersion=city_d4_array_candidate_plan.v0.1`、`cityId`、`arrayId`、`candidatePatchRefs[]`、`templateIds[]`、每个模板的显式 `variantId`、`arrayCount`。`patterns[]` 缺省为 `loose_cluster`、`patch_axis_band`、`scattered`；显式可传 `compound_cluster`、`grid`、`courtyard`、`l_shape`、`u_shape`、`organic_compact`。可选 `compoundCluster={shape,rows,columns,spacingBlocks}`；template assignment 固定为 `round_robin`。
 
 语义：
 
-- `structureIds[]` 可按稳定 round-robin、seeded random 或 weighted random 分配到 `arrayCount` 个 item；单独 endpoint 缺省 `round_robin`，workflow 从 `array_fill` slot 构造阵列计划时缺省 `seeded_random`。
+- `templateIds[]` 按稳定 round-robin 分配到 `arrayCount` 个 item；传 seeded/weighted random、variant seed 或 weights 返回 `D4_RANDOM_TEMPLATE_SELECTION_REMOVED`。
 - `arrayCount` 必须完整满足；容量不足返回 `D4_ARRAY_COUNT_UNSATISFIED`，不输出部分候选组。
 - 不读取或生成道路，只输出 item 级 `roadPoint` / `roadAccessIntent` 作为 D7 后处理提示。
 - 输出 `d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json`；每个候选组写 `arrayPattern`、`arrayShape`、`spacingBlocks`，item 也写 `arrayShape` / `spacingBlocks`。
@@ -384,11 +391,11 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `arrayLayoutPlan`
 
 可选：
 
-- `structureEnvelopeFactsSource`
 - `baseStructureAnchorPlanSource`
 - `occupiedStructureAnchorMapSource`
 
@@ -399,20 +406,20 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.3` 或 `planningMode=array_layout_loop_v0_3` 时，state / trace 也使用 v0.3 口径。
 - `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4` + `planningMode=array_candidate_selection_loop_v0_4` 时，`layoutPlans[]` 必须为空；创建后只能走 v0.4 query / plan / select，`city_execute_d4_array_layout_item` 返回 `D4_ARRAY_LAYOUT_V04_CANDIDATE_SELECTION_REQUIRED`。
 - 输出 `d4_array_layout_preview.png`，主图只显示已执行 zone、点、连接线和 RoadWeaver gateway，不绘制 bbox。
-- `arrayLayoutPlan` 可选内嵌 `templateCatalog`，其 schema 必须为 `city_template_catalog.v0.1`。此时 `requiredItems[]`、`featuredItems[]` 或 `fillPool[]` 的对象可使用 `{templateId,variantId,rotation?,mirror?}` 代替 `structureId`；`variantId` 必填，变换省略时取目录允许集合的首项。
+- `requiredItems[]`、`featuredItems[]` 或 `fillPool[]` 只允许 `{templateId,variantId,rotation?,mirror?}`；`variantId` 必填，几何从显式 `templateCatalogSource` 冻结。`fillPool` 只允许固定 round-robin，不接受权重或随机 seed。
 
 `city_execute_d4_array_layout_item` 必填：
 
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `nextArrayLayoutPlanItem`
 
 可选：
 
 - `stateId`
 - `arrayLayoutLoopStateSource`
-- `structureEnvelopeFactsSource`
 
 语义：
 
@@ -432,12 +439,12 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 
 可选：
 
 - `stateId`
 - `arrayLayoutLoopStateSource`
-- `structureEnvelopeFactsSource`
 
 语义：
 
@@ -449,7 +456,7 @@ D4 v0.2/v0.3 阵列布局 loop 是显式开发路径，不替换默认 `key_then
 
 v0.4 是显式开发路径，不加入 `city_run_workflow` 默认 `key_then_array`，也不改变 v0.2/v0.3 的直接 execute 语义。
 
-共同前提：`city_create_d4_array_layout_loop` 传 `arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4`、`planningMode=array_candidate_selection_loop_v0_4`、空 `layoutPlans[]`；可选 `occupiedStructureAnchorMapSource` 提供已 Plan 的 collision occupied。所有 v0.4 endpoint 都接受 `runId`、`citySeedId`、可选 `stateId` / `arrayLayoutLoopStateSource`；plan 另需 `terrasenseProfileSource`，可选 `structureEnvelopeFactsSource`。
+共同前提：`city_create_d4_array_layout_loop` 传显式 `templateCatalogSource`、`arrayLayoutPlan.schemaVersion=city_d4_array_layout_plan.v0.4`、`planningMode=array_candidate_selection_loop_v0_4`、空 `layoutPlans[]`；可选 `occupiedStructureAnchorMapSource` 提供已 Plan 的 collision occupied。后续 plan/select/finalize 继续传同一 catalog source，source identity 漂移 hard fail。
 
 `city_query_d4_array_expansion_space` 的 `arrayExpansionRequest` 有两种互斥路径：
 
@@ -652,11 +659,11 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `designSlotPlan`
 
 可选参数：
 
-- `structureEnvelopeFactsSource`
 - `groupCount`，默认 5。
 - `candidatesPerSlot`，默认 5。
 - `beamWidth`，默认 `groupCount * candidatesPerSlot`。
@@ -665,7 +672,7 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 
 - 读取与 D4 v2 session 相同的 `DesignSlotPlan`。
 - 这是显式调试 / 整城构图实验入口，不再是 workflow 默认推荐路径；默认推荐路径是 `city_run_workflow d4CandidateMode=key_then_array`。
-- 内部复用顺序候选 session 的 `planNext/selectSession/finalizeSession` 规则做 beam search；每扩展一个 slot，就用 selection 同口径的 `estimatedCollisionEnvelope` 冻结 occupied，结构大小诊断只保留为 `diagnosticMaxObservedEnvelope` 或 profile facts。
+- 内部复用顺序候选 session 的 `planNext/selectSession/finalizeSession` 规则做 beam search；每扩展一个 slot，就用 fixed-template exact body + clearance collision 冻结 occupied。
 - 只输出完整组；若无法生成任何完整非重叠组，返回 `D4_STRUCTURE_CLUSTER_GROUP_UNSATISFIED`。
 - 输出 `structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json`。
 - `structure_cluster_group_candidates.png` 是给 AI 选择用的主图：一种颜色代表一整组候选，点标签是 slot 简写，不绘制 bbox / mask / collision envelope。bbox 仍保留在 JSON 里供 debug 和验证使用。
@@ -676,12 +683,12 @@ v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expans
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `groupCandidateId`
 
 可选参数：
 
 - `structureClusterGroupCandidateSetSource`，形如 `{ "candidateSetPath": "..." }` 或 `{ "structureClusterGroupCandidateSetPath": "..." }`；未传时读取当前 run/city 默认产物。
-- `structureEnvelopeFactsSource`
 
 语义：
 
@@ -706,12 +713,12 @@ city_finalize_d4_candidate_session
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `designSlotPlan`
 
 可选：
 
 - `sessionId`
-- `structureEnvelopeFactsSource`
 
 `city_plan_d4_next_candidates` 必填参数：
 
@@ -722,6 +729,7 @@ city_finalize_d4_candidate_session
 
 - 每次只返回当前 `currentSlotId` 的候选。
 - 候选基于 session 中已经冻结的 `selectedAnchors[]` / `occupiedEnvelopes[]` 重新生成。
+- slot 只提交 `templateId/templateIds` 与显式 `variantId`；服务端从 session 冻结的 `templateCatalogSource` 读取 hash、rawSize、入口和 clearance。TerraSense 只提供语义标签，不自动发现 companion catalog。
 - 返回 `slot_candidate_set.json`、`anchor_candidate_preview.png`、`d4_candidate_session_trace.json`。
 - `anchor_candidate_preview.png` 必须叠加 D3 patch member-cell 底图；已冻结 anchor 用 `S1/S2...` 标注，当前 slot 候选用 `C1/C2...` 标注，候选完整 id / score / role 放入右侧 legend，避免把同一 slot 的多个候选重叠误读为最终落地重叠。
 
@@ -743,7 +751,7 @@ city_finalize_d4_candidate_session
 
 - `slotId` 必须等于当前 session `currentSlotId`，否则返回 `D4_SLOT_ORDER_VIOLATION`。
 - 选择成功后冻结 `estimatedCollisionEnvelope` 作为 `occupiedEnvelopes[].blockBounds`；后续 slot 候选必须避开该 collision envelope，不再写入 `estimatedSafetyEnvelope`。
-- 本轮 `quickPreflight` 只记录请求，返回 `quickPreflightStatus=deferred_to_d6`；MC actual bbox 仍由 D6 负责。
+- 本轮 `quickPreflight` 只记录请求，返回 `quickPreflightStatus=deferred_to_d6`；当前世界 NBT identity 与 exact geometry 复核仍由 D6 负责。
 - 每次 selection 会累计 `agentThinkTimeMs`。
 
 `city_finalize_d4_candidate_session` 必填参数：
@@ -751,11 +759,11 @@ city_finalize_d4_candidate_session
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 
 可选：
 
 - `sessionId`
-- `structureEnvelopeFactsSource`
 
 语义：
 
@@ -786,19 +794,16 @@ city_finalize_d4_candidate_session
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `designSlotPlan`
-
-可选：
-
-- `structureEnvelopeFactsSource`，形如 `{ "factsPath": "..." }`；未传时读取当前 run/city 默认产物。
 
 语义：
 
 - 这是 v0.1 debug batch path；active 推荐路径是 D4 v2 session。
 - 返回 `planningMode=all_slots_tentative_order_debug`。
 - `slotId` / `displayRole` 只表示本次设计槽位，不是 City 全局功能枚举。
-- `candidatePatchRefs` 是候选搜索依据，不是硬边界；结构真实 hard gate 仍由 D6 actual footprint 决定。
-- slot 可使用 `structureId` 表示单一顶层 configured structure，也可使用 `structureIds[]` 表示多个备选结构。
+- `candidatePatchRefs` 始终只是候选搜索依据。未传 `patchSelectionRef` 时沿用既有 D4 grid / patch / collision 行为；传入并验证选择凭证后，服务端内部注入的 `candidateLegalRegion` 是候选 `collisionEnvelope` 的额外硬边界，任何调用方手写同名字段均拒绝。D6 actual footprint 校验仍是后续物化硬门，不取代此处 D4 候选约束。
+- slot 只使用 `templateId` 或 `templateIds[]`，并显式指定 `variantId`；旧 `structureId(s)` 返回 `CITY_CONFIGURED_STRUCTURE_FLOW_REMOVED`。
 - 每个 slot 默认输出最多 5 个候选，候选包含 `candidateKind`、`anchorBlock`、`estimatedCollisionEnvelope`、`estimatedMaskEnvelope`、`scoreBreakdown`、`placementReason`、`risks`。
 - `candidateId` 在同一 slot 内稳定且唯一，用于 `city_select_d4_candidates` 精确回选。
 - `distanceBand` 首版固定为 `near=32-96`、`medium=96-224`、`far=>224` blocks；`targetAnchorId` 只引用已选 anchor，`targetSlotId` 只作为软提示。
@@ -810,19 +815,18 @@ city_finalize_d4_candidate_session
 - `anchorCandidatePreview`
 - `qualityReport`
 - `sourceD3Package`
-- `sourceStructureEnvelopeFacts`
 
 `city_select_d4_candidates` 必填参数：
 
 - `runId`
 - `citySeedId`
 - `terrasenseProfileSource`
+- `templateCatalogSource`
 - `anchorSelectionPlan`
 
 可选：
 
 - `anchorCandidateSetSource`，形如 `{ "candidateSetPath": "..." }`；未传时读取当前 run/city 默认候选产物。
-- `structureEnvelopeFactsSource`，同 `city_plan_d4`。
 
 语义：
 
@@ -868,7 +872,7 @@ city_finalize_d4_candidate_session
 
 执行语义：
 
-- 必须已存在完整 D6 locked `structure_materialization_plan.json`；缺 `actualFootprint`、`lockedActualFootprint`、`pieceBoxes`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey` 或 `expectedStartSignature` 时 hard fail。
+- 必须已存在完整 D6 locked `structure_materialization_plan.json`；每项必须有固定 template identity、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]`、`terrainPosePolicy=structure_start_beard_thin` 与 `templateDatumPolicy=generator_base_height_motion_blocking_no_leaves`。出现 `pieceBoxes`、signature、bbox group 或 envelope sample 时按旧 configured artifact 拒绝。
 - `city_decoration_compiled_program_plan.json` 与 `city_decoration_planning_complete.json` 必须同时存在；缺一返回 `CITY_DECORATION_PLAN_INCOMPLETE`。两者均不存在时按 dimension + city 注销旧 active decoration plan。
 - `city_dressing_<citySeedId>/` 中的 v0.1 artifact 必须显式拒绝 `CITY_DRESSING_LEGACY_SCHEMA_REMOVED`，不得参与激活或跳过判断。
 - 激活 server-root `geomantia_city_masks/active_reservation_mask_plan.json`。
@@ -876,7 +880,7 @@ city_finalize_d4_candidate_session
 - LandUse activation 前先由当前 AreaPlan + SurfacePrintPlan 编译 owner fragment，只读检查实际包含 surface 或 boundary 操作的 owner；微整地 mask 只是 surface 操作的上下文，不能单独令 owner relevant，`PRESERVE + OPEN` 等零写入区域不进入预检。任一待写 owner 的 loaded / disk chunk 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，region NBT 读取失败或状态未知返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`；不得申请 chunk ticket、加载或生成目标 chunk，且整体预检通过前不得改 active registry。
 - decoration compiled plan、slot projection、completion 完整存在时，D5 必须校验 projection 的 schema / city / catalog / program / slot 身份，并与 compiled plan 的确定性投影逐项一致。随后每个有 slot 的 program 以实际 slot min/max 包络额外进入该 active plan 的 `noVegetationMask` 和 `noVanillaStructureMask`，两者均为 `maskType=decoration_projection`；前者抑制植被，后者阻止普通原版 / 模组结构起始。不得扩大为整块 patch；分别返回 `decorationVegetationMaskCount`、`decorationStructureMaskCount`。
 - `cross_section_repeat` / `parallel_rows` 必须在 activation 使用目标 `ServerLevel` 的 `ChunkGenerator.getBaseHeight/getBaseColumn` 编译完整 run；不得加载 / 生成 chunk。缺 level 返回 `CITY_DECORATION_TERRAIN_SAMPLER_LEVEL_REQUIRED`。同一 frozen plan 写 D5 artifact 并进入 active registry。
-- 同步激活 `active_planned_structure_registry.json`，registry 写入 `expectedStartSignature`、`lockedActualFootprint`、`lockedCollisionEnvelope`。
+- 同步激活 `active_planned_structure_registry.json`，registry 只写固定 template identity、三层几何、owner chunks 和冻结的 terrain policy。
 - hook 不可用 hard fail：`CITY_MASK_HOOK_UNAVAILABLE` / `CITY_WORLDGEN_STRUCTURE_HOOK_UNAVAILABLE`。
 - active path 不执行 `build_operation_plan.json`，返回 skipped / deferred 的 `worldMutationReport`，避免提前生成目标 chunk。
 - RoadWeaver 存在且 `roadProvider=auto|roadweaver` 时，D5 生成 `city_roadweaver_connection_plan.v0.2` 并反射调用 `RoadNetworkApi.registerStructureEndpoint` / `ensureConnection(..., generateImmediately=false)`。计划固定使用 `connectionStrategy=group_spatial_mst`：先按 D4/D6 `placementGroupId` 对组内真实入口生成 Manhattan 距离最小生成树，再从每对 group 的最近真实入口候选生成组间最小生成树；不得按局部 priority 把不同功能区交替串成全城长链。顶层报告 `placementGroupCount`、`intraGroupConnectionCount`、`interGroupConnectionCount`，连接项报告 `connectionScope`、两端 group 与 `distanceBlocks`。worldgen 先由 LandUse v0.2 直接消费冻结 FIELD / CHANNEL role spans并写 FIELD-only CROP / channel-aware BOUNDARY，再执行稀疏 Decoration，最后由 RoadWeaver 真实道路后写；道路拥有最终地表覆盖权。
@@ -921,9 +925,9 @@ city_finalize_d4_candidate_session
 
 chunk 已经生成到 `FEATURES` 或之后且没有 ledger 时，返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，不得继续走 active placement。
 
-D6 会做 non-mutating probe-and-lock，输出 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`pieceBoxes`、`lockedBBoxGroupKey`、`lockedCollisionEnvelope`、`expectedStartSignature`，并按 `lockedCollisionEnvelope + maskMarginBlocks` 写入 `maskEnvelope`。若 actual group 与 D4 selected/dominant group 不一致，但 facts 中存在该 group 且最终防撞通过，D6 锁定实际 group，不再直接失败。
+D6 使用当前世界 `StructureTemplateManager` non-mutating 重新读取 NBT，校验 template hash、rawSize、rotation、mirror、exact footprint、collision、mask 和 owner chunks。输出只保留 `locked=true`、固定 template identity、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]` 与冻结 terrain policy；不创建或探测 `StructureStart`。
 
-D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey`、`lockedCollisionEnvelope`、`envelopeMode`、`selectedEnvelopeGroupKey`，用于解释 fixed bbox group 是否匹配本次实际生成形态。默认 `collisionClearanceBlocks=4`。
+D6 trace 记录 NBT identity 复核、变换、`actualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope` 和 owner chunks。任何 identity 或几何漂移 hard fail；尤其不得把 collision 覆写成裸 footprint。
 
 ## city_plan_land_use
 
@@ -965,7 +969,6 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 可选：
 
 - `executeStructurePlacement`，默认 false。
-- `debugLateMaterialize`，默认 false，仅开发诊断可用。
 - `dimensionId`
 - `playerName`
 
@@ -974,7 +977,7 @@ D6 trace 会记录 `actualFootprint`、`actualLocalBounds`、`actualBBoxGroupKey
 - `executeStructurePlacement=false`：只查看 worldgen ledger / 当前 chunk 状态。
 - `executeStructurePlacement=true`：正式路径仍只查看 worldgen ledger / 当前 chunk 状态，不 late paste。
 - 当所有 planned structures 都有 ledger 时，若 RoadWeaver 已注册，D7 不再覆盖 RoadWeaver 道路；若显式 `worldedit_debug`，D7 基于 ledger 真实 `actualFootprint` 生成调试道路 / 边界后处理，避障使用 `actualFootprint + roadAvoidanceMarginBlocks`，默认 3；若 `auto` 缺 RoadWeaver，则跳过道路并报告 `ROADWEAVER_UNAVAILABLE`。
-- `debugLateMaterialize=true`：显式开发模式，才允许旧 `StructureStart.placeInChunk` 路径；trace 标记 `lateMaterialization=true`，不作为验收通过。
+- `debugLateMaterialize` 已删除；传入时返回 `CITY_CONFIGURED_STRUCTURE_FLOW_REMOVED`，不会执行任何 late paste。
 
 返回 artifact：
 
@@ -1104,8 +1107,8 @@ city_run_workflow {
   runId,
   citySeedId,
   terrasenseProfileSource,
+  templateCatalogSource,
   designSlotPlan,
-  structureIds,
   patchScanPaddingBlocks: 128,
   skipExisting: true,
   d4CandidateMode: "key_then_array",

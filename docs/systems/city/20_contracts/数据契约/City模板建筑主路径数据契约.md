@@ -4,7 +4,7 @@
 
 本文是 City 固定模板建筑主路径的当前数据真值，覆盖 D2 模板目录、D4 placement plan、D5 active registry、worldgen 交接和 D7 ledger。
 
-City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询外部 `Minecraft Registries.STRUCTURE`，不使用 Jigsaw pool。`templateId` 或 `templateRef` 属于 `geomantia:` 命名空间时，目录模型与 D6 必须把有效 `terrainPosePolicy` 归一为 `structure_start_beard_thin`；其他命名空间只有显式选择该 policy 才创建 City 单-piece `StructureStart`，以 `beard_thin` 适配地形。City active registry 仍不是外部 configured structure，也不允许携带 Jigsaw 展开结果。
+City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询外部 `Minecraft Registries.STRUCTURE`，不使用 Jigsaw pool。凡进入 City catalog 的模板，不分命名空间，目录模型与 D6 都必须把有效 `terrainPosePolicy` 归一为 `structure_start_beard_thin`，并只创建 City 自有的单-piece `StructureStart` 以借用 `beard_thin` 地形适配。该 start 的 terrain-adaptation bbox 只供 Minecraft 内部使用，不能进入 D4-D7 几何、active registry、ledger 或预览。
 
 D2、D4、D6、D7 对同一建筑必须保持以下 identity 完全一致：
 
@@ -93,7 +93,7 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
 | `allowedRotations[]` | string[] | `NONE`、`CLOCKWISE_90`、`CLOCKWISE_180`、`COUNTERCLOCKWISE_90` 中的非空子集 |
 | `allowedMirrors[]` | string[] | `NONE`、`LEFT_RIGHT`、`FRONT_BACK` 中的非空子集 |
 | `roadEntrances[]` | object[] | 模板局部道路入口；每项含 `entranceId`、`position{x,z}`、`direction` |
-| `terrainPosePolicy` | string | 模板地形姿态策略，也是 placement lifecycle 配置；`geomantia:` 模板无条件归一为 `structure_start_beard_thin`，其他命名空间精确填写该值时使用 City 单-piece `StructureStart` + Beardifier，其余为 direct-template 路径 |
+| `terrainPosePolicy` | string | 模板地形姿态策略，也是 placement lifecycle 配置；所有 City catalog 模板无条件归一为 `structure_start_beard_thin`，不存在 direct-template 分支 |
 | `supportPolicy` | string | 支撑 / 基础策略 |
 | `clearanceBlocks` | int | 非负；只用于从 actual footprint 派生 collision bbox |
 
@@ -153,8 +153,8 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
 | `actualFootprint` | object | D4/D6 的派生输出快照；由 `templateSize + rotation + mirror + anchor` 计算，closed bounds |
 | `collisionEnvelope` / `maskEnvelope` | object | 从 `actualFootprint` 按 clearance / mask margin 派生，closed bounds |
 | `roadEntrances[]` | object[] | transformed 入口；含 `entranceId`、`relativePosition{x,z}`、`worldPosition{x,y,z}`、`direction` |
-| `terrainPosePolicy` | string | 从目录冻结；`geomantia:` 身份在目录模型和 D6 规划期强制归一为 `structure_start_beard_thin`，不得由 D4 item 或 worldgen 覆盖。该冻结值是唯一可创建 City terrain start 的值 |
-| `templateDatumPolicy` | string | D6 按 `terrainPosePolicy` 锁定：普通模板为 `worldgen_surface_motion_blocking_no_leaves`，`structure_start_beard_thin` 为 `generator_base_height_motion_blocking_no_leaves` |
+| `terrainPosePolicy` | string | 从目录冻结；所有 City catalog 模板在目录模型和 D6 规划期强制归一为 `structure_start_beard_thin`，不得由 D4 item 或 worldgen 覆盖 |
+| `templateDatumPolicy` | string | 固定为 `generator_base_height_motion_blocking_no_leaves`；不存在 direct-template datum policy |
 
 `roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
 
@@ -168,7 +168,7 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 `roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail；`worldedit_debug` 只授权旧 debug road，不授权旧建筑物化路径。
 
-模板 D6 item 的 lock 必须包含 `locked=true`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`lockedBBoxGroupKey`、`pieceBoxes[]`、`terrainPosePolicy` 和派生的 `templateDatumPolicy`。direct-template 的 `expectedStartSignature` 可以为空；`structure_start_beard_thin` 只允许 City 注册的单-piece terrain start，仍不得要求或伪造外部 configured-structure signature。worldgen 缺失 / 未知 policy 或不能得到高于 `minBuildHeight` 的高度图 datum 时必须失败，不能静默以世界最低高度放置。
+模板 D6 item 的 lock 必须包含 `locked=true`、`templateId`、`templateRef`、`templateHash`、`variantId`、`rawSize`、`rotation`、`mirror`、`anchorBlock`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]`、`terrainPosePolicy` 和 `templateDatumPolicy`。D6 必须重新读取当前世界 NBT，并重新校验 hash、rawSize、变换、footprint、collision、mask 与 owner chunks。`pieceBoxes`、start signature、bbox group 和 envelope sample 均为非法旧字段；运行时单-piece start 的内部 bbox 不写回此 schema。worldgen 不能得到高于 `minBuildHeight` 的 generator datum 时必须失败，不能静默以世界最低高度放置。
 
 ## Placement ledger `city_template_placement_ledger.v0.1`
 
