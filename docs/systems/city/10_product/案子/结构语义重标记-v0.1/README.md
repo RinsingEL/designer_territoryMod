@@ -53,6 +53,15 @@
 4. City D4 只消费导出的原始 terms。
 5. 真实验收后把 `quality.real_playtest`、适配风险等回写 TerraSense。
 
+## Trek 固定模板首批画像（2026-07-27）
+
+- `tools/city_templates/trek_fixed_manifest.json` 是 20 个 Trek B0.6 固定 NBT 的人工审核语义源；导出器不得从结构 id 自动推断标签。
+- profile identity 使用 `geomantia:city/trek/...`，统一为 `single / structure_template_nbt / city_template_nbt / fixed_footprint`，不得复用旧 `trek:...` Jigsaw assembly 的 `structure_assembly / system_root` 身份。
+- 首批 canonical terms 覆盖居住、商业、农业、功能设施、防御、港口、行政、地标，以及沿街、城市边缘、滨水和城市核心等放置语义；完整词表随 profile 包冻结。
+- 旧人工审核记录仍保留作历史证据。例如 `maison` 曾被人工覆盖为“磨坊 + 农业”，新固定模板画像纠正为 `function.residential`，但不改写旧工作区记录。
+- `quality.approved_baseline` 只表示已通过本轮人工筛选，可进入语义检索；不得解释为 `quality.real_playtest`，也不得跳过 runtime metadata 或正式 City template catalog 闸门。入口确认另以 manifest 的固定 NBT 证据追溯，不由语义 quality term 代替。
+- TerraSense profile 中携带的 `fixedFootprint` 只用于画像展示和一致性检查；D4-D7 的规划几何仍只读取当前世界 NBT 与显式 `city_template_catalog.v0.1`。
+
 ## 验收
 
 - D4 trace 中所有结构语义都能追溯到 TerraSense profile。
