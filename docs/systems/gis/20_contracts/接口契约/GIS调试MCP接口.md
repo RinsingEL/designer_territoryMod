@@ -90,6 +90,46 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 | `ok` | boolean | 等同于 `passed`。 |
 | `runDirectory` | string | 绝对产物目录。 |
 
+### `POST /gis/chunk_generation_benchmark/start`
+
+由服务端在指定中心建立临时 Region Ticket，按原生异步 Chunk 调度生成方形目标范围。该接口会真实生成并可能保存 Chunk，只用于 D3 性能基线和开发调试，不属于 GIS prior 刷新主链。
+
+请求字段：
+
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+| --- | --- | --- | --- | --- |
+| `confirmGenerateChunks` | boolean | 是 | - | 必须为 `true`，确认本次操作会生成并可能保存真实 Chunk。 |
+| `radiusChunks` | number | 否 | `32` | 方形目标半径，范围 `1..32`；32 对应 `65 x 65 = 4225` 个目标 Chunk。 |
+| `timeoutSeconds` | number | 否 | `900` | 超时秒数，范围 `30..1800`。超时后移除临时 ticket。 |
+| `requireFresh` | boolean | 否 | `true` | 目标范围存在已加载 Chunk 时拒绝启动；磁盘旧 Chunk 在运行中记为 existing 并令 cold baseline 无效。 |
+| `centerBlockX` / `centerBlockZ` | number | 条件 | 玩家位置 | 必须成对出现；无在线玩家时必须显式提供。 |
+| `dimensionId` | string | 否 | 玩家维度或主世界 | 例如 `minecraft:overworld`。 |
+| `playerName` | string | 否 | 首个在线玩家 | 只用于解析默认中心和维度，玩家不会被传送。 |
+
+启动成功立即返回 `status=running`，不会阻塞 HTTP 线程等待数千 Chunk 完成。主要返回字段：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `schemaVersion` | string | `gis_chunk_generation_benchmark.v0.1`。 |
+| `ok` | boolean | `running` 或 `completed` 时为 true；失败、超时、取消时为 false。 |
+| `jobId` | string | 本次基准任务 ID。 |
+| `status` | string | `running`、`completed`、`timed_out`、`failed`、`cancelled`。 |
+| `terminal` | boolean | 是否已进入终态。 |
+| `targetChunkCount` | number | 方形目标 Chunk 总数。 |
+| `ticketActive` / `ticketReleased` | boolean | 临时 Region Ticket 当前是否有效，以及终态是否已执行释放。 |
+| `targetBounds` | object | Chunk 与 block 两套完整边界。 |
+| `progress` | object | completed / remaining、new / existing、loadedAtStart、unclassified 计数。 |
+| `timings` | object | 已达到时输出 `p50Ms`、`p95Ms`、`p100Ms` 和 `chunksPerSecond`。 |
+| `coldBaselineValid` | boolean | 只有全部目标均为本轮新生成、无起测前加载且任务完成时为 true。 |
+| `invalidReasons` | array | cold baseline 无效或任务未完成的稳定原因码。 |
+| `artifacts.chunkGenerationBaselineReport` | string | `chunk_generation_baseline_report.json` 绝对路径。 |
+
+运行时只在内存累计 Chunk 状态；Forge `ChunkEvent.Load.isNewChunk()` 区分新生成与磁盘加载，后续 server tick 再确认目标已成为可用 `LevelChunk`。结束、超时、失败或服务端停止时必须移除临时 Region Ticket。
+
+### `POST /gis/chunk_generation_benchmark/status`
+
+请求可选字段 `jobId`。省略时返回当前任务，若无当前任务则返回最近一次任务；未知 ID 返回 HTTP 400。返回字段与 start 相同，终态结果同时写入报告文件。
+
 ## MCP 工具
 
 | 工具 | HTTP 映射 | 说明 |
@@ -97,6 +137,8 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 | `gis_status` | `GET /gis/status` | 查询本地接口、debugRoot 和在线玩家。 |
 | `gis_refresh` | `POST /gis/refresh` | 执行真实世界半径刷新，可选传入 `cellStepBlocks` 覆盖默认 step。 |
 | `gis_test_run` | `POST /gis/test_run` | 执行合成验收用例。 |
+| `gis_chunk_generation_benchmark_start` | `POST /gis/chunk_generation_benchmark/start` | 显式确认后启动服务端同面积 Chunk 生成基准。 |
+| `gis_chunk_generation_benchmark_status` | `POST /gis/chunk_generation_benchmark/status` | 查询当前或最近基准的进度与结果。 |
 
 工具返回内容为格式化 JSON 文本，错误时返回 MCP `isError=true` 与 `Error: <message>`。
 
@@ -107,3 +149,8 @@ Java 侧端口可用 JVM system property `geomantia.apiPort` 覆盖。
 - `gis_refresh {"radiusChunks":8,"sampleMode":"prior"}` 在有在线玩家时能返回 `ok=true`，并在 runDirectory 中生成 progress 与 preview manifest。
 - `gis_refresh {"radiusChunks":8,"sampleMode":"prior","cellStepBlocks":8}` 能返回 `cellStepBlocks=8`，且产物 manifest 中记录同一 step。
 - 无在线玩家时，`gis_refresh` 必须显式传入 `centerBlockX` 与 `centerBlockZ`。
+- Chunk 基准未传 `confirmGenerateChunks=true` 时必须拒绝，不能生成目标 Chunk。
+- `radiusChunks=32` 必须报告 `diameterChunks=65`、`targetChunkCount=4225`。
+- cold 基准遇到磁盘旧 Chunk 时仍可完成调度，但必须输出 `coldBaselineValid=false` 和 `TARGET_CHUNKS_LOADED_FROM_DISK`。
+- 基准完成或超时后必须移除 Region Ticket，并保留可查询的终态报告。
+- 正常终态报告必须满足 `ticketActive=false`、`ticketReleased=true`。

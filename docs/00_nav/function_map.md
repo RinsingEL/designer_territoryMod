@@ -59,6 +59,7 @@
 
 - 总入口：`../systems/city/README.md`
 - 案子状态索引：`../systems/city/10_product/案子/README.md`
+- D3 / D4 下一步职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；按 `00` 到 `04` 阅读 D3 局部地形扫描、D4 单次城市决策、程序化城市编译器、通用装饰系统退役和景观系统。
 - 固定模板唯一落地主线：`../systems/city/10_product/案子/City固定模板唯一落地主线-v0.1/README.md`；当前开发路径，破坏性删除 configured structure、StructureStart、Jigsaw、envelope profiling 和建筑 late materialize，City active 建筑只使用固定 NBT `StructureTemplate`。
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`

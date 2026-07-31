@@ -61,17 +61,18 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 
 1. `10_product/案子/README.md`
 2. `10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
-3. `10_product/案子/City固定模板唯一落地主线-v0.1/README.md`
-4. `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`
-5. `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`
-6. `10_product/案子/City关键装饰锚点候选-v0.1/README.md`
-7. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
-8. `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
-9. `20_contracts/数据契约/结构落地交接契约.md`
-10. `20_contracts/接口契约/City调试MCP接口.md`
-11. `30_code_guide/代码导览.md`
-12. `40_tests/测试入口.md`
-13. `40_tests/影响面.md`
+3. `10_product/案子/D4城市生成职责重构-v0.1/00_D3局部地形扫描重构.md` 到 `04_景观系统.md`：下一步重构计划；先修复 D3 范围、采样、指标与性能，再进入单次蓝图、程序化编译器、装饰退役和景观系统。
+4. `10_product/案子/City固定模板唯一落地主线-v0.1/README.md`
+5. `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`
+6. `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`
+7. `10_product/案子/City关键装饰锚点候选-v0.1/README.md`
+8. `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
+9. `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
+10. `20_contracts/数据契约/结构落地交接契约.md`
+11. `20_contracts/接口契约/City调试MCP接口.md`
+12. `30_code_guide/代码导览.md`
+13. `40_tests/测试入口.md`
+14. `40_tests/影响面.md`
 
 历史方案可读但不作为当前实现依据：
 

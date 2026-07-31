@@ -23,6 +23,7 @@ GIS 是 Geomantia 的地貌基础设施层。它负责把 Minecraft 世界转换
 ## 当前跨系统计划
 
 - 国度规划 v1.3 计划会驱动 GIS 指标层改造：将 `cellStepBlocks` 与指标采样尺度拆开，避免 W 粗扫在 `cellStepBlocks=128` 时用 coarse cell-to-cell 高差误判 cliff。详见 `../realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`。
+- City [D3 局部地形扫描重构](../city/10_product/案子/D4城市生成职责重构-v0.1/00_D3局部地形扫描重构.md)计划会驱动城市级 GIS Tile 采样、planning / terrain / metric 三尺度拆分、loaded fast path、prior 单柱去重、跨 Region halo、坡度角和 cliff overlay 改造；当前 active GIS 契约尚未切换。
 
 ## 目录说明
 

@@ -13,6 +13,7 @@
 | 当前真值 | 当前 active path 的主方案，改实现和接口前必须先读。 |
 | 当前开发路径 | 契约已经锁定并正在实现，验收通过后进入 active path。 |
 | 当前设计案 | 目标与职责边界已确认，尚未进入契约和实现。 |
+| 下一步开发计划 | 已确定为下一轮重构方向，但尚未替换当前 active path。 |
 | 已完成并入主线 | 核心能力已进入当前主线，后续只按缺口继续迭代。 |
 | 后续待做 | 方向仍有效，但尚未作为当前实现主线完成。 |
 | 已替代 | 方案被 D3-D6 结构落地驱动主线替代，不再作为实现依据。 |
@@ -22,19 +23,20 @@
 
 1. `D3-D6结构落地驱动城市重构-v0.1/README.md`
 2. `City固定模板唯一落地主线-v0.1/README.md`
-3. `D4设计构图候选闭环-v0.1/README.md`
-4. `D4设计构图候选闭环-v0.2/README.md`
-5. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
-6. `D4阵列候选选择闭环-v0.4/README.md`
-7. `D4连续外扩候选-v0.5/README.md`
-8. `结构Envelope精修-v0.1/README.md`
-9. `City通用装饰阵列系统-v0.3/README.md`
-10. `City关键装饰锚点候选-v0.1/README.md`
-11. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
-12. `City建筑群生活感设计-v0.1/README.md`
-13. `W结果驱动大城镇功能区设计-v0.1/README.md`
-14. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
-15. 当前实例设计案：`潮汐王冠首都-百建筑设计-v0.1/README.md`。
+3. 下一步重构按 `D4城市生成职责重构-v0.1/` 的 `00` 到 `04` 阅读：D3 局部地形扫描、D4 单次城市决策、程序化城市编译器、通用装饰系统退役、景观系统。
+4. `D4设计构图候选闭环-v0.1/README.md`
+5. `D4设计构图候选闭环-v0.2/README.md`
+6. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
+7. `D4阵列候选选择闭环-v0.4/README.md`
+8. `D4连续外扩候选-v0.5/README.md`
+9. `结构Envelope精修-v0.1/README.md`
+10. `City通用装饰阵列系统-v0.3/README.md`
+11. `City关键装饰锚点候选-v0.1/README.md`
+12. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
+13. `City建筑群生活感设计-v0.1/README.md`
+14. `W结果驱动大城镇功能区设计-v0.1/README.md`
+15. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+16. 当前实例设计案：`潮汐王冠首都-百建筑设计-v0.1/README.md`。
 
 ## 案子状态表
 
@@ -42,6 +44,7 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前实现主线仍含 configured structure：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger。其 configured / StructureStart 分支已确定由固定模板唯一落地主线破坏性替换，完成后本案降为历史参考。 |
 | `City固定模板唯一落地主线-v0.1` | 当前开发路径 | City active 建筑只认固定 NBT `StructureTemplate`；删除 configured structure、外部 StructureStart、Jigsaw、envelope profiling 和 late materialize。D4-D6 使用精确模板尺寸 / hash / 入口，worldgen 做确定性模板粘贴；三个地形适配试验模板保留 City 注册单-piece start。 |
+| `D4城市生成职责重构-v0.1` | 下一步开发计划 | 按 `00` 到 `04` 推进：先把 D3 收敛为可缓存、step 4、范围受控的可信地形真值，再让 D4 一次输出 CityBlueprint、由程序化编译器自动冻结结构锚点，随后退役通用装饰层并建立独立景观系统。当前 active path 与 D5/D6/D7 契约尚未切换。 |
 | `City固定模板StructureStart地形适配试验-v0.1` | 当前试验路径 | 仅 Stubbs 风车、谷仓与肉铺在 `createStructures` 注入一个 City 注册的 `StructureStart` 和一个固定模板 piece，使用 `beard_thin`。固定模板 identity 不变，不恢复 configured 随机选择或 Jigsaw；装饰仍走当前独立路径。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
 | `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
