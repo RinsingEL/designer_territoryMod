@@ -23,7 +23,7 @@
 
 1. `D3-D6结构落地驱动城市重构-v0.1/README.md`
 2. `City固定模板唯一落地主线-v0.1/README.md`
-3. 下一步重构按 `D4城市生成职责重构-v0.1/` 的 `00` 到 `04` 阅读：D3 局部地形扫描、D4 单次城市决策、程序化城市编译器、通用装饰系统退役、景观系统。
+3. D4 职责重构按 `D4城市生成职责重构-v0.1/` 的 `00` 到 `04` 阅读；01+02 已接通单次 Blueprint 与程序化编译，00/03/04 仍按各案状态推进。
 4. `D4设计构图候选闭环-v0.1/README.md`
 5. `D4设计构图候选闭环-v0.2/README.md`
 6. `D4阵列布局AgentLoop-v0.2-v0.3/README.md`
@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前实现主线仍含 configured structure：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger。其 configured / StructureStart 分支已确定由固定模板唯一落地主线破坏性替换，完成后本案降为历史参考。 |
 | `City固定模板唯一落地主线-v0.1` | 当前开发路径 | City active 建筑只认固定 NBT `StructureTemplate`；删除 configured structure、外部 StructureStart、Jigsaw、envelope profiling 和 late materialize。D4-D6 使用精确模板尺寸 / hash / 入口，worldgen 做确定性模板粘贴；三个地形适配试验模板保留 City 注册单-piece start。 |
-| `D4城市生成职责重构-v0.1` | 下一步开发计划 | 按 `00` 到 `04` 推进：先把 D3 收敛为可缓存、step 4、范围受控的可信地形真值，再让 D4 一次输出 CityBlueprint、由程序化编译器自动冻结结构锚点，随后退役通用装饰层并建立独立景观系统。当前 active path 与 D5/D6/D7 契约尚未切换。 |
+| `D4城市生成职责重构-v0.1` | 开发中（01 v0.2 + 02 产物 v0.4 已接通） | D4 一次输出空间范围/疏密/算法 Blueprint；程序先在偏好 patch 播种，再按关系图以各 Group 持续阵列完成无固定距离上限的连接生长，实体连通交给 LandUse，标准 D5/D6/D7 artifact 不变。00 D3 v2、03 装饰退役、04 景观仍待后续。 |
 | `City固定模板StructureStart地形适配试验-v0.1` | 当前试验路径 | 仅 Stubbs 风车、谷仓与肉铺在 `createStructures` 注入一个 City 注册的 `StructureStart` 和一个固定模板 piece，使用 `beard_thin`。固定模板 identity 不变，不恢复 configured 随机选择或 Jigsaw；装饰仍走当前独立路径。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
 | `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
@@ -85,8 +85,9 @@
 - D3 patch 作为地形事实输入，不重复做功能区真值层。
 - Trek 顶层 configured structure 可做 envelope profiling。
 - D4 可通过候选闭环选择结构落脚点，不要求 AI 直接手算坐标和防撞。
+- D4 案子 01 v0.2 + 案子 02 产物 v0.4 已接通：AI 只提交一次完整 CityBlueprint，配置功能区范围、疏密、算法、偏好 patch 与关系而非建筑数量；程序 required 播种后先按关系图连接、再 fill，连接只受 D3 规划网格等硬约束，不设固定 Group 间距离上限。正式 workflow 默认 `blueprint`，旧候选链仅显式 legacy/debug。
 - D4 v0.2 逐 slot session 已实现并被 `key_then_array` 关键结构阶段复用；当前 v0.1 批量候选只作为 debug / 兼容路径。
-- D4 阵列布局 Agent Loop v0.2/v0.3 已作为显式开发路径接入；当前默认 `key_then_array` 的 array_fill 仍以 v0.1 阵列候选为准，显式 endpoint / workflow 可每轮执行一个 patch / sector 驱动的阵列 item，v0.3 `composite_array` 可在同轮展开 parent/subZones/child arrays。
+- D4 阵列布局 Agent Loop v0.2/v0.3 已作为显式 legacy/debug 路径接入；正式默认已切到 Blueprint compiler。显式旧 endpoint/workflow 仍可 replay item，v0.3 `composite_array` 可展开 parent/subZones/child arrays。
 - City 通用装饰阵列 v0.3 已接入内容姿态、全局 run、冻结地形 outcome、fill-only foundation 和 v0.3 ledger / activation preview；真实新存档 worldgen 验收仍需执行。
 - City 关键装饰锚点候选 v0.1 负责 required 单点 prefab 的规划期候选、完整 footprint / clearance 避障与相对坐标 patch；普通 scatter / edge / grid 仍走现有装饰投影。
 - D5 可激活 reservation mask 和 planned structure registry。
@@ -99,7 +100,7 @@
 - 建筑群生活感设计：联动现有 D4 / LandUse、建筑朝向和 Decoration；首个临河 / 海综合城镇切片以可读的农业 / 商业 / 行政关系做视觉验收，道路另案。
 - W 结果驱动大城镇设计：按新选址重新组织农业、广场、行政、商业、居民和警卫区，优先验证不规则连续农田、LandUse 等高线条带水槽、石质农业边界、自动相向扩张，以及 PAVE、广场步行面和真实道路组成的城区交通网络。
 - Road Weaver 深度接入：入口候选、道路风格、水岸 / 桥梁策略和更好预览。
-- D4 阵列布局 Agent Loop 后续：完成 v0.5 连续外扩候选的真实游玩验收，验证首户间距、近圈回退原因和局部 preview 可读性；默认 `key_then_array` 是否升级仍需单独决策。
+- D4 阵列布局 Agent Loop 后续：只作为 legacy/debug 保留真实游玩诊断价值；不再参与正式默认路径升级决策。
 - City 通用装饰阵列后续：完成 v0.3 真实游玩验收后，再接 `path_follow`、放射、自由多边形、跨 chunk 大 prefab、挖方 / 桥梁 / 隧道等复杂地形适配。
 - 关键装饰候选后续：在首版 rotation 0 和规划几何候选稳定后，再评估旋转枚举、真实地形只读采样和面向目标评分；不提前并入首版。
 - 建筑驱动土地使用区域：在 D4 已落建筑和组合关系之后，以 block 级多源行动力扩张生成农田、花海、林场、鱼塘、广场和庭院等连续区域，并向 DecorationProgram、边界与精确生成 mask 交接。

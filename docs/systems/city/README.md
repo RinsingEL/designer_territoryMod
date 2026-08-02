@@ -11,9 +11,12 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 ```text
 D3 地形 patch 真值
   -> 对 T4 AI 候选选出的首都显式审查选址（接受或回 T4 重选）
+  -> 新 D4 决策边界：程序冻结 v0.2 Context，AI 一次提交范围/疏密/连接阵列 CityBlueprint v0.4
+  -> D4 程序化编译器：必要结构优先、旧连续外扩阵列桥接、整批自动选择与 occupied 提交
+  -> 标准 StructureAnchorPlan / StructureAnchorMap 直接交给 D5/D6
   -> 显式 city_template_catalog.v0.1 + 当前世界 NBT metadata
-  -> D4 key_then_array 分阶段主流程（关键结构逐个定锚 / 冻结 occupied，再按阵列填充批量结构）
-  -> 可选 D4 v2 顺序候选 session（逐 slot 生成 / 选择 / 冻结）
+  -> 可选 legacy/debug D4 key_then_array 分阶段流程
+  -> 可选 legacy/debug D4 v2 顺序候选 session（逐 slot 生成 / 选择 / 冻结）
   -> 可选 D4 结构群整组候选 / 整组选定（整城构图调试路径）
   -> 可选 D4 阵列候选组（批量结构候选组，输出标准 StructureAnchorPlan）
   -> 可选 D4 阵列布局 loop v0.3（composite_array 父分区 / subZones / child arrays）
@@ -42,6 +45,8 @@ D3 地形 patch 真值
 D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRef + hash + variant + rawSize + rotation + mirror + anchor`）；world `actualFootprint` 只能由该 identity 推导并校验，不能维护第二份 template bbox。D6 必须重新读取当前世界 NBT，并校验 collision、mask 与 owner chunks。D5 的 RoadWeaver 注册只使用模板 transformed `roadEntrances[]`，不使用 bbox 外侧伪入口；缺 mod 时 `auto` 跳过、`roadweaver` hard fail，旧 debug road 仅在显式 `worldedit_debug` 下可用。旧 configured / Jigsaw / envelope artifact 进入 active endpoint 时统一返回 `CITY_CONFIGURED_STRUCTURE_FLOW_REMOVED`。
 
 `city_run_workflow` 是当前调试 / 验收快跑入口，用于串联上述阶段、记录每步耗时和暂停原因；它不改变单步接口的真值，也不允许绕过 worldgen-time placement 或 D5/D7 状态检查。
+
+案子 01+02 已接通 `city_prepare_d4_blueprint_context -> city_submit_d4_blueprint -> city_compile_d4_blueprint -> 标准 D4 anchor`。`city_run_workflow` 默认 `d4CandidateMode=blueprint`；缺 Context/Blueprint 时明确暂停并给出 nextAction，有效蓝图则纯程序编译后继续 D5/D6。candidate/session/manual anchor 只允许显式 legacy/debug mode。
 
 若当前 CitySeed 是 T4 AI 候选选出的首都，workflow 在 D3 后必须以 `awaiting_site_review` 暂停。`city_review_d3_site=accept_selected_site` 才能继续 D4；`reselect_required` 必须回到 T4，不能默认改变城市原型。
 
@@ -90,7 +95,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 
 - `10_product/案子/D4设计构图候选闭环-v0.1/README.md`：让 AI 提交城市结构 slot 和通用空间关系，程序按 D3 patch / envelope facts 生成少量安全候选点，避免 AI 直接手算 anchor。
 - `10_product/案子/D4设计构图候选闭环-v0.2/README.md`：已完成并入主线；将 v0.1 批量候选升级为逐 slot session：每选定一个 anchor 后冻结 occupied set，再为下一个 slot 重新生成候选，降低 D6 才发现碰撞后的回退成本。`key_then_array` 的关键结构阶段复用该 session；v0.1 批量候选仅保留为 debug / 兼容入口。
-- D4 key_then_array：`city_run_workflow` 默认路径；`placementStrategy=key_structure|single_ai_selected` 的关键结构必须先走逐 slot session，选中后冻结 occupied envelope；`placementStrategy=array_fill` 的填充结构随后逐组调用阵列候选，并读取上一阶段 `StructureAnchorMap` 避让已落结构。
+- D4 key_then_array：当前只保留为 `city_run_workflow d4CandidateMode=key_then_array` 显式 legacy/debug 路径；正式默认已切到 Blueprint compiler。
 - `10_product/案子/D4阵列布局AgentLoop-v0.2-v0.3/README.md`：D4 阵列布局同一版本线；v0.2 已接入显式阵列层开发路径，v0.3 已补 `composite_array` 嵌套阵列能力。AI 每轮仍只提交一个 `nextArrayLayoutPlanItem`，但该 item 可用 `childLayoutPlans[]` 描述父 zone 内的子阵列；程序同轮生成 parent zone、subZones、child zones、occupied field 和 preview。当前不切默认，需显式调用三段 endpoint 或 `d4CandidateMode=array_layout_loop_v0_3`。
 - `10_product/案子/D4阵列候选选择闭环-v0.4/README.md`：已接入显式候选选择闭环：create 后常规外扩查询以已 Plan collision occupied 的 focus、方向和 target patch 划定外侧可用区；显式 `newFunctionalArea=true` 不需要这三项，先返回按容量 / 可用性排序的全局 patch 和入口，再由 `selectedGlobalPatchRef` 生成候选。候选不提交 state，整组选中才原子写 occupied / zones / 剩余空间；默认不自动选择，`composite_array` 父子区继续保留。当前不切默认。
 - `10_product/案子/D4连续外扩候选-v0.5/README.md`：当前开发路径。常规外扩不预选 patch，改以父结构 D2 body / collision bbox、方向和目标实体间距产生近中远连续候选；D3 patch 后置用于地形筛选 / 评分，可跨 patch，近圈不可用才有原因地扩大搜索。
@@ -120,6 +125,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | D3 | `city_landform_review_package.json`、`landform_review_map.png`；patch 含 `biomeSummary` 群系摘要 |
 | D4 design loop state | `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`、`d4_design_loop_occupied_field.json`、`d4_design_loop_function_zones.json`、`d4_design_loop_array_zones.json`、`d4_design_loop_patch_availability.json`、`d4_design_loop_next_ai_context_summary.json`、`d4_design_loop_execution_trace.json` |
 | D4 staged workflow | `d4_staged_plan.json`、`d4_staged_trace.json`；关键结构阶段复用 D4 v2 session artifact，阵列阶段按 `arrayId` 输出独立阵列候选 artifact，最终仍写标准 `structure_anchor_plan.json` / `structure_anchor_map.json` |
+| D4 Blueprint 决策与编译 | AI 以 CityBlueprint v0.4 的方位、范围、疏密、Group 阵列和可选 `connectionPlan` 表达功能区；程序播种核心后，从最近已提交阵列自动派生连接 focus/方向/gap，复用旧连续外扩引擎生成 near 完整批次并原子提交，不设固定组间距离上限，写 compile trace v0.6、`group_extent_map.v0.6` 和标准 anchor / preview。 |
 | D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 array candidates | `d4_array_candidate_plan.json`、`d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json` |

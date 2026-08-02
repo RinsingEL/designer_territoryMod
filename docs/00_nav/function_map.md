@@ -59,7 +59,7 @@
 
 - 总入口：`../systems/city/README.md`
 - 案子状态索引：`../systems/city/10_product/案子/README.md`
-- D3 / D4 下一步职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；按 `00` 到 `04` 阅读 D3 局部地形扫描、D4 单次城市决策、程序化城市编译器、通用装饰系统退役和景观系统。
+- D3 / D4 职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；案子 01 已升级为带 patch 内部五方位与可选连接阵列意图的 CityBlueprint v0.4，案子 02 复用旧连续外扩阵列引擎，自动生成并整批提交 near 连接候选，输出无固定组间距离上限的 v0.6 编译产物；正式 workflow 默认生成标准 D4 anchor。00 D3 v2、03 装饰退役、04 景观仍按各案状态推进。
 - 固定模板唯一落地主线：`../systems/city/10_product/案子/City固定模板唯一落地主线-v0.1/README.md`；当前开发路径，破坏性删除 configured structure、StructureStart、Jigsaw、envelope profiling 和建筑 late materialize，City active 建筑只使用固定 NBT `StructureTemplate`。
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
@@ -95,6 +95,7 @@
 - 历史案：`../systems/city/10_product/案子/D7条件包装结构生成-v0.1/README.md`
 - 历史案：`../systems/city/10_product/案子/D7剩余结构起点候选-v0.1/README.md`
 - 城市规划数据契约：`../systems/city/20_contracts/数据契约/城市规划数据契约.md`
+- D4 单次决策、程序化编译 trace 与 Group extent 契约：`../systems/city/20_contracts/数据契约/CityBlueprint数据契约.md`
 - 结构落地交接契约：`../systems/city/20_contracts/数据契约/结构落地交接契约.md`
 - City LandUse 数据契约：`../systems/city/20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
 - City worldgen 方块观测数据契约：`../systems/city/20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`；区分执行器提交 ledger 与 Minecraft 回调实际 BlockState，按 chunk 查询 post-features / chunk-save 证据。
