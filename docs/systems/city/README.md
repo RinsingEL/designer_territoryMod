@@ -11,8 +11,8 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 ```text
 D3 地形 patch 真值
   -> 对 T4 AI 候选选出的首都显式审查选址（接受或回 T4 重选）
-  -> 新 D4 决策边界：程序冻结 v0.2 Context，AI 一次提交范围/疏密/连接阵列 CityBlueprint v0.4
-  -> D4 程序化编译器：必要结构优先、旧连续外扩阵列桥接、整批自动选择与 occupied 提交
+  -> 新 D4 决策边界：程序冻结 v0.4 Context、三组 TerraSense 语义、City 固定 terrainModes 与 D3 terrain field，AI 一次提交范围/疏密/连接阵列 CityBlueprint v0.4
+  -> D4 程序化编译器：必要结构优先、城市规模 × Group extent 派生最低组内成形量、fill 后再用旧连续外扩阵列桥接、整批自动选择与 occupied 提交
   -> 标准 StructureAnchorPlan / StructureAnchorMap 直接交给 D5/D6
   -> 显式 city_template_catalog.v0.1 + 当前世界 NBT metadata
   -> 可选 legacy/debug D4 key_then_array 分阶段流程
@@ -108,7 +108,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业外轮廓由 LandUse 扩张形成，内部由 `CONTOUR_BANDS` 直接冻结顺等高线的 FIELD / BANK / WATER mask；同类区域默认在 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：历史 configured/envelope 精修案；active 主线只保留 fixed NBT body / collision / mask 的分层概念。
-- `10_product/案子/结构语义重标记-v0.1/README.md`：整理 TerraSense 结构语义白名单，不恢复 City 自建枚举。
+- `10_product/案子/结构语义重标记-v0.1/README.md`：功能、规划角色和风格继续使用 TerraSense 配置术语；placement topology 明确收敛为 City 固定多选枚举 `terrainModes`。
 - `10_product/案子/RoadWeaver结构连接-v0.1/README.md`：已接入 optional RoadWeaver adapter，D5 execute 阶段注册结构道路端点；连接计划 v0.2 先生成 placement group 组内空间 MST、再生成组间最近入口 MST，避免局部 priority 跨区串链；`auto` 缺 mod时跳过道路并标记 `ROADWEAVER_UNAVAILABLE`，旧 debug 道路只允许显式 `worldedit_debug`。
 - `10_product/案子/结构地形兼容适配-v0.1/README.md`：已加入 terrain adaptation / Beardifier 诊断 trace，用于判断浮空等问题来源。
 - `10_product/案子/城市边界与城墙-v0.1/README.md`：已加入 D7 ledger 后的临时城墙 plan / execute 闭环，输出石墙 NBT artifact。
@@ -125,7 +125,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | D3 | `city_landform_review_package.json`、`landform_review_map.png`；patch 含 `biomeSummary` 群系摘要 |
 | D4 design loop state | `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`、`d4_design_loop_occupied_field.json`、`d4_design_loop_function_zones.json`、`d4_design_loop_array_zones.json`、`d4_design_loop_patch_availability.json`、`d4_design_loop_next_ai_context_summary.json`、`d4_design_loop_execution_trace.json` |
 | D4 staged workflow | `d4_staged_plan.json`、`d4_staged_trace.json`；关键结构阶段复用 D4 v2 session artifact，阵列阶段按 `arrayId` 输出独立阵列候选 artifact，最终仍写标准 `structure_anchor_plan.json` / `structure_anchor_map.json` |
-| D4 Blueprint 决策与编译 | AI 以 CityBlueprint v0.4 的方位、范围、疏密、Group 阵列和可选 `connectionPlan` 表达功能区；程序播种核心后，从最近已提交阵列自动派生连接 focus/方向/gap，复用旧连续外扩引擎生成 near 完整批次并原子提交，不设固定组间距离上限，写 compile trace v0.6、`group_extent_map.v0.6` 和标准 anchor / preview。 |
+| D4 Blueprint 决策与编译 | AI 读取 `functionTerms/planningRoleTerms/styleTerms` 与 City 固定 `terrainModes`，以 CityBlueprint v0.4 的方位、范围、疏密、Group 阵列和可选 `connectionPlan` 表达功能区；style 仅供理解。程序冻结 D3 terrain field，对 required/fill/connectivity collision footprint 统一执行 SURFACE 逐格已采样且非水门禁；required 后先按城市规模与 extent 派生最低组内成形量并完成 fill，再自动派生连接 focus/方向/gap、生成并原子提交 near 完整批次。写 compile trace v0.9、`group_extent_map.v0.7` 和标准 anchor / preview。 |
 | D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 array candidates | `d4_array_candidate_plan.json`、`d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json` |

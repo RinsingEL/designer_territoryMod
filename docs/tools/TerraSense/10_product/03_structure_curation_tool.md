@@ -56,7 +56,7 @@ TerraSense 结构策展工具按 v1-v3 功能包记录为已完成。后续 C �
 后续工作重心转移到 StructureBinder 侧：
 
 - 接入 TerraSense 最新导出的 `StructureProfile.jsonl` 和 `TerraSenseStructureProfileSource.official.json`。
-- 确认 `CityStructureProfileCatalog` 与 D4 候选使用原始 `semanticTerms/functionTerms/...`，不再投影为 City `functionTags` 或 `function_candidates`。
+- 确认 `CityStructureProfileCatalog` 与 D4 冻结快照只使用三组可配置词表 `functionTerms/planningRoleTerms/styleTerms` 和 City 固定枚举 `terrainModes`，不再投影为 City `functionTags` 或 `function_candidates`；style 只给 AI 看。
 - 保留 runtime jigsaw 真值字段作为上游结构画像；当前 City 主链不再包含旧 bounded jigsaw solver。
 
 ## 最小交付能力
@@ -125,7 +125,7 @@ TerraSense Studio 是给协作者使用的核心工具。它必须不依赖启�
 
 - 浏览结构截图。
 - 查看硬事实和 AI 初标。
-- 通过动态术语表编辑功能、风格、位置倾向、用途角色。
+- 通过动态术语表编辑功能、规划角色和地形要求；其他丰富策展说明可留在 Studio 内部资料，不进入 City 结构语义目录。
 - 标记审核状态。
 - 写人工备注。
 - 标为优秀范例。
@@ -145,11 +145,8 @@ TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只�
 | 词表类型 | 用途 |
 | --- | --- |
 | `function` | residential、market、port、warehouse、military、religious 等功能 |
-| `style` | medieval、eastern、industrial、ruin、coastal、magic 等风格 |
-| `placement` | road_frontage、waterfront、plaza_edge、corner、slope 等位置倾向 |
-| `usage` | main_building、secondary_building、decoration、landmark、starter_village_core 等用途 |
-| `template_role` | start、child、connector、roof、wall、room、corridor 等 jigsaw 内部角色 |
-| `quality` | excellent、usable、needs_fix、reject 等质量标签 |
+| `planning_role` | key、fill 等城市规划角色；连接沿用填充结构池，不形成第三种永久结构等级 |
+| `terrain` | land_only、water_only、flat 等结构自身地形要求 |
 
 标记流程：
 
@@ -251,12 +248,9 @@ MC 侧应提供：
 | `independent_semantic_unit` | 是否能作为独立语义单元使用 |
 | `has_jigsaw_connectors` | 是否带 jigsaw connector |
 | `function` | 功能 term，例如 `function.村庄`、`function.灯塔`、`function.trade` |
-| `style` | 风格 term，例如 medieval、eastern、nomadic、industrial、ruin、magic、coastal |
-| `placement` | 位置倾向 term，例如 road_frontage、waterfront、plaza_edge、corner、quiet_backstreet、slope |
-| `usage` | 用途 term，例如 main_building、secondary_building、decoration、landmark、road_node、starter_village_core |
-| `template_role` | start、child、middle、end、connector、decor、roof、wall、room、corridor 等 jigsaw 内部角色 |
+| `planning_role` | 规划角色 term，例如 key、fill；连接不作为独立永久等级 |
+| `terrain` | 结构地形要求 term，例如 land_only、water_only、flat |
 | `system_ref` | 若是 jigsaw 子模板，指向所属系统或 pool |
-| `quality` | excellent、usable、needs_fix、reject |
 | `review_state` | pending、approved、rejected、needs_review |
 | `vocabulary_terms` | 本结构引用的动态术语表 canonical term、状态和版本 |
 | `evidence` | AI 或人工给出的标注依据 |
@@ -270,21 +264,18 @@ MC 侧应提供：
 - `TerraSenseStructureProfileSource.official.json`
 - 显式 debug catalog
 
-当前 City 结构目录查询、envelope profiling 与 D4 候选主要读取：
+当前 City 结构语义目录与 D4 冻结快照读取：
 
 | 字段 | 当前用途 |
 | --- | --- |
-| `structure_id` | C7/C8/C9 模板 id |
-| `size / size_tier / piece_role` | 候选过滤和节点计划 |
-| `semanticTerms` / `functionTerms` | AI 选择结构时对照 D4 功能区语义，不投影为 City enum |
-| `styleTerms` / `placementTerms` / `usageTerms` / `templateRoleTerms` / `qualityTerms` | 风格、位置、用途、jigsaw 角色和质量判断 |
-| `placement` | origin offset、footprint、entry、terrain probe |
-| `constraints` | rotation、水/坡度/solid base 等硬约束 |
-| `connectors` | 保留 runtime jigsaw 硬事实；当前 City active path 不执行旧 bounded jigsaw 求解 |
-| `weight_profile` | 排列与权重预留 |
-| `tag_source` | 判断是否可信、是否人工覆盖或扫描来源 |
+| `structureId` / `sourceProfileRef` | 画像身份与来源追溯 |
+| `reviewState` | 正式目录唯一准入门禁，必须为 `approved` |
+| `functionTerms` | AI 选择结构时对照 D4 功能语义；正式画像必填，不投影为 City enum |
+| `planningRoleTerms` | 关键/填充等结构规划角色；当前可为空，等待可信人工重标记 |
+| `terrainModes` | City 固定 placement topology；正式画像至少一项，当前值域 `SURFACE/EMBEDDED/FLOATING`，可多选 |
+| `styleTerms` | 结构风格；当前可为空，只供 AI / 人工理解和筛选 |
 
-TerraSense 导出必须优先保证这些字段稳定；旧 `function_candidates` 和 `functionTags` 不再作为当前消费字段。
+TerraSense 原始画像仍可保留扫描硬事实与追溯资料，但 City 语义目录不消费它们；NBT 尺寸、旋转、碰撞和净空走 Minecraft / template catalog 链。旧 `function_candidates` 和 `functionTags` 不再作为当前消费字段。
 
 ## 导出格式
 
@@ -300,13 +291,10 @@ TerraSense 导出必须优先保证这些字段稳定；旧 `function_candidates
 
 - `hard_facts`
 - `hard_constraints`
-- `semanticTerms`
 - `functionTerms`
+- `planningRoleTerms`
+- `terrainModes`
 - `styleTerms`
-- `placementTerms`
-- `usageTerms`
-- `templateRoleTerms`
-- `qualityTerms`
 - `vocabulary_snapshot`
 - `tag_source`
 - `evidence`

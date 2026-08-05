@@ -10,9 +10,9 @@ CityBlueprint 本身不生成结构坐标。案子 02 已接通程序化编译�
 
 | 对象 | schemaVersion |
 | --- | --- |
-| 上下文 | `city_blueprint_context.v0.2` |
+| 上下文 | `city_blueprint_context.v0.4` |
 | 引用目录 | `city_blueprint_reference_catalog.v0.2` |
-| 目录快照 | `city_blueprint_catalog_snapshot.v0.2` |
+| 目录快照 | `city_blueprint_catalog_snapshot.v0.5` |
 | 蓝图 | `city_blueprint.v0.4` |
 | 校验报告 | `city_blueprint_validation_report.v0.2` |
 | 提交 trace | `city_blueprint_submission_trace.v0.2` |
@@ -37,7 +37,7 @@ CityBlueprint 本身不生成结构坐标。案子 02 已接通程序化编译�
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint_context.v0.2`。 |
+| `schemaVersion` | string | 固定 `city_blueprint_context.v0.4`。 |
 | `contextId` | string | 对除 `preparedAt` 外的冻结上下文做 SHA-256。 |
 | `runId` / `cityId` | string | 当前 run 与城市。 |
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
@@ -46,10 +46,18 @@ CityBlueprint 本身不生成结构坐标。案子 02 已接通程序化编译�
 | `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
-| `catalogSnapshot` | object | TerraSense 结构画像、固定模板目录和 Blueprint 引用目录。 |
+| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.5`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Blueprint 引用目录及 D3 terrain field 引用。画像暴露 TerraSense `functionTerms/planningRoleTerms/styleTerms` 和 City `terrainModes`；style 只给 AI 看。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
+
+## Structure Terrain Modes
+
+`terrainModes` 是 City 固定 placement topology 枚举数组，不属于 TerraSense 动态词表。值域严格为 `SURFACE | EMBEDDED | FLOATING`，导入时大小写归一为大写；正式画像必须非空，未知值或归一后重复值直接拒绝。旧 `terrainTerms` 是退役字段，导入器必须显式拒绝。
+
+多值按 OR 解析。当前运行时只真正实现 `SURFACE`：只要数组含 `SURFACE`，D4 便解析并冻结 `resolvedTerrainMode=SURFACE`；只有 `EMBEDDED/FLOATING` 时明确返回 `CITY_STRUCTURE_TERRAIN_MODE_UNSUPPORTED`，不得伪装为已支持。
+
+SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫描或 chunk 加载。transformed collision footprint 覆盖的每个 terrain-field cell 必须存在、`sampled=true` 且 `water=false`。坡度、`localRelief`、roughness、biome 与 landform 不做结构硬拒绝；它们仍可参与既有地形适配评分或诊断。Context/Snapshot 只冻结 `terrainFieldRef` 的 schema 与内容 hash；文件变化、city/grid/step 不一致均 stale。
 
 ## Blueprint 引用目录
 
@@ -158,28 +166,34 @@ CITY_BLUEPRINT_ATTACHED_FEATURE_UNSUPPORTED
 
 02 已接通：`city_run_workflow` 默认 `d4CandidateMode=blueprint`。所有 candidate/session/manual anchor 接口统一视为 `legacy/debug`，只有显式指定旧 mode 才执行，不属于新的正式 Blueprint 决策边界。
 
-## CityGenerationCompileTrace v0.6
+## CityGenerationCompileTrace v0.9
 
-文件：`city_d4_<cityId>/city_generation_compile_trace.json`，`schemaVersion=city_generation_compile_trace.v0.6`。
+文件：`city_d4_<cityId>/city_generation_compile_trace.json`，`schemaVersion=city_generation_compile_trace.v0.9`。
 
 根字段：`cityId`、`status=compiled|failed`、`reasonCode`、`generationSeed`、`selectionMode`、`aiCandidateSelectionCount=0`、`manualCandidateSelectionCount=0`、`sourceD3Ref`、`catalogSnapshotRef`、`connectivityPlan`、`selections[]`、`groupResults[]`。
 
-每个 selection 按执行顺序记录 `phase=required|connectivity_growth|fill`。required/fill 继续记录单结构候选、评分、envelope 与提交状态；connectivity selection 必须按完整阵列批次记录 `arrayId`、`plannerType`、`focusArrayId`、自动方向、`resolvedConnectionPlan`、语义参数、近圈搜索 trace、候选数、选中 candidate、批次 anchor IDs、连接前后 gap 与整批结构数。任一连接批次只有完整 cardinality、全部 terrain/collision 合法且确实缩短目标 gap 时才能原子提交，不得部分落地。
+每个 selection 按执行顺序记录 `phase=required|fill|connectivity_growth`。全部 Group 的 required 先完成，随后各 Group 的 fill 完成内部成形，最后才允许出现 connectivity selection。required/fill 继续记录单结构候选、评分、envelope 与提交状态；connectivity selection 必须按完整阵列批次记录 `arrayId`、`plannerType`、`focusArrayId`、自动方向、`resolvedConnectionPlan`、语义参数、近圈搜索 trace、候选数、选中 candidate、批次 anchor IDs、连接前后 gap 与整批结构数。任一连接批次只有完整 cardinality、全部 terrain/collision 合法且确实缩短目标 gap 时才能原子提交，不得部分落地。
+
+connectivity selection 另必填 `requestedBatchSize`、`terminalBatch`、`initialBodyGapBlocks`、`frontierGapCorrectionBlocks`；对应 `frontierSearchTrace[].rings[]` 记录 `correctedForBodyGap`。批量从解析后的配置规模按 `N..1` 确定性降级重试，失败尝试同样进入 trace；一组完整合法候选即可提交，零组才失败。`minCandidateCount` 不属于 Blueprint 或编译请求，旧字段必须以 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED` 明确拒绝。
+
+required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate。门禁以 transformed collision footprint 为范围，对 `terrainModes` 做 OR 解析；当前 SURFACE 要求全部相交 D3 terrain-field cells 存在、已采样且非水，不得只检查 anchor 点、首个 patch 或 dominant biome。trace 至少记录 `structureRef`、`declaredTerrainModes`、`resolvedTerrainMode`、footprint、相交/已评估/拒绝格数、reasonCode 和有限失败样本；anchor 同样冻结 `resolvedTerrainMode`。`styleTerms` 不得出现在 gate、分数或候选排序依据中。
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、从 0 连续递增的 `slotIndex`、`spacingBlocks`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，可选 `outwardTarget`；首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。该字段是程序 provenance，不是 AI 输入坐标。
 
 `connectivityPlan` 必填 `topologyPolicy=EXPLICIT_RELATIONS_THEN_DETERMINISTIC_SHORTEST_FALLBACK`、`handoffThresholdPolicy=STRICT_BILATERAL_MINIMUM`、`edgeCount`、`fallbackEdgeCount` 与 `edges[]`。每条边必填 `fromGroupId`、`toGroupId`、`topologySource=EXPLICIT|FALLBACK`、`topologyReason`、`initialGapBlocks`、`finalGapBlocks`、`handoffGapBlocks`、`connectionStructureCount`、`connectionBatchCount`、`status`；fallback 原因固定为 `DETERMINISTIC_SHORTEST_COMPONENT_EDGE`。`handoffGapBlocks` 及 HARD 关系复验必须同源读取双方解析后的 `resolvedConnectionPlan.derivedLayoutParameters.landUseHandoffGapBlocks` 严格最小值，不得混用 Group required/fill 的内部 handoff。
 
-`groupResults[]` 必填 `groupId`、`requestedExtentClass`、`densityClass`、`densityParameterization=ALGORITHM_SPECIFIC`、`layoutAlgorithm`、`layoutParameters`、`resolvedConnectionPlan`、`targetAreaBlocks`、`maxExtentSpanBlocks`、`maxIntraGroupGapBlocks`、`outwardGuidedPlacementCount`、`connectionStructureCount`、`connectionBatchCount`、`connectionSpatialDemandBlocks`、`connectionExpansionBlocks`、`extentExpandedForConnectivity`、`actualStructureCount`、`requiredStructureCount`、`builtCollisionAreaBlocks`、`actualSpatialDemandBlocks`、`estimatedCoverageRatio`、`preferredPatchRefs[]`、`claimedPatchRefs[]`、`structureCounts` 与 `stopReason`。`resolvedConnectionPlan` 必须写出继承后的 pool、算法、planner、疏密及继承来源。`SPATIAL_BUDGET_REACHED` 是正常完成，`CONNECTED_SPACE_EXHAUSTED` 是保留必要结构后的软停；连接阶段可越过 extent 软目标，但不得越过 D3 规划网格等硬边界。
+`groupResults[]` 必填 `groupId`、`requestedExtentClass`、`densityClass`、`densityParameterization=ALGORITHM_SPECIFIC`、`layoutAlgorithm`、`layoutParameters`、`resolvedConnectionPlan`、`targetAreaBlocks`、`maxExtentSpanBlocks`、`maxIntraGroupGapBlocks`、`outwardGuidedPlacementCount`、`derivedMinimumStructureCount`、`internalStructureCount`、`minimumStructureCountReached`、`internalSpatialDemandBlocks`、`connectionStructureCount`、`connectionBatchCount`、`connectionSpatialDemandBlocks`、`connectionExpansionBlocks`、`extentExpandedForConnectivity`、`actualStructureCount`、`requiredStructureCount`、`builtCollisionAreaBlocks`、`actualSpatialDemandBlocks`、`estimatedCoverageRatio`、`preferredPatchRefs[]`、`claimedPatchRefs[]`、`structureCounts` 与 `stopReason`。`resolvedConnectionPlan` 必须写出继承后的 pool、算法、planner、疏密及继承来源。`SPATIAL_BUDGET_REACHED` 是正常完成，`CONNECTED_SPACE_EXHAUSTED` 只表示达到最低成形量后未填满空间预算；未达到最低成形量必须 hard fail。连接阶段可越过 extent 软目标，但不得越过 D3 规划网格等硬边界。
 
 `groupResults[]` 与 extent 中的每个 Group 还必须回写 `preferredPatchZone`，用于区分 AI 指定的内部方位与程序最终认领的 `claimedPatchRefs[]`。
 
-## GroupExtentMap v0.6
+## GroupExtentMap v0.7
 
-文件：`city_d4_<cityId>/group_extent_map.json`，`schemaVersion=group_extent_map.v0.6`。根字段为 `cityId`、`generationSeed`、`connectivityPolicy=RELATION_GRAPH_ARRAY_GROWTH_THEN_LAND_USE`、`connectionSemantics=STRUCTURE_FRONTIER_FOR_LAND_USE`、`cityBoundaryPolicy=D3_REVIEW_GRID_HARD_BOUNDARY`、`handoffThresholdPolicy=STRICT_BILATERAL_MINIMUM`、`structureGraphConnected`、`landUseConnected=false`、`landUseConnectionStatus=PENDING_LAND_USE_COMPILE`、`connections[]`、`groups[]`。不得出现 `maxInterGroupGapBlocks` 或含糊的旧 `connected` 字段；调用方不得自行把结构拓扑解释成实体地表连通。
+文件：`city_d4_<cityId>/group_extent_map.json`，`schemaVersion=group_extent_map.v0.7`。根字段为 `cityId`、`generationSeed`、`connectivityPolicy=RELATION_GRAPH_ARRAY_GROWTH_THEN_LAND_USE`、`connectionSemantics=STRUCTURE_FRONTIER_FOR_LAND_USE`、`cityBoundaryPolicy=D3_REVIEW_GRID_HARD_BOUNDARY`、`handoffThresholdPolicy=STRICT_BILATERAL_MINIMUM`、`structureGraphConnected`、`landUseConnected=false`、`landUseConnectionStatus=PENDING_LAND_USE_COMPILE`、`connections[]`、`groups[]`。不得出现 `maxInterGroupGapBlocks` 或含糊的旧 `connected` 字段；调用方不得自行把结构拓扑解释成实体地表连通。
 
-`connections[]` 与 compile trace 边字段同源，并增加 `landUseHandoffReady` 与 `connectionEdge{fromX,fromZ,toX,toZ}`；每个 Group 同时携带上述布局/空间/count/stop 字段和 closed `collisionExtent{minX,minZ,maxX,maxZ}`。所有 Group 的 required 核心必须先在各自 `preferredPatchRefs[]` 播种；连接阶段允许认领 D3 `review.grid` 内符合 terrain policy 的其他 patch/member cells，并在 `claimedPatchRefs[]` 中解释。Group 间初始距离不构成 D4 固定阈值；LandUse 编译后必须另以真实 block spans 验收连续性。LandUse 子系统自身的 64 格自动连接策略是独立契约，不属于本 D4 extent map。
+`connections[]` 与 compile trace 边字段同源，并增加 `landUseHandoffReady` 与 `connectionEdge{fromX,fromZ,toX,toZ}`；每个 Group 同时携带上述布局/空间/count/stop 字段和 closed `collisionExtent{minX,minZ,maxX,maxZ}`。所有 Group 的 required 核心必须先在各自 `preferredPatchRefs[]` 播种；连接阶段允许认领 D3 `review.grid` 内其他 patch/member cells，并在 `claimedPatchRefs[]` 中解释。Group `terrainPolicy` 只形成排序偏好与 trace，不按 patch 平均坡度硬裁剪。Group 间初始距离不构成 D4 固定阈值；LandUse 编译后必须另以真实 block spans 验收连续性。
 
-`extentClass` 核心/fill 目标空间预算为 `4096 / 16384 / 36864 blocks²`，最大跨度为 `96 / 160 / 240 blocks`。`densityClass` 必须经当前布局算法参数化；基础 target/max/handoff gap 见案子 02，空间需求按模板 collision 与算法 gap/multiplier 计算。结构数是输出事实，不是输入约束。连接阶段绕过 extent 软目标，但仍受 D3 grid、collision、terrain policy、组内连续最大 gap 和内部 256 anchor 安全护栏约束；安全护栏命中必须 hard fail，不能作为正常规模停止原因。
+`extentClass` 核心/fill 目标空间预算为 `4096 / 16384 / 36864 blocks²`，最大跨度为 `96 / 160 / 240 blocks`。程序另按 D3 `targetScale.scale` 与 `extentClass` 派生最低成形栋数：HAMLET=`2/3/4`、VILLAGE=`3/4/6`、TOWN=`3/6/9`、CITY=`4/8/12`（SMALL/MEDIUM/LARGE）。它不是 Blueprint 输入数量；最终结构数仍是模板 collision、疏密、算法和空间预算共同形成的输出事实。连接结构只计入 `actualStructureCount/actualSpatialDemandBlocks` 与 connection 专用字段，不计入 `internalStructureCount/internalSpatialDemandBlocks` 或最低成形判定。连接阶段绕过 extent 软目标，但仍受 D3 grid、collision、结构 terrain mode gate、组内连续最大 gap 和内部 256 anchor 安全护栏约束；安全护栏命中必须 hard fail，不能作为正常规模停止原因。
+
+若任一 Group 在连接前无法达到 `derivedMinimumStructureCount`，编译必须以 `CITY_BLUEPRINT_GROUP_MINIMUM_UNREACHABLE` 失败；不得进入 connectivity growth 后再用连接建筑补足数量。
 
 编译成功后仍必须输出原有 `city_structure_anchor_plan.v0.2`、`city_structure_anchor_map.v0.2` 与结构预览。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。

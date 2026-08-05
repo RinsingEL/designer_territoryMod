@@ -35,8 +35,9 @@
 
 3、候选选择与预览：
 
-   - 保留 `create -> query -> plan -> select -> finalize`：生成候选不写 state，整组选定才写 occupied、zones 和剩余空间。
-   - 默认至少返回 3 组完整合法候选；调用方显式传 `minCandidateCount=2` 时，允许返回 2 组完整合法候选供人工选择，不得以删点或不完整簇凑数。
+   - 候选生成与原子 select 继续作为程序几何和状态提交能力保留；正式 Blueprint compiler 自动评分并选择，不进入 Agent Loop，也不等待 AI/人工选 candidate ID。
+   - `candidateCount` 只控制最多生成多少组供程序稳定评分，不是验收下限。一组完整合法候选即可继续，零组才失败；不得以删点或不完整簇凑数。
+   - `minCandidateCount` 破坏性移除，传入时明确返回 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED`。旧“至少 3 组、人工最少 2 组”的候选菜单口径作废。
    - 总览图用于比较近、中、远组；局部图以父结构和当前候选簇为中心，短标签只标候选编号。
    - 调试图可显示 D2 body、collision、mask 三层；设计主图默认不叠 bbox，避免将保留边距误看成建筑体积。
 

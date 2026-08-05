@@ -44,7 +44,7 @@ v1.1 起调试刷新入口可以覆盖 `cellStepBlocks`。同一 Region 内 Cell
 | surfaceType | enum | 表面方块粗分类。 |
 | biomeId | string | 生物群系标识。 |
 | isWater | boolean | 是否水体。 |
-| waterDepth | float | 水深估计。 |
+| waterDepth | float | 从实际 WORLD_SURFACE 水面到 OCEAN_FLOOR 的柱内水深估计，不以海平面作为水面。 |
 | slope | float | 坡度指标。 |
 | localRelief | float | 局部起伏。 |
 | roughness | float | 粗糙度。 |

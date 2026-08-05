@@ -71,6 +71,31 @@ worldgen runtime 必须使用数学等价的唯一适配：`getZeroPositionWithT
 | `maxX` / `maxY` / `maxZ` | int | 是 | 包含的最大方块坐标，必须不小于对应 min |
 | `convention` | string | 是 | 固定为 `closed_inclusive_blocks` |
 
+## 带 Jigsaw 独栋模板的离线清洗契约
+
+City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视觉与功能上已经能够独立成立，但 NBT 内仍保留 connector 的模板，只允许先经过 `tools/city_templates/jigsaw_template_sanitizer.py` 离线清洗，再作为普通固定 NBT 进入模板目录。
+
+该工具使用三个独立产物：
+
+| 产物 | schemaVersion | 作用 |
+| --- | --- | --- |
+| 审计报告 | `city_standalone_jigsaw_audit.v0.1` | 只读列出源 hash、rawSize、实体数和每个 Jigsaw 的位置、方向、pool、target、`final_state`；同时给出待人工确认的道路入口候选。 |
+| 审核 manifest | `city_standalone_jigsaw_sanitize_manifest.v0.1` | 冻结 `sourceFile`、`sourceSha256`、`targetRef`、`expectedJigsawCount`、`connectorPolicy` 和人工 `standaloneConfirmed`。 |
+| 清洗报告 | `city_standalone_jigsaw_sanitize_report.v0.1` | 记录输出 hash、rawSize、替换数量、剩余数量、实体数、入口候选和实际写入状态。 |
+
+准入规则：
+
+1. 审计只提供事实，不根据文件名、pool 名或建筑外观自动断言独栋。
+2. manifest 草稿中的 `standaloneConfirmed` 固定为 `false`；只有人工确认完整建筑后才能改为 `true`。
+3. 首版唯一允许的 `connectorPolicy` 是 `replace_all_with_final_state`。每个 Jigsaw 必须使用自身可解析的 `final_state` 替换，不能统一猜成 air。
+4. 源 SHA-256 或 Jigsaw 数量与审核 manifest 不一致时整项 hard fail；任一 `final_state` 非法、Jigsaw 坐标越界或重复时拒绝。
+5. 输出模板必须满足 `remainingJigsawCount=0`。未确认条目只记为 skipped，不得写入输出目录。
+6. 水平 connector 可生成局部 `position{x,z}`、方向和边界距离候选，但 `confirmationRequired=true`；它不是正式 `roadEntrances[]`，仍需结合门、门洞或道路接面人工确认。
+7. 通用清洗器只报告实体，不改写实体；City active worldgen 本身使用 `ignoreEntities=true`。需要清实体或烘焙 processor 的来源，必须另有显式、可回归的来源适配器。
+8. 真正依赖子 pool 才能完整的屋顶、房间、走廊、墙段和多-piece 组装系统不得通过本契约伪装成独栋模板。
+
+清洗输出采用 datapack 目录 `data/<namespace>/structures/<path>.nbt`。服务端 reload 后仍必须通过 `city_query_template_metadata` 回读当前 `StructureTemplateManager` 的 hash 与 rawSize，离线报告不能直接充当正式模板目录。
+
 ## 模板目录 `city_template_catalog.v0.1`
 
 顶层必填字段：

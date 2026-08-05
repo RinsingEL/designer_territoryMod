@@ -59,7 +59,7 @@
 
 - 总入口：`../systems/city/README.md`
 - 案子状态索引：`../systems/city/10_product/案子/README.md`
-- D3 / D4 职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；案子 01 已升级为带 patch 内部五方位与可选连接阵列意图的 CityBlueprint v0.4，案子 02 复用旧连续外扩阵列引擎，自动生成并整批提交 near 连接候选，输出无固定组间距离上限的 v0.6 编译产物；正式 workflow 默认生成标准 D4 anchor。00 D3 v2、03 装饰退役、04 景观仍按各案状态推进。
+- D3 / D4 职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；案子 01 已升级为 CityBlueprint Context v0.4，冻结三组 TerraSense 术语、City `terrainModes` 与 D3 terrain field；案子 02 复用旧连续外扩阵列引擎，required/fill/connectivity 统一执行 SURFACE 逐格门禁并输出 v0.8 编译 trace；正式 workflow 默认生成标准 D4 anchor。00 D3 v2、03 装饰退役、04 景观仍按各案状态推进。
 - 固定模板唯一落地主线：`../systems/city/10_product/案子/City固定模板唯一落地主线-v0.1/README.md`；当前开发路径，破坏性删除 configured structure、StructureStart、Jigsaw、envelope profiling 和建筑 late materialize，City active 建筑只使用固定 NBT `StructureTemplate`。
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
@@ -81,7 +81,7 @@
 - 后续案：`../systems/city/10_product/案子/城市边界与城墙-v0.2/README.md`
 - 后续案：`../systems/city/10_product/案子/城市边界与城墙-v0.3/README.md`
 - 后续案：`../systems/city/10_product/案子/城市边界与城墙-v5/README.md`
-- 后续案：`../systems/city/10_product/案子/结构语义重标记-v0.1/README.md`
+- 结构语义与 placement topology：`../systems/city/10_product/案子/结构语义重标记-v0.1/README.md`
 - 后续案：`../systems/city/10_product/案子/City结构风格化换皮-v0.1/README.md`
 - 历史概述：`../systems/city/10_product/系统概述.md`
 - 历史过程：`../systems/city/10_product/过程设计/C1-C4城市规划过程.md`

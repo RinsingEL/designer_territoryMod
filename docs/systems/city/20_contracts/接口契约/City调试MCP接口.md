@@ -36,7 +36,7 @@ Node MCP：`country_designer_mcp`
 | `city_create_d4_array_layout_loop` | `POST /realm/city/create_d4_array_layout_loop` | D4 阵列布局 loop 显式入口：v0.2/v0.3 创建直接执行 state；v0.4 创建候选选择 state，读取关键结构 D4 anchor 作为 occupied。 |
 | `city_execute_d4_array_layout_item` | `POST /realm/city/execute_d4_array_layout_item` | D4 v0.2/v0.3：每轮只执行一个 `nextArrayLayoutPlanItem`；v0.3 `composite_array` 可在单 item 内展开 parent zone / subZones / child arrays。 |
 | `city_query_d4_array_expansion_space` | `POST /realm/city/query_d4_array_expansion_space` | D4 v0.4 只读外扩空间：常规返回 focus 周边空间；显式新功能区返回全局 patch 候选与入口。 |
-| `city_plan_d4_array_expansion_candidates` | `POST /realm/city/plan_d4_array_expansion_candidates` | D4 v0.4/v0.5 默认生成至少 3 组完整阵列候选与预览，不提交 loop state；显式 `minCandidateCount=2` 可返回 2 组完整合法候选供人工选择。 |
+| `city_plan_d4_array_expansion_candidates` | `POST /realm/city/plan_d4_array_expansion_candidates` | legacy/debug D4 v0.4/v0.5 几何入口：按 `candidateCount=1..5` 最多生成对应数量的完整阵列候选与预览，不提交 loop state；一组完整合法候选即可成功。`minCandidateCount` 已移除。 |
 | `city_select_d4_array_expansion_candidate` | `POST /realm/city/select_d4_array_expansion_candidate` | D4 v0.4 选择完整候选后原子更新 occupied、array zones、剩余空间和 trace。 |
 | `city_finalize_d4_array_layout_loop` | `POST /realm/city/finalize_d4_array_layout_loop` | D4 v0.2/v0.3/v0.4：把 base key anchors + 已提交 array anchors 合并成标准 D4 `StructureAnchorPlan` 并调用 `city_plan_d4`。 |
 | `city_plan_d4_structure_cluster_groups` | `POST /realm/city/plan_d4_structure_cluster_groups` | D4 整组候选调试入口：按 `DesignSlotPlan` 一次生成多组完整结构群落脚方案；预览图颜色代表整组，bbox 默认不画在主图里。 |
@@ -74,7 +74,9 @@ city_prepare_d4_blueprint_context
 -> 标准 structure_anchor_plan / structure_anchor_map
 ```
 
-prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCatalogSource`、`blueprintReferenceCatalog.v0.2`，成功返回 `contextId`、`aiCityDesignCallCount=0` 和完整 `cityBlueprintContext`。submit 必填同一 run/city/contextId 与严格 `city_blueprint.v0.4`；非法提交也消费该 context 的一次 AI 设计预算，失败不得覆盖最后有效 Blueprint。v0.1-v0.3 不做静默迁移。`connectionPlan` 可选覆写 `structurePoolRef/algorithmProfileRef/densityClass/parameters`；MCP schema 严格拒绝坐标、数量、裸 gap 和跨 planner family 参数。
+prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCatalogSource`、`blueprintReferenceCatalog.v0.2`，成功返回 `contextId`、`aiCityDesignCallCount=0` 和完整 `cityBlueprintContext.v0.4`。其中冻结目录固定为 `city_blueprint_catalog_snapshot.v0.5`，内含 `city_semantic_profile_catalog.v0.4` 和同一 D3 的 `city_land_use_terrain_field.v0.1` ref。submit 必填同一 run/city/contextId 与严格 `city_blueprint.v0.4`；非法提交也消费该 context 的一次 AI 设计预算，失败不得覆盖最后有效 Blueprint。旧 Context/Snapshot 不做静默迁移。`connectionPlan` 可选覆写 `structurePoolRef/algorithmProfileRef/densityClass/parameters`；MCP schema 严格拒绝坐标、数量、裸 gap 和跨 planner family 参数。
+
+画像中的 `terrainModes` 是 City 固定 placement topology 枚举数组，值域为 `SURFACE | EMBEDDED | FLOATING`，多值按 OR 解释；它不属于 TerraSense 动态词表，也不再需要独立 Terrain Policy 参数。prepare 冻结画像与 D3 terrain field；field hash 漂移或 city/grid 不一致会在继续编译前失败。当前运行时只真正支持 `SURFACE`：required、fill、connectivity 的 footprint 覆盖格必须全部已采样且非水；`EMBEDDED/FLOATING` 单独声明时明确返回不支持。`styleTerms` 只随冻结画像提供给 AI，不参与程序门禁。
 
 详细字段、枚举、hash 和 reason code 见 [CityBlueprint 数据契约](../数据契约/CityBlueprint数据契约.md)。02 已接通；本文其余 D4 candidate/session/array/manual anchor 接口统一按 legacy/debug 理解，只能由显式旧 mode 调用，不得被正式 Blueprint 主链继续调用。
 
@@ -285,7 +287,7 @@ D4 v0.5 常规 outward 保持原行为：已有父结构、方向和目标间距
 
 term 输入优先使用 TerraSense canonical termId，例如 `function.agriculture`。当 source 带 `vocabularySnapshotPath` 时，也接受该冻结词表中唯一对应的 `label`（例如 `农业`）或 `aliases[]`；无词表时 display label / alias 必须返回 `CITY_STRUCTURE_QUERY_TERM_UNRESOLVED`，同名歧义返回 `CITY_STRUCTURE_QUERY_TERM_AMBIGUOUS`，不做 City 自建语义映射。
 
-响应 schema 为 `city_structure_catalog_query.v0.2`，只返回可用于语义筛选的摘要：`semanticProfileId`、`matchedCanonicalTerms`、各类完整 terms、`sourceProfileRef`、`catalogMode` 与 `qualityTerms`。不得返回 `structureId`、fixed footprint / expected area / rotations / clearance 等几何或 configured identity；模板身份和全部几何必须另由显式 `templateCatalogSource` 提供。请求不依赖 `runId`、`citySeedId` 或 D3-D7 artifact，不生成任何 artifact、状态或世界写入；`readOnly=true` 是固定响应字段。
+响应 schema 为 `city_structure_catalog_query.v0.5`，只返回可用于语义选择与 placement topology 判断的摘要：`semanticProfileId`、`matchedCanonicalTerms`、`terms{functionTerms,planningRoleTerms,terrainModes,styleTerms}`，以及 `profileSource{sourceProfileRef,reviewState,catalogMode}`。三种过滤数组只在 `functionTerms/planningRoleTerms/styleTerms` 三组 TerraSense canonical term 的并集上匹配；`terrainModes` 作为 City 固定枚举直接展示，不参与动态词表解析与 term filter。style 过滤只帮助 AI 找到合适素材，不产生程序分数或合法性结论。不得返回退役语义、`structureId`、fixed footprint / expected area / rotations / clearance 等几何或 configured identity；模板身份和全部几何必须另由显式 `templateCatalogSource` 提供。请求不依赖 `runId`、`citySeedId` 或 D3-D7 artifact，不生成任何 artifact、状态或世界写入；`readOnly=true` 是固定响应字段。
 
 本地运行时导入必须把 `StructureProfile.jsonl`、`StructureVocabulary.snapshot.json` 与正式 source 描述一并复制到 `run/config/structureTemplate/terrasense/<importId>/`，不得在 City 请求中继续引用客户端或 TerraSense 工程目录。接口不自动发现 source；调用方仍须将该描述文件内容作为 `terrasenseProfileSource` 传入。当前 v0.1 的只读查询与 D4/D6 请求工作目录不同，导入 source 的 `profilePath` / `vocabularySnapshotPath` 必须写为 StructureBinder 本地运行配置的绝对路径；不得使用跨 endpoint 的相对路径。
 
@@ -499,7 +501,7 @@ v0.4 artifact：`d4_array_expansion_space.json`、`d4_array_expansion_candidate_
 v0.5 复用 `city_query_d4_array_expansion_space` 与 `city_plan_d4_array_expansion_candidates` 的闭环职责，继续使用 `city_d4_array_layout_plan.v0.4`，不新增 endpoint。
 
 - 常规 outward 只提交父结构引用、方向、阵列方式和 `arrayExpansionRequest.expansionPolicy={actualBodyGapMin,actualBodyGapMax,frontierExpansionStepBlocks?,frontierMaxExpansionRounds?}`；不传 `targetPatchRef` 即进入连续前沿模式。
-- `candidateCount` 仍限制为 3-5，缺省为 5；`minCandidateCount` 缺省为 3。仅显式 `minCandidateCount=2` 时可返回 2 组完整合法候选，且不得低于 2 或返回残缺阵列。
+- `candidateCount` 限制为 1-5、缺省为 5，只表示最多生成多少组供程序评分或 debug 查看，不是成功下限。一组完整合法候选即可成功，零组才失败；不得返回残缺阵列。`minCandidateCount` 已破坏性移除，传入即返回 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED`。
 - query 的 `expansionSpace` 以父结构 D2 body / collision bbox 为中心，响应 `focusBodyEnvelope`、`expansionMode=continuous_focus_frontier`、`expansionPolicy` 与 `frontierRings[]`。候选响应 `parentBodyEnvelope`、`parentCollisionEnvelope`、`frontierRing`、`actualBodyGapBlocks`、`terrainPatchRefs` 与 `frontierTrace`；候选集另写 `frontierSearchTrace[]`。D3 patch 仅作为命中地形与评分说明，可跨 patch。
 - `actualBodyGapBlocks` 固定为候选整组结构的最小方向 body gap。连续 `guide_line_dual_side` 先在目标 gap 放内侧首排，再向外放另一侧，不能因双侧横移把首排推到 gap 之外。
 - `expansionPolicy` 的连续前沿按整组 D2 `plannedFootprint` 并集推导，而不是按第一个数组成员；混合尺寸成员均不得回压 `actualBodyGapMin`。

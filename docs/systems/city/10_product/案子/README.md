@@ -44,7 +44,7 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前实现主线仍含 configured structure：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger。其 configured / StructureStart 分支已确定由固定模板唯一落地主线破坏性替换，完成后本案降为历史参考。 |
 | `City固定模板唯一落地主线-v0.1` | 当前开发路径 | City active 建筑只认固定 NBT `StructureTemplate`；删除 configured structure、外部 StructureStart、Jigsaw、envelope profiling 和 late materialize。D4-D6 使用精确模板尺寸 / hash / 入口，worldgen 做确定性模板粘贴；三个地形适配试验模板保留 City 注册单-piece start。 |
-| `D4城市生成职责重构-v0.1` | 开发中（01 v0.2 + 02 产物 v0.4 已接通） | D4 一次输出空间范围/疏密/算法 Blueprint；程序先在偏好 patch 播种，再按关系图以各 Group 持续阵列完成无固定距离上限的连接生长，实体连通交给 LandUse，标准 D5/D6/D7 artifact 不变。00 D3 v2、03 装饰退役、04 景观仍待后续。 |
+| `D4城市生成职责重构-v0.1` | 开发中（01 v0.2 + 02 产物 v0.7 已接通） | D4 一次输出空间范围/疏密/算法 Blueprint；程序先在偏好 patch 播种并按城市规模/extent 完成组内阵列，再以各 Group 持续阵列完成无固定距离上限的连接生长，实体连通交给 LandUse，标准 D5/D6/D7 artifact 不变。00 D3 v2、03 装饰退役、04 景观仍待后续。 |
 | `City固定模板StructureStart地形适配试验-v0.1` | 当前试验路径 | 仅 Stubbs 风车、谷仓与肉铺在 `createStructures` 注入一个 City 注册的 `StructureStart` 和一个固定模板 piece，使用 `beard_thin`。固定模板 identity 不变，不恢复 configured 随机选择或 Jigsaw；装饰仍走当前独立路径。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
 | `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
@@ -85,7 +85,7 @@
 - D3 patch 作为地形事实输入，不重复做功能区真值层。
 - Trek 顶层 configured structure 可做 envelope profiling。
 - D4 可通过候选闭环选择结构落脚点，不要求 AI 直接手算坐标和防撞。
-- D4 案子 01 v0.2 + 案子 02 产物 v0.4 已接通：AI 只提交一次完整 CityBlueprint，配置功能区范围、疏密、算法、偏好 patch 与关系而非建筑数量；程序 required 播种后先按关系图连接、再 fill，连接只受 D3 规划网格等硬约束，不设固定 Group 间距离上限。正式 workflow 默认 `blueprint`，旧候选链仅显式 legacy/debug。
+- D4 案子 01 v0.2 + 案子 02 产物 v0.7 已接通：AI 只提交一次完整 CityBlueprint，配置功能区范围、疏密、算法、偏好 patch 与关系而非建筑数量；程序 required 播种后先按城市规模/extent 派生下限完成组内 fill，再按关系图连接，连接结构不计入组内成形量，且不设固定 Group 间距离上限。正式 workflow 默认 `blueprint`，旧候选链仅显式 legacy/debug。
 - D4 v0.2 逐 slot session 已实现并被 `key_then_array` 关键结构阶段复用；当前 v0.1 批量候选只作为 debug / 兼容路径。
 - D4 阵列布局 Agent Loop v0.2/v0.3 已作为显式 legacy/debug 路径接入；正式默认已切到 Blueprint compiler。显式旧 endpoint/workflow 仍可 replay item，v0.3 `composite_array` 可展开 parent/subZones/child arrays。
 - City 通用装饰阵列 v0.3 已接入内容姿态、全局 run、冻结地形 outcome、fill-only foundation 和 v0.3 ledger / activation preview；真实新存档 worldgen 验收仍需执行。

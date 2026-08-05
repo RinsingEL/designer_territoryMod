@@ -92,6 +92,7 @@ TerraSense 保留为语义与检索真值：住宅、农业、商业、市政、
 
 - 读取模板目录和 NBT，输出可检索的模板 facts。
 - 校验 template identity、精确尺寸、hash、旋转、镜像和道路入口。
+- 对人工确认可独立成立但仍含 connector 的跨 Mod NBT，可先走通用离线审计与清洗：冻结源 hash / Jigsaw 数量，逐个按自身 `final_state` 收尾，并要求输出 Jigsaw=0；审计生成的道路入口只作为待确认候选。
 - 不调用 `city_profile_structure_envelopes`，不做随机采样。
 
 ### 5.2 D3
@@ -254,7 +255,7 @@ D6 不再输出 `pieceBoxes`、`expectedStartSignature`、`lockedBBoxGroupKey` �
 
 ## 十、不做
 
-- 不自动把任意 configured structure 或 Jigsaw pool 转换成模板。
+- 不自动把任意 configured structure 或 Jigsaw pool 转换成模板；通用清洗器也只处理人工确认可独栋的原始 NBT，不执行 pool、不判断建筑完整性。
 - 不保留 Trek configured structure 作为正式验收 fallback。
 - 不支持旧 chunk 建筑回填。
 - 不让模板内部再运行随机 Jigsaw。
