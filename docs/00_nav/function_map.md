@@ -46,6 +46,7 @@
 - v1.4 T3 行动力国度扩张模型计划：`../systems/realm_planning/10_product/开发计划-v1.4-T3行动力国度扩张模型.md`
 - v1.5 高步长局部指标封装与地貌判定修正计划：`../systems/realm_planning/10_product/开发计划-v1.5-高步长局部指标封装与地貌判定修正.md`
 - v1.6 多尺度 GIS 地貌特征栈与面域验收计划：`../systems/realm_planning/10_product/开发计划-v1.6-多尺度GIS地貌特征栈与面域验收.md`
+- W/T4 生成器原生粗地形预览：`../systems/realm_planning/10_product/案子/T4生成器原生粗地形预览-v0.1/README.md`
 - W / T 阶段数据契约：`../systems/realm_planning/20_contracts/数据契约/W-T阶段数据契约.md`
 - W / T 阶段 MCP 接口契约：`../systems/realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md`
 - 代码导览：`../systems/realm_planning/30_code_guide/代码导览.md`

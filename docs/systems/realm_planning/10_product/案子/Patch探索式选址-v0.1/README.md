@@ -23,6 +23,7 @@ W / T / City 主链继续保留 patch 作为 AI 理解世界地理的主要单�
 - `RealmPlanningService.prepareT1` 既有的整大陆候选图只表示目标大陆的可分配 scope，不按国度文化或地貌兴趣做差异化；多个国度共享大陆时图片可以相同。它是 Patch Explorer 的范围参考，不是正式叙事选址图。
 - T1 完成后的主动作固定为 `patch_explorer_open(scopeType=realm_t2)`；AI 必须先浏览类型、候选与关系，再把选择凭证交给 T2。直接手填 grid 坐标只保留给旧调用方和人工调试，不进入无上下文 AI 的推荐主链。
 - T4 候选将群系 patch 与 T3 owned territory 相交，面积、排名和关系均以国境内的实际部分为准。
+- T4 可叠加 `RealmT4CoarseTerrainEvidence`：RTF 激活时从生成器二维 Heightmap 快速采样，其他生成器回退现有 prior sampler；该层只补充宏观高度、水体和起伏事实，不改变群系 patch 真值，也不替代 D3。
 - T4 会话创建后不继承 T2 坐标为首都；AI 必须先消费一个 `realm_t4` 选择凭证建立唯一首都，才能继续添加非首都城市。
 - T 阶段可以为群系连续区、裁剪或派生候选生成稳定 ID，但每个区域必须保留覆盖到的来源 W patch IDs 和 territory scope；`landform`、`baseLandform` 与坡度事实作为候选组成返回，不再把 `cliff` 等局部形态当作 T 的互斥主目录。
 - City D3 在最终城市粗锚点周围生成局部精细 patch；T 阶段候选只决定宏观落脚区域，不取代 D3 的局部地形复查。

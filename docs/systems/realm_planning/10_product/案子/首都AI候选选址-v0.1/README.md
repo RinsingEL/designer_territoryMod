@@ -9,6 +9,7 @@ T2 既有路径把国度扩张核心同时写成 `CapitalCitySeed` 坐标，T4 P
 - T2 只确定 `RealmSeed` 和无坐标的 `CapitalCityIntent`。
 - T3 完成 owned territory 后，T4 为该国建立空的城市规划会话，会话首先等待首都选址。
 - AI 必须使用 `realm_t4` Patch Explorer 浏览候选，再通过专用 `realm_t4_patch_planning_select_capital` 消费 `patchSelectionRef`。
+- `realm_t4` Patch Explorer 打开时按需读取或生成 owned territory 粗地形证据；该证据可排除明显水体和高起伏粗格，但不替代 D3 局部真实地貌复查。
 - 首都选定前不能添加普通城市；通用 `add_city` 不接受 `role=capital`；同一会话只能有一座首都。
 - finalize 必须校验恰好一座首都，且首都保留 Patch Explorer 选择追溯。
 - D3 生成局部真实地貌后，新选首都必须显式审查。接受才能进入 D4；不接受则回到 T4 重新选址，不允许默认改成另一种城市原型继续施工。
@@ -26,4 +27,3 @@ T2 既有路径把国度扩张核心同时写成 `CapitalCitySeed` 坐标，T4 P
 3. 首都容量不足、越界、重复选择或第二座首都都必须阻断。
 4. 首都未选、缺少选择追溯或数量不是一座时不能 finalize。
 5. D3 后未审查或审查要求重选时，所有 D4 入口都不能开始正式布局。
-

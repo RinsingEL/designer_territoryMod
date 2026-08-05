@@ -75,6 +75,7 @@ v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegis
 | `microSampleCount` | long? | v1.3 | 本次 W survey 实际 micro sample 总数。 |
 | `adaptiveSampling` | boolean? | v1.3 | 是否启用自适应加密；当前固定 stride 实现必须显式写 `false`，不得伪装成自适应。 |
 | `configHash` | string? | v1.3 | seed / 维度 / 范围 / step / stride / slope radius 等配置哈希，用于 tile 和 feature cache 校验。 |
+| `source.terrainProvider` | object? | 生成器快路径 | W 实际采样提供器追溯，字段同下述 manifest `terrainProvider`；用于解释本轮世界地貌来源。 |
 | `metricScales` | object? | v1.6 | 多尺度 GIS 派生指标的物理尺度说明，例如 `scanHeightRank=scan_bounds`、`localScaleBlocks=512`、`regionalScaleBlocks=2048`、`plateauCoreScaleBlocks=512`、`plateauOuterScaleBlocks=1536`、`plateauProminenceThreshold`、`rankDriftThreshold`。 |
 | `scoreManifest` | string? | v1.2 建议 | `score_manifest.json` 路径。 |
 | `source.gisRefreshJobId` | string? | 否 | 若来自 GIS refresh，记录 job ID。 |
@@ -128,11 +129,13 @@ W 调度层还必须写出 `world_survey_manifest.json`，用于断点续扫和�
 | `schemaVersion` | string | 是 | 结构版本。 |
 | `surveyId` | string | 是 | 对应 `WorldSurveyContext`。 |
 | `status` | enum | 是 | `sealed` 或 `failed`。 |
-| `config` | object | 是 | 维度、seed、中心、`planningRadiusBlocks`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`。 |
+| `config` | object | 是 | 维度、seed、中心、`planningRadiusBlocks`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`、`preferGeneratorNativeTerrain` 和 `terrainProvider`。 |
 | `scanBounds` | object | 是 | block 级扫描边界和直径。 |
 | `grid` | object | 是 | grid 原点、宽高、cell 数。 |
-| `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleBudget`、`microSampleBudgetPerCell`、`microSampleCount`、`adaptiveSampling`。 |
+| `stats` | object | 是 | `tileCount`、`scannedTileCount`、`cachedTileCount`、`failedTileCount`、`artifactBytes`、`microSampleBudget`、`microSampleBudgetPerCell`、`microSampleCount`、`adaptiveSampling` 和实际 `terrainProvider`。 |
 | `tiles[]` | array | 是 | 每个 tile / GIS Region 的坐标、状态、cache 路径、`configHash` 和错误信息。 |
+
+`terrainProvider` 必须包含 `generatorNativeRequested`、`providerId`、`sourceKind`、`fastPath`、`fallbackReason`、`sourceFingerprint` 和 `samplingSemantics`。完整 provider 身份必须进入 `configHash`；开关变化、RTF 设置变化或实际 provider 变化时，不得命中旧 W tile / feature cache。
 
 ## WorldSurveyProgress
 
@@ -603,6 +606,52 @@ T3 输出，先按粗 cell 记录势力范围。
 | `areaCells` | int | 影响面积。 |
 | `reason` | string | 修复理由。 |
 
+## RealmT4CoarseTerrainEvidence
+
+T3 owned territory 冻结后、T4 选择城市粗落点前生成的可选建议证据。当前 schema 为 `realm_t4_coarse_terrain_evidence.v0.1`，单国单文件，不取代 sealed `WorldPatchMap` 或 D3 `CityLandformReviewPackage`。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` / `realmId` / `dimensionId` | string | 是 | 本次 run、单国作用域和维度身份。 |
+| `territoryMapId` / `territoryIdentity` | string | 是 | T3 国境来源与内容身份。 |
+| `worldSurveyContextIdentity` | string | 是 | sealed W context 内容身份。 |
+| `sourceIdentity` | string | 是 | territory、W context、step、dimension 与完整 provider provenance 的组合 hash。 |
+| `advisoryOnly` | boolean | 是 | 固定为 `true`。 |
+| `requiredNextGate` | string | 是 | 固定为 `city_d3_site_review`。 |
+| `provider` | object | 是 | 当前粗览 provider 及回退追溯。 |
+| `grid` | object | 是 | W cell step、中心偏移、owned 数、采样数和 grid bounds。 |
+| `summary` | object | 是 | 高度分位、robust relief、水体比例、坡度代理和分类直方图。 |
+| `cells[]` | array | 是 | 目标 realm 的 owned cell 粗样本；每格恰好一个。 |
+| `artifacts.heightWaterPreview` | string | 是 | 相对 run 目录的高度/水体 PNG。 |
+
+`provider`：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `providerId` | string | 实际选中的 provider。 |
+| `sourceKind` | enum | `generator_native` 或 `gis_atlas_sampler`。 |
+| `fastPath` | boolean | 是否为生成器原生快速路径。 |
+| `fallbackReason` | string | 原生 provider 不可用时的拒绝链；未回退时为空。 |
+| `sourceFingerprint` | string | 绑定维度、seed、生成器 API / preset 或回退采样源的稳定身份。 |
+| `samplingSemantics` | string | 例如 RTF 的 `estimated_coarse_heightmap` 或回退的 `base_height_feature_sample`。 |
+
+`cells[]`：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `gridX/gridZ` | int | W 粗格绝对 grid 坐标。 |
+| `blockX/blockZ` | int | 该 W cell 的中心采样点。 |
+| `elevation` | number | provider 返回的生成先验高度。 |
+| `water` | boolean | provider 的粗水体判断。 |
+| `biomeId` | string | Minecraft registry biome。 |
+| `terrainId` / `sourceBiomeId` | string | 生成器可提供的 terrain / source biome；回退 provider 可为 `unknown`。 |
+| `neighborCount` | int | 同国 owned 四邻样本数。 |
+| `neighborElevationDeltaMean/Max` | number | 四邻绝对高度差。 |
+| `slopeProxy` | number | `neighborElevationDeltaMax / cellStepBlocks`。 |
+| `localRelief` | number | 当前格与 owned 四邻样本的最大最小高度差。 |
+
+该产物只可用于 T4 候选摘要和建议粗锚点。provider 初始化失败可整国回退；provider 选定后的逐点失败必须终止，不得在同一文件混合数据源。粗证据变化后，依赖它的 Patch Explorer session / selection 必须 stale。
+
 ## CitySeedRegistry
 
 T4 输出，登记城市名册和生成条件。
@@ -735,6 +784,7 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | 国度面积弹性 | T3 v1.4 | `quota_frontier` 下仍按 `scalePlan.minAreaRatio/maxAreaRatio` 阻断；`action_budget` 下 `scalePlan` 为软目标，面积偏差进入 `budgetCoherenceScore` / `overExpansionPenalty`，不再单独硬阻断。 |
 | 行动力最低可玩领地 | T3 v1.4 | strict + `action_budget` 下，每个国度必须有 owned territory；极小 owned 结果应进入硬阻断，不能只靠首都点放行。 |
 | 城市锚点必须在 owned territory | T4 v1.4 | 本轮 `RealmProfile` 所属的 `CitySeedRegistry.citySeeds[].anchorGrid` 必须落在同 realm 的 owned cell 内；无 owned 领地的本轮国度不能生成首都种子。全局名册按 realm 合并时可保留其他规划轮次的城市，它们不得用本轮 `RealmTerritoryMap` 误判。 |
+| T4 粗地形证据不得替代 D3 | T4 / D3 | `RealmT4CoarseTerrainEvidence` 必须声明 `advisoryOnly=true`、`requiredNextGate=city_d3_site_review`；城市进入 D4 前仍以 D3 局部精扫和显式审查为准。 |
 | 高 step cliff 必须有局部证据 | W v1.5 | `cellStepBlocks>=64` 且 `microSamplingImplemented=true` 时，正式 `cliff` / `steep` tag 必须由 `slopeStats` / `steepFrac` 支撑；coarse cliff 不得直接进入正式 cliff tag。 |
 | Tag Audit 抽样精扫 | W v1.5 | 开发期 `runTagAudit=true` 应输出 `tag_audit_samples.json` 与 `tag_audit_report.json`，报告中至少包含 `cliff/steep/coastal` 的 precision / recall。 |
 | 多尺度 rank 不替代真值 | W v1.6 | `relativeHeightRank` / `scanHeightRank` 只能作为辅助特征；`ridge`、`plateau`、`lowland` 判定必须至少可追溯到 local / regional rank、roughness、DEV 或 geomorphon evidence。 |

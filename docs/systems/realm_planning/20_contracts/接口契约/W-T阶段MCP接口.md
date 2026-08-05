@@ -89,6 +89,7 @@
 | `radiusChunks` | number | 否 | 兼容字段；未传 `planningRadiusBlocks` 时换算为 block 半径。 |
 | `cellStepBlocks` | number | 否 | 粗 cell 步长，默认 `128`，可选 64 / 128 / 256。 |
 | `sampleMode` | string | 否 | 默认 `prior`。 |
+| `preferGeneratorNativeTerrain` | boolean | 否 | 默认 `true`；检测到兼容生成器时优先使用原生二维粗地形快路径。`false` 强制使用 Minecraft prior sampler。仅控制本次 W 请求。 |
 | `resumePolicy` | string | 否 | `use_cache`、`rescan`、`use_cache_strict`，默认 `use_cache`。 |
 | `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
@@ -216,8 +217,19 @@
 | `scopeId` | string | 条件必填 | 对应 realm / continent / citySeed；也可使用下列显式字段。 |
 | `realmId` / `continentId` / `citySeedId` | string | 条件必填 | 按 scope 提供。 |
 | `sessionId` | string | 否 | 自定义稳定会话 ID；省略时由服务端生成。 |
+| `preferGeneratorNativeTerrain` | boolean | 否 | `realm_t4` 默认 `true`；`false` 强制使用 Minecraft prior sampler。仅控制本次 open，不改变 W 的选择。其他 scope 忽略该字段。 |
 
-返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。
+当 `scopeType=realm_t4` 时，HTTP 层在打开会话前按需 ensure 当前 realm 的 `RealmT4CoarseTerrainEvidence`。它从运行中的 `ServerLevel` 选择生成器原生 provider；RTF 不可用或开关关闭时回退 Minecraft prior sampler。调用方不需要传 RTF 专用字段，可选 `dimensionId` / `playerName` 仅用于现有世界上下文解析。
+
+返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。`realm_t4` 额外返回：
+
+| 字段 | 说明 |
+| --- | --- |
+| `terrainPreviewCacheHit` | 本次是否复用有效的单国粗览缓存。 |
+| `terrainPreviewProvider` | 实际 provider、fast path、fallback reason、source fingerprint 和 sampling semantics。 |
+| `typeCatalog[].coarseTerrainEvidence` | 当前类型覆盖样本的高度、水体、坡度与 terrain/source biome 摘要。 |
+| `artifacts.coarseTerrainEvidence` | 单国粗证据 JSON。 |
+| `artifacts.heightWaterPreview` | 单国高度/水体预览 PNG。 |
 
 `patch_explorer_show_candidates` 请求：
 
@@ -229,7 +241,7 @@
 | `pageToken` | string | 否 | 上一页返回的稳定续页凭证。 |
 | `pageSize` | int | 否 | 每种类型每页数量，默认 3，最大 12。 |
 
-返回 `candidatePage`、彩色候选预览和关系表。T 候选同时返回 `terrainComposition`、`baseLandformComposition` 和最大连续面积；关系只覆盖本次 `interestTypes` 中当页已展示候选，内容限于相邻、距离、方位、共享边界等结构化几何事实；首都、国境、已有城市和 occupied 只参与硬校验，不进入关系表。
+返回 `candidatePage`、彩色候选预览和关系表。T 候选同时返回 `terrainComposition`、`baseLandformComposition` 和最大连续面积；`realm_t4` 在有粗览时还返回 `coarseTerrainEvidence`，建议锚点按非水、低起伏、低坡度、边界深度排序。关系只覆盖本次 `interestTypes` 中当页已展示候选，内容限于相邻、距离、方位、共享边界等结构化几何事实；首都、国境、已有城市和 occupied 只参与硬校验，不进入关系表。
 
 `patch_explorer_select_candidate` 请求：
 
@@ -239,7 +251,7 @@
 | `candidateId` | string | 是 | 必须是当前会话中已经展示的候选。 |
 | `selectionReason` | string | 否 | AI 选择理由。 |
 
-返回 `patchSelectionRef` 与 `selectedCandidatePreview`。确认图对选中候选染色并标出建议粗锚点；来源文件、scope 或候选事实变化时，旧选择凭证必须拒绝消费。
+返回 `patchSelectionRef` 与 `selectedCandidatePreview`。确认图对选中候选染色并标出建议粗锚点；`realm_t4` 选择同时冻结 `coarseTerrainEvidence` 和 `heightWaterPreview` 引用。来源 W、territory、粗地形证据、scope 或候选事实变化时，旧选择凭证必须拒绝消费。
 
 HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_candidates`、`/realm/patch_explorer/select_candidate`。
 
@@ -332,6 +344,7 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 | `cellStepBlocks` | number | 否 | 默认 `128`。 |
 | `microSampleStrideBlocks` | number | 否 | v1.3 cell 内 micro-sampling 步长，默认 `32`。 |
 | `localSlopeRadiusBlocks` | number | 否 | v1.3 micro sample 局部坡度半径，默认 `8`。 |
+| `preferGeneratorNativeTerrain` | boolean | 否 | 默认 `true`；控制验收内 W 是否优先使用生成器原生快路径。 |
 | `runTagAudit` | boolean | 否 | v1.5 开发期调试开关；验收完成后对 W tag 抽样局部精扫。 |
 | `tagAuditSampleCount` | number | 否 | v1.5 Tag Audit 抽样点数量，默认 `120`。 |
 | `tagAuditSampleSeed` | string | 否 | v1.5 Tag Audit 抽样 seed；同一 run 可换 seed 抽另一批点，便于分批人工传送复核。 |
