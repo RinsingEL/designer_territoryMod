@@ -15,8 +15,8 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d2` | `POST /realm/city/plan_d2` | 构建 CitySiteContext。 |
 | `city_plan_d3` | `POST /realm/city/plan_d3` | 构建 CityLandformReviewPackage 和 D3 review PNG。 |
 | `city_review_d3_site` | `POST /realm/city/review_d3_site` | 对 T4 AI 候选选出的首都显式接受当前 D3 选址或要求回 T4 重选。 |
-| `city_prepare_d4_blueprint_context` | `POST /realm/city/prepare_d4_blueprint_context` | 程序冻结完整 D4 只读上下文；不调用模型，AI 城市设计调用计数为 0。 |
-| `city_submit_d4_blueprint` | `POST /realm/city/submit_d4_blueprint` | 同一 `contextId` 只消费一次完整 `CityBlueprint v0.4` 提交；每个 Group 必填 `preferredPatchZone=CENTER|NORTH|EAST|SOUTH|WEST`，可选 `connectionPlan`，输出 blueprint/report/trace。 |
+| `city_prepare_d4_blueprint_context` | `POST /realm/city/prepare_d4_blueprint_context` | 程序冻结结构、LandUse rule、Surface recipe、Landscape profile 与 D3 的完整只读上下文；不调用模型，AI 城市设计调用计数为 0。 |
+| `city_submit_d4_blueprint` | `POST /realm/city/submit_d4_blueprint` | 同一 `contextId` 只消费一次完整 `CityBlueprint v0.5` 提交；除结构 Group / relation 外根级必填 `outdoorPlan`，输出 blueprint/report/trace。 |
 | `city_compile_d4_blueprint` | `POST /realm/city/compile_d4_blueprint` | 只读取已接受 Blueprint 与冻结 snapshot；全部 Group 先按 patch 内部方位播种，再按关系图连接。程序自动派生 focus/方向/gap，复用旧连续外扩引擎生成近圈完整阵列候选并整批提交，最后 fill。输出 v0.6 compile trace、Group extent 和标准 D4 anchor，不接受 candidateId，不调用 AI。 |
 | `patch_explorer_open` | `POST /realm/patch_explorer/open` | 以 `scopeType=city_d4` 打开 D3 patch 探索会话，返回扣除 hard occupied 后的类型目录。 |
 | `patch_explorer_show_candidates` | `POST /realm/patch_explorer/show_candidates` | 按 AI 兴趣类型分页返回每类候选、染色图和仅限当页兴趣候选的稀疏几何关系。 |
@@ -45,7 +45,7 @@ Node MCP：`country_designer_mcp`
 | `city_plan_d4` | `POST /realm/city/plan_d4` | 直接提交 `StructureAnchorPlan`，生成结构 anchor / envelope；保留为调试入口。 |
 | `city_plan_d5` | `POST /realm/city/plan_d5` | 读取最终 D4 `StructureAnchorMap`，按 `collisionEnvelope + maskMarginBlocks` 生成轻量 reservation mask 预案；不读 safety 字段，不生成真实道路 operation。 |
 | `city_plan_d6` | `POST /realm/city/plan_d6` | 读取最终 D4/D5 与当前世界固定 NBT，复核 identity、三层几何和 owner chunks；不要求 chunk loaded，不改世界。 |
-| `city_plan_land_use` | `POST /realm/city/plan_land_use` | 读取 D3 terrain field、D4 group provenance 与 D6 locked footprint，生成 block 级 area plan 和 `city_land_use_surface_print_plan.v0.2`；可选严格 intent v0.3 在本次规划中提供 `uniform|contour_bands` 算法材料默认与 group 例外，不改世界。 |
+| `city_plan_land_use` | `POST /realm/city/plan_land_use` | 正式 Blueprint 模式从同一次 `outdoorPlan` 自动投影 structure ground / landscape / residual，不接受临时 intent；Blueprint 权威三件套任一存在后，缺件、未接受、D6 缺失/未锁定或请求 intent 覆写都 fail closed。只有三件套完全不存在时才允许 legacy/debug 严格 intent v0.3。输出 AreaPlan、SurfacePrintPlan、OutdoorIntentPlan、UrbanSpacePlan、preview 与 completion，不改世界。 |
 | `city_query_decoration_catalog` | `GET /realm/city/query_decoration_catalog` | v0.3 返回 catalog hash、content index schema、pose upgrade required / mode、prefab pose summaries 与 style 摘要；不返回原始 NBT。 |
 | `city_upgrade_default_decoration_catalog` | `POST /realm/city/upgrade_default_decoration_catalog` | 仅对 managed 且精确匹配旧打包默认的目录显式备份并升级 v0.3；自定义目录拒绝自动改写，停用旧 active plan但保留 ledger / 已落地方块。 |
 | `city_plan_decoration_anchor_candidates` | `POST /realm/city/plan_decoration_anchor_candidates` | 为关键单点 prefab 按完整 footprint、clearance 和已知硬障碍生成 1-8 个稳定候选与预览；不采样地形、不加载 chunk，Agent 选中后把相对 `coordinateFramePatch` 回填到最终 DecorationProgram。 |
@@ -72,9 +72,12 @@ city_prepare_d4_blueprint_context
 -> city_submit_d4_blueprint（一次）
 -> city_compile_d4_blueprint（纯程序）
 -> 标准 structure_anchor_plan / structure_anchor_map
+-> D5 / D6 locked footprint
+-> 同一 Blueprint outdoorPlan 纯程序编译
+-> LandUseAreaPlan / SurfacePrintPlan / UrbanSpacePlan
 ```
 
-prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCatalogSource`、`blueprintReferenceCatalog.v0.2`，成功返回 `contextId`、`aiCityDesignCallCount=0` 和完整 `cityBlueprintContext.v0.4`。其中冻结目录固定为 `city_blueprint_catalog_snapshot.v0.5`，内含 `city_semantic_profile_catalog.v0.4` 和同一 D3 的 `city_land_use_terrain_field.v0.1` ref。submit 必填同一 run/city/contextId 与严格 `city_blueprint.v0.4`；非法提交也消费该 context 的一次 AI 设计预算，失败不得覆盖最后有效 Blueprint。旧 Context/Snapshot 不做静默迁移。`connectionPlan` 可选覆写 `structurePoolRef/algorithmProfileRef/densityClass/parameters`；MCP schema 严格拒绝坐标、数量、裸 gap 和跨 planner family 参数。
+prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCatalogSource`、`blueprintReferenceCatalog.v0.3`，成功返回 `contextId`、`aiCityDesignCallCount=0` 和完整 `city_blueprint_context.v0.5`。冻结目录固定为 `city_blueprint_catalog_snapshot.v0.6`，内含 `city_semantic_profile_catalog.v0.4`、完整 LandUse rule/surface recipe/landscape profile 和同一 D3 的 `city_land_use_terrain_field.v0.1` ref。submit 必填同一 run/city/contextId 与严格 `city_blueprint.v0.5`；非法提交也消费该 context 的一次 AI 设计预算，失败不得覆盖最后有效 Blueprint。旧 Blueprint/Context/Snapshot 不做静默迁移。`connectionPlan` 可选覆写结构连接语义，根级 `outdoorPlan` 同次冻结户外设计；MCP schema 严格拒绝坐标、数量、裸 gap 和跨 planner family 参数。
 
 画像中的 `terrainModes` 是 City 固定 placement topology 枚举数组，值域为 `SURFACE | EMBEDDED | FLOATING`，多值按 OR 解释；它不属于 TerraSense 动态词表，也不再需要独立 Terrain Policy 参数。prepare 冻结画像与 D3 terrain field；field hash 漂移或 city/grid 不一致会在继续编译前失败。当前运行时只真正支持 `SURFACE`：required、fill、connectivity 的 footprint 覆盖格必须全部已采样且非水；`EMBEDDED/FLOATING` 单独声明时明确返回不支持。`styleTerms` 只随冻结画像提供给 AI，不参与程序门禁。
 
@@ -102,8 +105,8 @@ prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCat
 - `patchScanPaddingBlocks`，默认 128；首次 D3 会按 city bounds + padding 覆盖多个 GIS region，把结构 bbox 和 v4 城墙 breathing room 需要的外侧 patch context 一并写入 D3 package。D4 候选仍受原 city grid 约束，padding 不是新的城市核心可选域。
 - `confirmWorldMutation`，默认 `false`。未传时 workflow 在 execute_d5 前返回 `waiting_for_confirmation`。
 - `d4CandidateMode=blueprint|key_then_array|array_layout_loop_v0_2|array_layout_loop_v0_3|sequential_session|structure_cluster_groups`；默认 `blueprint`。默认路径缺 Context 时返回 `awaiting_city_blueprint + nextAction=city_prepare_d4_blueprint_context`，缺已接受 Blueprint 时返回 `awaiting_city_blueprint + nextAction=city_submit_d4_blueprint`，两者均为 `ok=true` 可恢复暂停。其余 mode 必须显式传入并统一视为 legacy/debug。
-- `enableLandUseLayer=true|false`；显式请求值优先于 `city_land_use/settings.json.enabledInWorkflow`，bundled 默认关闭。启用后在 D6 locked plan 之后运行 `city_plan_land_use`。
-- `landUseIntentPlan`，可选严格 `city_land_use_intent_plan.v0.3`。省略时服务端按 D4 semantic 自动选规则并使用 policy 内置 fallback；显式提交以 `surfaceAlgorithmDefaults[]` 提供本次城市算法材料默认，以 `surfaceOverrides[]` 处理少数 group 例外。未知字段、未知 target / rule、重复算法默认 / surface target、`set_rule` 缺 ruleRef、`exclude` 携带 ruleRef 均 hard fail；旧 v0.2 `global_axis|radial` 不自动迁移。
+- 正式 `d4CandidateMode=blueprint` 不接受 `enableLandUseLayer` 或 `landUseIntentPlan`：是否生成由 Blueprint `outdoorPlan.mode=GENERATE|PRESERVE` 冻结。请求级字段只允许显式 legacy/debug D4 mode。
+- legacy/debug `landUseIntentPlan` 仍只接受严格 `city_land_use_intent_plan.v0.3`；`surfaceAlgorithmDefaults[]` 提供算法材料默认，`surfaceOverrides[]` 处理少数 group 例外，旧 v0.1/v0.2 不迁移。
 - `enableDressingLayer=true|false`，默认 `false`；为 `true` 时必须提供 `decorationProgramPlan`，workflow 会在 D6 后调用 `city_plan_city_dressing`，再由 `city_execute_d5` 激活装饰 worldgen 程序。
 - `decorationProgramPlan`，`schemaVersion=city_decoration_program_plan.v0.2`；必须带 query 返回的 `catalogHash`、`styleProfileId`、`styleProfileHash`；`programs[]` 使用 Shape / Pattern 判别联合并只引用该风格档案注册的语义 content。
 - `dressingBrushPlan`、`dressingLayoutItems[]` 和 v0.1 七种业务 item 已破坏性移除，传入返回 `CITY_DRESSING_LEGACY_SCHEMA_REMOVED`，不得自动转换。
@@ -115,7 +118,7 @@ prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCat
 
 语义：
 
-- workflow 会顺序执行：`city_plan_d3` -> site review -> 默认 Blueprint 编译 D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` 当前世界 NBT lock -> 可选 `city_plan_land_use` -> 可选 `city_plan_city_dressing` -> `city_execute_d5` locked 激活 -> `city_execute_d7`。正式 D4 只读取冻结 snapshot，不接受本次请求临时替换目录。legacy/debug mode 才读取 `templateCatalogSource/designSlotPlan`。
+- workflow 会顺序执行：`city_plan_d3` -> site review -> 默认 Blueprint 编译 D4 -> `city_plan_d5` 轻量预案 -> `city_plan_d6` 当前世界 NBT lock -> Blueprint `GENERATE` 自动户外编译与 LandUse -> 可选 legacy dressing -> `city_execute_d5` locked 激活 -> `city_execute_d7`。正式模式只读取冻结 snapshot，不接受本次请求临时替换户外 intent；legacy/debug mode 才读取临时输入。
 - `key_then_array` 阶段约束：`placementOrder` 中所有关键结构 slot 必须在任何 `array_fill` 之前；数组阶段后再出现关键结构返回 `D4_KEY_STRUCTURES_MUST_PRECEDE_ARRAYS`；存在阵列但没有关键结构返回 `D4_KEY_STRUCTURE_STAGE_REQUIRED`。
 - D3 step 会刷新覆盖 `grid.blockBounds + patchScanPaddingBlocks` 的所有 GIS region；不得只刷新城市中心所在单个 region。
 - 若 `confirmWorldMutation=false`，返回 `status=waiting_for_confirmation`，不激活 mask / planned registry。
@@ -131,7 +134,7 @@ prepare 必填 `runId`、`citySeedId`、`terrasenseProfileSource`、`templateCat
 - `city_d4_staged_<citySeedId>/d4_staged_plan.json`
 - `city_d4_staged_<citySeedId>/d4_staged_trace.json`
 - `city_d4_array_layout_<citySeedId>/d4_array_layout_plan.json`、`d4_array_layout_loop_state.json`、`d4_array_layout_execution_trace.json`、`d4_array_occupied_field.json`、`d4_array_patch_availability.json`、`d4_functional_array_zones.json`、`d4_array_layout_preview.png`（仅显式 `array_layout_loop_v0_2` / `array_layout_loop_v0_3`）
-- `city_land_use_<citySeedId>/land_use_terrain_field.json`、`city_land_use_area_plan.json`、`city_land_use_surface_print_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`、最后发布的 `city_land_use_planning_complete.json`（workflow 开启 LandUse 或单独调用 `city_plan_land_use`）
+- `city_land_use_<citySeedId>/land_use_terrain_field.json`、`city_outdoor_intent_plan.json`、`city_urban_space_plan.json`、`city_land_use_area_plan.json`、`city_land_use_surface_print_plan.json`、`land_use_plan_trace.json`、`land_use_preview.png`、`quality_report.json`、最后发布的 `city_land_use_planning_complete.json`（Blueprint GENERATE 或显式 legacy/debug 规划）
 - `city_decoration_<citySeedId>/city_decoration_program_plan.json`、`city_decoration_compiled_program_plan.json`、`city_decoration_slot_projection.json`、`city_decoration_planning_trace.json`、`quality_report.json`、`city_decoration_preview_index.json`、`city_decoration_preview_<programId>.png`、末尾发布的 `city_decoration_planning_complete.json`（仅显式 `enableDressingLayer=true` 或单独调用 `city_plan_city_dressing`）
 
 质量口径：
@@ -952,6 +955,8 @@ D6 trace 记录 NBT identity 复核、变换、`actualFootprint`、`lockedCollis
 
 ## city_plan_land_use
 
+正式 `d4CandidateMode=blueprint` 下，该步骤由 `city_run_workflow` 在 D6 后自动调用，并从已接受的 CityBlueprint v0.5 与 catalog snapshot 编译户外意图；调用方不得再提交 `landUseIntentPlan`。下面的可选 intent 口径只适用于显式独立调用或 legacy/debug D4 mode。
+
 必填参数：
 
 - `runId`
@@ -963,7 +968,7 @@ D6 trace 记录 NBT identity 复核、变换、`actualFootprint`、`lockedCollis
 
 语义：
 
-- 必须已有 D3 `land_use_terrain_field.json`、最终 D4 provenance、D5 轻量预案和 D6 locked `structure_materialization_plan.json`。
+- 正式 Blueprint 路径必须另有完整且已接受的 `city_blueprint.json`、validation、submission trace、`city_blueprint_catalog_snapshot.json` 与 D6 locked plan；一旦 Blueprint 三件套任一存在，路由不得静默退回 legacy。legacy/debug 只在三件套完全不存在时成立，并至少已有 D3 terrain field、最终 D4 provenance、D5 轻量预案和 D6 locked plan。
 - 显式 group / array / composite group 作为一个竞争主体，未分组 anchor 各自成为主体；最终 footprint 排除只认 D6 locked plan。
 - `landUseIntentPlan` 只能指定稳定 group / anchor、`ruleRef`、算法级运行时材料默认和 group 例外；不得提交面积、行动力、成本、64 格连接阈值、逐 block 路径或 mask。`algorithmAnchor` 是唯一允许的可选 block 坐标，只用于 `contour_bands` 平地回退和相位基准，不定义区域边界。
 - 调用只做规划与 artifact 写入，不加载 chunk、不写世界、不激活 registry。独立调用本身视为显式规划，不受 workflow 默认关闭影响。
@@ -972,7 +977,10 @@ D6 trace 记录 NBT identity 复核、变换、`actualFootprint`、`lockedCollis
 返回 artifact：
 
 - `landUseTerrainField`
+- `cityOutdoorIntentPlan`（正式 Blueprint 路径）
 - `landUseAreaPlan`
+- `cityUrbanSpacePlan`（正式 Blueprint 路径）
+- `landUseSurfacePrintPlan`
 - `landUsePlanTrace`
 - `landUsePreview`
 - `qualityReport`

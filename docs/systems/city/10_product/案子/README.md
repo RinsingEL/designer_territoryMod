@@ -32,11 +32,12 @@
 9. `结构Envelope精修-v0.1/README.md`
 10. `City通用装饰阵列系统-v0.3/README.md`
 11. `City关键装饰锚点候选-v0.1/README.md`
-12. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
-13. `City建筑群生活感设计-v0.1/README.md`
-14. `W结果驱动大城镇功能区设计-v0.1/README.md`
-15. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
-16. 当前实例设计案：`潮汐王冠首都-百建筑设计-v0.1/README.md`。
+12. `City单次蓝图户外空间编译-v0.1/README.md`
+13. `City建筑驱动LandUseAreaPlan-v0.1/README.md`
+14. `City建筑群生活感设计-v0.1/README.md`
+15. `W结果驱动大城镇功能区设计-v0.1/README.md`
+16. 需要后续方向时，再读 Road Weaver、地形兼容、城墙、语义重标记、结构风格化换皮等待做案。
+17. 当前实例设计案：`潮汐王冠首都-百建筑设计-v0.1/README.md`。
 
 ## 案子状态表
 
@@ -44,7 +45,7 @@
 | --- | --- | --- |
 | `D3-D6结构落地驱动城市重构-v0.1` | 当前真值 | 当前实现主线仍含 configured structure：D3 patch 真值 -> D4 structure anchor -> D5 mask / registry -> D6 probe-and-lock -> worldgen-time placement -> D7 ledger。其 configured / StructureStart 分支已确定由固定模板唯一落地主线破坏性替换，完成后本案降为历史参考。 |
 | `City固定模板唯一落地主线-v0.1` | 当前开发路径 | City active 建筑只认固定 NBT `StructureTemplate`；删除 configured structure、外部 StructureStart、Jigsaw、envelope profiling 和 late materialize。D4-D6 使用精确模板尺寸 / hash / 入口，worldgen 做确定性模板粘贴；三个地形适配试验模板保留 City 注册单-piece start。 |
-| `D4城市生成职责重构-v0.1` | 开发中（01 v0.2 + 02 产物 v0.7 已接通） | D4 一次输出空间范围/疏密/算法 Blueprint；程序先在偏好 patch 播种并按城市规模/extent 完成组内阵列，再以各 Group 持续阵列完成无固定距离上限的连接生长，实体连通交给 LandUse，标准 D5/D6/D7 artifact 不变。00 D3 v2、03 装饰退役、04 景观仍待后续。 |
+| `D4城市生成职责重构-v0.1` | 已完成并入主线 | D4 一次输出结构范围/疏密/算法；程序先在偏好 patch 播种并按城市规模/extent 完成组内阵列，再以各 Group 持续阵列完成无固定距离上限的连接生长。CityBlueprint v0.5 同次冻结户外设计，实体地表在 D6 后交给程序编译。 |
 | `City固定模板StructureStart地形适配试验-v0.1` | 当前试验路径 | 仅 Stubbs 风车、谷仓与肉铺在 `createStructures` 注入一个 City 注册的 `StructureStart` 和一个固定模板 piece，使用 `beard_thin`。固定模板 identity 不变，不恢复 configured 随机选择或 Jigsaw；装饰仍走当前独立路径。 |
 | `D4设计构图候选闭环-v0.1` | 已完成并入主线 | 已形成推荐路径：人 / AI 提交设计 slot 和 patch / 距离意图，程序生成少量安全候选，再选择候选转成 `StructureAnchorPlan`。后续重点是设计评分、结构套件和更好的候选解释。 |
 | `D4设计构图候选闭环-v0.2` | 已完成并入主线 | 已实现逐 slot session：`create -> plan_next -> select -> finalize`。`key_then_array` 的关键结构阶段复用该 session 自动选择并冻结 occupied；v0.1 批量候选保留为 debug / 兼容入口。 |
@@ -55,7 +56,8 @@
 | `City通用装饰阵列系统-v0.3` | 当前真值 | 继承 v0.2 判别联合与全局几何；content index / program 升级 v0.3，显式声明 ground plane、embed depth、clearance，连续线性 pattern 在 activation 编译跨 chunk run，并以冻结 outcome 驱动水域 / 峭壁 / 累计落差终止、end-cap 和 fill-only Beardifier foundation。 |
 | `City关键装饰锚点候选-v0.1` | 当前开发案 | 为喷泉、雕像、水井等 required 单点 prefab 生成 1-8 个完整 footprint + clearance 安全候选和预览；Agent 只选择 candidate 并回填现有相对坐标 patch，不枚举世界坐标。首版不采样真实地形、不加载 chunk。 |
 | `City通用装饰阵列系统-v0.2` | 已完成并入主线 | Shape / Pattern / ContentPalette 通用几何与语义风格档案基础；由 v0.3 承接当前姿态、连续地形和 foundation 真值。 |
-| `City建筑驱动LandUseAreaPlan-v0.1` | 当前开发路径 | D3 补 LandUse terrain field，D4 v0.2 保留 group provenance；D6 locked footprint 后执行 64 格内相向扩张，再由 intent v0.3 运行时材料驱动 `uniform|contour_bands` 刷地并冻结 SurfacePrintPlan v0.2，随后交给稀疏 Decoration / execute_d5。配置默认关闭；roads 后写覆盖、旧 chunk 不回填。 |
+| `City单次蓝图户外空间编译-v0.1` | 已完成并入主线 | CityBlueprint v0.5 在一次 AI 提交中冻结结构 `groups[]` 与 `outdoorPlan`。D6 后程序把 Group 地表和独立景观编译为共享面积预算、方向化生长与城市包络 residual 闭合；正式 workflow 和独立 `city_plan_land_use` 都服从 Blueprint 权威，`unknownResidualBlocks` 必须为 0。 |
+| `City建筑驱动LandUseAreaPlan-v0.1` | 已完成执行基础 | D3 terrain field、D6 locked footprint、64 格内相向扩张、`uniform|contour_bands` SurfacePrintPlan v0.2、FIELD-only crop 与 worldgen owner 事务继续作为户外编译执行层。独立 intent v0.3 仅保留给 legacy/debug；RoadWeaver 后写覆盖、旧 chunk 不回填。 |
 | `City建筑群生活感设计-v0.1` | 当前设计案 | 使用现有 D4 / LandUse 表达农业、商业、行政结构，增加建筑自动朝向和功能装饰；首个切片为临河 / 海综合城镇，道路另案。 |
 | `W结果驱动大城镇功能区设计-v0.1` | 当前设计案 | 基于 sealed W 重新选取未生成临水候选，定义大城镇农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序与修缮口径；农业使用不规则 LandUse 扩张与 `CONTOUR_BANDS` 等高线条带，水槽按全局 role mask 直接落地，石墙禁用木栅栏。 |
 | `潮汐王冠首都-百建筑设计-v0.1` | 当前实例设计案 | 基于 `realm_w_mryvxhga_62af05d6` 的潮汐王冠首都 `city_realm_tide_crown_capital`，以 block `(4480,256)` 为粗锚点，目标 99 栋；用户已确认按崖岸型继续，本轮 D4 已按真实占用冻结 80 个唯一 anchor，质量通过，尚未进入 D5/D6 或世界写入。 |
