@@ -2,7 +2,7 @@
 
 ## 定位
 
-本契约定义建筑驱动土地使用层 v0.1 的输入、规则引用、block 级区域输出和 worldgen 交接。它位于 D6 locked actual footprint 之后、DecorationProgram 与 `execute_d5` 之前，不恢复已删除的 `FunctionZoneMap`。
+本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后、DecorationProgram 与 `execute_d5` 之前，不恢复已删除的 `FunctionZoneMap`。正式 Blueprint v0.6 路径不再把 AreaPlan 解释为逐建筑竞争占地。
 
 ## 版本与开关
 
@@ -11,12 +11,12 @@
 | 外部 settings | `city_land_use_settings.v0.1` |
 | D3 地形事实 | `city_land_use_terrain_field.v0.1` |
 | legacy/debug 人工意图 | `city_land_use_intent_plan.v0.3`；v0.1/v0.2 明确拒绝 |
-| Blueprint 户外投影 | `city_outdoor_intent_plan.v0.1` |
+| Blueprint 户外投影 | `city_outdoor_intent_plan.v0.2` |
 | 城市包络与残余空间 | `city_urban_space_plan.v0.1` |
 | 规则目录 | `city_land_use_rules.v0.1` |
 | 区域计划 | `city_land_use_area_plan.v0.1` |
 | 批量地表计划 | `city_land_use_surface_print_plan.v0.2` |
-| 规划完成标记 | `city_land_use_planning_complete.v0.1` |
+| 规划完成标记 | `city_land_use_planning_complete.v0.3` |
 | active registry | `city_active_land_use_area_plans.v0.2` |
 | worldgen ledger | `city_land_use_worldgen_ledger.v0.3` |
 
@@ -68,7 +68,7 @@
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
-legacy/debug intent 仍按建筑来源 growth region 计算面积。正式 Blueprint v0.5 路径改为 structure ground / landscape 级共享预算：同一 D4 Group 的全部 D6 anchors 先汇总真实 footprint，再只生成一份 `min/preferred/max`；同一 landscape 的多个 attached buildings 只贡献 seed，不重复贡献完整景观面积。该规则尤其用于阻止农业面积随农舍数量线性膨胀。
+正式 Blueprint v0.6 路径按 SpatialGround / landscape 共享预算：同一 D4 Group 的全部 D6 anchors 共同形成一个空间主体；同一 landscape 的多个 attached buildings 只贡献 seed，不重复贡献完整景观面积。该规则阻止农业面积随农舍数量线性膨胀，也阻止逐建筑地表环。
 
 bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 
@@ -217,10 +217,10 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `areaId` | string | 稳定逻辑区域 ID；同一 group 被竞争结果拆成的多个不连通组件可共享同一 ID。按该 ID 消费区域的下游必须先合并全部匹配项的成员 spans，再执行 inset 与硬障碍扣除。 |
+| `areaId` | string | 稳定逻辑区域 ID。正式城市 SpatialGround 应形成关系连通的组团空间；不连通组件属于规划质量失败，不能用共享 ID 掩盖。显式景观可按 continuity 产生多个 parcel。 |
 | `ruleRef` / `landUseType` | string | 规则引用和用途。 |
 | `sourceGroupIds[]` / `sourceAnchorIds[]` | string[] | 可追溯来源。 |
-| `seedPoints[]` | BlockPoint[] | footprint 外缘、入口或组合内侧等多源起点。 |
+| `seedPoints[]` | BlockPoint[] | 建筑入口、组内最小连接树和跨组关系骨架的多源起点；正式城市路径禁止把每栋建筑完整外缘作为 seed。 |
 | `spans[]` | ScanlineSpan[] | block 成员；每项为 `z,minX,maxX`，两端包含。 |
 | `structureFootprintExclusions[]` | BlockBounds[] | D6 locked 结构硬排除区。 |
 | `boundaryLoops[]` | object[] | `points[]` 与 `hole`；内部孔洞不得生成外边界。 |
@@ -233,16 +233,16 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 相向扩张仍只产生普通 `spans[]`，不会追加桥线或第二种区域。兼容主体的扩张前沿自然接触后可由几何编译器融合；异类 area 仍是独立区域和硬障碍。
 
-`unclaimedSpans[]` 仍表示整个 D3 `planningBounds` 内 AreaPlan claim 的补集，其中混合城市外部自然、结构/走廊排除和不可达地形。它不得用于判断城市内部是否存在原版群系漏洞；该口径由 `CityUrbanSpacePlan` 单独承担。
+`unclaimedSpans[]` 只允许表示城市包络外部以及结构/走廊执行排除。CityUrbanSpacePlan 包络内不得存在未归属原群系。
 
 ## CityOutdoorIntentPlan
 
-`city_outdoor_intent_plan.v0.1` 是 Blueprint `outdoorPlan` 在 D6 后的程序投影，不是第二次 AI 输入。它至少冻结：
+`city_outdoor_intent_plan.v0.2` 是 Blueprint `outdoorPlan` 在 D6 后的程序投影，不是第二次 AI 输入。它至少冻结：
 
 - `cityId`、`sourceBlueprintHash`、`sourceD6Hash`、`sourceTerrainFieldHash`、`sourceOutdoorCatalogHash`。
-- 每个 structure ground 实际解析的 D6 anchor、rule、Surface recipe、共享面积预算、seed 和程序派生 growth bias。
+- 每个 SpatialGround 实际解析的 D6 anchor、rule、Surface recipe、共享空间类型、层级、关系骨架 seed 和程序派生预算。
 - 每个 landscape 实际解析的 profile、attached anchors / preferred patch、共享面积预算、seed、membership 与 required 状态。
-- Blueprint envelope profile 与 residual policy。
+- Blueprint envelope profile；城市 residual 固定吸收到 SpatialGround，不再由 Blueprint 选择。
 
 相同 Blueprint、D6、terrain field 和 catalog 必须输出相同规范 JSON 与 hash。任一来源漂移都不得复用旧 completion。
 
@@ -252,11 +252,11 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 `city_urban_space_plan.v0.1` 与 AreaPlan 并列，记录城市包络和残余空间验收，不进入 worldgen recipe parser。顶层严格包含 `schemaVersion`、`cityId`、`planHash`、`enabled`、`closeRadiusBlocks`、nullable `workingBounds`、`envelopeSpans[]`、`residualRegions[]` 和 `coverageSummary`。包络档位已经在 OutdoorIntent 中冻结；UrbanSpacePlan 只保留编译后的闭合半径和实际几何。
 
-城市包络只由 `membership=URBAN` 的 claims、对应 D6 structure footprint 和已冻结 corridor/gate 支撑；`LANDSCAPE` 农田、林地和池塘不得扩大包络。程序在紧凑局部 raster 上按 `COMPACT|BALANCED|LOOSE` 固定 profile 收口，再对包络内所有未归属组件分类。
+城市包络只由 `membership=URBAN` 的 claims、对应 D6 structure footprint 和已冻结 corridor/gate 支撑；`LANDSCAPE` 农田、林地和池塘不得扩大包络。程序按 `COMPACT|BALANCED|LOOSE` 收口，再把包络内所有未归属组件确定性并入最近的城市 SpatialGround。
 
-`residualRegions[]` 每项严格记录 `residualId`、`residualClass`、`disposition`、`memberSpans[]`、`adjacentGroupIds[]`、`absorbedGroupId`、`blockCount`、`terrainDominated` 和 `touchesEnvelopeEdge`。小孔/窄缝按 Blueprint 可吸收到相邻 urban claim；水体、陡坡和未采样区域只能进入显式自然；其余 common green、service ground 或 natural reserve 即使不写方块，也必须拥有明确类型。显式 residual 的几何由各项 `memberSpans[]` 直接承载，不另设重复的 `explicitNaturalSpans[]`。
+`residualRegions[]` 仅保留编译追踪。每项必须是 `ABSORB_NEIGHBOR` 且具有非空 `absorbedGroupId`。任何 `NATURAL_RESERVE`、`COMMON_GREEN` 或 `SERVICE_GROUND` residual 都是旧产物或规划失败；自然与绿地必须是 Blueprint 显式 landscape。
 
-`coverageSummary` 必填：`envelopeBlocks`、`landUseBlocks`、`structureBlocks`、`corridorBlocks`、`absorbedResidualBlocks`、`explicitResidualBlocks`、`unknownResidualBlocks`。这些计数按优先级去重、两两互斥，并必须满足 `envelopeBlocks = landUseBlocks + structureBlocks + corridorBlocks + absorbedResidualBlocks + explicitResidualBlocks + unknownResidualBlocks`；正式规划成功要求 `unknownResidualBlocks=0`。
+`coverageSummary` 必填：`envelopeBlocks`、`landUseBlocks`、`structureBlocks`、`corridorBlocks`、`absorbedResidualBlocks`、`explicitResidualBlocks`、`unknownResidualBlocks`。这些计数按优先级去重、两两互斥，并必须满足恒等式；正式规划成功同时要求 `explicitResidualBlocks=0` 与 `unknownResidualBlocks=0`。
 
 ## CityLandUseSurfacePrintPlan
 

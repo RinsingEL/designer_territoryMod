@@ -13,7 +13,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 | 上下文 | `city_blueprint_context.v0.5` |
 | 引用目录 | `city_blueprint_reference_catalog.v0.3` |
 | 目录快照 | `city_blueprint_catalog_snapshot.v0.6` |
-| 蓝图 | `city_blueprint.v0.5` |
+| 蓝图 | `city_blueprint.v0.6` |
 | 校验报告 | `city_blueprint_validation_report.v0.3` |
 | 提交 trace | `city_blueprint_submission_trace.v0.3` |
 
@@ -70,19 +70,19 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 - `styleProfiles[]`：`profileRef`。
 - `roadProfiles[]`：`profileRef`、`hierarchy=SIMPLE|HIERARCHICAL`、`density=SPARSE|BALANCED|DENSE`。
 - `surfaceDetailProfiles[]`：`profileRef`、`intensity=LOW|MEDIUM|HIGH`。
-- `landUseRuleProfile`：完整严格 `city_land_use_rules.v0.1`；其 `ruleRef` 是 structure ground 的唯一规则白名单。
+- `landUseRuleProfile`：完整严格 `city_land_use_rules.v0.1`；其 `ruleRef` 是 SpatialGround 的唯一规则白名单。
 - `surfaceRecipes[]`：冻结 `surfaceRecipeRef`、是否写地表、默认自动连接、`UNIFORM|CONTOUR_BANDS` 和算法所需全部方块材料；Blueprint 只引用 recipe ID，不提交 block ID。
 - `landscapeProfiles[]`：冻结 `landscapeProfileRef`、`FARMLAND|COMMON_GREEN|WOODLAND|MEADOW|POND`、LandUse rule、Surface recipe、SMALL/MEDIUM/LARGE 基准面积和 `URBAN|LANDSCAPE` membership。
 
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
-## CityBlueprint v0.5
+## CityBlueprint v0.6
 
 根字段全部必填，未知字段拒绝：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint.v0.5`；v0.4 缺少户外意图，不兼容。 |
+| `schemaVersion` | string | 固定 `city_blueprint.v0.6`；v0.5 的逐建筑地表与 residual policy 不兼容。 |
 | `cityId` | string | 与 context / D3 一致。 |
 | `sourceD3Ref` / `catalogSnapshotRef` | ArtifactRef | 与 context 逐字段一致。 |
 | `generationSeed` | safe integer | `-9007199254740991..9007199254740991`；后续编译器唯一记录随机源。 |
@@ -99,7 +99,7 @@ Group 必填字段：
 | 字段 | 值域 |
 | --- | --- |
 | `groupId` | 蓝图内唯一非空字符串。 |
-| `groupKind` | v0.5 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
+| `groupKind` | v0.6 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
 | `preferredPatchRefs[]` | 非空当前 D3 `landformPatchId` 列表；多个 Group 可以共享。 |
 | `preferredPatchZone` | `CENTER | NORTH | EAST | SOUTH | WEST`；核心在全部偏好 patch 精确 member-cell 并集内的起步方位。北=-Z、南=+Z、西=-X、东=+X；不表示世界坐标，也不约束连接阶段。 |
 | `role` | 非空功能角色。 |
@@ -131,23 +131,21 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 ## OutdoorPlan
 
-`outdoorPlan` 根字段为 `mode`、`envelopeProfile`、`structureGrounds[]`、`landscapes[]` 和 `residualPolicy`，未知字段拒绝。
+`outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`spatialGrounds[]` 和 `landscapes[]`，未知字段拒绝。
 
-- `mode=GENERATE`：每个 STRUCTURE Group 必须且只能有一项 structure ground；D6 后自动编译户外空间。
-- `mode=PRESERVE`：`structureGrounds[]` 与 `landscapes[]` 必须为空；表示本城明确保持原始户外地表，不是遗漏设计。
+- `mode=GENERATE`：每个 STRUCTURE Group 必须且只能有一项 spatial ground；D6 后自动编译城市空间织体。
+- `mode=PRESERVE`：`spatialGrounds[]` 与 `landscapes[]` 必须为空。
 - `envelopeProfile=COMPACT|BALANCED|LOOSE`：只选择冻结的城市包络形态档位，程序映射为固定形态学半径，不接受 block 数。
 
-`structureGrounds[]` 每项字段：
+`spatialGrounds[]` 每项字段：
 
 | 字段 | 类型 / 值域 | 说明 |
 | --- | --- | --- |
 | `sourceGroupId` | string | 必须引用本 Blueprint 的 STRUCTURE Group；全表唯一。 |
 | `landUseRuleRef` | string | 冻结 LandUse rule 引用。 |
 | `surfaceRecipeRef` | string | 冻结 Surface recipe 引用。 |
-| `extentClass` | `SMALL|MEDIUM|LARGE` | 组级户外范围档位；程序从 D6 总 footprint 派生共享预算。 |
-| `growthBias` | `BALANCED|AWAY_FROM_REFERENCE|TOWARD_REFERENCE` | 关系方向，不是坐标。 |
-| `referenceGroupIds[]` | string[] | 非 BALANCED 时必须非空并引用 STRUCTURE Group；BALANCED 时必须为空。 |
-| `autoConnect` | boolean | 是否参加相同兼容类别的正常扩张连接。 |
+| `sharedSpaceType` | `CIVIC_SQUARE|MARKET_STREET|RESIDENTIAL_COURT|FARMSTEAD|GENERAL_URBAN` | 组团共享空间的建筑学类型。 |
+| `hierarchyLevel` | `PRIMARY|SECONDARY|LOCAL` | 城市主脉、次级连接和本地空间的层级。 |
 | `membership` | `URBAN|LANDSCAPE` | 是否参与城市包络；农业等外围地表必须使用 LANDSCAPE。 |
 
 `landscapes[]` 每项字段：
@@ -168,17 +166,7 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 农田 landscape 的多个 attached 建筑只贡献 seed，始终共享一份 landscape 总预算；不得回到“每栋建筑各贡献完整农田面积”的线性叠加。`CONTINUOUS` 编译为 1 个 parcel growth region，`MULTI_PARCEL` 最多 2 个，`PATCHY` 最多 4 个；各 region 的 `min/preferred/max` 由同一总预算确定性拆分，求和必须与 landscape 总预算严格相等。
 
-`residualPolicy` 必填：
-
-| 字段 | 允许值 |
-| --- | --- |
-| `smallEnclosed` | `ABSORB_NEIGHBOR|NATURAL_RESERVE` |
-| `narrowGap` | `ABSORB_NEIGHBOR|PATH_OR_VERGE|NATURAL_RESERVE` |
-| `mediumEnclosed` | `ABSORB_NEIGHBOR|COMMON_GREEN|SERVICE_GROUND|NATURAL_RESERVE` |
-| `largeEnclosed` | `COMMON_GREEN|NATURAL_RESERVE` |
-| `exteriorConnected` | 只能 `NATURAL_RESERVE` |
-
-这些值只决定程序分类和归属。Blueprint 不提交面积阈值、形态学半径、逐格 owner 或材料；相同冻结输入必须得到相同 UrbanSpacePlan。
+`residualPolicy` 已删除。城市包络内部的剩余单元必须由程序并入最近的 SpatialGround，不能由 AI 或旧面积上限选择原群系回退。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
 
 ## 禁止字段
 
