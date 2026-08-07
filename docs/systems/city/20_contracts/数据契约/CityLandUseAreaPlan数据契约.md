@@ -2,7 +2,7 @@
 
 ## 定位
 
-本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后、DecorationProgram 与 `execute_d5` 之前，不恢复已删除的 `FunctionZoneMap`。正式 Blueprint v0.7 路径把 AreaPlan 解释为一个 Foundation 底层加若干 Landscape 覆盖地块，不再是逐建筑竞争占地。
+本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后、DecorationProgram 与 `execute_d5` 之前，不恢复已删除的 `FunctionZoneMap`。正式 Blueprint v0.9 路径把 AreaPlan 解释为一个 Foundation 底层加若干 Landscape 覆盖地块，不再是逐建筑竞争占地。
 
 ## 版本与开关
 
@@ -15,7 +15,7 @@
 | 城市包络与残余空间 | `city_urban_space_plan.v0.1` |
 | 规则目录 | `city_land_use_rules.v0.1` |
 | 区域计划 | `city_land_use_area_plan.v0.1` |
-| 批量地表计划 | `city_land_use_surface_print_plan.v0.3` |
+| 批量地表计划 | `city_land_use_surface_print_plan.v0.4` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.4` |
 | active registry | `city_active_land_use_area_plans.v0.2` |
 | worldgen ledger | `city_land_use_worldgen_ledger.v0.3` |
@@ -64,11 +64,11 @@
 }
 ```
 
-规则目录不再包含事后桥接阈值。正式 Blueprint v0.7 路径固定关闭 LandUse 自动连接：城市连通由一块 Foundation domain 保证，道路连通由 RoadWeaver 保证，景观 Parcel 保持独立。64 格相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
+规则目录不再包含事后桥接阈值。正式 Blueprint v0.9 路径固定关闭 LandUse 自动连接：城市连通由一块 Foundation domain 保证，道路连通由 RoadWeaver 保证，景观 Parcel 保持独立。64 格相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
-正式 Blueprint v0.7 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。Landscape 根据 attached anchor 的 `blueprintPlacementPhase` 派生独立 Parcel：required/core 与 fill 使用各自配置数量区间，connectivity_growth 不生成 Parcel；总量仍受 Profile 与城市规模硬上限保护。
+正式 Blueprint v0.9 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。Landscape 根据 attached anchor 的 `blueprintPlacementPhase` 派生独立 Parcel：required/core 与 fill 使用各自配置数量区间，connectivity_growth 不生成 Parcel；总量仍受 Profile 与城市规模硬上限保护。
 
 bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 
@@ -250,7 +250,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityUrbanSpacePlan
 
-`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.7 分层规划返回 disabled plan，覆盖证明改由 Foundation 的单组件、resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
+`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.9 分层规划返回 disabled plan，覆盖证明改由 Foundation 的单组件、resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
 
 城市基础域只由纳入主体的 D6 structure footprint 和 Foundation Profile 支撑，不读取 corridor/gate。程序从 `closeRadiusBlocks` 开始，在 `maxJoinDistanceBlocks` 内选择首个能形成单组件且通过最小颈宽验收的闭合半径；超过范围仍不连续时 hard fail，不生成多个默认城镇或细长地板桥。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
 
@@ -260,17 +260,17 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityLandUseSurfacePrintPlan
 
-`city_land_use_surface_print_plan.v0.3` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`；hash 必须由严格 codec 的规范 JSON 计算。recipe 判别联合只允许 `uniform|contour_bands`，基础地板与景观通过 Area/层级顺序表达，不重新读取 catalog。
+`city_land_use_surface_print_plan.v0.5` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`；hash 必须由严格 codec 的规范 JSON 计算。recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`，基础地板与景观通过 Area/层级顺序表达，不重新读取 catalog。
 
 `areas[]` 每项至少包含：
 
 | 字段 | 说明 |
 | --- | --- |
 | `printAreaId` / `landUseAreaId` / `sourceGroupIds[]` | 稳定执行 ID、来源 area 与 group。不同精确 surface settings 不得在几何编译时误合并。 |
-| `surfaceSettings` | 完整冻结 `surfacePrintEnabled`、`surfaceAlgorithm`、nullable `algorithmAnchor`、`boundaryBlockId`、等高线三段宽度和解析后的全部 block ID。正式 v0.7 的 `autoConnect=false`。 |
+| `surfaceSettings` | 完整冻结 `surfacePrintEnabled`、`surfaceAlgorithm`、nullable `algorithmAnchor`、`boundaryBlockId`、旧等高线三段宽度和解析后的全部 block ID。正式 v0.9 的 `autoConnect=false`。 |
 | `memberSpans[]` / `exclusionSpans[]` | 全局不规则 mask 和硬排除。chunk 只能裁切这份 mask，不得使用 bbox 重建形状。 |
-| `surfaceAlgorithm` / `algorithmAnchor` | `uniform|contour_bands` 与 nullable 回退中心；nullable 字段必须显式写 JSON null。 |
-| `recipe` | `uniform` 或 `contour_bands` 判别联合。 |
+| `surfaceAlgorithm` / `algorithmAnchor` | `uniform|contour_bands|relay_region_growth` 与 nullable/有效根起点；nullable 字段必须显式写 JSON null。 |
+| `recipe` | `uniform`、`contour_bands` 或 `relay_region_growth` 判别联合。 |
 
 `uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。
 
@@ -281,11 +281,31 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 - 把每条三格水槽解释为 `CHANNEL_BEFORE_BANK + CHANNEL_WATER + CHANNEL_AFTER_BANK`；开放 `CHANNEL_WATER` 端点按完整全局邻接冻结 bank 封口，禁止按 owner chunk 局部猜测。
 - 固定输入、算法版本和 seed 得到相同 spans；输入 spans 顺序或 chunk 执行顺序不得改变结果。
 
+`relay_region_growth` 是正式 Blueprint v0.9 景观填充配方。它冻结：
+
+- Surface Recipe 已解析材料：`surfaceBlockId`、可选 `cropBlockId`、可选 bank/water/overlay、可选 `boundaryBlockId`。
+- AI/目录决策：`fillProfileRef`、`primaryRoleRef`、`stableSeed`、有序区域阶段的角色、`PATCH|CORRIDOR` 生长偏置及 `targetShare`、内容权重。
+- 程序解析：合法根起点、每个区域的 `regionId/parentRegionId/start/sourceFrontier/targetAreaBlocks/actualAreaBlocks/growthForm` 和逐格扩张 provenance。
+- 最终执行 mask：全局稳定的 `regionSpans[]`，每项至少为 `{z,minX,maxX,regionId,roleRef}`；同一角色的不同区域身份不能在压缩时丢失。
+
+核心分类器在完整 `memberSpans - exclusionSpans` 上使用 4 邻接逐格 frontier 扩张。第一块区域从根起点生长；后继区域的首格必须邻接父区域的局部边界，区内每格必须邻接本区已生长格。`PATCH` 偏向局部凝聚分叉，`CORRIDOR` 偏向活跃端点和方向连续，但两者都不是固定形状或固定宽度。根起点非法、mask 断开、接力界面耗尽或覆盖不能完成时 hard fail；不得吸附到图形中心、静默重播种、使用距离环或 bbox/fixed-shape fallback。chunk 执行只查冻结 region span，不得重新计算 frontier、父子关系、占比或随机内容。
+
+`materialRole` 的执行映射固定为：
+
+| materialRole | SurfacePrint 行为 |
+| --- | --- |
+| `PRIMARY_CONTENT` | 写 `surfaceBlockId`；`cropBlockId` 非空时在上层写作物/主题内容槽。 |
+| `BANK` | 写 bank 基层；overlay 非空时写上层半砖、地毯或叶带。 |
+| `WATER` | 写 water 基层。 |
+| `GROUND` | 只写 bank/ground 基层，用于土路、石子带等纯地面间隔。 |
+
+`contentWeights[]` 在 v0.5 中进入 plan hash、trace 和预览审计，但不由 SurfacePrint 把任意 semantic contentRef 解释成方块。多花种、树种和灌木随机落点必须由 Decoration 的内容目录继续消费；当前只会执行 Surface Recipe 已冻结的单一 crop/material 槽，禁止声称已完成多内容世界落地。
+
 同一个 surface-owned `landUseAreaId` 禁止 Decoration 使用 `uniform_fill`、`cross_section_repeat` 或 `parallel_rows`，避免批量地表重复落地；`deterministic_scatter`、`edge_repeat`、`grid_repeat` 等稀疏细节仍允许。
 
 ## LandUse 规划 Trace
 
-`land_use_plan_trace.json` 当前正式路径记录 Foundation resolved close radius、单组件/颈宽证明、Landscape Parcel 的 anchor phase、parent kind、方向、seed、请求/实际面积和失败重试。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.7 必须为空；非空只允许出现在显式 legacy/debug 规划。
+`land_use_plan_trace.json` 正式路径记录 Foundation resolved close radius、单组件/颈宽证明、Landscape Parcel 的 anchor phase、parent kind、方向、seed、请求/实际面积和失败重试；带填充方案的 group 另记录 `fillProfileRef`、稳定 seed、主角色、有序区域阶段、角色/materialRole/growthForm/目标占比和内容权重。SurfacePrint 区域 trace 冻结每块区域的父子关系、接力界面和目标/实际面积。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.9 必须为空；非空只允许出现在显式 legacy/debug 规划。
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 
@@ -293,9 +313,10 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## Worldgen 交接
 
-- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.3、material palette/hash 与 prepared band index，不携带 LandUse catalog、prefab 或 run 状态。
+- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.5、material palette/hash 与 prepared region index，不携带 LandUse catalog、prefab 或 run 状态。
+- 传入 SurfacePrintPlan 的 `land_use_preview` metadata 为 `city_land_use_preview.v0.3`，并以 `layeredFillAreas[]` 逐块报告 `fillProfileRef`、`primaryRoleRef`、重复周期、实际块数，以及每个角色的 `materialRole/targetShare/actualBlocks/actualShare`；该摘要只解释已冻结 spans，不参与执行决策。
 - ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项记录 area / surface / palette identity，以及 FIELD / CHANNEL / crop / boundary 的阶段计数和结果摘要；不保存 placement datum、prefab decision 或旧 schema 迁移状态。
-- SurfacePrintPlan v0.1/v0.2、旧 active registry、旧 ledger 和旧 completion 都不进入当前 parser / activation。切换版本前必须清理旧任务产物与 server-root LandUse 状态，再重跑 `city_plan_land_use -> city_execute_d5`；不做内存迁移、磁盘迁移或静默降级，历史实现只保留在 Git。
+- SurfacePrintPlan v0.1/v0.2/v0.3、旧 active registry、旧 ledger 和旧 completion 都不进入当前 parser / activation。切换版本前必须清理旧任务产物与 server-root LandUse 状态，再重跑 `city_plan_land_use -> city_execute_d5`；不做内存迁移、磁盘迁移或静默降级，历史实现只保留在 Git。
 - activation preflight 必须基于 AreaPlan + SurfacePrintPlan 的当前编译结果，只枚举实际包含 surface 或 boundary 操作的 owner；微整地 mask 只是 surface 操作的上下文，不能单独令 owner relevant，`PRESERVE + OPEN` 等零写入 owner 不得阻断激活。预检只读当前 loaded status 或 region NBT，不得申请 ticket。任一待写 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
 - owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 band spans、不读取无关 owner 状态。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。

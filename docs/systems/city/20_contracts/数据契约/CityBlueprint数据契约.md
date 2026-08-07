@@ -10,10 +10,10 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 对象 | schemaVersion |
 | --- | --- |
-| 上下文 | `city_blueprint_context.v0.6` |
-| 引用目录 | `city_blueprint_reference_catalog.v0.4` |
-| 目录快照 | `city_blueprint_catalog_snapshot.v0.7` |
-| 蓝图 | `city_blueprint.v0.7` |
+| 上下文 | `city_blueprint_context.v0.8` |
+| 引用目录 | `city_blueprint_reference_catalog.v0.6` |
+| 目录快照 | `city_blueprint_catalog_snapshot.v0.9` |
+| 蓝图 | `city_blueprint.v0.9` |
 | 校验报告 | `city_blueprint_validation_report.v0.4` |
 | 提交 trace | `city_blueprint_submission_trace.v0.4` |
 
@@ -37,7 +37,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint_context.v0.6`。 |
+| `schemaVersion` | string | 固定 `city_blueprint_context.v0.8`。 |
 | `contextId` | string | 对除 `preparedAt` 外的冻结上下文做 SHA-256。 |
 | `runId` / `cityId` | string | 当前 run 与城市。 |
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
@@ -46,7 +46,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 | `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
-| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.7`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Blueprint v0.4 引用目录及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile 与 ParcelStyle 完整定义，D6 后不得重新解释为另一版配置。 |
+| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.9`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Blueprint v0.6 引用目录及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle 与 Landscape Fill Profile 完整定义，D6 后不得重新解释为另一版配置。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
@@ -74,6 +74,11 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 - `surfaceRecipes[]`：冻结 `surfaceRecipeRef`、是否写地表、`UNIFORM|CONTOUR_BANDS`、全部方块材料、可选 `boundaryBlockId`；`CONTOUR_BANDS` 另必填正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks`。`autoConnectDefault` 只服务 legacy/debug，正式 v0.7 编译固定关闭。
 - `foundationProfiles[]`：冻结 `foundationProfileRef`、LandUse rule、Surface recipe、`structureMarginBlocks`、`closeRadiusBlocks`、`maxJoinDistanceBlocks`；距离必须满足 `0 <= margin <= close <= join`。
 - `landscapeProfiles[]`：冻结 `landscapeProfileRef`、`FARMLAND|COMMON_GREEN|WOODLAND|MEADOW|POND`、LandUse rule、Surface recipe、SMALL/MEDIUM/LARGE 基准面积、membership 和严格 `parcelStyle`。
+- `landscapeFillProfiles[]`：冻结 `fillProfileRef`、显示名、视觉意图、唯一 `algorithm=SINGLE_SOURCE_REGION_RELAY`、`relayOrigin=PARENT_REGION_LOCAL_BOUNDARY`、兼容景观类型、`primaryRoleRef`、角色目录、内容白名单和非空接力示例。每个 `landscapeProfiles[]` 暴露的景观类型必须至少被一个 Fill Profile 覆盖，否则整个目录拒绝；服务不注入默认 Profile，调用方必须把完整目录传入 prepare，随后目录原样进入 Context 供 AI 选择。
+
+每个 Fill Profile 的 `roles[]` 必填 `roleRef`、`materialRole=PRIMARY_CONTENT|BANK|WATER|GROUND`、非空 `allowedGrowthForms[]`、`defaultGrowthForm`、`minShare/maxShare/defaultShare`。生长偏置仅允许 `PATCH|CORRIDOR`，默认值必须位于本角色白名单。占比满足 `0 <= min <= default <= max <= 1`，全部 default 之和为 1；主角色必须为 `PRIMARY_CONTENT`。已删除 `layerSequence/repeatLayers`，不允许目录另藏距离层或固定形状。`allowedContentRefs[]` 是 AI 内容权重的唯一白名单。
+
+`examples[]` 每项必填 `exampleId`、`description`、有序 `roleShares[]` 和 `contentWeights[]`。每个 role occurrence 必填 `roleRef/growthForm/targetShare`；同一角色允许重复出现，数组顺序就是区域接力顺序。全部 occurrence 占比和为 1，同角色 occurrence 的占比合计必须落入该角色范围，每个声明角色至少出现一次。内容只引用白名单。示例是正式目录数据，不能只存在于提示词或实现注释中。
 
 `parcelStyle` 必填：
 
@@ -87,13 +92,13 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
-## CityBlueprint v0.7
+## CityBlueprint v0.9
 
 根字段全部必填，未知字段拒绝：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint.v0.7`；v0.6 的关系骨架铺地不兼容。 |
+| `schemaVersion` | string | 固定 `city_blueprint.v0.9`；v0.8 是单源距离分层失败原型，不兼容。 |
 | `cityId` | string | 与 context / D3 一致。 |
 | `sourceD3Ref` / `catalogSnapshotRef` | ArtifactRef | 与 context 逐字段一致。 |
 | `generationSeed` | safe integer | `-9007199254740991..9007199254740991`；后续编译器唯一记录随机源。 |
@@ -110,7 +115,7 @@ Group 必填字段：
 | 字段 | 值域 |
 | --- | --- |
 | `groupId` | 蓝图内唯一非空字符串。 |
-| `groupKind` | v0.7 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
+| `groupKind` | v0.9 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
 | `preferredPatchRefs[]` | 非空当前 D3 `landformPatchId` 列表；多个 Group 可以共享。 |
 | `preferredPatchZone` | `CENTER | NORTH | EAST | SOUTH | WEST`；核心在全部偏好 patch 精确 member-cell 并集内的起步方位。北=-Z、南=+Z、西=-X、东=+X；不表示世界坐标，也不约束连接阶段。 |
 | `role` | 非空功能角色。 |
@@ -172,6 +177,54 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | `referenceGroupIds[]` | string[] | `AWAY_FROM_REFERENCE` 的参考 Group；其他模式按 validator 规则限制。 |
 | `terrainPolicy` | `CONFORM|BALANCED|ASSERTIVE` | 景观地形适配档位。 |
 | `required` | boolean | 无合法 seed / 容量明显不足时是否 hard fail。 |
+| `fillSelection` | object | 必填候选填充方案；AI 只提交目录引用、候选权重、有序接力区域的角色/生长偏置/目标占比和内容权重。 |
+
+`fillSelection` 严格只含非空 `variants[]`。每个 variant 必填：
+
+| 字段 | 约束 |
+| --- | --- |
+| `fillProfileRef` | 命中同一快照的 Landscape Fill Profile，且兼容当前 Landscape Type。 |
+| `selectionWeight` | 正有限数；程序按 Parcel 稳定选择候选，不要求归一为 1。 |
+| `roleShares[]` | 非空有序接力区域列表；每项为 `roleRef/growthForm/targetShare`。同一角色可重复；每个声明角色至少出现一次，全部 occurrence 占比和为 1，同角色合计占比落入 Profile 范围，且 `growthForm` 命中该角色白名单。 |
+| `contentWeights[]` | 可为空；`contentRef` 唯一且命中 `allowedContentRefs`，`weight` 为正有限数。 |
+
+AI 可直接参考目录示例后调整占比，例如：
+
+```json
+{
+  "fillSelection": {
+    "variants": [
+      {
+        "fillProfileRef": "fill:relay_irrigated_farmland",
+        "selectionWeight": 3.0,
+        "roleShares": [
+          {"roleRef": "CULTIVATED", "growthForm": "PATCH", "targetShare": 0.46},
+          {"roleRef": "BANK", "growthForm": "CORRIDOR", "targetShare": 0.09},
+          {"roleRef": "WATER", "growthForm": "CORRIDOR", "targetShare": 0.08},
+          {"roleRef": "BANK", "growthForm": "CORRIDOR", "targetShare": 0.09},
+          {"roleRef": "CULTIVATED", "growthForm": "PATCH", "targetShare": 0.28}
+        ],
+        "contentWeights": [
+          {"contentRef": "crop:wheat", "weight": 3.0},
+          {"contentRef": "crop:carrot", "weight": 1.0}
+        ]
+      },
+      {
+        "fillProfileRef": "fill:relay_dry_farmland",
+        "selectionWeight": 1.0,
+        "roleShares": [
+          {"roleRef": "CULTIVATED", "growthForm": "PATCH", "targetShare": 0.58},
+          {"roleRef": "GROUND_BREAK", "growthForm": "CORRIDOR", "targetShare": 0.18},
+          {"roleRef": "CULTIVATED", "growthForm": "PATCH", "targetShare": 0.24}
+        ],
+        "contentWeights": [{"contentRef": "crop:wheat", "weight": 1.0}]
+      }
+    ]
+  }
+}
+```
+
+`selectionWeight` 决定不同 Parcel 使用哪套方案；每个 occurrence 的 `targetShare` 决定该接力区域的目标面积，同角色合计决定该角色总体占比。AI 不提交固定层宽、坐标、mask 或方块 ID。程序严格按 `roleShares[]` 顺序执行逐格 frontier 扩张，并冻结每块区域的父子关系与实际面积。
 
 正式景观按 D4 provenance 生成独立 Parcel：`required` anchor 使用 `coreParcelCountMin..Max`，`fill` 使用 `fillParcelCountMin..Max`，`connectivity_growth` 固定为 0。每个 Parcel 独立持有面积预算和边界，禁止同类型合并。`generationSeed + landscapeId + anchorId + parcel ordinal` 决定数量、父节点、方向、间距和面积；固定输入结果不变。
 
@@ -179,7 +232,7 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 ## 禁止字段
 
-Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
+Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
 
 ## 校验与一次提交
 
@@ -211,6 +264,7 @@ CITY_BLUEPRINT_STYLE_PROFILE_UNKNOWN
 CITY_BLUEPRINT_ROAD_PROFILE_UNKNOWN
 CITY_BLUEPRINT_SURFACE_DETAIL_PROFILE_UNKNOWN
 CITY_BLUEPRINT_ATTACHED_FEATURE_UNSUPPORTED
+CITY_BLUEPRINT_OUTDOOR_REFERENCE_INVALID
 ```
 
 ## 01 -> 02 审查门
