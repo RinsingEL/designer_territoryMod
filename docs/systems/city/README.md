@@ -11,7 +11,7 @@ City 系统承接 T 阶段输出的 `CitySeedRegistry` / `CitySiteCandidate`，�
 ```text
 D3 地形 patch 真值
   -> 对 T4 AI 候选选出的首都显式审查选址（接受或回 T4 重选）
-  -> 新 D4 决策边界：程序冻结 v0.5 Context、三组 TerraSense 语义、City 固定 terrainModes、D3 terrain field 与户外目录，AI 一次提交结构 groups + outdoorPlan 的 CityBlueprint v0.5
+  -> 新 D4 决策边界：程序冻结 v0.6 Context、三组 TerraSense 语义、City 固定 terrainModes、D3 terrain field 与户外目录，AI 一次提交结构 groups + outdoorPlan 的 CityBlueprint v0.7
   -> D4 程序化编译器：必要结构优先、城市规模 × Group extent 派生最低组内成形量、fill 后再用旧连续外扩阵列桥接、整批自动选择与 occupied 提交
   -> 标准 StructureAnchorPlan / StructureAnchorMap 直接交给 D5/D6
   -> 显式 city_template_catalog.v0.1 + 当前世界 NBT metadata
@@ -23,13 +23,13 @@ D3 地形 patch 真值
   -> D4 StructureAnchorPlan / StructureAnchorMap
   -> city_plan_d5 轻量 reservation mask 预案（只读最终 D4 collision + maskMargin，含 D3 patch 贴边 wall reservation）
   -> city_plan_d6 当前世界 NBT lock（复核 hash / rawSize / transform / body / collision / mask / owner chunks）
-  -> 正式 Blueprint workflow 在 D6 后自动编译 outdoorPlan，生成户外意图、block 级 LandUseAreaPlan、城市包络闭合计划与 SurfacePrintPlan；独立 intent 只保留给 legacy/debug
+  -> 正式 Blueprint workflow 在 D6 后自动编译 outdoorPlan，生成单一城市基础地板、独立景观 Parcel、block 级 LandUseAreaPlan 与 SurfacePrintPlan；独立 intent 只保留给 legacy/debug
   -> 可选 city_plan_decoration_anchor_candidates：为 required 单点 prefab 生成完整 footprint + clearance 候选，Agent 顺序选择并回填相对坐标 patch
   -> 可选 plan_city_dressing 校验 DecorationProgram intent v0.4、按 style profile 将语义内容解析为 prefab、冻结 content / style hash 并生成意图预览
   -> 可选 city_probe_decoration_terrain 只读已加载真实地形、人工审阅高度 / 连续带 profile / 未加载覆盖
   -> execute_d5 以 D6 locked collision 激活 active mask / planned structure / LandUse / 装饰 worldgen 程序
   -> Minecraft worldgen createStructures 阶段注入 City single-piece beard-thin start
-  -> FEATURES owner-chunk 裁切 SurfacePrintPlan v0.2 全局 role spans，执行 FIELD / CHANNEL -> CROP -> BOUNDARY，再执行稀疏 Decoration
+  -> FEATURES owner-chunk 裁切冻结 SurfacePrintPlan 全局 role spans，执行 FOUNDATION -> LANDSCAPE FIELD / CHANNEL -> CROP -> BOUNDARY，再执行稀疏 Decoration
   -> applyBiomeDecoration TAIL 与 ChunkDataEvent.Save 按 touched positions 读取实际 BlockState
   -> city_execute_d7 查询 worldgen ledger
   -> city_query_worldgen_observations 按 chunk 查询现场匹配 / 缺失证据
@@ -104,10 +104,10 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 - D4 结构群整组候选：显式调试路径；读取同一 `DesignSlotPlan`，用顺序候选生成 / 选择规则做 beam search，一次输出多组完整 slot 落脚方案；预览图中颜色代表整组，不代表建筑或 slot，bbox 默认不画在主图里。
 - `10_product/案子/City通用装饰阵列系统-v0.3/README.md`：当前装饰开发真值。继承 v0.2 的 Shape / Pattern / ContentPalette 几何；新增 content pose、跨 chunk 全局连续地形 run、D5 generator 采样冻结、fill-only Beardifier foundation、v0.3 outcome ledger / activation trace / preview。v0.2 catalog / program 只读兼容且不自动改写，managed default 只能显式升级。
 - `10_product/案子/City关键装饰锚点候选-v0.1/README.md`：当前开发案。required 单点 prefab 在最终 DecorationProgram 前，先按 resolved target mask、真实 prefab footprint、clearance 与结构 / 墙 / 门 / 路口 / LandUse gate 等硬障碍生成 1-8 个稳定候选和预览；Agent 只选择并回填现有相对坐标 patch。
-- `10_product/案子/City单次蓝图户外空间编译-v0.1/README.md`：已完成并入 active path。CityBlueprint v0.5 在一次提交中同时冻结结构 Group 与 `outdoorPlan`；D6 后程序按 locked footprint、D3 terrain field 和冻结目录编译户外区域，共享 Group / 景观面积预算，并把城市包络内 residual 全部吸收或显式分类。正式 workflow 与独立规划入口都不再接受第二份 LandUse intent。
+- `10_product/案子/City单次蓝图户外空间编译-v0.1/README.md`：当前统一城市基底与景观地块真值。CityBlueprint v0.7 在一次提交中同时冻结结构 Group、城市级 Foundation Profile 与景观 Profile；D6 后程序按 locked footprint 生成一块连续基础地板，再生成 required/fill anchor 驱动的独立 Parcel。LandUse 不再生成入口、MST 或跨组道路形态，RoadWeaver 唯一负责道路。
 - `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`：LandUse 执行基础。固定顺序为 D4 -> D5 预案 -> D6 locked footprint -> LandUse -> Decoration -> execute_d5；`uniform|contour_bands` 在扩张后消费最终 mask。正式 Blueprint 主线的意图由同一 Blueprint 自动编译；intent v0.3 仅保留给 legacy/debug，RoadWeaver 后写覆盖，旧 chunk 不回填。
 - `10_product/案子/City建筑群生活感设计-v0.1/README.md`：当前设计案。使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个临河 / 海综合城镇切片要求能直接读出农业、商业和行政，道路另案。
-- `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业外轮廓由 LandUse 扩张形成，内部由 `CONTOUR_BANDS` 直接冻结顺等高线的 FIELD / BANK / WATER mask；同类区域默认在 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
+- `10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`：当前设计案。基于 sealed W 的未生成临水候选，重新定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序及最后修缮；农业由独立 Parcel 组团形成，内部可用 `CONTOUR_BANDS` 冻结顺等高线的 FIELD / BANK / WATER mask；城区基础地板与 RoadWeaver 真实道路联合验收。
 - `10_product/案子/City装饰填充层Plan-v0.1/README.md`：历史参考；记录旧七种业务 item、提前展开 surface operation 和内置测试模板方案，不再作为 active 输入契约。
 - `10_product/案子/结构Envelope精修-v0.1/README.md`：历史 configured/envelope 精修案；active 主线只保留 fixed NBT body / collision / mask 的分层概念。
 - `10_product/案子/结构语义重标记-v0.1/README.md`：功能、规划角色和风格继续使用 TerraSense 配置术语；placement topology 明确收敛为 City 固定多选枚举 `terrainModes`。
@@ -127,7 +127,7 @@ D2 / D4 / D6 / D7 对同一建筑必须携带同一模板 identity（`templateRe
 | D3 | `city_landform_review_package.json`、`landform_review_map.png`；patch 含 `biomeSummary` 群系摘要 |
 | D4 design loop state | `city_d4_design_loop_<citySeedId>/d4_design_loop_state.json`、`d4_design_loop_occupied_field.json`、`d4_design_loop_function_zones.json`、`d4_design_loop_array_zones.json`、`d4_design_loop_patch_availability.json`、`d4_design_loop_next_ai_context_summary.json`、`d4_design_loop_execution_trace.json` |
 | D4 staged workflow | `d4_staged_plan.json`、`d4_staged_trace.json`；关键结构阶段复用 D4 v2 session artifact，阵列阶段按 `arrayId` 输出独立阵列候选 artifact，最终仍写标准 `structure_anchor_plan.json` / `structure_anchor_map.json` |
-| D4 Blueprint 决策与编译 | AI 读取 `functionTerms/planningRoleTerms/styleTerms`、City 固定 `terrainModes` 与户外引用目录，以 CityBlueprint v0.5 一次表达结构 Group、关系和 `outdoorPlan`；style 仅供理解。D4 只编译结构部分，户外部分保持冻结到 D6。程序对 required/fill/connectivity collision footprint 统一执行 SURFACE 逐格已采样且非水门禁；required 后先按城市规模与 extent 派生最低组内成形量并完成 fill，再自动派生连接 focus/方向/gap、生成并原子提交 near 完整批次。写 compile trace v0.9、`group_extent_map.v0.7` 和标准 anchor / preview。 |
+| D4 Blueprint 决策与编译 | AI 读取 `functionTerms/planningRoleTerms/styleTerms`、City 固定 `terrainModes` 与户外引用目录，以 CityBlueprint v0.7 一次表达结构 Group、关系和 `outdoorPlan`；style 仅供理解。D4 只编译结构部分，户外部分保持冻结到 D6。程序对 required/fill/connectivity collision footprint 统一执行 SURFACE 逐格已采样且非水门禁；required 后先按城市规模与 extent 派生最低组内成形量并完成 fill，再自动派生连接 focus/方向/gap、生成并原子提交 near 完整批次。写 compile trace v0.9、`group_extent_map.v0.7` 和标准 anchor / preview。 |
 | D4 structure cluster groups | `design_slot_plan.json`、`structure_cluster_group_candidate_set.json`、`structure_cluster_group_candidates.png`、`quality_report.json` |
 | D4 candidates | `design_slot_plan.json`、`anchor_candidate_set.json`、`anchor_candidate_preview.png`、`quality_report.json` |
 | D4 array candidates | `d4_array_candidate_plan.json`、`d4_array_candidate_set.json`、`d4_array_candidate_preview.png`、`quality_report.json` |

@@ -60,7 +60,7 @@
 
 - 总入口：`../systems/city/README.md`
 - 案子状态索引：`../systems/city/10_product/案子/README.md`
-- D3 / D4 职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；CityBlueprint v0.5 一次冻结结构 `groups[]` 与 `outdoorPlan`，D4 复用连续外扩阵列引擎编译结构，D6 后再由程序消费户外决策；required/fill/connectivity 统一执行 SURFACE 逐格门禁，正式 workflow 默认生成标准 D4 anchor。
+- D3 / D4 职责重构：`../systems/city/10_product/案子/D4城市生成职责重构-v0.1/`；CityBlueprint v0.7 一次冻结结构 `groups[]` 与 `outdoorPlan`，D4 复用连续外扩阵列引擎编译结构，D6 后再由程序消费户外决策；required/fill/connectivity 统一执行 SURFACE 逐格门禁，正式 workflow 默认生成标准 D4 anchor。
 - 固定模板唯一落地主线：`../systems/city/10_product/案子/City固定模板唯一落地主线-v0.1/README.md`；当前开发路径，破坏性删除 configured structure、StructureStart、Jigsaw、envelope profiling 和建筑 late materialize，City active 建筑只使用固定 NBT `StructureTemplate`。
 - 当前主线案：`../systems/city/10_product/案子/D3-D6结构落地驱动城市重构-v0.1/README.md`
 - D4 设计构图候选闭环：`../systems/city/10_product/案子/D4设计构图候选闭环-v0.1/README.md`
@@ -70,8 +70,8 @@
 - D4 连续外扩候选 v0.5：`../systems/city/10_product/案子/D4连续外扩候选-v0.5/README.md`；当前开发路径。常规外扩以父结构 D2 bbox、方向和目标实体间距生成近中远连续候选，D3 patch 后置筛选 / 评分，可跨界；不再预选 target patch。
 - City 通用装饰阵列系统 v0.3：`../systems/city/10_product/案子/City通用装饰阵列系统-v0.3/README.md`；当前装饰真值，在 v0.2 通用几何上增加内容姿态、全局连续地形 run、fill-only foundation、activation trace / preview 和显式 catalog 升级。
 - City 关键装饰锚点候选 v0.1：`../systems/city/10_product/案子/City关键装饰锚点候选-v0.1/README.md`；当前开发案，让喷泉、雕像、水井等 required 单点 prefab 先由程序按完整 footprint、clearance 与硬障碍生成 1-8 个候选，再由 Agent 选择相对坐标 patch，禁止继续手算世界点。
-- City 单次蓝图户外空间编译 v0.1：`../systems/city/10_product/案子/City单次蓝图户外空间编译-v0.1/README.md`；当前开发路径，正式主线用同一 CityBlueprint v0.5 冻结结构地表、景观和 residual policy，D6 后程序生成共享预算、方向化生长与城市包络闭合，不再接受第二份 AI LandUse intent。
-- City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；户外执行基础，保留 D3 terrain field、D6 locked footprint、64 格兼容扩张、`uniform|contour_bands` SurfacePrint、FIELD-only crop、owner 事务与 RoadWeaver 后写；独立 intent v0.3 只用于 legacy/debug。
+- City 统一城市基底与景观地块 v0.3：`../systems/city/10_product/案子/City单次蓝图户外空间编译-v0.1/README.md`；当前开发路径，正式主线用一次 CityBlueprint 冻结城市级 Foundation Profile 与景观 Profile，D6 后程序生成单一连续基础地板和独立 Parcel 图；LandUse 不再使用入口、MST、跨组关系线或自动连接生成道路形态。
+- City 建筑驱动 LandUseAreaPlan v0.1：`../systems/city/10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md`；户外执行基础，保留 D3 terrain field、D6 locked footprint、`uniform|contour_bands` SurfacePrint、FIELD-only crop、owner 事务与 RoadWeaver 后写；正式 Blueprint 路径分为基础地板与景观覆盖，旧自动连接只属于 legacy/debug。
 - City 建筑群生活感设计 v0.1：`../systems/city/10_product/案子/City建筑群生活感设计-v0.1/README.md`；当前设计案，使用现有 D4 / LandUse 表达功能结构，增加建筑朝向与生活装饰；首个切片为临河 / 海的农业、商业、行政综合城镇，道路另案。
 - W 结果驱动大城镇功能区设计 v0.1：`../systems/city/10_product/案子/W结果驱动大城镇功能区设计-v0.1/README.md`；当前设计案，基于 sealed W 未生成候选定义农业、广场、行政、商业、居民和警卫区的建筑、装饰、阵列、设计顺序与修缮；农田使用不规则 LandUse 扩张和 `CONTOUR_BANDS` 等高线条带刷地，水槽由全局 FIELD / BANK / WATER mask 直接落地；同类兼容区域默认 64 格内相向扩张，城区按铺装面与真实道路联合网络验收。
 - City 装饰填充层 Plan v0.1：`../systems/city/10_product/案子/City装饰填充层Plan-v0.1/README.md`；旧显式实现，七种业务 item 与提前展开刷入计划待 v0.2 破坏性替代，不自动兼容。

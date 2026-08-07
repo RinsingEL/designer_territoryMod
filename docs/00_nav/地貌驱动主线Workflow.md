@@ -26,14 +26,15 @@ D3 patch + LandUseTerrainField
 -> D4 anchors / group provenance
 -> D5 轻量预案
 -> D6 locked actual footprint
--> 可选 LandUseAreaPlan
+-> 可选单一城市基础地板
+-> 可选景观 Parcel 覆盖
 -> 可选 DecorationProgram
 -> execute_d5 激活
 -> 首次 owner-chunk worldgen
 -> RoadWeaver 真实道路后写覆盖
 ```
 
-LandUse 是 block 级土地使用归属，不是旧 `FunctionZoneMap` 的恢复，也不自动等于地表替换或植被抑制。workflow 的 bundled settings 默认关闭 LandUse，请求 `enableLandUseLayer` 可覆写；独立规划入口视为显式启用。已到 FEATURES 的旧 chunk 不回填。
+LandUse 是 block 级土地使用归属，不是旧 `FunctionZoneMap` 的恢复，也不自动等于道路。正式路径先用全部城市建筑形成一块连续通用基础地板，再由农田、花田、绿化带、林场等独立 Parcel 覆盖；建筑入口、组内连接和跨组道路全部交给 RoadWeaver 后写。workflow 的 bundled settings 默认关闭 LandUse，请求 `enableLandUseLayer` 可覆写；独立规划入口视为显式启用。已到 FEATURES 的旧 chunk 不回填。
 
 ## 宏观概念流程
 

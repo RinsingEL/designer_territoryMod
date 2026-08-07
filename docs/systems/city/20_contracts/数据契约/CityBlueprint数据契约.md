@@ -10,12 +10,12 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 对象 | schemaVersion |
 | --- | --- |
-| 上下文 | `city_blueprint_context.v0.5` |
-| 引用目录 | `city_blueprint_reference_catalog.v0.3` |
-| 目录快照 | `city_blueprint_catalog_snapshot.v0.6` |
-| 蓝图 | `city_blueprint.v0.6` |
-| 校验报告 | `city_blueprint_validation_report.v0.3` |
-| 提交 trace | `city_blueprint_submission_trace.v0.3` |
+| 上下文 | `city_blueprint_context.v0.6` |
+| 引用目录 | `city_blueprint_reference_catalog.v0.4` |
+| 目录快照 | `city_blueprint_catalog_snapshot.v0.7` |
+| 蓝图 | `city_blueprint.v0.7` |
+| 校验报告 | `city_blueprint_validation_report.v0.4` |
+| 提交 trace | `city_blueprint_submission_trace.v0.4` |
 
 ## ArtifactRef
 
@@ -37,7 +37,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint_context.v0.5`。 |
+| `schemaVersion` | string | 固定 `city_blueprint_context.v0.6`。 |
 | `contextId` | string | 对除 `preparedAt` 外的冻结上下文做 SHA-256。 |
 | `runId` / `cityId` | string | 当前 run 与城市。 |
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
@@ -46,7 +46,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 | `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
-| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.6`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Blueprint v0.3 引用目录及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Surface recipe 和 Landscape profile 完整定义，D6 后不得重新解释为另一版配置。 |
+| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.7`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Blueprint v0.4 引用目录及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile 与 ParcelStyle 完整定义，D6 后不得重新解释为另一版配置。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
@@ -70,19 +70,30 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 - `styleProfiles[]`：`profileRef`。
 - `roadProfiles[]`：`profileRef`、`hierarchy=SIMPLE|HIERARCHICAL`、`density=SPARSE|BALANCED|DENSE`。
 - `surfaceDetailProfiles[]`：`profileRef`、`intensity=LOW|MEDIUM|HIGH`。
-- `landUseRuleProfile`：完整严格 `city_land_use_rules.v0.1`；其 `ruleRef` 是 SpatialGround 的唯一规则白名单。
-- `surfaceRecipes[]`：冻结 `surfaceRecipeRef`、是否写地表、默认自动连接、`UNIFORM|CONTOUR_BANDS` 和算法所需全部方块材料；Blueprint 只引用 recipe ID，不提交 block ID。
-- `landscapeProfiles[]`：冻结 `landscapeProfileRef`、`FARMLAND|COMMON_GREEN|WOODLAND|MEADOW|POND`、LandUse rule、Surface recipe、SMALL/MEDIUM/LARGE 基准面积和 `URBAN|LANDSCAPE` membership。
+- `landUseRuleProfile`：完整严格 `city_land_use_rules.v0.1`；其 `ruleRef` 是 Foundation/Landscape Profile 的规则白名单。
+- `surfaceRecipes[]`：冻结 `surfaceRecipeRef`、是否写地表、`UNIFORM|CONTOUR_BANDS`、全部方块材料、可选 `boundaryBlockId`；`CONTOUR_BANDS` 另必填正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks`。`autoConnectDefault` 只服务 legacy/debug，正式 v0.7 编译固定关闭。
+- `foundationProfiles[]`：冻结 `foundationProfileRef`、LandUse rule、Surface recipe、`structureMarginBlocks`、`closeRadiusBlocks`、`maxJoinDistanceBlocks`；距离必须满足 `0 <= margin <= close <= join`。
+- `landscapeProfiles[]`：冻结 `landscapeProfileRef`、`FARMLAND|COMMON_GREEN|WOODLAND|MEADOW|POND`、LandUse rule、Surface recipe、SMALL/MEDIUM/LARGE 基准面积、membership 和严格 `parcelStyle`。
+
+`parcelStyle` 必填：
+
+| 字段 | 约束 |
+| --- | --- |
+| `coreParcelCountMin/coreParcelCountMax` | 正整数且 min <= max；required/core anchor 的 Parcel 数范围。 |
+| `fillParcelCountMin/fillParcelCountMax` | 非负整数且 min <= max；fill anchor 的 Parcel 数范围。 |
+| `parcelAreaMinBlocks/parcelAreaMaxBlocks` | 正整数且 min <= max；单块面积范围。 |
+| `branchFromExistingChance` | `0..1`；后续 Parcel 从已有 Parcel 而非原建筑分叉的稳定概率。 |
+| `gapMinBlocks/gapMaxBlocks` | 非负整数且 min <= max；Parcel 间隙范围。 |
 
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
-## CityBlueprint v0.6
+## CityBlueprint v0.7
 
 根字段全部必填，未知字段拒绝：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint.v0.6`；v0.5 的逐建筑地表与 residual policy 不兼容。 |
+| `schemaVersion` | string | 固定 `city_blueprint.v0.7`；v0.6 的关系骨架铺地不兼容。 |
 | `cityId` | string | 与 context / D3 一致。 |
 | `sourceD3Ref` / `catalogSnapshotRef` | ArtifactRef | 与 context 逐字段一致。 |
 | `generationSeed` | safe integer | `-9007199254740991..9007199254740991`；后续编译器唯一记录随机源。 |
@@ -99,7 +110,7 @@ Group 必填字段：
 | 字段 | 值域 |
 | --- | --- |
 | `groupId` | 蓝图内唯一非空字符串。 |
-| `groupKind` | v0.6 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
+| `groupKind` | v0.7 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
 | `preferredPatchRefs[]` | 非空当前 D3 `landformPatchId` 列表；多个 Group 可以共享。 |
 | `preferredPatchZone` | `CENTER | NORTH | EAST | SOUTH | WEST`；核心在全部偏好 patch 精确 member-cell 并集内的起步方位。北=-Z、南=+Z、西=-X、东=+X；不表示世界坐标，也不约束连接阶段。 |
 | `role` | 非空功能角色。 |
@@ -131,22 +142,20 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 ## OutdoorPlan
 
-`outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`spatialGrounds[]` 和 `landscapes[]`，未知字段拒绝。
+`outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`foundationProfileRef`、`spatialGrounds[]` 和 `landscapes[]`，未知字段拒绝。
 
-- `mode=GENERATE`：每个 STRUCTURE Group 必须且只能有一项 spatial ground；D6 后自动编译城市空间织体。
-- `mode=PRESERVE`：`spatialGrounds[]` 与 `landscapes[]` 必须为空。
-- `envelopeProfile=COMPACT|BALANCED|LOOSE`：只选择冻结的城市包络形态档位，程序映射为固定形态学半径，不接受 block 数。
+- `mode=GENERATE`：`foundationProfileRef` 必须命中冻结目录；每个 STRUCTURE Group 必须且只能有一项 spatial ground；D6 后自动编译基础地板与景观 Parcel。
+- `mode=PRESERVE`：`foundationProfileRef` 必须为空，`spatialGrounds[]` 与 `landscapes[]` 必须为空。
+- `envelopeProfile=COMPACT|BALANCED|LOOSE`：保留为城市总体紧凑度语义；正式几何参数以 Foundation Profile 冻结值为权威，不接受 Blueprint block 数。
 
 `spatialGrounds[]` 每项字段：
 
 | 字段 | 类型 / 值域 | 说明 |
 | --- | --- | --- |
 | `sourceGroupId` | string | 必须引用本 Blueprint 的 STRUCTURE Group；全表唯一。 |
-| `landUseRuleRef` | string | 冻结 LandUse rule 引用。 |
-| `surfaceRecipeRef` | string | 冻结 Surface recipe 引用。 |
 | `sharedSpaceType` | `CIVIC_SQUARE|MARKET_STREET|RESIDENTIAL_COURT|FARMSTEAD|GENERAL_URBAN` | 组团共享空间的建筑学类型。 |
-| `hierarchyLevel` | `PRIMARY|SECONDARY|LOCAL` | 城市主脉、次级连接和本地空间的层级。 |
-| `membership` | `URBAN|LANDSCAPE` | 是否参与城市包络；农业等外围地表必须使用 LANDSCAPE。 |
+| `hierarchyLevel` | `PRIMARY|SECONDARY|LOCAL` | 建筑学层级；不生成道路或地表连接线。 |
+| `membership` | `URBAN|LANDSCAPE` | 是否纳入城市主体 footprint 集；不选择铺地材质。 |
 
 `landscapes[]` 每项字段：
 
@@ -154,7 +163,7 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | --- | --- | --- |
 | `landscapeId` | string | 户外计划内唯一；不得与其他 landscape 重复。 |
 | `landscapeProfileRef` | string | 冻结景观 profile，决定 rule、surface recipe、基准面积和 membership。 |
-| `attachedGroupIds[]` | string[] | 可为空；非空项引用 STRUCTURE Group，D6 后提供 footprint / entrance seed。 |
+| `attachedGroupIds[]` | string[] | 可为空；非空项引用 STRUCTURE Group，D6 后提供 footprint 与 `blueprintPlacementPhase`。 |
 | `preferredPatchRefs[]` | string[] | 可为空；非空项必须命中冻结 D3 patch。attached 与 patch 至少一者非空。 |
 | `extentClass` | `SMALL|MEDIUM|LARGE` | 从 profile 选择基准面积。 |
 | `intensity` | `LOW|MEDIUM|HIGH` | 程序化面积/内容强度档位，不是裸比例。 |
@@ -164,9 +173,9 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | `terrainPolicy` | `CONFORM|BALANCED|ASSERTIVE` | 景观地形适配档位。 |
 | `required` | boolean | 无合法 seed / 容量明显不足时是否 hard fail。 |
 
-农田 landscape 的多个 attached 建筑只贡献 seed，始终共享一份 landscape 总预算；不得回到“每栋建筑各贡献完整农田面积”的线性叠加。`CONTINUOUS` 编译为 1 个 parcel growth region，`MULTI_PARCEL` 最多 2 个，`PATCHY` 最多 4 个；各 region 的 `min/preferred/max` 由同一总预算确定性拆分，求和必须与 landscape 总预算严格相等。
+正式景观按 D4 provenance 生成独立 Parcel：`required` anchor 使用 `coreParcelCountMin..Max`，`fill` 使用 `fillParcelCountMin..Max`，`connectivity_growth` 固定为 0。每个 Parcel 独立持有面积预算和边界，禁止同类型合并。`generationSeed + landscapeId + anchorId + parcel ordinal` 决定数量、父节点、方向、间距和面积；固定输入结果不变。
 
-`residualPolicy` 已删除。城市包络内部的剩余单元必须由程序并入最近的 SpatialGround，不能由 AI 或旧面积上限选择原群系回退。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
+`residualPolicy` 已删除。单一 Foundation domain 内部全部使用同一基础地板，Landscape Parcel 后写覆盖；不得按 SpatialGround 分配不同铺地，也不得保留原群系残余。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
 
 ## 禁止字段
 
