@@ -1,8 +1,8 @@
-# City 案子：统一城市基底与景观地块 v0.5
+# City 案子：统一城市基底与景观地块 v0.6
 
 ## 状态
 
-进入 active path。v0.5 破坏性替换 v0.4 的单源距离分层：景观内部只能通过逐格 frontier 扩张形成区域，后继区域必须从父区域局部边界接力。v0.4 的八邻域距离、周期取模和同心角色层属于失败原型，不再是正式路径，也不得作为失败保底。
+进入 active path。v0.6 在 v0.5 区域接力基础上把 Parcel 数量收口为 Landscape/Group 总预算，并增加核心优先与可选准入。景观内部仍只能通过逐格 frontier 扩张形成区域，后继区域必须从父区域局部边界接力；固定图形和失败保底继续禁止。
 
 ## 核心分层
 
@@ -43,15 +43,17 @@ D6 locked structure footprint
 
 景观不是一次连续面积洪泛。每个 landscape 由一组稳定、可追踪的 Parcel 组成，每个 Parcel 保留独立 mask、边界和 Surface recipe。
 
-农业附着建筑按 D4 provenance 分级：
+农业附着建筑按 D4 provenance 提供起点，但数量预算属于整个 Landscape/Group，不按 anchor 数倍增：
 
-- `required`：核心来源，默认 Profile 可配置为每栋生成 `5..10` 个 Parcel。
-- `fill`：填充来源，默认 Profile 可配置为每栋生成 `1..3` 个 Parcel。
+- `required`：核心来源；`coreParcelCountMin..Max` 是全组优先准入的核心 Parcel 总量，多个核心 anchor 只共同提供起点。
+- `fill`：填充来源；`fillParcelCountMin..Max` 是全组共享的额外 Parcel 总量，多个 fill anchor 不复制配额。
 - `connectivity_growth`：道路/连接结构，默认不生成景观 Parcel。
 
 第一个 Parcel 从来源建筑外缘选择合法方向。后续 Parcel 可从原建筑重新分叉，也可从任一已有 Parcel 的可用外缘继续生长；选择由 Blueprint `generationSeed`、landscape ID、anchor ID 和 Parcel ordinal 稳定派生。固定输入必须得到固定图形。
 
-每次扩张必须校验 D6 footprint、规划边界、地形可通行性、Parcel 间距和当前占用。失败时按稳定顺序更换方向或父节点；达到重试上限后记录短缺，不允许重叠补数。总 Parcel 数仍受城市规模和 Profile 硬上限保护，防止大量 fill 建筑造成无界增长。
+LandUse 先让全部核心 Parcel 竞争并冻结位置；任一核心 Parcel 低于 `max(parcelAreaMinBlocks, stageCount)` 时 hard fail。随后按稳定顺序逐个探测可选 Parcel：只有能够完整达到同一最小可执行面积才正式准入并冻结，否则零占地跳过并记录 `skipped_insufficient_space`。不得让可选 Parcel 长到一半后带着碎片进入 SurfacePrint，也不得缩减 AI 阶段。
+
+每次扩张必须校验 D6 footprint、规划边界、地形可通行性、Parcel 间距和当前占用。失败时按稳定顺序更换方向或父节点；不允许重叠补数。Group 总预算防止大量 fill 建筑造成无界增长。
 
 相邻 Parcel 不合并成一个 Area。它们可以共享或贴近边界，但必须保持独立边界身份，使围栏农田继续呈现“一块一块”的建筑景观层次。
 
@@ -116,7 +118,8 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。RoadWeaver 在景观之后�
 - 全城只有一个连续基础地板主体，且所有基础地板使用同一冻结配方。
 - 基础域无入口线、MST 线、跨组关系线或其他道路状 LandUse 几何。
 - 城市基础域内部无未解释原群系洞。
-- 农田核心建筑与填充建筑的 Parcel 数分别落在 Profile 配置范围内。
+- 每个 Landscape/Group 的核心 Parcel 总量与可选 Parcel 总量分别落在 Profile 配置范围内，增加 fill anchor 不得线性放大数量。
+- 核心 Parcel 必须先满足最小可执行面积；空间不足的可选 Parcel 必须以零占地 `skipped_insufficient_space` 退出，已准入 Parcel 不得缺 stage。
 - Parcel 可从建筑或已有 Parcel 分叉，固定输入重复编译 hash 一致。
 - 各 Parcel 保留独立 Area 和边界，不因同类型或相邻而合并。
 - AI 可为同一景观提供多个填充候选及选择权重；固定输入下每个 Parcel 的候选选择稳定。

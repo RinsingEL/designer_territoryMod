@@ -89,8 +89,8 @@
 
 `POST /realm/city/plan_d3` / `city_plan_d3` 必须写出：
 
-- `run/realm_debug/<runId>/city_d3_<citySeedId>/landform_review_map.png`
-- `run/realm_debug/<runId>/city_d3_<citySeedId>/city_landform_review_package.json`
+- `run/realm_debug/<runId>/city_test_runs/<citySeedId>/steps/d3/landform_review_map.png`
+- `run/realm_debug/<runId>/city_test_runs/<citySeedId>/steps/d3/city_landform_review_package.json`
 
 返回体中：
 

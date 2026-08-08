@@ -1,35 +1,24 @@
-# GIS 文档入口
+# GIS 地貌基础设施
 
-GIS 是 Geomantia 的地貌基础设施层。它负责把 Minecraft 世界转换成可查询、可缓存、可验证的地理空间事实，再交给城市、道路、国度边界、结构分布等系统消费。
+GIS 把 Minecraft 世界转换成可查询、可缓存、可验证的地理空间事实，供 W/T 与 City D3 消费。当前实现包含采样、Atlas、指标、地貌分类、Patch、预览和调试接口。
 
-## 阅读顺序
+## 阅读入口
 
 1. `10_product/系统概述.md`
-2. `10_product/开发计划.md`
-3. `10_product/功能设计/GIS主流程图.md`
-4. `10_product/功能设计/半径刷新与Atlas构建.md`
-5. `10_product/功能设计/GIS指标层.md`
-6. `10_product/功能设计/地貌分类与地貌区.md`
-7. `10_product/开发计划-v1.1-Step参数化最小闭环.md`
-8. `../realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`
-9. `20_contracts/数据契约/`、`20_contracts/接口契约/`
-10. `30_code_guide/代码导览.md`
-11. `30_code_guide/flows/半径刷新实现指南.md`
-12. `30_code_guide/review/GIS主链Review清单.md`
-13. `30_code_guide/diagrams/GIS_G1-G7设计Review流程图.md`
-14. `40_tests/自动测试方案.md`
-15. `40_tests/验收计划.md`
+2. `10_product/功能设计/GIS主流程图.md`
+3. `10_product/功能设计/半径刷新与Atlas构建.md`
+4. `10_product/功能设计/GIS指标层.md`
+5. `10_product/功能设计/地貌分类与地貌区.md`
+6. `10_product/功能设计/预览图与调试图.md`
+7. `20_contracts/`
+8. `30_code_guide/代码导览.md`
+9. `40_tests/测试入口.md`
 
-## 当前跨系统计划
+## 当前边界
 
-- 国度规划 v1.3 计划会驱动 GIS 指标层改造：将 `cellStepBlocks` 与指标采样尺度拆开，避免 W 粗扫在 `cellStepBlocks=128` 时用 coarse cell-to-cell 高差误判 cliff。详见 `../realm_planning/10_product/开发计划-v1.3-Dregora标准W粗扫与GIS指标聚合.md`。
-- City [D3 局部地形扫描重构](../city/10_product/案子/D4城市生成职责重构-v0.1/00_D3局部地形扫描重构.md)计划会驱动城市级 GIS Tile 采样、planning / terrain / metric 三尺度拆分、loaded fast path、prior 单柱去重、跨 Region halo、坡度角和 cliff overlay 改造；当前 active GIS 契约尚未切换。
+- GIS 提供地貌事实，不决定国度、城市功能或结构落点。
+- 普通 refresh 保留完整 preview；W 批量粗扫使用自己的轻量产物策略。
+- W/T 的生成器原生粗览和多尺度聚合由国度规划系统编排，GIS 只提供可复用采样与指标能力。
+- City D3 使用当前 GIS/terrain 实现形成局部审查包；未来设想不写入当前 GIS 真值。
 
-## 目录说明
-
-| 目录 | 内容 |
-| --- | --- |
-| `10_product/` | GIS 的系统定位、开发计划和功能设计。 |
-| `20_contracts/` | AtlasCell、AtlasRegion、LandformPatch、RefreshJob、PreviewManifest、GIS 调试 MCP 接口和配置表。 |
-| `30_code_guide/` | 实现入口索引、流程实现指南、Review 清单和代码流程图。 |
-| `40_tests/` | 测试入口、验收计划、影响面和结果报告模板。 |
+代码入口、类职责和测试锚点分别以 `30_code_guide/代码导览.md` 和 `40_tests/测试入口.md` 为准。已完成开发计划和一次性结果报告不再保留，历史从 Git 查询。

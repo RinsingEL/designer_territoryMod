@@ -15,7 +15,7 @@
 | 城市包络与残余空间 | `city_urban_space_plan.v0.1` |
 | 规则目录 | `city_land_use_rules.v0.1` |
 | 区域计划 | `city_land_use_area_plan.v0.1` |
-| 批量地表计划 | `city_land_use_surface_print_plan.v0.4` |
+| 批量地表计划 | `city_land_use_surface_print_plan.v0.5` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.4` |
 | active registry | `city_active_land_use_area_plans.v0.2` |
 | worldgen ledger | `city_land_use_worldgen_ledger.v0.3` |
@@ -68,7 +68,11 @@
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
-正式 Blueprint v0.9 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。Landscape 根据 attached anchor 的 `blueprintPlacementPhase` 派生独立 Parcel：required/core 与 fill 使用各自配置数量区间，connectivity_growth 不生成 Parcel；总量仍受 Profile 与城市规模硬上限保护。
+正式 Blueprint v0.9 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。Landscape 根据 attached anchor 的 `blueprintPlacementPhase` 取得核心与可选起点，但 `coreParcelCount`、`fillParcelCount` 均是 Landscape/Group 总量，不按 anchor 倍增；connectivity_growth 不生成 Parcel。
+
+核心 Parcel 先共同竞争，任何核心结果低于 `max(minAreaBlocks, relayStageCount)` 都以 `CITY_LANDSCAPE_CORE_BELOW_MINIMUM` hard fail。核心 claims 冻结后，可选 Parcel 按稳定 ID 顺序逐个探测；达到同一阈值才合并进正式结果，否则候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE`、`admissionStatus=skipped_insufficient_space`。这属于创建前准入结果，不是已创建 required Parcel 的静默删除。
+
+可选 Parcel 若在户外编译阶段连合法 seed 都无法取得，则不创建 seed group，并在 Resolution warnings 记录 `CITY_OUTDOOR_OPTIONAL_PARCEL_SKIPPED_NO_SEED:<landscapeId>:fill:<ordinal>`；required Parcel 同一情况继续 hard fail。
 
 bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 

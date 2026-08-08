@@ -7,7 +7,7 @@
 | 工具 | 说明 |
 | --- | --- |
 | `code_process_viewer/` | 代码过程浏览与 Jigsaw 求解器回放工作台。 |
-| `TerraSense/` | 结构扫描、结构策展、C3.5 catalog 生成和 runtime jigsaw 真值相关工具。 |
+| `TerraSense/` | 结构扫描、固定模板资产策展、语义审核与导出工具。 |
 
 ## 组织规则
 

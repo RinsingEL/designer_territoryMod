@@ -1,393 +1,54 @@
-# TerraSense 结构策展工具方案
+# TerraSense 结构扫描与策展
 
-## 功能目标
+## 定位
 
-TerraSense 的目标从“按名字关键词给结构打标签”升级为“结构素材策展工具”。
+TerraSense 是独立 Forge/Studio 工具：在 Minecraft 中扫描结构与截图，在 Studio 中进行 AI 初标和人工审核，再导出冻结语义画像。它不参与 StructureBinder 的 runtime 规划或 worldgen。
 
-它需要把各种结构 mod、datapack 和原版结构整理成 StructureBinder 可消费的可信结构画像库，让城市生成器在 C7-C9 阶段能按功能、风格、位置倾向、硬约束和 jigsaw 真值选择结构，而不是继续依赖脆弱的名字关键词。
-
-## 当前问题
-
-现有结构标记主要依赖路径和名字猜测，例如 `house / tower / farm / road` 之类关键词。
-
-这种方式无法判断：
-
-- 结构真实外观和质量。
-- 正面、入口、可连接方向。
-- 是否适合临街、临水、广场边、山坡或背街。
-- 是主建筑、次级建筑、装饰、地标还是道路节点。
-- 与哪些结构组合更好看。
-- 是否适合某类国度、城市功能区或新手村。
-
-因此它不能支撑高质量城市设计，只能作为临时占位。
-
-## 系统形态
-
-TerraSense 第一版应拆成两个部分：
-
-```mermaid
-flowchart TD
-    A["TerraSense in MC"] --> B["扫描结构 / 放置结构 / 截图 / 提取硬事实"]
-    B --> C["scan bundle"]
-    C --> D["TerraSense Studio"]
-    D --> E["AI 批量初标"]
-    D --> F["人工审核 / 修正 / 备注 / 优秀范例"]
-    F --> G["StructureBinder catalog export"]
-    G --> H["C7-C9 消费"]
-```
-
-| 模块 | 运行环境 | 职责 |
-| --- | --- | --- |
-| TerraSense in MC | Minecraft / Forge | 扫描结构、放置结构、截图、提取尺寸/palette/jigsaw 等硬事实 |
-| TerraSense Studio | 脱离 MC 的本地工具 | 浏览截图与元数据，AI 初标，动态术语表匹配，人工审核，导出结构画像 |
-| StructureBinder Exporter | Studio 或独立脚本 | 把已审核术语冻结为 TerraSense 白名单 term，导出 `StructureProfile.jsonl`、vocabulary snapshot 和显式 debug catalog |
-
-## 当前完成状态（2026-05-11）
-
-TerraSense 结构策展工具按 v1-v3 功能包记录为已完成。后续 C 大重构不再把“MC 自动样本产出、脱离 MC 的 Studio、Studio 图片识别初标”视为待实现前置，而是把 TerraSense 导出的静态 catalog 和下一代结构画像作为上游资产消费。
-
-已完成闭环：
-
-- v1：MC 侧固定产出 `single`、`template`、`single_template` 三类结构样本、硬事实、截图与扫描配置。
-- v2：TerraSense Studio 可脱离 MC 读取 workspace，进行人工审核并保存审核结果。
-- v3：Studio 图片识别初标链路已跑通，AI 建议与人工真值分层保存。
-- `StructureProfile.jsonl` 已作为当前 City 结构目录查询、envelope profiling 与 D4 候选链输入；旧 C3.5 兼容导出不再作为当前真值。
-
-后续工作重心转移到 StructureBinder 侧：
-
-- 接入 TerraSense 最新导出的 `StructureProfile.jsonl` 和 `TerraSenseStructureProfileSource.official.json`。
-- 确认 `CityStructureProfileCatalog` 与 D4 冻结快照只使用三组可配置词表 `functionTerms/planningRoleTerms/styleTerms` 和 City 固定枚举 `terrainModes`，不再投影为 City `functionTags` 或 `function_candidates`；style 只给 AI 看。
-- 保留 runtime jigsaw 真值字段作为上游结构画像；当前 City 主链不再包含旧 bounded jigsaw solver。
-
-## 最小交付能力
-
-### 1. 批量扫描与截图
-
-TerraSense in MC 至少需要：
-
-- 扫描所有已加载 `.nbt` structure。
-- 按 namespace、目录和关键词筛选。
-- 批量放置结构到固定摄影场。
-- 输出标准三视图加 45 度斜俯视截图：正面、右侧、俯视、45 度整体视角。
-- 导出结构硬事实：
-  - `structure_id`
-  - 来源 namespace / path / mod hint
-  - size / footprint / height
-  - block palette
-  - jigsaw 原始字段
-  - connector 派生字段
-
-### 2. 断点续扫
-
-批量任务必须能中断和恢复。
-
-建议维护 `scan_index.json`：
-
-| 状态 | 说明 |
-| --- | --- |
-| `pending` | 尚未扫描 |
-| `scanned` | 已有截图与硬事实 |
-| `ai_done` | 已有 AI 初标 |
-| `reviewed` | 人工已审核 |
-| `failed` | 扫描、截图或 AI 失败 |
-
-### 3. AI 批量初标
-
-AI 只负责给建议，不是真值。
-
-输入：
-
-- 结构截图。
-- 结构 id、namespace、path、路径分段和文件名 token；这些只作为低置信语义辅助。
-- `data.json` 硬事实。
-- jigsaw / connector 信息。
-- 可选的同类优秀范例。
-
-路径名可以帮助 AI 区分 `houses`、`streets`、`town_centers`、`camps`、`outpost` 等结构来源，尤其适用于 `structure_assembly` / `jigsaw_assembly` 这种整套结构群样本。但路径名不得覆盖截图、硬事实和人工审核：如果视觉证据与路径语义冲突，应输出 warning 或低置信建议。
-
-内饰不进入自动拍摄和自动推断范围。住宅、商店、工坊、塔楼等内部用途与质量先由人工在 Studio 审核阶段确认，AI 不应根据外观截图猜测看不见的内饰。
-
-输出建议：
-
-- 功能倾向。
-- 风格倾向。
-- 位置倾向。
-- 用途角色。
-- 结构质量说明。
-- 适合/不适合场景。
-- 置信度与证据。
-
-### 4. 人工审核编辑器
-
-TerraSense Studio 是给协作者使用的核心工具。它必须不依赖启动 MC。
-
-最小功能：
-
-- 浏览结构截图。
-- 查看硬事实和 AI 初标。
-- 通过动态术语表编辑功能、规划角色和地形要求；其他丰富策展说明可留在 Studio 内部资料，不进入 City 结构语义目录。
-- 标记审核状态。
-- 写人工备注。
-- 标为优秀范例。
-- 快速跳到上一个/下一个待审核结构。
-
-### 5. 动态术语表
-
-TerraSense 标记阶段使用动态术语表，StructureBinder 消费阶段只使用冻结后的 TerraSense 白名单 term。
-
-这个边界用于同时满足两个目标：
-
-- 标记时允许新增词，避免协作者和 AI 被现有枚举卡住。
-- 导出时统一名词，保证后续索引、检索和 City 结构画像 / D4 候选查询稳定。
-
-动态术语表不是简单白名单，而是可审核的受控词汇表。它至少覆盖：
-
-| 词表类型 | 用途 |
-| --- | --- |
-| `function` | residential、market、port、warehouse、military、religious 等功能 |
-| `planning_role` | key、fill 等城市规划角色；连接沿用填充结构池，不形成第三种永久结构等级 |
-| `terrain` | land_only、water_only、flat 等结构自身地形要求 |
-
-标记流程：
-
-1. AI 或人工先提出原始标签。
-2. Studio 在动态术语表中检索 canonical term、alias 和近似词。
-3. 如果找到可信相似词，直接归一到已有 canonical term。
-4. 如果没有相似词，先新增为 `proposed` 术语，再允许当前结构引用它。
-5. 人工审核时决定批准、改名、合并、废弃或保留待定。
-6. 导出给 StructureBinder 时，只把 `approved` 术语冻结为正式 TerraSense term；`proposed` 默认不得进入正式运行时索引。
-
-因此“实在没有就先加进白名单再标记”是允许的，但新增词默认应是 `proposed`，不能直接污染正式枚举。
-
-### 6. 优秀范例库
-
-优秀范例不是单纯标签，而是给后续城市设计 agent 检索参考的高质量案例。
-
-每个优秀范例至少记录：
-
-- 为什么好。
-- 适合什么城市、功能区或新手村。
-- 适合与哪些结构组合。
-- 不适合什么场景。
-- 作为主建筑、地标、街边填充还是装饰。
-
-## 结构分类口径
-
-第一版只分两类，避免过早设计复杂分类。
-
-| 类型 | 判断口径 | 说明 |
-| --- | --- | --- |
-| `single` | 该模板可以作为独立语义单元使用 | 一栋完整房子、一座塔、一个神庙、一个摊位、一个装饰物、一个完整废墟 |
-| `jigsaw_system` | 需要 start + templates / pool 组合后才形成完整语义 | 村庄房屋系统、道路系统、地牢房间系统、城墙段系统、大型建筑模块系统 |
-
-分类核心不是“有没有 jigsaw 方块”，而是：
-
-> 这个模板能不能独立表达一个玩家和 AI 都能理解的结构含义。
-
-因此存在一个重要兼容情况：
-
-- 有些模板带 jigsaw connector，但本身仍是完整建筑，例如原版村庄房屋。
-- 这类模板仍可标为 `single`，并额外记录 `has_jigsaw_connectors=true`。
-- 它既能独立放置，也能参与 jigsaw 连接。
-
-`jigsaw_system` 的审核对象不应只是单个碎片，而应包含：
-
-- `start_templates`
-- `child_templates`
-- `pool_refs`
-- `template_roles`
-- `connectors`
-- `sample_assemblies`
-
-### 命令生成样本
-
-除 `single/template/single_template` 三类模板级样本外，TerraSense 允许产出命令生成样本。
-
-推荐优先使用 `structure_assembly`。它不是单个 `.nbt` 模板，而是模拟 Minecraft 完整结构入口后得到的整套结构成品，例如：
+## 当前流程
 
 ```text
-place structure trek:village/plains
+Forge 发现并放置样本
+-> 写 ScanWorkspace 硬事实与截图
+-> Studio AI suggestion
+-> 人工 review / vocabulary
+-> export-city-profiles.mjs
+-> official / debug / binder 静态产物
 ```
 
-这一路径会走 `worldgen/structure/*.json` 中的 configured structure 配置，包括 `start_pool`、`size`、高度投影、地形适配和结构自身规则，更接近玩家记忆中的“一条命令生成一整座村庄”。
+AI 只提供初标建议。`review_state=approved` 才能进入 official 或 binder 导出；硬事实、截图和放置结果不得由 AI 改写。
 
-`jigsaw_assembly` 保留为底层调试入口，用于直接测试某个 template pool、target 和 depth，例如：
+## 样本类型
 
-```text
-place jigsaw minecraft:village/plains/town_centers minecraft:town_centers 7
-```
-
-MC 侧应提供：
-
-- `/ts_structure_assembly_scan <structure_id>`：用于扫描完整 configured structure，例如 `trek:village/plains`。
-- `/ts_jigsaw_assembly_scan <start_pool> [target] [max_depth]`：用于快速扫描一个指定 start pool。
-- `/ts_jigsaw_ui`：从当前单人世界的 template pool registry 中列出可用 start pool，允许搜索、多选，并从每个 pool 的模板 jigsaw `name` 自动推断 target，再用统一 max depth 批量生成 `jigsaw_assembly` 样本。
-
-`structure_assembly` 用于给 StructureBinder 后续落地消费提供“整座村庄 / 整套系统”级画像，而不是继续要求每个道路、中心、铁匠铺、房屋片段都只能单独作为候选。`jigsaw_assembly` 只在需要验证 template pool 级拼接行为时使用，不能默认代表完整村庄。
-
-口径：
-
-- `sample_type=structure_assembly` 或 `jigsaw_assembly`
-- `profile_type=jigsaw_system`
-- `independent_semantic_unit=true`
-- `placement_kind=minecraft_place_structure` 或 `minecraft_place_jigsaw`
-- `placement_command` 必须记录实际使用的 MC 命令。
-- `footprint.origin_offset` 必须记录实际生成包围盒最小点相对命令锚点的偏移。
-- `jigsaw_points` 仍按 runtime 扫描保留；若命令生成后不残留 jigsaw 方块，可以为空。
-- 列表选择入口只负责选择 start pool 和批量入队，不写人工审核真值。
-
-命令生成样本的人工审核重点是整体外观质量、是否可作为整包落地资产、适合的城市功能区与地形条件、命令锚点和实际内容包围盒之间的关系，以及是否需要拆回 `jigsaw_system` 子模板继续细标。
-
-如果单个模板只是屋顶、走廊、墙段、楼梯、房间片段，不能独立表达完整语义，则不要强行按完整建筑标注功能，而应把它归入所属 `jigsaw_system` 下的 template role。
-
-## 标注字段建议
-
-| 字段 | 说明 |
+| 类型 | 入口与用途 |
 | --- | --- |
-| `profile_type` | `single` 或 `jigsaw_system` |
-| `independent_semantic_unit` | 是否能作为独立语义单元使用 |
-| `has_jigsaw_connectors` | 是否带 jigsaw connector |
-| `function` | 功能 term，例如 `function.村庄`、`function.灯塔`、`function.trade` |
-| `planning_role` | 规划角色 term，例如 key、fill；连接不作为独立永久等级 |
-| `terrain` | 结构地形要求 term，例如 land_only、water_only、flat |
-| `system_ref` | 若是 jigsaw 子模板，指向所属系统或 pool |
-| `review_state` | pending、approved、rejected、needs_review |
-| `vocabulary_terms` | 本结构引用的动态术语表 canonical term、状态和版本 |
-| `evidence` | AI 或人工给出的标注依据 |
-| `manual_notes` | 人工备注 |
+| `single/template/single_template` | 固定 NBT 模板扫描；`single_template` 是当前 binder mode 唯一准入样本。 |
+| `structure_assembly` | 通过 MC `place structure` 扫描 configured structure 的整体结果，供 TerraSense official/debug 研究，不是 City active 建筑输入。 |
+| `jigsaw_assembly` | 通过 MC `place jigsaw` 扫描 pool 展开结果，只用于底层组合调试。 |
 
-## StructureBinder 消费目标
+样本类型不能互相替代。一个包含 Jigsaw connector、但经人工确认可独立使用的 NBT，仍需在 StructureBinder 离线清洗流程中冻结源 hash、connector 数量和收尾结果；TerraSense 截图不能自动批准它进入 City catalog。
 
-当前 StructureBinder / City 结构画像链消费：
+## ScanWorkspace
 
-- `StructureProfile.jsonl`
-- `TerraSenseStructureProfileSource.official.json`
-- 显式 debug catalog
+每次 run 由 manifest 索引结构目录。单结构至少保留 `data.json`、`scan_config.json`、截图、`ai_suggestion.json`（若执行）和 `review.json`（若审核）。完整字段见 `../20_contracts/ScanWorkspace.md`。
 
-当前 City 结构语义目录与 D4 冻结快照读取：
+Studio 文件 API 必须限制在 workspace/imports 根目录。导入 zip 不得覆盖共享 vocabulary/tag index；中断扫描可通过索引继续。
 
-| 字段 | 当前用途 |
-| --- | --- |
-| `structureId` / `sourceProfileRef` | 画像身份与来源追溯 |
-| `reviewState` | 正式目录唯一准入门禁，必须为 `approved` |
-| `functionTerms` | AI 选择结构时对照 D4 功能语义；正式画像必填，不投影为 City enum |
-| `planningRoleTerms` | 关键/填充等结构规划角色；当前可为空，等待可信人工重标记 |
-| `terrainModes` | City 固定 placement topology；正式画像至少一项，当前值域 `SURFACE/EMBEDDED/FLOATING`，可多选 |
-| `styleTerms` | 结构风格；当前可为空，只供 AI / 人工理解和筛选 |
+## 策展边界
 
-TerraSense 原始画像仍可保留扫描硬事实与追溯资料，但 City 语义目录不消费它们；NBT 尺寸、旋转、碰撞和净空走 Minecraft / template catalog 链。旧 `function_candidates` 和 `functionTags` 不再作为当前消费字段。
+人工审核负责功能、规划角色、地形/拓扑语义、风格和推荐场景。以下内容始终是扫描或 Minecraft 事实：NBT 大小、palette、connector、pool、放置命令、实际 footprint 和截图来源。
 
-## 导出格式
+debug 导出可以保留未审核信息，但必须显式 `catalogMode=debug`。official/binder 不得自动把 proposed term 当 approved，也不得根据结构 ID 或文件名猜缺失标签。
 
-当前导出给 City 结构画像链使用：
+## 与 StructureBinder 的边界
 
-- `StructureProfile.jsonl`
-- `StructureVocabulary.snapshot.json`
-- `TerraSenseStructureProfileSource.official.json`
-- `debug_structure_profile_catalog.json`
-- `TerraSenseStructureProfileSource.debug.json`
+当前 City active path 只使用固定 NBT。模板几何由当前世界 `StructureTemplateManager` 与 City template catalog 冻结；TerraSense 最多提供 AI 可读、可审核的结构语义，不提供 configured/Jigsaw 几何、统计 envelope 或运行时放置计划。
 
-`StructureProfile` 需要对齐：
+当前 binder 集成尚未闭环：TerraSense exporter 输出 `terrainTerms`，StructureBinder importer 要求 `terrainModes` 并拒绝前者。在字段统一和跨仓库 fixture 通过前，binder 产物只能作为待接入输出，不能宣称已经进入 D4/D6。
 
-- `hard_facts`
-- `hard_constraints`
-- `functionTerms`
-- `planningRoleTerms`
-- `terrainModes`
-- `styleTerms`
-- `vocabulary_snapshot`
-- `tag_source`
-- `evidence`
+## 验收
 
-## 与当前 City 结构落地主链的关系
-
-| 组件 / 阶段 | 消费方式 |
-| --- | --- |
-| `CityStructureProfileCatalog` / query | 导入冻结结构画像，并按 canonical TerraSense term 查询 |
-| envelope profiling | 以结构 ID 和运行时 registry 采样 bbox facts；TerraSense 静态字段不覆盖运行时 envelope 真值 |
-| D4 anchor / array | 结合 TerraSense term、envelope facts、地形 patch 与 occupied field 形成候选 |
-| D6 / worldgen | 沿当前 probe-and-lock / planned registry / ledger 链落地，不调用旧 bounded jigsaw solver |
-
-TerraSense 不参与 C7-C9 运行时决策。它只负责在开局前或开发期提供可信结构画像。
-
-## 关键原则
-
-- AI 初标不是最终真值，人工审核结果才是可信标签。
-- 名字关键词只能作为低置信度提示，不得作为高质量城市生成的主依据。
-- 结构分类按“是否能独立表达语义”判断，不按是否存在 jigsaw 方块粗暴判断。
-- 带 jigsaw connector 的完整建筑可以是 `single`，但必须记录连接能力。
-- jigsaw 碎片不应被强行标成完整建筑，应回到所属系统和 template role 下解释。
-- TerraSense 标记阶段使用动态术语表；StructureBinder 运行时消费冻结后的 TerraSense term 和画像，不消费 City enum 投影。
-- 新增术语默认进入 `proposed` 状态，审核通过前不得进入正式 StructureBinder catalog 索引。
-- 硬事实必须来自扫描、NBT、runtime 或人工规则，不能由 AI 编造。
-- jigsaw / connector 真值必须保留原始 runtime 语义，不能压扁成单个 facing。
-- 审核编辑器必须能脱离 MC 使用，方便协作者长期整理素材库。
-- 导出产物必须能直接被 StructureBinder 消费，否则标注价值无法闭环。
-
-## 三阶段交付边界
-
-本节保留 v1-v3 的功能边界，用于后续验收和回归。三阶段按功能包交付，而不是把每个功能拆成半成品。每个版本都必须形成可运行、可验收的纵向闭环。
-
-### v1：MC 自动样本产出
-
-目标是在 Minecraft / Forge 内稳定产出结构扫描样本，作为 Studio 与后续 AI 初标的固定输入。
-
-固定样本先覆盖三类结构形态：
-
-| 样本类型 | 用途 | 示例口径 |
-| --- | --- | --- |
-| `single` | 可独立表达语义的完整结构，不依赖拼装 | 普通建筑、装饰、地标或完整废墟 |
-| `template` | 不能独立表达完整语义的 jigsaw/pool 片段 | start、child、道路段、房间片段、墙段、屋顶片段 |
-| `single_template` | 本身是完整结构，但带 jigsaw connector，可独立使用也可参与拼接 | 原版村庄房屋或工作站建筑 |
-| `structure_assembly` | 由 MC `place structure` 命令生成的完整 configured structure 样本 | 原版村庄、TREK 村庄、地牢、城墙系统或大型建筑系统 |
-| `jigsaw_assembly` | 由 MC `place jigsaw` 命令生成的底层 template pool 组合样本 | pool 调试、特殊 start pool 验证 |
-
-v1 必须做到：
-
-- 提供一条稳定命令或自动测试入口，启动固定三类样本扫描。
-- 每个样本放置到固定摄影场并输出四张标准截图：`front/right/top/iso_45`。
-- 每个样本输出 `data.json`、`scan_config.json` 和截图目录。
-- 顶层输出 `scan_manifest.json`，记录本轮样本、状态、路径和错误。
-- `template` 与 `single_template` 样本必须输出原始 `orientation_raw/front/top/name/target/pool/joint/final_state`。
-- `single_template` 不能被降级成纯 `template`，因为它仍然是独立语义结构。
-- 命令生成样本必须记录 `placement_command`、实际内容包围盒尺寸和命令锚点偏移，供后续整包落地消费。
-- 自动测试可检查三类结构产物是否完整，不依赖 AI 服务。
-
-### v2：TerraSense Studio 工作台
-
-目标是让协作者在脱离 MC 的本地 Studio 中审核 v1 产物。
-
-Studio 第一版采用本地 Web 工具形态，读取一个 `TerraSenseWorkspace` 目录，不要求 MC 同时运行。
-
-v2 必须做到：
-
-- 启动 Studio 后能选择或传入 workspace。
-- 读取 `scan_manifest.json` 并展示三类结构列表。
-- 展示每个结构的截图、`data.json` 硬事实和 `scan_config.json`。
-- 支持编辑功能、风格、用途、位置倾向、质量标签和人工备注。
-- 支持 `pending/approved/rejected/needs_review` 审核状态。
-- 保存单结构 `review.json`。
-- 不把 AI 建议直接当作人工真值。
-
-### v3：Studio 图片识别初标
-
-目标是在 Studio 内跑通图片识别标记，让 AI 为人工审核提供建议。
-
-v3 必须做到：
-
-- Studio 中可以对单个结构或三类样本批量触发 AI 初标。
-- AI 输入包含截图、`data.json` 硬事实和当前动态术语表。
-- AI 输入包含 `source_semantics` 低置信路径语义包，用于给路径名和结构群命令提供辅助上下文。
-- AI 输出写入 `ai_suggestion.json`，不直接覆盖 `review.json`。
-- 提供 `mock` 模式，稳定返回示例初标，用于无 API key 的验收。
-- 提供真实 vision API 模式，用于实际图片识别。
-- 人工可在 Studio 中采纳、修改或拒绝 AI 建议，并保存到 `review.json`。
-
-### 后续导出闭环
-
-TerraSense 侧 v1-v3 完成后，下一步推进 StructureBinder / City 结构画像回灌验证：
-
-1. 从 `review.json`、`vocabulary.json` 和 `data.json` 导出 `StructureProfile.jsonl`。
-2. 导出 `StructureVocabulary.snapshot.json` 和 `TerraSenseStructureProfileSource.official.json`。
-3. 用 `CityStructureProfileCatalog` / `CityStructureCatalogQueryService` 验证人工审核结构可导入并按 canonical term 查询。
-4. 用 envelope profiling 与 D4 anchor / array 候选验证结构 ID、运行时 bbox facts 和 TerraSense 语义保持一致。
+- 扫描入口按样本类型写出可重放 workspace，截图和硬事实身份一致。
+- Studio 可脱离 MC 浏览、初标、审核和保存，AI 不覆盖人工真值。
+- exporter 的四种 mode、准入、skip reason 和 v0.2 schema 与代码一致。
+- debug/unapproved 不混入正式输出。
+- StructureBinder 集成只有在真实 exporter 输出被 importer 直接读取后才算完成。

@@ -2,7 +2,7 @@
 
 ## 状态
 
-当前开发案。它在现有 DecorationProgram 意图与 `city_plan_city_dressing` 之间增加只读候选步骤，不修改最终 intent、compiled program 或 worldgen 契约。
+当前已实现能力。它在现有 DecorationProgram 意图与 `city_plan_city_dressing` 之间提供只读候选步骤，不修改最终 intent、compiled program 或 worldgen 契约。
 
 ## 目的
 

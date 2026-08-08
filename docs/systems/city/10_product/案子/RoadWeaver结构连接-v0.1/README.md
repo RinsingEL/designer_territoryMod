@@ -93,9 +93,3 @@ D6 locked plan
 - 不保证 RoadWeaver 最终道路美术符合 City 设计风格。
 - 不做 RoadWeaver non-mutating preview。
 - 不处理 RoadWeaver 已加载 chunk 无法补路的问题；该限制由“D5 生成期注册”规避。
-
-## 后续方向
-
-- 继续扩展模板 `roadEntrances[]` 的道路通行语义；不恢复从 bbox 外侧点生成伪入口。
-- 把 D3 坡度、水岸、桥梁意图交给 RoadWeaver 或 adapter。
-- 道路 style / palette 与后续 City 结构风格化换皮联动。
