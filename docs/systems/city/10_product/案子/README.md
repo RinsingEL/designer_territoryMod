@@ -6,8 +6,9 @@
 
 | 案子 | 实现状态 | 当前作用 |
 | --- | --- | --- |
+| `City景观扩张与区域接力-v0.1` | 最新需求案 | 景观 Parcel 外部可从新起点接力或回到旧起点分支，内部区域继续逐格接力生长；禁止固定图形与失败 fallback。 |
 | `City固定模板唯一落地主线-v0.1` | active | 固定 NBT identity、D4-D6 几何冻结、single-piece StructureStart 和 worldgen ledger。 |
-| `City单次蓝图户外空间编译-v0.1` | active | CityBlueprint v0.9、Reference Catalog v0.7、单一 Foundation、Landscape/Group 总预算和区域接力。 |
+| `City单次蓝图户外空间编译-v0.1` | active，组合多样性未完成 | CityBlueprint v0.9、Reference Catalog v0.7、单一 Foundation、Landscape/Group 总预算和区域接力；AI 自由组合与内容权重世界落地仍是功能缺口。 |
 | `City建筑驱动LandUseAreaPlan-v0.1` | active | D3 terrain field、D6 footprint 排除、LandUse/SurfacePrint 和 owner worldgen 执行。 |
 | `City通用装饰阵列系统-v0.4` | active | 分层 Decoration content、placement、terrain outcome 与冻结执行。 |
 | `City关键装饰锚点候选-v0.1` | active | required 单点 prefab 的完整 footprint、clearance 候选与相对坐标 patch。 |

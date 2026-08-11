@@ -10,10 +10,10 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 对象 | schemaVersion |
 | --- | --- |
-| 上下文 | `city_blueprint_context.v0.8` |
-| 引用目录 | `city_blueprint_reference_catalog.v0.7` |
-| 目录快照 | `city_blueprint_catalog_snapshot.v0.9` |
-| 蓝图 | `city_blueprint.v0.9` |
+| 上下文 | `city_blueprint_context.v0.9` |
+| 引用目录 | `city_blueprint_reference_catalog.v0.8` |
+| 目录快照 | `city_blueprint_catalog_snapshot.v0.10` |
+| 蓝图 | `city_blueprint.v0.10` |
 | 校验报告 | `city_blueprint_validation_report.v0.4` |
 | 提交 trace | `city_blueprint_submission_trace.v0.4` |
 
@@ -37,7 +37,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint_context.v0.8`。 |
+| `schemaVersion` | string | 固定 `city_blueprint_context.v0.9`。 |
 | `contextId` | string | 对除 `preparedAt` 外的冻结上下文做 SHA-256。 |
 | `runId` / `cityId` | string | 当前 run 与城市。 |
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
@@ -46,7 +46,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器只消费 `g
 | `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
-| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.9`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Reference Catalog v0.7 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle 与 Landscape Fill Profile 完整定义，D6 后不得重新解释为另一版配置。 |
+| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.10`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Reference Catalog v0.8 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle 与 Landscape Fill Profile 完整定义，D6 后不得重新解释为另一版配置。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
@@ -61,11 +61,43 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 ## Blueprint 引用目录
 
+### Landscape v0.10
+
+`outdoorPlan.landscapes[]` 使用严格判别结构：
+
+| 字段 | 类型 | 约束 |
+| --- | --- | --- |
+| `landscapeId` / `landscapeProfileRef` | string | 城市内唯一 ID；Profile 必须存在。 |
+| `purpose` | enum | `FUNCTIONAL | COMPOSITIONAL | AMBIENT`。 |
+| `originMode` | enum | `ATTACHED | FREE_STANDING`。 |
+| `owner` | object/null | `ATTACHED` 必填，严格为 `{groupId,requiredStructureRef}`；必须指向该 Group 唯一 required 条目。`FREE_STANDING` 必须为 null。 |
+| `placementDomain` | enum/null | `FREE_STANDING` 必填：`URBAN_RESIDUAL | FOUNDATION_EDGE | BETWEEN_GROUPS | ALONG_WATER`；`ATTACHED` 必须为 null。 |
+| `instanceCount` | positive int | AI 精确提交；`ATTACHED` 固定为 1。 |
+| `parcelCount` | positive int | AI 精确提交的每实例数量，必须落在 Profile `parcelCountMin..Max`。 |
+| `required` | boolean | true 时所有实例完整满足，否则 D4/D6 hard fail；false 仅允许 `FREE_STANDING`，逐实例准入。 |
+| `preferredPatchRefs` / `terrainPolicy` / `fillSelection` | existing | 自由选址偏好、地形策略和 Parcel 内填充方案。 |
+
+`groups[].requiredStructureRefs[]` 在 v0.10 必须唯一。fill/connectivity 结构不允许作为 owner，也不从自身派生 Landscape。
+
+`ParcelStyle` 严格字段为 `parcelCountMin`、`parcelCountMax`、`parcelAreaMinBlocks`、`parcelAreaMaxBlocks`、`minSharedBoundaryBlocks`。删除的 `coreParcelCount*`、`fillParcelCount*`、`branchFromExistingChance`、`gapMinBlocks`、`gapMaxBlocks` 均按未知旧字段拒绝。
+
+### D4 景观容量预留
+
+新增 `city_landscape_capacity_reservation_plan.v0.1`。根字段为 `schemaVersion/cityId/sourceBlueprintHash/sourceD4Hash/planHash/status/searchNodeCount/instances/failures`。每个 required instance 冻结：
+
+- `landscapeId/landscapeInstanceId/profileRef/ownerGroupId/ownerRequiredStructureRef/ownerAnchorId`；
+- `capacityCandidateId/directionVariant/topologyVariant/parcelCount/parcelAreaBlocks`；
+- `reservationSpans[]` 和逐 Parcel `parcelReservations[]`；
+- `parentParcelId/rootSource/sharedBoundaryProof` 连通证明；
+- 失败时的候选原因，不生成部分成功 artifact。
+
+景观容量格彼此互斥但允许四邻接。联合搜索最多访问 100000 节点；穷尽为 `CITY_BLUEPRINT_REQUIRED_LANDSCAPE_LAYOUT_UNSATISFIED`，达到上限为 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED`。
+
 引用目录根对象所有数组必填且非空：
 
 - `structureRefs[]`：`structureRef` 必须存在于冻结 TerraSense semantic profile；`templateCandidates[]` 的 `templateId + variantId` 必须存在于固定模板目录。
 - `fillPools[]`：`poolRef` 与只引用上述 `structureRef` 的 `structureRefs[]`。
-- `algorithmProfiles[]`：`algorithmProfileRef`；算法枚举为 `COMPACT | GRID | LINEAR | COURTYARD | ORGANIC_COMPACT`。
+- `algorithmProfiles[]`：`algorithmProfileRef`；算法枚举为 `COMPACT | GRID | LINEAR | COURTYARD | ORGANIC_COMPACT | CENTER_SYMMETRIC`。
 - `compositionProfiles[]`：`compositionProfileRef` 与 `mode=ROUND_ROBIN`；只控制模板组成顺序，不携带建筑数量上限。
 - `styleProfiles[]`：`profileRef`。
 - `roadProfiles[]`：`profileRef`、`hierarchy=SIMPLE|HIERARCHICAL`、`density=SPARSE|BALANCED|DENSE`。
@@ -84,21 +116,19 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 | 字段 | 约束 |
 | --- | --- |
-| `coreParcelCountMin/coreParcelCountMax` | 正整数且 min <= max；单个 Landscape 在整个附着 Group 中优先准入的核心 Parcel 总量，不按 required anchor 倍增。 |
-| `fillParcelCountMin/fillParcelCountMax` | 非负整数且 min <= max；单个 Landscape 在整个附着 Group 中共享的可选 Parcel 总量，不按 fill anchor 倍增。 |
+| `parcelCountMin/parcelCountMax` | 正整数且 min <= max；约束 AI 可提交的每实例精确 Parcel 数。 |
 | `parcelAreaMinBlocks/parcelAreaMaxBlocks` | 正整数且 min <= max；单块面积范围。 |
-| `branchFromExistingChance` | `0..1`；后续 Parcel 从已有 Parcel 而非原建筑分叉的稳定概率。 |
-| `gapMinBlocks/gapMaxBlocks` | 非负整数且 min <= max；Parcel 间隙范围。 |
+| `minSharedBoundaryBlocks` | 正整数；每个非根 Parcel 与冻结父 Parcel 的最小四邻接共享边界格数。 |
 
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
-## CityBlueprint v0.9
+## CityBlueprint v0.10
 
 根字段全部必填，未知字段拒绝：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint.v0.9`；v0.8 是单源距离分层失败原型，不兼容。 |
+| `schemaVersion` | string | 固定 `city_blueprint.v0.10`；旧 Blueprint 不兼容且不迁移。 |
 | `cityId` | string | 与 context / D3 一致。 |
 | `sourceD3Ref` / `catalogSnapshotRef` | ArtifactRef | 与 context 逐字段一致。 |
 | `generationSeed` | safe integer | `-9007199254740991..9007199254740991`；后续编译器唯一记录随机源。 |
@@ -115,7 +145,7 @@ Group 必填字段：
 | 字段 | 值域 |
 | --- | --- |
 | `groupId` | 蓝图内唯一非空字符串。 |
-| `groupKind` | v0.9 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
+| `groupKind` | v0.10 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
 | `preferredPatchRefs[]` | 非空当前 D3 `landformPatchId` 列表；多个 Group 可以共享。 |
 | `preferredPatchZone` | `CENTER | NORTH | EAST | SOUTH | WEST`；核心在全部偏好 patch 精确 member-cell 并集内的起步方位。北=-Z、南=+Z、西=-X、东=+X；不表示世界坐标，也不约束连接阶段。 |
 | `role` | 非空功能角色。 |
@@ -124,7 +154,7 @@ Group 必填字段：
 | `densityClass` | `SPARSE | BALANCED | DENSE`。 |
 | `algorithmProfileRef` | 冻结算法引用。 |
 | `terrainPolicy` | `CONFORM | BALANCED | ASSERTIVE`。 |
-| `requiredStructureRefs[]` | 非空且全部在结构白名单。 |
+| `requiredStructureRefs[]` | 非空、组内唯一且全部在结构白名单；`groupId + requiredStructureRef` 唯一定位 Landscape owner。 |
 | `fillPoolRef` / `compositionProfileRef` | 冻结目录引用；composition 不限制数量。 |
 | `connectionPlan` | 可选连接专用覆写；不填时继承本 Group 的 fill pool、算法和疏密。 |
 | `attachedFeatures[]` | 当前版本必须为空；案子 04 才定义景观归属。 |
@@ -142,6 +172,8 @@ Group 必填字段：
 | `parameters.widthClass` | `NARROW | MEDIUM | WIDE`；只适用于 `guide_line_dual_side`，控制阵列宽度档位而非 block 宽度。 |
 
 连接参数与解析后的 planner family 不匹配时返回 `CITY_BLUEPRINT_CONNECTION_PARAMETERS_INVALID`。AI 不提交 focus、外扩方向、block gap、候选数量、candidateId 或逐栋坐标；这些都由编译器按当前已提交阵列和目标 Group 自动派生。
+
+`CENTER_SYMMETRIC` 是正式中心对称阵列。使用该算法的 Group 必须且只能提交一个 `requiredStructureRef`，该结构成为冻结中心主体；fill pool 中每次选择一个结构类型，并在中心两侧生成两个互为中心对称的候选。每一对必须使用同一模板候选，以两栋为一个原子批次同时通过地形、碰撞、范围和关系门禁；任一侧失败时程序旋转整对候选继续搜索，不得单侧提交或退化为普通 `GRID/COURTYARD`。中心主体之外的内部结构数因此只能按偶数增长。中心主体提交后，编译器必须先原子预留该 Group 的最低成形对数，再允许其他 Group 播种 required 核心，避免相邻核心抢占阵列轴线；每层依次使用两组正交轴线，下一层整体旋转 45 度。连接阶段不承担内部对称成形，继承该算法时只使用 `COURTYARD` 形态生成跨组连接批次。
 
 Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`distancePreference`、`directionPreference`。`relationKind` 为 `HIERARCHY | ADJACENCY | CONNECTION | BUFFER | DISTANCE | DIRECTION`，`strength` 为 `HARD | SOFT`。只有 `DISTANCE` 可使用 `distancePreference=NEAR|FAR`，其他关系必须为 `NONE`；只有 `DIRECTION` 可使用 `directionPreference=NORTH|EAST|SOUTH|WEST`，其他关系必须为 `NONE`。`HIERARCHY` 按 `fromGroupId -> toGroupId` 表示父到子，必须无环；编译器据此做稳定拓扑排序，同批节点再按 priority 和 `groupId` 排序。
 
@@ -168,15 +200,15 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | --- | --- | --- |
 | `landscapeId` | string | 户外计划内唯一；不得与其他 landscape 重复。 |
 | `landscapeProfileRef` | string | 冻结景观 profile，决定 rule、surface recipe、基准面积和 membership。 |
-| `attachedGroupIds[]` | string[] | 可为空；非空项引用 STRUCTURE Group，D6 后提供 footprint 与 `blueprintPlacementPhase`。 |
-| `preferredPatchRefs[]` | string[] | 可为空；非空项必须命中冻结 D3 patch。attached 与 patch 至少一者非空。 |
-| `extentClass` | `SMALL|MEDIUM|LARGE` | 从 profile 选择基准面积。 |
-| `intensity` | `LOW|MEDIUM|HIGH` | 程序化面积/内容强度档位，不是裸比例。 |
-| `continuity` | `CONTINUOUS|MULTI_PARCEL|PATCHY` | seed 与连通组件策略。 |
-| `growthRelation` | `AROUND_SOURCE|AWAY_FROM_REFERENCE|TOWARD_WATER|ALONG_WATER` | 选择程序白名单生长关系。 |
-| `referenceGroupIds[]` | string[] | `AWAY_FROM_REFERENCE` 的参考 Group；其他模式按 validator 规则限制。 |
+| `purpose` | `FUNCTIONAL|COMPOSITIONAL|AMBIENT` | 景观在城市构图中的意义。 |
+| `originMode` | `ATTACHED|FREE_STANDING` | 严格判别字段。 |
+| `owner` | object | 仅 ATTACHED 使用；严格为 `groupId/requiredStructureRef`，必须定位唯一 required 结构。 |
+| `placementDomain` | `URBAN_RESIDUAL|FOUNDATION_EDGE|BETWEEN_GROUPS|ALONG_WATER` | 仅 FREE_STANDING 使用。 |
+| `instanceCount` | positive integer | AI 提交的精确实例数；ATTACHED 固定为 1。 |
+| `parcelCount` | positive integer | AI 提交的每实例精确 Parcel 数，必须落入 Profile 范围。 |
+| `preferredPatchRefs[]` | string[] | 可为空；非空项必须命中冻结 D3 patch。 |
 | `terrainPolicy` | `CONFORM|BALANCED|ASSERTIVE` | 景观地形适配档位。 |
-| `required` | boolean | 无合法 seed / 容量明显不足时是否 hard fail。 |
+| `required` | boolean | required 所有实例和 Parcel 必须完整满足；FREE_STANDING 当前必须 optional。 |
 | `fillSelection` | object | 必填候选填充方案；AI 只提交目录引用、候选权重、有序接力区域的角色/生长偏置/目标占比和内容权重。 |
 
 `fillSelection` 严格只含非空 `variants[]`。每个 variant 必填：
@@ -226,7 +258,7 @@ AI 可直接参考目录示例后调整占比，例如：
 
 `selectionWeight` 决定不同 Parcel 使用哪套方案；每个 occurrence 的 `targetShare` 决定该接力区域的目标面积，同角色合计决定该角色总体占比。AI 不提交固定层宽、坐标、mask 或方块 ID。程序严格按 `roleShares[]` 顺序执行逐格 frontier 扩张，并冻结每块区域的父子关系与实际面积。
 
-正式景观按 D4 provenance 选择起点，但数量按 Landscape/Group 汇总：程序只解析一次 `coreParcelCountMin..Max` 核心总量和一次 `fillParcelCountMin..Max` 可选总量，再在对应 phase 的 anchors 间稳定分配；`connectivity_growth` 固定为 0。每个 Parcel 独立持有面积预算和边界，禁止同类型合并。`generationSeed + landscapeId + admission tier + parcel ordinal` 决定数量、父节点、方向、间距和面积；固定输入结果不变。Reference Catalog v0.6 的按 anchor 数量语义不兼容，必须重新 prepare。
+required Landscape 在 D4 与 required 结构候选联合求解；数量严格等于 `instanceCount × parcelCount`，不得按 required/fill anchor 倍增、缩减或降级。程序只枚举容量方向、父子拓扑和主体候选位置，成功后原子提交，fill/connectivity 结构把全部预留 spans 当硬排除。FREE_STANDING optional 在 D6 后从剩余空间逐实例准入；成功实例同样必须达到精确 Parcel 数。固定 Blueprint、catalog、D3、D6 与 seed 必须完全复现。
 
 `residualPolicy` 已删除。单一 Foundation domain 内部全部使用同一基础地板，Landscape Parcel 后写覆盖；不得按 SpatialGround 分配不同铺地，也不得保留原群系残余。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
 
@@ -287,6 +319,8 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、从 0 连续递增的 `slotIndex`、`spacingBlocks`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，可选 `outwardTarget`；首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。该字段是程序 provenance，不是 AI 输入坐标。
 
+`CENTER_SYMMETRIC` 的 fill selection 另写 `requestedBatchSize=2`、`atomicPair=true` 与 `centerSymmetryProof`；两栋 anchor 的 `blueprintLayout` 必须共享 `symmetryPairId/symmetryPairIndex/symmetryCenter/visualCenter`，分别写 `symmetryPairMember=FIRST|OPPOSITE`。程序按模板变换后的 collision footprint 校正 anchor 对称中心；证明必须同时满足两端 anchor 关于校正中心成对，以及两栋实际 collision footprint 的几何中心关于中心主体的实际 collision footprint 中心成对。
+
 `connectivityPlan` 必填 `topologyPolicy=EXPLICIT_RELATIONS_THEN_DETERMINISTIC_SHORTEST_FALLBACK`、`handoffThresholdPolicy=STRICT_BILATERAL_MINIMUM`、`edgeCount`、`fallbackEdgeCount` 与 `edges[]`。每条边必填 `fromGroupId`、`toGroupId`、`topologySource=EXPLICIT|FALLBACK`、`topologyReason`、`initialGapBlocks`、`finalGapBlocks`、`handoffGapBlocks`、`connectionStructureCount`、`connectionBatchCount`、`status`；fallback 原因固定为 `DETERMINISTIC_SHORTEST_COMPONENT_EDGE`。`handoffGapBlocks` 及 HARD 关系复验必须同源读取双方解析后的 `resolvedConnectionPlan.derivedLayoutParameters.landUseHandoffGapBlocks` 严格最小值，不得混用 Group required/fill 的内部 handoff。
 
 `groupResults[]` 必填 `groupId`、`requestedExtentClass`、`densityClass`、`densityParameterization=ALGORITHM_SPECIFIC`、`layoutAlgorithm`、`layoutParameters`、`resolvedConnectionPlan`、`targetAreaBlocks`、`maxExtentSpanBlocks`、`maxIntraGroupGapBlocks`、`outwardGuidedPlacementCount`、`derivedMinimumStructureCount`、`internalStructureCount`、`minimumStructureCountReached`、`internalSpatialDemandBlocks`、`connectionStructureCount`、`connectionBatchCount`、`connectionSpatialDemandBlocks`、`connectionExpansionBlocks`、`extentExpandedForConnectivity`、`actualStructureCount`、`requiredStructureCount`、`builtCollisionAreaBlocks`、`actualSpatialDemandBlocks`、`estimatedCoverageRatio`、`preferredPatchRefs[]`、`claimedPatchRefs[]`、`structureCounts` 与 `stopReason`。`resolvedConnectionPlan` 必须写出继承后的 pool、算法、planner、疏密及继承来源。`SPATIAL_BUDGET_REACHED` 是正常完成，`CONNECTED_SPACE_EXHAUSTED` 只表示达到最低成形量后未填满空间预算；未达到最低成形量必须 hard fail。连接阶段可越过 extent 软目标，但不得越过 D3 规划网格等硬边界。
@@ -299,8 +333,8 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 `connections[]` 与 compile trace 边字段同源，并增加 `landUseHandoffReady` 与 `connectionEdge{fromX,fromZ,toX,toZ}`；每个 Group 同时携带上述布局/空间/count/stop 字段和 closed `collisionExtent{minX,minZ,maxX,maxZ}`。所有 Group 的 required 核心必须先在各自 `preferredPatchRefs[]` 播种；连接阶段允许认领 D3 `review.grid` 内其他 patch/member cells，并在 `claimedPatchRefs[]` 中解释。Group `terrainPolicy` 只形成排序偏好与 trace，不按 patch 平均坡度硬裁剪。Group 间初始距离不构成 D4 固定阈值；LandUse 编译后必须另以真实 block spans 验收连续性。
 
-`extentClass` 核心/fill 目标空间预算为 `4096 / 16384 / 36864 blocks²`，最大跨度为 `96 / 160 / 240 blocks`。程序另按 D3 `targetScale.scale` 与 `extentClass` 派生最低成形栋数：HAMLET=`2/3/4`、VILLAGE=`3/4/6`、TOWN=`3/6/9`、CITY=`4/8/12`（SMALL/MEDIUM/LARGE）。它不是 Blueprint 输入数量；最终结构数仍是模板 collision、疏密、算法和空间预算共同形成的输出事实。连接结构只计入 `actualStructureCount/actualSpatialDemandBlocks` 与 connection 专用字段，不计入 `internalStructureCount/internalSpatialDemandBlocks` 或最低成形判定。连接阶段绕过 extent 软目标，但仍受 D3 grid、collision、结构 terrain mode gate、组内连续最大 gap 和内部 256 anchor 安全护栏约束；安全护栏命中必须 hard fail，不能作为正常规模停止原因。
+`extentClass` 核心/fill 目标空间预算为 `4096 / 16384 / 36864 blocks²`，最大跨度为 `96 / 160 / 240 blocks`。程序另按 D3 `targetScale.scale` 与 `extentClass` 派生最低成形栋数：HAMLET=`2/3/4`、VILLAGE=`3/4/6`、TOWN=`3/6/9`、CITY=`4/8/12`（SMALL/MEDIUM/LARGE）。`CENTER_SYMMETRIC` 因结构总数恒为“一个中心 + 若干成对 fill”，通用最低栋数为偶数时必须投影为不大于该值的最近奇数，且不得低于 3；例如 TOWN/MEDIUM 的通用 6 栋实际派生为 5 栋。它不是 Blueprint 输入数量；最终结构数仍是模板 collision、疏密、算法和空间预算共同形成的输出事实。连接结构只计入 `actualStructureCount/actualSpatialDemandBlocks` 与 connection 专用字段，不计入 `internalStructureCount/internalSpatialDemandBlocks` 或最低成形判定。连接阶段绕过 extent 软目标，但仍受 D3 grid、collision、结构 terrain mode gate、组内连续最大 gap 和内部 256 anchor 安全护栏约束；安全护栏命中必须 hard fail，不能作为正常规模停止原因。
 
 若任一 Group 在连接前无法达到 `derivedMinimumStructureCount`，编译必须以 `CITY_BLUEPRINT_GROUP_MINIMUM_UNREACHABLE` 失败；不得进入 connectivity growth 后再用连接建筑补足数量。
 
-编译成功后仍必须输出原有 `city_structure_anchor_plan.v0.2`、`city_structure_anchor_map.v0.2` 与结构预览。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。
+编译成功后仍必须输出原有 `city_structure_anchor_plan.v0.2`、`city_structure_anchor_map.v0.2` 与结构预览。D4 局部结构预览必须叠加 `landscapeCapacityReservationPlan.reservationSpans[]` 的精确格点面积，并以独立颜色和图例区分各 Landscape；不得只画外接矩形或只列文字数量。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。
