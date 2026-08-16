@@ -6,6 +6,7 @@
 
 | 案子 | 实现状态 | 当前作用 |
 | --- | --- | --- |
+| `City嵌套阵列与关系位置-v0.1` | 最新需求案 | 正式 Blueprint 允许父阵列排列子阵列，并按 Patch、边界和建筑群关系定位；广场、码头先作为录制结构，异构子阵列分别使用地形限制。 |
 | `City景观扩张与区域接力-v0.1` | 最新需求案 | 景观 Parcel 外部可从新起点接力或回到旧起点分支，内部区域继续逐格接力生长；禁止固定图形与失败 fallback。 |
 | `City固定模板唯一落地主线-v0.1` | active | 固定 NBT identity、D4-D6 几何冻结、single-piece StructureStart 和 worldgen ledger。 |
 | `City单次蓝图户外空间编译-v0.1` | active，组合多样性未完成 | CityBlueprint v0.9、Reference Catalog v0.7、单一 Foundation、Landscape/Group 总预算和区域接力；AI 自由组合与内容权重世界落地仍是功能缺口。 |
