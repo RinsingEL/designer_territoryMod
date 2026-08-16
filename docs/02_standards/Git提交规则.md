@@ -89,7 +89,7 @@ TerraSense-v0.1.x版本-核心主题
 
 ## dev_docs 归档
 
-如果本轮创建了 `dev_docs/.../active/.../任务记录.md`，提交成功后按 `dev_docs组织规则.md` 归档到同领域 `archive/`。
+如果本轮创建了 `dev_docs/.../active/.../任务记录.md`，提交成功后按 `../01_workflows/开发与Bug留档规则.md` 归档到同领域 `archive/`。
 
 归档目录名应包含：
 

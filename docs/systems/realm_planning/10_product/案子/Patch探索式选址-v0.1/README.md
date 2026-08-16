@@ -2,7 +2,7 @@
 
 ## 目的
 
-W / T / City 主链继续保留 patch 作为 AI 理解世界地理的主要单元，但不再让 AI 从整张预览图的数百个细小 patch 标签中直接辨认编号，也不让程序按一个综合评分自动决定唯一的“最佳选址”。T 与 City 使用不同的首要语义：T2/T4 以主导群系连续区表达文明环境，City D4 以 D3 精细地形 patch 表达建筑承载面。
+W / T / City 主链继续保留 patch 作为 AI 理解世界地理的主要单元，但不再让 AI 从整张预览图的数百个细小 patch 标签中直接辨认编号，也不让程序按一个综合评分自动决定唯一的“最佳选址”。T2/T4 直接使用 W 地貌 patch，City D4 使用 D3 精细地貌 patch；群系只作为候选附加事实，不再生成候选。
 
 选址交互改为探索式决策：AI 先根据国度设定、世界预览和已知地貌类型，选择它感兴趣的 patch 类型；程序只负责将该类型中面积最大的少量候选清晰地渲染出来，并计算候选之间的空间关系；AI 可以选择其中一个，也可以继续查看其他类型或后续排名，直到找到能启发文明设计的地理区域。
 
@@ -19,13 +19,13 @@ W / T / City 主链继续保留 patch 作为 AI 理解世界地理的主要单�
 ### 1. Patch 真值与跨尺度投影
 
 - W 阶段 sealed `WorldPatchMap` 继续作为粗尺度自然地理真值，T 阶段不重新加载 chunk，不重新扫描同一片世界。
-- T1 / T2 候选以大陆、W 指定范围或国度可用范围为 scope，按 `WorldPatchMap.cells[].biomeHist` 的主导 biome 将四邻 cell 连成群系 patch。
+- T1 / T2 候选以大陆、W 指定范围或国度可用范围为 scope，直接读取 `WorldPatchMap.cells[].patchId` 与 `landform`。
 - `RealmPlanningService.prepareT1` 既有的整大陆候选图只表示目标大陆的可分配 scope，不按国度文化或地貌兴趣做差异化；多个国度共享大陆时图片可以相同。它是 Patch Explorer 的范围参考，不是正式叙事选址图。
 - T1 完成后的主动作固定为 `patch_explorer_open(scopeType=realm_t2)`；AI 必须先浏览类型、候选与关系，再把选择凭证交给 T2。直接手填 grid 坐标只保留给旧调用方和人工调试，不进入无上下文 AI 的推荐主链。
-- T4 候选将群系 patch 与 T3 owned territory 相交，面积、排名和关系均以国境内的实际部分为准。
-- T4 可叠加 `RealmT4CoarseTerrainEvidence`：RTF 激活时从生成器二维 Heightmap 快速采样，其他生成器回退现有 prior sampler；该层只补充宏观高度、水体和起伏事实，不改变群系 patch 真值，也不替代 D3。
+- T4 候选将 W 地貌 patch 与 T3 owned territory 相交，面积、排名和关系均以国境内的实际部分为准。
+- T4 可叠加 `RealmT4CoarseTerrainEvidence`：RTF 激活时从生成器二维 Heightmap 快速采样，其他生成器回退现有 prior sampler；该层只补充宏观高度、水体和起伏事实，不改变地貌 patch 真值，也不替代 D3。
 - T4 会话创建后不继承 T2 坐标为首都；AI 必须先消费一个 `realm_t4` 选择凭证建立唯一首都，才能继续添加非首都城市。
-- T 阶段可以为群系连续区、裁剪或派生候选生成稳定 ID，但每个区域必须保留覆盖到的来源 W patch IDs 和 territory scope；`landform`、`baseLandform` 与坡度事实作为候选组成返回，不再把 `cliff` 等局部形态当作 T 的互斥主目录。
+- T 阶段可以为 W patch 在 scope 内的裁剪或连通分量生成稳定 ID，但每个候选必须保留来源 W patch ID 和 territory scope；`landform` 是候选目录类型，群系、`baseLandform` 与坡度事实只作为组成返回。
 - City D3 在最终城市粗锚点周围生成局部精细 patch；T 阶段候选只决定宏观落脚区域，不取代 D3 的局部地形复查。
 - 对 T4 AI 候选选出的首都，D3 复查是强制闸门：必须显式接受当前选址才能进入 D4；若局部真实地形不承载目标城市，回到原 T4 探索尺度重选，不默认改造城市原型。
 - City D4 只消费当前 `CityLandformReviewPackage` 中的 D3 patch 真值，并将已冻结 occupied、现有建筑群、功能区和阵列区作为当前 scope；D4 不回头直接使用 W 粗 patch 替代 D3。
@@ -33,14 +33,14 @@ W / T / City 主链继续保留 patch 作为 AI 理解世界地理的主要单�
 
 ### 2. Patch 类型目录
 
-每轮探索开始时，程序不向 AI 展开全部 patch 编号，而是返回当前 scope 内的类型目录。T2/T4 目录类型是完整 biome ID，例如 `minecraft:plains`、`minecraft:forest`、`minecraft:badlands`；City D4 目录类型仍是 D3 landform。目录至少说明：
+每轮探索开始时，程序不向 AI 展开全部 patch 编号，而是返回当前 scope 内的地貌类型目录。T2/T4 使用 W `landform`，City D4 使用 D3 `landform`。目录至少说明：
 
 - patch 类型与可读名称；
 - 该类型的 patch 数量；
 - 总面积、最大面积和面积分布摘要；
 - 当前 scope 内是否存在足以承载国度核心或城市粗锚点的区域；
-- 类型事实来源与置信度摘要；T 尺度置信度为 cell 内主导 biome 样本占比。
-- T 尺度每种群系及候选的 `terrainComposition`、`baseLandformComposition`，用于说明群系内部平地、坡地、悬崖、谷地等组成，而不替 AI 选城。
+- 类型事实来源与地貌置信度摘要。
+- 候选的群系组成、`terrainComposition` 与 `baseLandformComposition` 只作为附加地理事实，不参与候选生成。
 
 City D4 的类型目录另外返回每类 patch 在扣除已冻结 occupied 后的剩余可用面积，但不因容量较小就向 AI 隐藏该类地理；是否足以承载指定建筑或阵列，在 AI 选定兴趣类型后作为事实返回。
 
@@ -48,10 +48,9 @@ AI 只需选择它当前感兴趣的一个或多个类型，不需要提交“�
 
 ### 3. 每类 Top 3 候选图
 
-- 程序对 AI 选择的每种 patch 类型按 scope 内面积降序排列，每种默认只展示前 3 个。T1 / T2 / T4 使用群系连续区在 scope 内的实际面积；D4 默认使用扣除硬 occupied 后的连续可用面积，并同时报告原始 patch 面积。
+- 程序对 AI 选择的每种 patch 类型按 scope 内面积降序排列，每种默认只展示前 3 个。T1 / T2 / T4 使用 W 地貌 patch 在 scope 内的实际面积；D4 默认使用扣除硬 occupied 后的连续可用面积，并同时报告原始 patch 面积。
 - 排序不使用隐式的“文明最优”综合分；程序只负责面积排序、稳定并列打破和硬合法性标记。
-- 预览图隐藏未入选 patch 的密集文字，只对当前候选大面积染色，并使用稳定、醒目的大号编号，例如 `PLAIN-01`、`MOUNTAIN-02`、`SHORE-03`。
-- 不同类型使用可区分的固定色，同类型的 1‑3 名使用同色系不同明度；图例只显示本轮候选。
+- 不再生成需要从密集标签中重新认领候选的多候选总图。每个候选只输出一张随高度连续变色、保留水体与轻量山影、并在原图中高亮当前 Patch 的主图；候选比较按 Patch 边界加周边环境自适应取景。
 - 每个候选同时返回结构化摘要，包含面积、包围盒、中心、成员粗格、地形指标、置信度和来源 patch；预览图用于观察，结构化事实用于决策。
 
 ### 4. 程序关系事实
@@ -99,7 +98,7 @@ AI 只需选择它当前感兴趣的一个或多个类型，不需要提交“�
 ### 8. T4 调整
 
 - T4 不再把港口、矿业镇、边境堡等城市直接简化为程序 `bestCityCell` 的单点最优结果。
-- T4 的 AI 兴趣输入以 biome 为主，例如先对平原、森林、恶地或海岸环境产生兴趣；候选返回的地形组成和最大连续面积再回答是否能承载目标规模城市。
+- T4 的 AI 兴趣输入以地貌 patch 类型为主；平原、森林、雪原等群系只描述环境，不代表地形平坦程度。
 - 程序不在选定前按预设城市角色过滤世界，也不在选定后自动追加 AI 未选择 patch 类型的关系解释。
 - 城市角色可以在选中地理后由 AI 确定，也可以在已有国度名册约束下调整；无论哪种情况，程序都只负责返回事实、硬约束和稳定候选，不代替 AI 做最终文明决策。
 - 单国规划 finalize 后必须以合并后的 `CitySeedRegistry` 重建 `t4_report.json`、城市预览、单国候选包和 `score_manifest.json`；不得让旧自动 T4 证据继续与正式名册并存。

@@ -69,6 +69,7 @@
 - C1.5 只复述 GIS metrics/tag/adjacency 事实，不输出“适合建设”“建议建设区域”等 C2 功能区决策文案
 - `grid` 是城市核心规划域；`patchContextBounds` 是额外 patch 覆盖域。D4 候选必须受 `grid` 约束，不能把 padding 区当成新的城市核心可选域。
 - D3 必须按 `patchContextBounds` 覆盖多个 GIS region。只刷新中心 region 会导致靠近 region 边界的结构 / v4 城墙缺少 patch 背景。
+- D3 必须在全部已刷新 region 上统一重算邻域指标，并按全局四邻接合并相同 `landformType`；内部 GIS region 接缝不得产生人为 Patch 边界。`landformPatchId` 与 `memberCells` 统一引用这批跨 region 合并结果。
 
 ## 面积分级
 

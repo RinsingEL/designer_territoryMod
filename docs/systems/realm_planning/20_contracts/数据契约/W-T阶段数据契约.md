@@ -476,10 +476,10 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 
 | 产物 | schemaVersion | 关键字段 |
 | --- | --- | --- |
-| 会话 | `patch_explorer_session.v0.1` | `sessionId`、`runId`、`scopeType`、`scopeId`、`candidateModel`、`candidateBasis`、`sourceArtifacts[]`、`sourceIdentity`、`scopeSnapshotIdentity`、`displayedCandidates[]`。 |
+| 会话 | `patch_explorer_session.v0.1` | `sessionId`、`runId`、`scopeType`、`scopeId`、`candidateModel`、`candidateBasis`、`sourceArtifacts[]`、`sourceIdentity`、`scopeSnapshotIdentity`、`displayedCandidates[]`；三个 scope 均冻结 `preferGeneratorNativeTerrain`。 |
 | 紧凑 scope 快照 | `patch_explorer_scope_snapshot.v0.1` | 候选 cell、来源 patch、scope 裁剪、hard occupied 扣除结果；用于避免每次翻页重读大型 W JSON。 |
-| 候选页 | `patch_explorer_candidate_page.v0.1` | `interestTypes[]`、`page`、`pageSize`、`typePages[]`（各自含 `nextPageToken` 与 `candidates[]`）、`relations[]`、`candidatePreview`。 |
-| 选择 | `patch_selection.v0.1` | `selectionId`、`sessionId`、`scopeType`、`scopeId`、`candidateId`、`candidateType`、`sourcePatchRefs[]`、面积字段、`suggestedAnchor`、来源 identity、`confirmationPreviewPath`。 |
+| 候选页 | `patch_explorer_candidate_page.v0.1` | `interestTypes[]`、`page`、`pageSize`、`typePages[]`（各自含 `nextPageToken` 与 `candidates[]`）、`relations[]`；每个候选含 `terrainPreview`，artifact 以 `candidateTerrainPreviews.<candidateId>` 汇总。 |
+| 选择 | `patch_selection.v0.1` | `selectionId`、`sessionId`、`scopeType`、`scopeId`、`candidateId`、`candidateType`、`sourcePatchRefs[]`、面积字段、`suggestedAnchor`、来源 identity、`confirmationPreviewPath`；另冻结城市尺度 `terrainPreview`。 |
 
 候选字段口径：
 
@@ -487,13 +487,13 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 - `largestContinuousAreaBlocks`：当前候选最大连续可用分量，T4 城市容量和 D4 阵列承载判断以此为准。
 - `originalAreaBlocks`：裁剪或扣除前来源 patch 的原始面积。
 - `sourcePatchRefs[]`：同尺度自然地理真值引用，不得把 T 与 D3 patch ID 混用。
-- `candidateBasis`：T2/T4 固定为 `dominant_biome_contiguous_region`，City D4 固定为 `d3_landform_patch`。
-- `patchType`：T2/T4 为完整主导 biome ID；City D4 为 D3 landform 类型。
-- `terrainComposition` / `baseLandformComposition`：候选内最终地貌和基础地貌的 cell 数与比例。T 阶段以它们说明群系区域的建设条件，不把 `cliff` 当作互斥主目录。
+- `candidateBasis`：T2/T4 固定为 `t_scale_landform_patch`，City D4 固定为 `d3_landform_patch`。
+- `patchType`：T2/T4 为 T 尺度重新采样、分类和连通合并后的 `landform`，City D4 为 D3 自身尺度的 `landform`。
+- `terrainComposition` / `baseLandformComposition`：候选内最终地貌和基础地貌的 cell 数与比例；T 候选不继承 W Patch 的类型或边界。
 - `relations[]`：只引用当前兴趣集合、当前页已展示候选；关系只含可计算的相邻、距离、方位和共享边界事实。
 - `suggestedAnchor`：程序按候选内部连通性与硬边界生成的粗锚点，不代表文明叙事上的最佳选择。
 
-`candidateModel=realm_biome_primary_city_landform_v0_1` 必须进入来源 identity。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；任何漂移都返回 stale，不得静默重算成另一个候选。
+`candidateModel=landform_patch_candidates_v0_2` 必须进入来源 identity。W Patch 只提供 T2/T4 的允许范围与来源关系；T 以不大于 32 格的 cell step 重新采样、计算地貌指标并跨 GIS region 合并连续 Patch。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；存在高程预览证据时还必须验证证据 JSON 内容 identity，任何漂移都返回 stale，不得静默重算成另一个候选。
 
 ## RealmSeed
 
@@ -651,6 +651,30 @@ T3 owned territory 冻结后、T4 选择城市粗落点前生成的可选建议�
 | `localRelief` | number | 当前格与 owned 四邻样本的最大最小高度差。 |
 
 该产物只可用于 T4 候选摘要和建议粗锚点。provider 初始化失败可整国回退；provider 选定后的逐点失败必须终止，不得在同一文件混合数据源。粗证据变化后，依赖它的 Patch Explorer session / selection 必须 stale。
+
+## PatchCandidateTerrainPreview
+
+Patch Explorer 按当前展示候选生成局部采样证据和一张高程高亮主图。schema 为 `patch_candidate_terrain_preview.v0.1`；三个 scope 均生成，每个候选、每个采样级别独立落盘，不要求对整个 scope 升采样。
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` / `realmId` / `dimensionId` / `scopeType` / `candidateId` | string | 是 | run、scope、维度与候选身份；`realmId` 字段在 City D4 中承载 city scope ID。 |
+| `scopeSourceIdentity` | string | 是 | 打开 Patch Explorer 时冻结的 scope 来源 identity。 |
+| `sourceIdentity` | string | 是 | scope、候选 cell mask、锚点、级别与完整 provider provenance 的组合 hash。 |
+| `evaluationLevel` | enum | 是 | `candidate_comparison` 或 `city_scale_confirmation`。 |
+| `provider` | object | 是 | 本次主图实际使用的 provider 身份、fingerprint 与 sampling semantics；T4 必须与同会话粗览一致。 |
+| `grid.sampleStepBlocks` | int | 是 | 候选比较按候选包围盒和周边上下文自适应；城市确认为 16。 |
+| `grid.windowDiameterBlocks` | int | 是 | 候选比较为 `sampleStepBlocks × 64`；城市确认为 1024。 |
+| `grid.framingMode` | enum | 是 | 候选比较为 `candidate_bounds_with_context`；城市确认为 `city_scale_anchor`。 |
+| `grid.candidateSampleCount` | int | 是 | 方形扫描窗口内落入原候选连续区 mask 的样本数。 |
+| `buildabilityPolicy` | object | 是 | 当前建议性城市承载判定口径，含坡度、局部起伏、水体和四邻连续规则。 |
+| `summary` | object | 是 | 高程、水体、坡度、起伏、可建设比例与最大连续可建设面积。 |
+| `cells[]` | array | 是 | 方形窗口样本，显式记录 `insideCandidate`、`slopeDegrees`、`localRelief`、`buildable` 与拒绝原因。 |
+| `artifacts.terrainPreview` | string | 是 | 单张 PNG：陆地随绝对高程连续变色，水体单独着色，轻量方向山影叠入底图；候选内部保留完整颜色，外部降饱和变暗，并以边线直接高亮候选 mask。 |
+| `advisoryOnly` | boolean | 是 | 固定为 `true`。 |
+| `requiredNextGate` | string | 是 | T2 为 `realm_t2_selection_review`，T4 为 `city_d3_site_review`，City D4 为 `city_d4_placement_review`。 |
+
+候选比较使用原候选 cell 集合作为 mask，不能把窗口内相邻但不属于候选的地形计入候选容量；选择确认仍绑定同一个候选 mask。选择凭证同时绑定 evidence 文件内容 hash，provider 来源变化或 evidence 被修改时，旧选择必须 stale / tampered。
 
 ## CitySeedRegistry
 

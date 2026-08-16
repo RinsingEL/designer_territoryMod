@@ -29,7 +29,7 @@ D6 locked structure footprint
 
 `CityBlueprint` 在 `outdoorPlan.foundationProfileRef` 选择冻结的基础地板 Profile。程序收集全部纳入城市主体的 D6 footprint，按 Profile 的建筑外扩和形态闭合参数生成一个单一连续执行域，并使用同一 Surface recipe 铺地。D6/ Foundation 规划只确定城市覆盖范围与几何连接，不得以 D3 的水体、坡度或局部起伏把城市域切碎或拒绝整座城市。
 
-Foundation 的地形兼容由 owner-chunk 执行层处理：局部低洼、峡沟和水/岩浆列向邻近稳定高度补平，小凸起允许削平；局部高差达到山体阈值时保留原地形并跳过该列的 Foundation 地表与边界。Landscape 仍按自身显式规则覆盖 Foundation，本规则不把山体变成新的 Landscape，也不改变 D6 locked footprint。
+Foundation 的地形兼容由 owner-chunk 执行层处理：局部低洼、峡沟和水/岩浆列向邻近稳定高度补平，小凸起允许削平。原“局部高差达到山体阈值就跳过该列地表与边界”已被最新《City台基与地形适应》需求替代：D4 必须先拒绝完整占地不可承载的建筑位置，合法城市硬质区域再执行有界填挖，不得因为局部窗口 relief 让未改高度列留下零星空洞。Landscape 仍按自身显式规则覆盖 Foundation，本规则不把山体变成新的 Landscape，也不改变 D6 locked footprint。
 
 基础域禁止使用：
 
@@ -156,7 +156,7 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。RoadWeaver 在景观之后�
 - 全城只有一个连续基础地板主体，且所有基础地板使用同一冻结配方。
 - 基础域无入口线、MST 线、跨组关系线或其他道路状 LandUse 几何。
 - 城市基础域内部无未解释原群系洞。
-- Foundation 不因 D3 `water/slope/localRelief` 产生规划失败；新区块实机中小坑、沟槽和流体被补平，小凸起被削平，山体列保持原状且不落 Foundation 边界。
+- D4 对完整结构占地执行 `water/slope/localRelief/elevation range` 门禁，不可承载时在同一规划范围内改选；合法城市硬质区域的小坑、沟槽和流体被补平，小凸起被削平，未改高度列不得漏铺 Foundation 地表或边界。
 - required 建筑和 required 景观联合求解并原子提交；不得顺序抢地、缩减 Parcel 或让 fill/connectivity 进入容量预留。
 - 存在多个完整可行容量方案时不得固定接受首个候选；大型多 Parcel 景观优先形成二维、多方向父子构图，同分方案随稳定 seed 可改变方位但固定输入必须复现。
 - 每个成功实例的 Parcel 数必须精确等于 Blueprint；optional 实例空间不足以零占地 `skipped_insufficient_space` 退出。

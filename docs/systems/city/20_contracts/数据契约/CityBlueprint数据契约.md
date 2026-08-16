@@ -57,7 +57,7 @@ D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首�
 
 多值按 OR 解析。当前运行时只真正实现 `SURFACE`：只要数组含 `SURFACE`，D4 便解析并冻结 `resolvedTerrainMode=SURFACE`；只有 `EMBEDDED/FLOATING` 时明确返回 `CITY_STRUCTURE_TERRAIN_MODE_UNSUPPORTED`，不得伪装为已支持。
 
-SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫描或 chunk 加载。transformed collision footprint 覆盖的每个 terrain-field cell 必须存在、`sampled=true` 且 `water=false`。坡度、`localRelief`、roughness、biome 与 landform 不做结构硬拒绝；它们仍可参与既有地形适配评分或诊断。Context/Snapshot 只冻结 `terrainFieldRef` 的 schema 与内容 hash；文件变化、city/grid/step 不一致均 stale。
+SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫描或 chunk 加载。transformed collision footprint 覆盖的每个 terrain-field cell 必须存在、`sampled=true` 且 `water=false`；`terrainPolicy=CONFORM|BALANCED|ASSERTIVE` 另分别把完整占地的最大坡度限制为 `6|12|18`、最大 `localRelief` 限制为 `8|12|18`、最大高程范围限制为 `6|12|18`。roughness、biome、landform 与 patch 平均坡度只参与评分或诊断。Context/Snapshot 只冻结 `terrainFieldRef` 的 schema 与内容 hash；文件变化、city/grid/step 不一致均 stale。
 
 ## Blueprint 引用目录
 
@@ -91,7 +91,7 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 - `parentParcelId/rootSource/sharedBoundaryProof` 连通证明；
 - 失败时的候选原因，不生成部分成功 artifact。
 
-景观容量格彼此互斥但允许四邻接。联合搜索最多访问 100000 节点；穷尽为 `CITY_BLUEPRINT_REQUIRED_LANDSCAPE_LAYOUT_UNSATISFIED`，达到上限为 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED`。
+景观容量格彼此互斥但允许四邻接。D4 容量预留和 D6 Parcel 实际扩张必须使用同一相邻高程连续性门禁：`CONFORM|BALANCED|ASSERTIVE` 的相邻 terrain-field cell 高程差上限分别为 `4|6|10`；种子与每一步生长都不得跨越该断崖门禁。联合搜索最多访问 100000 节点；穷尽为 `CITY_BLUEPRINT_REQUIRED_LANDSCAPE_LAYOUT_UNSATISFIED`，达到上限为 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED`。
 
 引用目录根对象所有数组必填且非空：
 
@@ -315,7 +315,7 @@ CITY_BLUEPRINT_OUTDOOR_REFERENCE_INVALID
 
 connectivity selection 另必填 `requestedBatchSize`、`terminalBatch`、`initialBodyGapBlocks`、`frontierGapCorrectionBlocks`；对应 `frontierSearchTrace[].rings[]` 记录 `correctedForBodyGap`。批量从解析后的配置规模按 `N..1` 确定性降级重试，失败尝试同样进入 trace；一组完整合法候选即可提交，零组才失败。`minCandidateCount` 不属于 Blueprint 或编译请求，旧字段必须以 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED` 明确拒绝。
 
-required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate。门禁以 transformed collision footprint 为范围，对 `terrainModes` 做 OR 解析；当前 SURFACE 要求全部相交 D3 terrain-field cells 存在、已采样且非水，不得只检查 anchor 点、首个 patch 或 dominant biome。trace 至少记录 `structureRef`、`declaredTerrainModes`、`resolvedTerrainMode`、footprint、相交/已评估/拒绝格数、reasonCode 和有限失败样本；anchor 同样冻结 `resolvedTerrainMode`。`styleTerms` 不得出现在 gate、分数或候选排序依据中。
+required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate。门禁以 transformed collision footprint 为范围，对 `terrainModes` 做 OR 解析；当前 SURFACE 要求全部相交 D3 terrain-field cells 存在、已采样、非水并满足 Group `terrainPolicy` 的完整占地坡度、起伏和高程范围上限，不得只检查 anchor 点、首个 patch 或 dominant biome。候选生成必须逐点应用该门禁，不合法时继续搜索同一合法域。首个 required 先搜索 `preferredPatchRefs[]`；该域没有任何完整占地合法候选时，允许以 `patchSelectionScope=d3_terrain_fallback` 搜索同一 D3 review grid，并在后续 `claimedPatchRefs[]` 记录实际认领 patch。trace 至少记录 `structureRef`、`declaredTerrainModes`、`resolvedTerrainMode`、footprint、相交/已评估/拒绝格数、阈值、reasonCode 和有限失败样本；anchor 同样冻结 `resolvedTerrainMode`。`styleTerms` 不得出现在 gate、分数或候选排序依据中。
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、从 0 连续递增的 `slotIndex`、`spacingBlocks`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，可选 `outwardTarget`；首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。该字段是程序 provenance，不是 AI 输入坐标。
 
@@ -331,7 +331,9 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 文件：`city_test_runs/<cityId>/steps/d4/group_extent_map.json`，`schemaVersion=group_extent_map.v0.7`。根字段为 `cityId`、`generationSeed`、`connectivityPolicy=RELATION_GRAPH_ARRAY_GROWTH_THEN_LAND_USE`、`connectionSemantics=STRUCTURE_FRONTIER_FOR_LAND_USE`、`cityBoundaryPolicy=D3_REVIEW_GRID_HARD_BOUNDARY`、`handoffThresholdPolicy=STRICT_BILATERAL_MINIMUM`、`structureGraphConnected`、`landUseConnected=false`、`landUseConnectionStatus=PENDING_LAND_USE_COMPILE`、`connections[]`、`groups[]`。不得出现 `maxInterGroupGapBlocks` 或含糊的旧 `connected` 字段；调用方不得自行把结构拓扑解释成实体地表连通。
 
-`connections[]` 与 compile trace 边字段同源，并增加 `landUseHandoffReady` 与 `connectionEdge{fromX,fromZ,toX,toZ}`；每个 Group 同时携带上述布局/空间/count/stop 字段和 closed `collisionExtent{minX,minZ,maxX,maxZ}`。所有 Group 的 required 核心必须先在各自 `preferredPatchRefs[]` 播种；连接阶段允许认领 D3 `review.grid` 内其他 patch/member cells，并在 `claimedPatchRefs[]` 中解释。Group `terrainPolicy` 只形成排序偏好与 trace，不按 patch 平均坡度硬裁剪。Group 间初始距离不构成 D4 固定阈值；LandUse 编译后必须另以真实 block spans 验收连续性。
+`connections[]` 与 compile trace 边字段同源，并增加 `landUseHandoffReady` 与 `connectionEdge{fromX,fromZ,toX,toZ}`；每个 Group 同时携带上述布局/空间/count/stop 字段和 closed `collisionExtent{minX,minZ,maxX,maxZ}`。所有 Group 的 required 核心先搜索各自 `preferredPatchRefs[]`；首选域完整占地不可承载时允许回退到同一 D3 `review.grid`，后续组建围绕实际认领核心继续，`preferredPatchRefs[]` 与 `claimedPatchRefs[]` 必须分别保留意图和结果。连接阶段同样可认领 D3 `review.grid` 内其他 patch/member cells。Group `terrainPolicy` 不按 patch 平均坡度裁剪，而是对每个 transformed collision footprint 的 terrain-field 事实执行硬门禁。Group 间初始距离不构成 D4 固定阈值；LandUse 编译后必须另以真实 block spans 验收连续性。
+
+固定模板 worldgen 的 `templateDatumPolicy=generator_base_height_motion_blocking_no_leaves` 表示高度来源。StructureStart 以 locked actual footprint 为范围每 4 blocks 采样 generator base height（包含远端边界），取排序中位数作为全结构唯一 `templateDatumY`；不得只取 anchor 点。仅 `supportPolicy=full_footprint_support` 的模板在 Beardifier 密度阶段获得完整矩形占地承托：台面下最大 32 blocks、外侧 2 blocks 收肩；其他 support policy 不生成该台基。Foundation 外围硬质地表使用 7×7 外环中位数做有界填挖，填方上限 48 blocks、切方上限 12 blocks；局部窗口起伏本身不得再使 `delta=0` 的表面列被跳过。
 
 `extentClass` 核心/fill 目标空间预算为 `4096 / 16384 / 36864 blocks²`，最大跨度为 `96 / 160 / 240 blocks`。程序另按 D3 `targetScale.scale` 与 `extentClass` 派生最低成形栋数：HAMLET=`2/3/4`、VILLAGE=`3/4/6`、TOWN=`3/6/9`、CITY=`4/8/12`（SMALL/MEDIUM/LARGE）。`CENTER_SYMMETRIC` 因结构总数恒为“一个中心 + 若干成对 fill”，通用最低栋数为偶数时必须投影为不大于该值的最近奇数，且不得低于 3；例如 TOWN/MEDIUM 的通用 6 栋实际派生为 5 栋。它不是 Blueprint 输入数量；最终结构数仍是模板 collision、疏密、算法和空间预算共同形成的输出事实。连接结构只计入 `actualStructureCount/actualSpatialDemandBlocks` 与 connection 专用字段，不计入 `internalStructureCount/internalSpatialDemandBlocks` 或最低成形判定。连接阶段绕过 extent 软目标，但仍受 D3 grid、collision、结构 terrain mode gate、组内连续最大 gap 和内部 256 anchor 安全护栏约束；安全护栏命中必须 hard fail，不能作为正常规模停止原因。
 

@@ -21,8 +21,8 @@
 | `realm_t2_select_coordinate` | T2 | 提交 AI / 人类选择的国度核心 grid 坐标，校验并生成 `RealmSeed`、无坐标 `CapitalCityIntent`。 |
 | `realm_t3_expand` | T3 | 对指定大陆 / 分组运行国度扩张，输出 `RealmTerritoryMap`。 |
 | `realm_t4_build_registry` | T4 兼容验收 | 以 `rule_fixture` 模式生成 `CitySeedRegistry`，不是正式 AI 选址主链。 |
-| `patch_explorer_open` | T2 / T4 / City D4 | 打开指定尺度的探索会话并返回类型目录。 |
-| `patch_explorer_show_candidates` | T2 / T4 / City D4 | 按 AI 选择的兴趣类型分页返回每类候选、预览图和候选间稀疏几何关系。 |
+| `patch_explorer_open` | T2 / T4 / City D4 | 打开指定尺度的探索会话，返回类型目录、原始地形总览和所有 Patch 总览。 |
+| `patch_explorer_show_candidates` | T2 / T4 / City D4 | 按 AI 选择的兴趣类型分页返回每类候选、同框 Top Patch 总览和候选间稀疏几何关系。 |
 | `patch_explorer_select_candidate` | T2 / T4 / City D4 | 选中已展示候选，返回确认染色图与稳定 `patchSelectionRef`。 |
 | `realm_t4_patch_planning_create` | T4 | 为单个国度创建空城市规划会话，只载入无坐标首都意图。 |
 | `realm_t4_patch_planning_select_capital` | T4 | 消费 `realm_t4` 选择凭证，建立该国唯一首都。 |
@@ -206,7 +206,7 @@
 
 ## Patch Explorer
 
-三个工具共用同一交互协议，但候选真值按尺度隔离：`realm_t2` 读取 sealed W 的 `biomeHist` 并在国度候选范围内生成主导群系连续区，`realm_t4` 将群系连续区裁剪到该国 T3 owned territory，`city_d4` 读取 D3 局部地形 patch 并扣除 hard occupied。
+三个工具共用同一交互协议，但候选真值按尺度隔离：`realm_t2` 以 sealed W 的允许 Patch 作为搜索范围，`realm_t4` 以该国 T3 owned territory 作为搜索范围，两者都在 T 的不大于 32 格尺度重新采样、分类并跨 GIS region 生成 Patch；`city_d4` 读取 D3 自身尺度、跨 region 合并后的局部地貌 Patch 并扣除 hard occupied。群系只作为候选附加事实，不参与候选生成和类型目录。
 
 `patch_explorer_open` 请求：
 
@@ -217,11 +217,11 @@
 | `scopeId` | string | 条件必填 | 对应 realm / continent / citySeed；也可使用下列显式字段。 |
 | `realmId` / `continentId` / `citySeedId` | string | 条件必填 | 按 scope 提供。 |
 | `sessionId` | string | 否 | 自定义稳定会话 ID；省略时由服务端生成。 |
-| `preferGeneratorNativeTerrain` | boolean | 否 | `realm_t4` 默认 `true`；`false` 强制使用 Minecraft prior sampler。仅控制本次 open，不改变 W 的选择。其他 scope 忽略该字段。 |
+| `preferGeneratorNativeTerrain` | boolean | 否 | 默认 `true`；`false` 强制 T Patch 重算和候选高程预览使用 Minecraft prior sampler。仅控制本次 session。 |
 
-当 `scopeType=realm_t4` 时，HTTP 层在打开会话前按需 ensure 当前 realm 的 `RealmT4CoarseTerrainEvidence`。它从运行中的 `ServerLevel` 选择生成器原生 provider；RTF 不可用或开关关闭时回退 Minecraft prior sampler。调用方不需要传 RTF 专用字段，可选 `dimensionId` / `playerName` 仅用于现有世界上下文解析。
+当 `scopeType=realm_t2` 或 `realm_t4` 时，HTTP 层从运行中的 `ServerLevel` 选择 T Patch 重算使用的 provider；RTF 不可用或开关关闭时回退 Minecraft prior sampler。`realm_t4` 还会在打开会话前按需 ensure 当前 realm 的 `RealmT4CoarseTerrainEvidence`。调用方不需要传 RTF 专用字段，可选 `dimensionId` / `playerName` 仅用于现有世界上下文解析。
 
-返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。`realm_t4` 额外返回：
+返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。T和D共用 `patchTypePalette` 固定色表，`typeCatalog[].color` 返回对应色号。`artifacts.terrainOverview` 是当前 scope 的原始高程/水体总览，`artifacts.allPatchesOverview` 在完全相同的边界和比例上标出全部 Patch。`realm_t4` 额外返回：
 
 | 字段 | 说明 |
 | --- | --- |
@@ -236,12 +236,14 @@
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `runId` / `sessionId` | string | 是 | 打开的探索会话。 |
-| `interestTypes[]` | string[] | 是 | AI 当前主动感兴趣的类型。T2/T4 使用完整 biome ID，例如 `minecraft:plains`；City D4 使用 D3 landform。 |
+| `interestTypes[]` | string[] | 是 | AI 当前主动感兴趣的 `landform` 类型，例如 `plain`、`valley`、`ridge`、`shore`。 |
 | `page` | int | 否 | 从 0 开始的页号。 |
 | `pageToken` | string | 否 | 上一页返回的稳定续页凭证。 |
 | `pageSize` | int | 否 | 每种类型每页数量，默认 3，最大 12。 |
 
-返回 `candidatePage`、彩色候选预览和关系表。T 候选同时返回 `terrainComposition`、`baseLandformComposition` 和最大连续面积；`realm_t4` 在有粗览时还返回 `coarseTerrainEvidence`，建议锚点按非水、低起伏、低坡度、边界深度排序。关系只覆盖本次 `interestTypes` 中当页已展示候选，内容限于相邻、距离、方位、共享边界等结构化几何事实；首都、国境、已有城市和 occupied 只参与硬校验，不进入关系表。
+返回 `candidatePage` 和关系表。`artifacts.topPatchesOverview` 在 `open` 返回的原始地形总览同一边界、同一比例上，一次叠加本页所有兴趣类型的 Top Patch，并标注候选 ID；准确边界替代包围盒。候选同时返回 `terrainComposition`、`baseLandformComposition` 和最大连续面积；`realm_t4` 在有粗览时还返回 `coarseTerrainEvidence`，建议锚点按非水、低起伏、低坡度、边界深度排序。关系只覆盖本次 `interestTypes` 中当页已展示候选，内容限于相邻、距离、方位、共享边界等结构化几何事实；首都、国境、已有城市和 occupied 只参与硬校验，不进入关系表。
+
+批量比较不再为每个候选生成自适应取景的 `terrainPreview`，也不返回 `artifacts.candidateTerrainPreviews`；候选之间的位置关系以同框 `topPatchesOverview` 为准。
 
 `patch_explorer_select_candidate` 请求：
 
@@ -251,7 +253,9 @@
 | `candidateId` | string | 是 | 必须是当前会话中已经展示的候选。 |
 | `selectionReason` | string | 否 | AI 选择理由。 |
 
-返回 `patchSelectionRef` 与 `selectedCandidatePreview`。确认图对选中候选染色并标出建议粗锚点；`realm_t4` 选择同时冻结 `coarseTerrainEvidence` 和 `heightWaterPreview` 引用。来源 W、territory、粗地形证据、scope 或候选事实变化时，旧选择凭证必须拒绝消费。
+返回 `patchSelectionRef` 与选中确认。三个 scope 都在建议锚点周围按 `sampleStepBlocks=16`、`windowDiameterBlocks=1024` 生成 `evaluationLevel=city_scale_confirmation` 的单张高程高亮确认图，并冻结 `terrainPreview` 与图片引用；`artifacts.cityScaleTerrainPreview` 指向该图。来源 W、territory、粗地形证据、scope、候选事实、采样 provider 或选中确认 JSON 变化时，旧选择凭证必须拒绝消费。
+
+T4 粗览、候选比较精扫和选中确认必须使用同一 provider 身份、source fingerprint 与 sampling semantics；运行时来源变化时必须重开 Patch Explorer 会话。两级精扫均固定 `advisoryOnly=true`、`requiredNextGate=city_d3_site_review`，不得绕过 D3 最终局部审查。
 
 HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_candidates`、`/realm/patch_explorer/select_candidate`。
 

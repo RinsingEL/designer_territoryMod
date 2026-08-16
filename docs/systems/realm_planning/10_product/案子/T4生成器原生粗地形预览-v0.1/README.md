@@ -15,7 +15,7 @@ T4 在 T3 国境形成后需要从单国 owned territory 中粗选首都和其�
 - 通过通用 `TerrainPreviewProvider` 选择数据源。RTF 激活且运行时 API 可用时走生成器原生二维 Heightmap；否则整体回退现有 `MinecraftPriorAtlasSampler`。
 - RTF 适配以可选反射桥接 0.0.5 / 0.0.6，不建立编译期硬依赖，不读取 runtime tile cache，不创建或加载 chunk。
 - 粗样本之间只用四邻高度差派生 `slopeProxy` 和 `localRelief`，不追加四方向高度查询。
-- Patch Explorer 仍按 owned territory 内的主导 biome 连续区生成候选，但可附带高度、水体、起伏、RTF terrain 和 source biome 证据；建议锚点优先非水、低起伏、低坡度，再以边界深度打破并列。
+- Patch Explorer 按 owned territory 内的 W 地貌 Patch 生成候选，并附带高度、水体、起伏、RTF terrain 和 source biome 证据；建议锚点优先非水、低起伏、低坡度，再以边界深度打破并列。
 - 粗证据变化必须进入 Patch Explorer source identity。旧 session 或选择凭证不得继续冒充当前来源。
 
 ## 主流程
