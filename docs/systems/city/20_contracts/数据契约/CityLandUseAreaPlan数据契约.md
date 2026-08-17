@@ -8,7 +8,7 @@ required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆
 
 ## 定位
 
-本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后与 worldgen 执行之前。正式 Blueprint v0.10 路径把 AreaPlan 解释为一个 Foundation 底层加若干显式 Landscape Parcel，不再是逐建筑竞争占地。
+本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后与 worldgen 执行之前。正式 Blueprint v0.11 路径把 AreaPlan 解释为一个 Foundation 底层加若干显式 Landscape Parcel，不再是逐建筑竞争占地。
 
 ## 版本与开关
 
@@ -70,11 +70,11 @@ required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆
 }
 ```
 
-规则目录不再包含事后桥接阈值。正式 Blueprint v0.10 路径固定关闭 LandUse 自动连接：城市连通由一块 Foundation domain 保证，景观 Parcel 按冻结父子树保持独立 Area。相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
+规则目录不再包含事后桥接阈值。正式 Blueprint v0.11 路径固定关闭 LandUse 自动连接：城市连通由一块 Foundation domain 保证，景观 Parcel 按冻结父子树保持独立 Area。相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
-正式 Blueprint v0.10 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。ATTACHED Landscape 只绑定唯一 required 主体，fill/connectivity 永不拥有 Landscape；FREE_STANDING optional 由 placement domain 从剩余空间选址。
+正式 Blueprint v0.11 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。ATTACHED Landscape 只绑定唯一 required 主体，fill/connectivity 永不拥有 Landscape；FREE_STANDING optional 由 placement domain 从剩余空间选址。
 
 正式 Landscape 的每个 GrowthRegion 对应一个独立 Parcel 和唯一根 seed。`preferredAreaBlocks` 是正常停止目标，`maxAreaBlocks` 是硬上限而不是默认填充目标；可用空间充足时 `claimedAreaBlocks == preferredAreaBlocks`。frontier 因地形、边界、结构、竞争或 action budget 耗尽时允许 `minAreaBlocks <= claimedAreaBlocks < preferredAreaBlocks`，再由 required / optional 准入规则裁决；不得仅因存在剩余可通行格继续增长到 max。
 
@@ -246,7 +246,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `boundaryPolicy` | enum | `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。 |
 | `decorationPolicy` | string | Decoration profile / program 选择引用。 |
 
-正式 Blueprint v0.10 不执行相向扩张或事后桥线。Foundation 几何由专用 planner 一次生成；Landscape Parcel 即使 rule、配方和材料完全相同也不得融合。同一实例父子接壤由 child 单侧占一格；跨实例接壤按非 `OPEN` 优先和规范化实例 ID 冻结唯一 owner。
+正式 Blueprint v0.11 不执行相向扩张或事后桥线。Foundation 几何由专用 planner 一次生成；Landscape Parcel 即使 rule、配方和材料完全相同也不得融合。同一实例父子接壤由 child 单侧占一格；跨实例接壤按非 `OPEN` 优先和规范化实例 ID 冻结唯一 owner。
 
 `unclaimedSpans[]` 只允许表示 Foundation domain 外部。正式路径没有道路走廊排除；Foundation domain 内不得存在未归属原群系。
 
@@ -266,7 +266,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityUrbanSpacePlan
 
-`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.10 分层规划返回 disabled plan，覆盖证明改由 Foundation 的单组件、resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
+`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.11 分层规划返回 disabled plan，覆盖证明改由 Foundation 的单组件、resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
 
 城市基础域只由纳入主体的 D6 structure footprint 和 Foundation Profile 支撑，不读取 corridor/gate。程序从 `closeRadiusBlocks` 开始，在 `maxJoinDistanceBlocks` 内选择首个能形成单组件且通过最小颈宽验收的闭合半径；几何闭合只受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与通行判定，也不得触发 `CITY_FOUNDATION_DISCONNECTED`。超过几何接合范围仍不连续时 hard fail，不生成多个默认城镇或细长地板桥。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
 
@@ -299,7 +299,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 - 把每条三格水槽解释为 `CHANNEL_BEFORE_BANK + CHANNEL_WATER + CHANNEL_AFTER_BANK`；开放 `CHANNEL_WATER` 端点按完整全局邻接冻结 bank 封口，禁止按 owner chunk 局部猜测。
 - 固定输入、算法版本和 seed 得到相同 spans；输入 spans 顺序或 chunk 执行顺序不得改变结果。
 
-`relay_region_growth` 是正式 Blueprint v0.10 景观填充配方。它冻结：
+`relay_region_growth` 是正式 Blueprint v0.11 景观填充配方。它冻结：
 
 - Surface Recipe 已解析材料：`surfaceBlockId`、可选 `cropBlockId`、可选 bank/water/overlay、可选 `boundaryBlockId`。
 - AI/目录决策：`fillProfileRef`、`primaryRoleRef`、`stableSeed`、有序区域阶段的角色、`PATCH|CORRIDOR` 生长偏置及 `targetShare`、内容权重。

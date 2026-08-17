@@ -7,7 +7,7 @@ City 承接 T4 `CitySeedRegistry` 和候选选址，在 D3-D7 生成可审查、
 ```text
 T4 CitySeed
 -> D3 局部地貌扫描与选址复核
--> D4 prepare / submit / compile CityBlueprint v0.10，并联合求解 required 建筑与景观容量
+-> D4 prepare / submit / compile CityBlueprint v0.11，并联合求解 required 建筑与景观容量
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
 -> D6 后在冻结容量内编译 Foundation、Landscape Parcel 与 LandUse
@@ -16,12 +16,12 @@ T4 CitySeed
 -> D7 ledger、现场观测、道路和城墙后处理
 ```
 
-正式 D4 只允许一次 CityBlueprint 决策。`groups[]` 与显式 `Landscape` 主体共同进入 D4：required 建筑候选和其 required 景观容量必须联合求解、原子提交，fill/connectivity 不得进入冻结景观容量。AI 精确提交实例数和每实例 Parcel 数；required 不缩减、不按顺序抢地，全部有限组合无解就明确失败。D6 后每实例按冻结父子树逐格生成互斥但可接壤的独立 Parcel。
+正式 D4 只允许一次 CityBlueprint 决策。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑候选和其 required 景观容量必须联合求解、原子提交，fill/connectivity 不得进入冻结景观容量。AI 精确提交实例数和每实例 Parcel 数；required 不缩减、不按顺序抢地，全部有限组合无解就明确失败。D6 后每实例按冻结父子树逐格生成互斥但可接壤的独立 Parcel。
 
 ## 当前实现边界
 
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
-- D4 Context `v0.9`、Reference Catalog `v0.8`、snapshot `v0.10`、Blueprint `v0.10` 必须严格匹配。
+- D4 Context `v0.10`、Reference Catalog `v0.8`、snapshot `v0.10`、Blueprint `v0.11` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
 - D6 后先生成一个连续 Foundation，再生成独立 Landscape Parcel；RoadWeaver 是道路唯一正式来源。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。
@@ -32,6 +32,7 @@ T4 CitySeed
 
 | 能力 | 当前文档 |
 | --- | --- |
+| 嵌套阵列与关系位置 | `10_product/案子/City嵌套阵列与关系位置-v0.1/README.md` |
 | 固定模板唯一落地 | `10_product/案子/City固定模板唯一落地主线-v0.1/README.md` |
 | 单次 Blueprint、Foundation 与 Landscape | `10_product/案子/City单次蓝图户外空间编译-v0.1/README.md` |
 | LandUse 执行层 | `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md` |
