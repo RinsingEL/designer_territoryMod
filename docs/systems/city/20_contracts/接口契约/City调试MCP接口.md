@@ -60,7 +60,7 @@
 | Catalog Snapshot | `city_blueprint_catalog_snapshot.v0.10` |
 | Reference Catalog | `city_blueprint_reference_catalog.v0.8` |
 | Validation / Submission | `city_blueprint_validation_report.v0.4` / `city_blueprint_submission_trace.v0.4` |
-| Compile Trace / Group Extent | `city_generation_compile_trace.v0.11` / `group_extent_map.v0.8` |
+| Compile Trace / Group Extent | `city_generation_compile_trace.v0.12` / `group_extent_map.v0.10` |
 | Template Catalog / Placement / Ledger | `v0.1` 系列 |
 | LandUse Intent / Area / Terrain Field | `v0.3` / `v0.1` / `v0.1` |
 | SurfacePrintPlan | `city_land_use_surface_print_plan.v0.5` |
