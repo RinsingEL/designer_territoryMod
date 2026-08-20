@@ -33,6 +33,7 @@ T4 CitySeed
 | 能力 | 当前文档 |
 | --- | --- |
 | 嵌套阵列与关系位置 | `10_product/案子/City嵌套阵列与关系位置-v0.1/README.md` |
+| 阵列拓扑分类与功能约束 | `10_product/案子/City阵列拓扑分类与功能约束-v0.1/README.md` |
 | 阵列主从骨架与街带 | `10_product/案子/City阵列主从骨架与街带-v0.1/README.md` |
 | 功能区预分配与受约束扩张 | `10_product/案子/City功能区预分配与受约束扩张-v0.1/README.md` |
 | 固定模板唯一落地 | `10_product/案子/City固定模板唯一落地主线-v0.1/README.md` |
