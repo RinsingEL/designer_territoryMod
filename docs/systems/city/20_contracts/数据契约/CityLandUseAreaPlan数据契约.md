@@ -2,7 +2,7 @@
 
 当前破坏性版本：`city_land_use_area_plan.v0.2`；户外意图为 `city_outdoor_intent_plan.v0.4`，SurfacePrint 为 `city_land_use_surface_print_plan.v0.6`。旧 artifact 不迁移。
 
-Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier/sharedBoundarySpans`。一 Parcel 仍对应一个独立 Area，不因同类型或接壤合并。`sharedBoundarySpans` 每格包含唯一 `writerParcelId`、边界材料和关系类型 `PARENT_CHILD|CROSS_LANDSCAPE`；owner chunk 只裁切这些冻结 spans，不重算归属。
+Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier/sharedBoundarySpans`。一 Parcel 仍对应一个独立 Area，不因同类型或接壤合并。fill program 含 `GROUND|BANK + CORRIDOR` 时，父子 Parcel 不直接贴边：child 从父边界外第二格接力，中间一格不被任何 Parcel claim，保留原地表作为随地形形成的自然路隙；若该格本来位于 Foundation 域内，则显露 Foundation owner。其余接壤关系的 `sharedBoundarySpans` 每格包含唯一 `writerParcelId`、边界材料和关系类型 `PARENT_CHILD|CROSS_LANDSCAPE`；owner chunk 只裁切这些冻结 spans，不重算归属。
 
 required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆盖，主体引用、D6 footprint 或候选身份漂移直接 hard fail。optional 自由景观逐实例记录 `admitted` 或 `skipped_insufficient_space`；admitted 实例的 Parcel 数必须精确等于 Blueprint。
 
@@ -74,7 +74,7 @@ required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
-正式 Blueprint v0.11 路径只有一个 Foundation 主体；全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。ATTACHED Landscape 只绑定唯一 required 主体，fill/connectivity 永不拥有 Landscape；FREE_STANDING optional 由 placement domain 从剩余空间选址。
+正式 Blueprint v0.11 路径只有一个 Foundation owner；它可包含多个互不强接的局部平台组件。全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。ATTACHED Landscape 只绑定唯一 required 主体，fill/connectivity 永不拥有 Landscape；FREE_STANDING optional 由 placement domain 从剩余空间选址。
 
 正式 Landscape 的每个 GrowthRegion 对应一个独立 Parcel 和唯一根 seed。`preferredAreaBlocks` 是正常停止目标，`maxAreaBlocks` 是硬上限而不是默认填充目标；可用空间充足时 `claimedAreaBlocks == preferredAreaBlocks`。frontier 因地形、边界、结构、竞争或 action budget 耗尽时允许 `minAreaBlocks <= claimedAreaBlocks < preferredAreaBlocks`，再由 required / optional 准入规则裁决；不得仅因存在剩余可通行格继续增长到 max。
 
@@ -246,7 +246,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `boundaryPolicy` | enum | `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。 |
 | `decorationPolicy` | string | Decoration profile / program 选择引用。 |
 
-正式 Blueprint v0.11 不执行相向扩张或事后桥线。Foundation 几何由专用 planner 一次生成；Landscape Parcel 即使 rule、配方和材料完全相同也不得融合。同一实例父子接壤由 child 单侧占一格；跨实例接壤按非 `OPEN` 优先和规范化实例 ID 冻结唯一 owner。
+正式 Blueprint v0.11 不执行相向扩张或事后桥线。Foundation 几何由专用 planner 一次生成；Landscape Parcel 即使 rule、配方和材料完全相同也不得融合。普通同实例父子接壤由 child 单侧占一格；启用自然路隙的父子 Parcel 保持一格 Foundation 间隔，不生成 shared boundary；跨实例接壤按非 `OPEN` 优先和规范化实例 ID 冻结唯一 owner。
 
 `unclaimedSpans[]` 只允许表示 Foundation domain 外部。正式路径没有道路走廊排除；Foundation domain 内不得存在未归属原群系。
 
@@ -266,9 +266,9 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityUrbanSpacePlan
 
-`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.11 分层规划返回 disabled plan，覆盖证明改由 Foundation 的单组件、resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
+`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.11 分层规划返回 disabled plan，覆盖证明改由 Foundation 各局部组件的 resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
 
-城市基础域只由纳入主体的 D6 structure footprint 和 Foundation Profile 支撑，不读取 corridor/gate。程序从 `closeRadiusBlocks` 开始，在 `maxJoinDistanceBlocks` 内选择首个能形成单组件且通过最小颈宽验收的闭合半径；几何闭合只受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与通行判定，也不得触发 `CITY_FOUNDATION_DISCONNECTED`。超过几何接合范围仍不连续时 hard fail，不生成多个默认城镇或细长地板桥。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
+城市基础域由纳入主体的 D6 structure footprint、LINEAR `platformBounds` 和 Foundation Profile 支撑，不读取 D5 corridor/gate。程序先按 `maxJoinDistanceBlocks` 分局部簇，再从 `closeRadiusBlocks` 开始为每簇选择首个通过最小颈宽验收的闭合半径；全城强连只会形成细桥时，按 close radius 重分局部平台，不生成细长地板桥。几何闭合只受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与通行判定。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
 
 正式路径 `residualRegions[]` 必须为空。Foundation domain 内除 Landscape 覆盖外必须全部归属同一 Foundation Area；任何按 SpatialGround 分配 residual、原群系洞或道路 corridor 空洞都是旧产物或规划失败。自然与绿地必须是 Blueprint 显式 landscape。
 
@@ -323,7 +323,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## LandUse 规划 Trace
 
-`city_land_use_planning_trace.v0.6` 正式路径记录 Foundation resolved close radius、单组件/颈宽证明、Landscape Parcel 的 anchor phase、方向、请求/实际面积和失败重试。每个 admitted Parcel 的 `parcelExpansionOrigin` 必须冻结 `kind=ROOT_SOURCE|PARENT_PARCEL_INTERFACE`、实际 `start`、`parentParcelId` 和 nullable `sourceFrontier`；父接力时 `sourceFrontier` 必须是父 Parcel 已 claim 且与 `start` 四邻接的一格，找不到合法界面必须明确失败，不得回落到预设 seed。带填充方案的 group 另记录 `fillProfileRef`、稳定 seed、主角色、有序区域阶段、角色/materialRole/growthForm/目标占比和内容权重。SurfacePrint 区域 trace 冻结每块区域的父子关系、接力界面和目标/实际面积。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.10 必须为空；非空只允许出现在显式 legacy/debug 规划。
+`city_land_use_planning_trace.v0.6` 正式路径记录 Foundation `foundationComponentCount`、resolved close radius、各局部组件颈宽证明、Landscape Parcel 的 anchor phase、方向、请求/实际面积和失败重试。每个 admitted Parcel 的 `parcelExpansionOrigin` 必须冻结 `kind=ROOT_SOURCE|PARENT_PARCEL_INTERFACE|PARENT_PARCEL_ROAD_GAP`、实际 `start`、`parentParcelId` 和 nullable `sourceFrontier`。普通父接力要求 `sourceFrontier` 与 `start` 四邻接；`PARENT_PARCEL_ROAD_GAP` 要求曼哈顿距离恰为 2，中间格必须已采样、可通行、未被任一 Parcel claim；若中间格位于 Foundation 域内则保留 Foundation owner，否则保持未 claim 原地表。找不到合法界面必须明确失败，不得回落到预设 seed。带填充方案的 group 另记录 `fillProfileRef`、稳定 seed、主角色、有序区域阶段、角色/materialRole/growthForm/目标占比和内容权重。SurfacePrint 区域 trace 冻结每块区域的父子关系、接力界面和目标/实际面积。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.10 必须为空；非空只允许出现在显式 legacy/debug 规划。
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 
