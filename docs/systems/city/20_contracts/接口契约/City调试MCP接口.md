@@ -13,7 +13,7 @@
 | `city_plan_d2` | `/realm/city/plan_d2` | 建立 CitySiteContext 与模板检索上下文。 |
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
-| `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.8。 |
+| `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.9。 |
 | `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.11；支持 Group 关系位置和父阵列编排。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。 |
 | `city_plan_d4` | `/realm/city/plan_d4` | 生成标准 anchor/group artifact。正式 workflow 使用 Blueprint mode。 |
@@ -58,12 +58,13 @@
 | Blueprint Context | `city_blueprint_context.v0.10` |
 | Blueprint | `city_blueprint.v0.11` |
 | Catalog Snapshot | `city_blueprint_catalog_snapshot.v0.10` |
-| Reference Catalog | `city_blueprint_reference_catalog.v0.8` |
+| Reference Catalog | `city_blueprint_reference_catalog.v0.9` |
 | Validation / Submission | `city_blueprint_validation_report.v0.4` / `city_blueprint_submission_trace.v0.4` |
-| Compile Trace / Group Extent | `city_generation_compile_trace.v0.12` / `group_extent_map.v0.10` |
+| Compile Trace / Group Extent | `city_generation_compile_trace.v0.13` / `group_extent_map.v0.10` |
+| Structure Anchor Plan / Map | `city_structure_anchor_plan.v0.3` / `city_structure_anchor_map.v0.3` |
 | Template Catalog / Placement / Ledger | `v0.1` 系列 |
 | LandUse Intent / Area / Terrain Field | `v0.3` / `v0.1` / `v0.1` |
-| SurfacePrintPlan | `city_land_use_surface_print_plan.v0.5` |
+| SurfacePrintPlan | `city_land_use_surface_print_plan.v0.7` |
 | Decoration content / program / active / ledger | `v0.4` 系列；只读旧版兼容以代码 parser 为准 |
 | Worldgen observation | `city_worldgen_block_observation.v0.1` |
 
@@ -77,7 +78,7 @@
 - `city_upgrade_default_decoration_catalog` 必须显式传 `confirmConfigMutation=true`。
 - plan、query、probe、preview 类接口不得修改世界。
 
-`city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|worldedit_debug|none`。`auto` 在 RoadWeaver 不可用时记录跳过，不启用 WorldEdit fallback；只有显式 `worldedit_debug` 才允许旧调试道路。
+`city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|worldedit_debug|none`。RoadWeaver plan v0.2 只允许 `long_distance_inter_group_mst`：禁止 intra-group 边，SIMPLE 仅保留距离 >=128 blocks 的组间边；HIERARCHICAL `cityMainRoadPlan=planned` 时 `delegatedToCityMainRoad=true/connectionCount=0`。`auto` 缺 Mod 只跳过该长距层，不启用 WorldEdit fallback。
 
 ## 运行与日志
 

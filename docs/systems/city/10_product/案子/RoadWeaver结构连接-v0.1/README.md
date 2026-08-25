@@ -2,13 +2,13 @@
 
 ## 状态
 
-已完成 v0.1 接入并并入当前 City 主线；连接计划已升级为 v0.2 的 placement group 空间骨架。
+已完成 v0.1 接入并并入当前 City 主线；连接计划 v0.2 当前只承担长距 placement group 连接。
 
-本案把“结构之间的正式道路连接”从 D7 WorldEdit 调试后处理，迁移到生成期 RoadWeaver optional adapter。City 不强绑 RoadWeaver；缺少 RoadWeaver 且 `roadProvider=auto` 时跳过道路并写明 `ROADWEAVER_UNAVAILABLE`，不再自动铺 WorldEdit debug fallback。旧 debug 道路只允许通过 `roadProvider=worldedit_debug` 显式启用。
+本案把“规划域外或超出 City 主路范围的长距通用连接”从 D7 WorldEdit 调试后处理迁移到生成期 RoadWeaver optional adapter。City 区内路和 HIERARCHICAL 父阵列主路由 D4/SurfacePrint 自己负责；缺 RoadWeaver 只跳过长距层，不影响 City 自有道路。
 
 ## 当前口径
 
-- RoadWeaver 是可选依赖，不是 mandatory mod。
+- RoadWeaver 是可选长距依赖，不是 mandatory mod；不生成 placement group 内道路。
 - 当前开发验收固定验证 Forge `2.3.0-1.20.1`；City 仍只经反射调用 API，升级后必须复核 `RoadNetworkApi.registerStructureEndpoint` 与 `ensureConnection` 签名。
 - 开发运行标准启动不再加载 RTF / ReTerraForged，只启用结构包和 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
@@ -27,8 +27,9 @@ D6 locked plan
   -> lockedActualFootprint / priority
   -> city_execute_d5
   -> roadweaver_connection_plan.json v0.2
-  -> placement group 内按入口距离生成最小生成树
-  -> placement group 间按最近入口生成最小生成树
+  -> HIERARCHICAL CityMainRoad 已 planned：仅注册 endpoint，连接数 0
+  -> SIMPLE：只在 placement group 间筛选距离 >=128 blocks 的最近入口
+  -> 对长距可行边生成最小生成树，不生成 intra_group 边
   -> RoadNetworkApi.registerStructureEndpoint(...)
   -> RoadNetworkApi.ensureConnection(..., generateImmediately=false)
   -> chunk 首次生成时由 RoadWeaver 自己生成道路
@@ -65,7 +66,8 @@ D6 locked plan
 - `lockedActualFootprint` / `footprint`
 - `roadEntrances[]`：模板局部入口经 rotation / mirror 变换后的世界入口，至少包含 `entranceId`、`worldPosition`、`direction`
 - `placementGroupId`
-- `group_spatial_mst` 连接骨架：组内 `intra_group` 支路与组间 `inter_group` 主干
+- `long_distance_inter_group_mst` 连接骨架：只含距离不小于 128 blocks 的 `inter_group` 边；`intraGroupConnectionCount=0`
+- `delegatedToCityMainRoad`：HIERARCHICAL City 主路已接管时为 true，此时 RoadWeaver `connectionCount=0`
 - 每条连接的 `distanceBlocks`、两端 group / anchor / endpoint
 - `generateImmediately=false`
 

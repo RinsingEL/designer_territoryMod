@@ -10,7 +10,7 @@ T4 CitySeed
 -> D4 prepare / submit / compile CityBlueprint v0.11，并联合求解 required 建筑、内部街带与景观容量
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
--> D6 后在冻结容量内编译含内部街带台基的 Foundation、Landscape Parcel 与 LandUse
+-> D6 后在冻结容量内编译含区内路/城市主路台基的 Foundation、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
 -> execute_d5 激活结构、LandUse、Decoration 和 RoadWeaver 交接
 -> worldgen createStructures / FEATURES 分片落地
 -> D7 ledger、现场观测、道路和城墙后处理
@@ -21,9 +21,9 @@ T4 CitySeed
 ## 当前实现边界
 
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
-- D4 Context `v0.10`、Reference Catalog `v0.8`、snapshot `v0.10`、Blueprint `v0.11` 必须严格匹配。
+- D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.11` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
-- D6 后生成一个 Foundation owner，其中可含多个连续、有限的局部平台组件，再生成独立 Landscape Parcel；GRID/COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街均由 D4 `streetBands[]` 冻结并进入 Foundation，ORGANIC 只保留自然缝隙，RoadWeaver 只负责功能区之间的远距通用连接。
+- D6 后生成一个 Foundation owner，其中可含多个连续、有限的局部平台组件，再生成独立 Landscape Parcel；GRID/COURTYARD/LINEAR/COMPACT、可选 CENTER 轴街及 HIERARCHICAL 父阵列城市主路均由 D4 `streetBands[]` 冻结，SurfacePrint v0.7 逐 block 执行台阶路缘/半砖路面、建筑绿化与住宅外溢边界。ORGANIC 只保留自然缝隙；RoadWeaver 只负责规划域外或超出本城主路范围的远距通用连接。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。
 - `key_then_array`、array loop、sequential session 和 cluster groups 仍是显式 legacy/debug endpoint，不是默认 workflow。
 - 城墙默认 D5 reservation 版本为 v2；workflow 可显式使用 v3/v4/v5，v1 只保留为 debug。
@@ -35,6 +35,7 @@ T4 CitySeed
 | 嵌套阵列与关系位置 | `10_product/案子/City嵌套阵列与关系位置-v0.1/README.md` |
 | 阵列拓扑分类与功能约束 | `10_product/案子/City阵列拓扑分类与功能约束-v0.1/README.md` |
 | 阵列主从骨架与街带 | `10_product/案子/City阵列主从骨架与街带-v0.2/README.md` |
+| 主从路网与景观层 | `10_product/案子/City主从路网与景观层-v0.1/README.md` |
 | 功能区预分配与受约束扩张 | `10_product/案子/City功能区预分配与受约束扩张-v0.1/README.md` |
 | 固定模板唯一落地 | `10_product/案子/City固定模板唯一落地主线-v0.1/README.md` |
 | 单次 Blueprint、Foundation 与 Landscape | `10_product/案子/City单次蓝图户外空间编译-v0.1/README.md` |

@@ -13,7 +13,7 @@ D3 LandUseTerrainField
 -> D6 lockedActualFootprint
 -> 单一 Foundation
 -> Landscape Parcels
--> SurfacePrintPlan v0.5
+-> SurfacePrintPlan v0.7
 -> 稀疏 Decoration
 -> execute_d5 激活
 -> FEATURES owner-chunk 执行
@@ -44,9 +44,9 @@ AI 在 Blueprint 中选择 Foundation Profile、Landscape Profile、ParcelStyle 
 
 ## SurfacePrint 与执行
 
-`CityLandUseSurfacePrintPlan v0.5` 冻结 fill profile、稳定 seed、有序 region、角色 spans 和接力 trace。执行期按 owner chunk 建索引，先预检和快照，再写基础、overlay、crop、boundary；任一步失败按 owner 事务回滚，成功后才写 ledger。
+`CityLandUseSurfacePrintPlan v0.7` 冻结 fill profile、稳定 seed、有序 region、角色 spans、接力 trace 与道路/建筑绿化/住宅外溢 `featureCells[]`。执行期按 owner chunk 建索引，先预检和快照，再写基础、overlay、道路与绿化地面、crop/plant/外溢边界、Area boundary；任一步失败按 owner 事务回滚，成功后才写 ledger。
 
-正式 Blueprint 路径不生成 LandUse 自动连接 corridor、近邻桥线或 residual 补洞。RoadWeaver 拥有真实道路的最终地表覆盖权，LandUse 不猜路线。旧 chunk 不回填，停用 active plan 也不回滚已写世界。
+正式 Blueprint 路径不生成自动连接 corridor、近邻桥线或 residual 补洞。LandUse 只执行 D4 已冻结的 City 自有 roads，不猜路线；RoadWeaver 只拥有长距通用连接的最终覆盖权。旧 chunk 不回填，停用 active plan 也不回滚已写世界。
 
 ## 硬边界
 

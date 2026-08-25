@@ -11,7 +11,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | 对象 | schemaVersion |
 | --- | --- |
 | 上下文 | `city_blueprint_context.v0.10` |
-| 引用目录 | `city_blueprint_reference_catalog.v0.8` |
+| 引用目录 | `city_blueprint_reference_catalog.v0.9` |
 | 目录快照 | `city_blueprint_catalog_snapshot.v0.10` |
 | 蓝图 | `city_blueprint.v0.11` |
 | 校验报告 | `city_blueprint_validation_report.v0.4` |
@@ -46,7 +46,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
-| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.10`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Reference Catalog v0.8 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle 与 Landscape Fill Profile 完整定义，D6 后不得重新解释为另一版配置。 |
+| `catalogSnapshot` | object | `city_blueprint_catalog_snapshot.v0.10`；包含 `city_semantic_profile_catalog.v0.4` 结构画像、固定模板目录、Reference Catalog v0.9 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle、Landscape Fill Profile、建筑可选绿化标记与城市植物 palette，D6 后不得重新解释为另一版配置。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
@@ -95,11 +95,11 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 引用目录根对象所有数组必填且非空：
 
-- `structureRefs[]`：`structureRef` 必须存在于冻结 TerraSense semantic profile；`templateCandidates[]` 的 `templateId + variantId` 必须存在于固定模板目录。
+- `structureRefs[]`：`structureRef` 必须存在于冻结 TerraSense semantic profile；`templateCandidates[]` 的 `templateId + variantId` 必须存在于固定模板目录。可选 `greenParcel` 严格为 `{pattern=FREEFORM|FIELD_GRID,density=LOW|MEDIUM|HIGH,groundBlockId,pathBlockId}`；缺少即该建筑不生成自带绿化，喷泉、广场等开放结构按此方式明确关闭。
 - `fillPools[]`：`poolRef` 与只引用上述 `structureRef` 的 `structureRefs[]`。
 - `algorithmProfiles[]`：`algorithmProfileRef`；算法枚举为 `COMPACT | GRID | LINEAR | COURTYARD | ORGANIC_COMPACT | CENTER_SYMMETRIC`。仅 `CENTER_SYMMETRIC` 可选 `centerAxisStreetEnabled=true|false`，缺省为 false；其他算法携带该开关必须拒绝。
 - `compositionProfiles[]`：`compositionProfileRef` 与 `mode=ROUND_ROBIN`；只控制模板组成顺序，不携带建筑数量上限。
-- `styleProfiles[]`：`profileRef`。
+- `styleProfiles[]`：`profileRef`，可选非空 `plantPalette[]`；每项严格为 `{blockId,weight>0}` 且 blockId 不重复。Blueprint 选中的城市 style profile 是建筑绿化唯一植物集合；任一带 `greenParcel` 建筑存在而该城市 palette 为空时，户外编译 hard fail。
 - `roadProfiles[]`：`profileRef`、`hierarchy=SIMPLE|HIERARCHICAL`、`density=SPARSE|BALANCED|DENSE`。
 - `surfaceDetailProfiles[]`：`profileRef`、`intensity=LOW|MEDIUM|HIGH`。
 - `landUseRuleProfile`：完整严格 `city_land_use_rules.v0.1`；其 `ruleRef` 是 Foundation/Landscape Profile 的规则白名单。
@@ -335,13 +335,13 @@ CITY_BLUEPRINT_OUTDOOR_REFERENCE_INVALID
 
 02 已接通：`city_run_workflow` 默认 `d4CandidateMode=blueprint`。所有 candidate/session/manual anchor 接口统一视为 `legacy/debug`，只有显式指定旧 mode 才执行，不属于新的正式 Blueprint 决策边界。
 
-## CityGenerationCompileTrace v0.12
+## CityGenerationCompileTrace v0.13
 
-文件：`city_test_runs/<cityId>/steps/d4/city_generation_compile_trace.json`，`schemaVersion=city_generation_compile_trace.v0.12`。
+文件：`city_test_runs/<cityId>/steps/d4/city_generation_compile_trace.json`，`schemaVersion=city_generation_compile_trace.v0.13`。
 
-根字段：`cityId`、`status=compiled|failed`、`reasonCode`、`generationSeed`、`selectionMode`、`aiCandidateSelectionCount=0`、`manualCandidateSelectionCount=0`、`sourceD3Ref`、`catalogSnapshotRef`、`districtCapacityPlan`、`connectivityPlan`、`arrayCompositionSlots[]`、`selections[]`、`groupResults[]`。`districtCapacityPlan` 是 D4 在建筑搜索前冻结的连通功能区容量预留，不能由调用方补写。
+根字段：`cityId`、`status=compiled|failed`、`reasonCode`、`generationSeed`、`selectionMode`、`aiCandidateSelectionCount=0`、`manualCandidateSelectionCount=0`、`sourceD3Ref`、`catalogSnapshotRef`、`districtCapacityPlan`、`connectivityPlan`、`arrayCompositionSlots[]`、`selections[]`、`groupResults[]`、`cityMainRoadPlan`、`residentialOverflowPlan`。`districtCapacityPlan` 是 D4 在建筑搜索前冻结的连通功能区容量预留，不能由调用方补写。
 
-每个 selection 按执行顺序记录 `phase=required|fill|connectivity_growth`。全部 Group 的 required 先完成，随后各 Group 的 fill 完成内部成形，最后才允许出现 connectivity selection。同一 Group 的 required 先稳定排列画像带 `planning_role.anchor|key` 的结构，再保留 AI required 列表的原相对顺序；没有 anchor/key 时列表首项自然成为主建筑。required/fill 继续记录单结构候选、评分、envelope 与提交状态；connectivity selection 必须按完整阵列批次记录 `arrayId`、`plannerType`、`focusArrayId`、自动方向、`resolvedConnectionPlan`、语义参数、近圈搜索 trace、候选数、选中 candidate、批次 anchor IDs、连接前后 gap 与整批结构数。任一连接批次只有完整 cardinality、全部 terrain/collision 合法且确实缩短目标 gap 时才能原子提交，不得部分落地。
+每个 selection 按执行顺序记录 `phase=required|fill|connectivity_growth`。全部 Group 的 required 先完成，随后各 Group 的 fill 完成内部成形。`roadProfile.hierarchy=SIMPLE` 才允许最后执行既有 connectivity structure growth；`HIERARCHICAL` 由父阵列城市主干路承担区际连接，必须不生成 `connectivity_growth` 建筑。required/fill 继续记录单结构候选、评分、envelope 与提交状态；SIMPLE 的 connectivity selection 仍按完整阵列批次记录并原子提交，不得部分落地。
 
 connectivity selection 另必填 `requestedBatchSize`、`terminalBatch`、`initialBodyGapBlocks`、`frontierGapCorrectionBlocks`；对应 `frontierSearchTrace[].rings[]` 记录 `correctedForBodyGap`。批量从解析后的配置规模按 `N..1` 确定性降级重试，失败尝试同样进入 trace；一组完整合法候选即可提交，零组才失败。`minCandidateCount` 不属于 Blueprint 或编译请求，旧字段必须以 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED` 明确拒绝。
 
@@ -349,9 +349,15 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、单调递增但可因非法留空而跳号的 `slotIndex`、`spacingBlocks`、`theoreticalAnchor`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。GRID、COURTYARD、LINEAR、CENTER_SYMMETRIC 使用全组最大 collision span 派生一次固定 pitch，锁世界轴或主入口显式轴，只能尝试精确 guide；不得追加 member-cell center、随机旋转或其他形状兜底，不合法槽位写 `skipped_illegal_slot/EXACT_SLOT_ILLEGAL_LEFT_EMPTY` 后留空。GRID 另写 `gridRow/gridColumn/gridPitchBlocks/worldAxisLocked=true`；COURTYARD 另写 `courtyardRing/courtyardRow/courtyardColumn/courtyardCenter/courtyardGateSide=SOUTH`，slot 0–4 必须构成北侧主建筑、东、东南、西、西南且中心空置；COMPACT 写 `compactLaneRank/compactLaneSide/compactLaneTarget`，建筑在允许旋转内朝弯巷；ORGANIC_COMPACT 只使用程序随机 guides，在功能区内保持 collision gap 1–3 blocks，不产正式道路。需要朝路的结构必须写 `frontageRotation/frontageEntranceId/frontageDirection/frontageAlignmentScore/frontageMinimumAlignmentScore/frontageTargetRef`；规则直路要求满分朝向，弯巷/院角接受最近合法四向且不得低于 0.7。
 
-最终 `StructureAnchorPlan` 与 `StructureAnchorMap` 根级可写 `streetBands[]`，同一 Group 可含多个直段。每项 schema 为 `city_internal_street_band.v0.1`，必填 `streetBandId/roadNetworkId/roadKind/segmentIndex/groupId/geometryMode=STRAIGHT_AXIS_CLIPPED_BY_TERRAIN/widthBlocks/surfacePolicy=FOLLOW_TERRAIN_NO_LEVEL/hardSkeleton=true/axisX/axisZ/start/end/bounds/platformBounds/platformPolicy=LOCAL_HARD_SKELETON`。`roadKind` 至少支持 `GRID_MAIN_STREET|GRID_ROW_LANE|GRID_COLUMN_LANE|COURTYARD_RING_*|COURTYARD_GATE|LINEAR_STREET_BAND|COMPACT_ALLEY|CENTER_AXIS_NORTH|CENTER_AXIS_SOUTH`；GRID、COURTYARD、LINEAR、COMPACT 必须产相应网络，CENTER_SYMMETRIC 仅在 profile 开关启用时产轴街，ORGANIC_COMPACT 禁止产正式道路。每个直段进入 D4 预览、D6 和 Foundation；RoadWeaver 不消费该数组。
+最终 `StructureAnchorPlan v0.3` 与 `StructureAnchorMap v0.3` 根级必填 `streetBands[]`、`cityMainRoadPlan` 与 `residentialOverflowPlan`。区内道路项 schema 为 `city_internal_street_band.v0.2`，必填 `streetBandId/roadNetworkId/roadKind/segmentIndex/groupId/geometryMode=STRAIGHT_AXIS_CLIPPED_BY_TERRAIN/widthBlocks/surfacePolicy=FOLLOW_TERRAIN_STEP_GRADED/crossSectionProfile=STAIR_SLAB_STAIR/hardSkeleton=true/axisX/axisZ/start/end/bounds/platformBounds/platformPolicy=LOCAL_HARD_SKELETON`。`widthBlocks` 是中间半砖路面宽，两侧台阶路缘各额外占 1 block。GRID 按相邻排/列真实 collision 边缘求自由间隙，连路缘净空不足时明确失败；COMPACT 从 transformed entrance 沿原门向寻找巷节点，再以 block 级四邻域避开全城实际建筑 footprint，压缩成纯 90° 弯巷。CENTER_SYMMETRIC 仅在 profile 开关启用时产轴街，ORGANIC_COMPACT 禁止产区内正式道路。
 
-最终 plan/map/trace 根级必填 `arrayVisualQuality`，schema=`city_array_visual_quality.v0.1`，含 `passed/hardBlocks/groups[]`。门禁直接检查最终几何：GRID 理论格点误差不超过 1 block、固定 pitch 与街巷网连通；COURTYARD 中心空置、基础五槽完整、南门与环路连通；LINEAR 街带存在且连通；CENTER_SYMMETRIC 镜像证明成立且可选轴街结构完整；COMPACT 弯巷连通且门脸达标；ORGANIC_COMPACT 无正式路且 collision gap 1–3 blocks 的图连通。任一失败以 `CITY_BLUEPRINT_ARRAY_VISUAL_GEOMETRY_INVALID` 阻断 D4。
+`cityMainRoadPlan.schemaVersion=city_main_road_plan.v0.1`，必填 `cityId/roadProfileRef/hierarchy/density/planningOwner=BLUEPRINT_PARENT_ARRAY/geometryMode=TERRAIN_AWARE_AXIS_ALIGNED_90_DEGREE/surfacePolicy=FOLLOW_TERRAIN_STEP_GRADED/crossSectionProfile=STAIR_SLAB_STAIR/internalStreetMaxWidthBlocks/mainRoadWidthBlocks/status/reasonCode/connectionCount/segmentCount/connections[]`。仅 `HIERARCHICAL` 规划城市级主干路；父阵列摆放 Group 前按“派生主路宽 + 两侧路缘”增加 pitch 净空，slot 自身尺寸不扩大。父阵列在具有完整宽度 gateway 的可行边上求确定性 MST；正式街口优先，无正式路的 Group 可使用四侧边界 gateway。窄街口沿街轴向区外延伸为 `city_main_road_transition_band.v0.1`，保持原街宽，主路从可容纳完整宽度的位置开始。路径先在 D3 terrain field 四邻域避水避崖，再在 block 级按完整路面和路缘宽度避开实际建筑 footprint；无合法 gateway、父图不连通或无路径都 hard fail，不得静默输出零路段。
+
+主干路每个直段 schema 为 `city_main_road_band.v0.1`，写入同一 `streetBands[]`；主路半砖面宽取不小于 7 的奇数，且严格大于本城最大区内道路半砖面宽，两侧路缘另各加 1 block。区内路、过渡段和主干路全部进入 D4 预览、D6、Foundation 与 SurfacePrint 精确方块执行；RoadWeaver 不消费该数组，仍只负责城市规划域外或功能区距离超过本城主路规划范围的通用长距连接。
+
+`residentialOverflowPlan.schemaVersion=city_residential_overflow_plan.v0.1`。程序只使用同 Group 已提交的 `phase=fill + blueprintLayout.outwardGuided=true` 建筑；至少 3 栋且其区内正式道路与子区范围相交时，冻结一个 `RESIDENTIAL_OVERFLOW` 子区。每项写 `zoneId/parentGroupId/generationMode=OUTWARD_GUIDED_FILL_BUILDINGS/buildingCount/boundaryBounds/boundaryBlockId/anchorIds[]/streetBandIds[]`，并把 `residentialOverflowZoneId` 回写成员 layout。执行层沿矩形边界写墙，所有关联道路 bounds 自动形成门洞；不足数量或无道路时不伪造子区。
+
+最终 plan/map/trace 根级必填 `arrayVisualQuality`，schema=`city_array_visual_quality.v0.1`，含 `passed/hardBlocks/roadStructureOverlapCount/groups[]`。除六阵列视觉指标外，全部区内路、过渡段和城市主路连同两侧路缘不得重叠任何建筑实际 footprint；任一失败以 `CITY_BLUEPRINT_ARRAY_VISUAL_GEOMETRY_INVALID` 阻断 D4。
 
 `CENTER_SYMMETRIC` 的 fill selection 另写 `requestedBatchSize=2`、`atomicPair=true` 与 `centerSymmetryProof`；两栋 anchor 的 `blueprintLayout` 必须共享 `symmetryPairId/symmetryPairIndex/symmetryCenter/visualCenter`，分别写 `symmetryPairMember=FIRST|OPPOSITE`。程序按模板变换后的 collision footprint 校正 anchor 对称中心；证明必须同时满足两端 anchor 关于校正中心成对，以及两栋实际 collision footprint 的几何中心关于中心主体的实际 collision footprint 中心成对。
 
@@ -381,4 +387,4 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 若任一 Group 在连接前无法达到 `derivedMinimumStructureCount`，编译必须以 `CITY_BLUEPRINT_GROUP_MINIMUM_UNREACHABLE` 失败；不得进入 connectivity growth 后再用连接建筑补足数量。
 
-编译成功后仍必须输出原有 `city_structure_anchor_plan.v0.2`、`city_structure_anchor_map.v0.2` 与结构预览。D4 总览和局部结构预览必须以独立颜色叠加每个 Group 的 `districtCapacity.reservationSpans[]`、`districtEnvelope`、`streetBandPlan` 和建筑 geometry；局部预览只画当前聚簇涉及的 Group。预览同时叠加 `landscapeCapacityReservationPlan.reservationSpans[]` 的精确格点面积，并以独立颜色和图例区分各 Landscape；不得只画外接矩形或只列文字数量。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。
+编译成功后必须输出 `city_structure_anchor_plan.v0.3`、`city_structure_anchor_map.v0.3` 与结构预览。D4 总览和局部结构预览必须以独立颜色叠加每个 Group 的 `districtCapacity.reservationSpans[]`、`districtEnvelope`、全部区内 `streetBands[]`、棕色粗线城市主干路和建筑 geometry；局部预览只画当前聚簇涉及的 Group 及与其相接的主干路。预览同时叠加 `landscapeCapacityReservationPlan.reservationSpans[]` 的精确格点面积，并以独立颜色和图例区分各 Landscape；不得只画外接矩形或只列文字数量。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。

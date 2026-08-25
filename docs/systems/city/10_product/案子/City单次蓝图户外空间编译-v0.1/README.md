@@ -22,7 +22,7 @@ D6 locked structure footprint
 
 1. 城市基础地板只回答“整座城市的通用建设地表在哪里”，不规划道路。
 2. 农田、花田、绿化带、林场、池塘等景观先形成独立 Parcel，再在 Parcel mask 内按选中的接力填充方案逐格生成主题区、间隔带、水、地面等内部角色。
-3. RoadWeaver 是建筑入口连接、组内道路和跨组道路的唯一权威；LandUse 不产生替代道路。
+3. D4 `streetBands[]` 是 City 区内街巷和 HIERARCHICAL 父阵列城市主路的权威，D6 后由 SurfacePrint 精确执行；RoadWeaver 只负责规划域外或超出本城主路范围的长距通用连接。
 4. 建筑结构本身继续由 D6 locked footprint 排除，Beardifier 继续负责结构地形融合。
 
 ## 单一城市基础域
@@ -142,7 +142,7 @@ prepare 不注入隐藏默认目录。调用方必须提交完整 `landscapeFill
 
 ## RoadWeaver 边界
 
-LandUse 不读取或猜测 RoadWeaver 最终路径。RoadWeaver 在景观之后执行，并对自己的道路 corridor 拥有覆盖权：清除冲突作物、景观装饰和边界方块，再落正式道路与入口。缺少 RoadWeaver 或道路入口数据时，道路按既有 provider 规则明确跳过或失败，不得由 LandUse 画线兜底。
+LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城市主路和窄宽 transition 已由 D4 冻结为精确 bands，并在 SurfacePrint v0.7 中转成 slab/curb feature cells；这不是缺 RoadWeaver 时的兜底。RoadWeaver 在景观之后只覆盖自己拥有的长距 corridor；缺少 RoadWeaver 时只影响该长距连接，不删除 City 自有路。
 
 ## 破坏性规则
 
@@ -168,4 +168,4 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。RoadWeaver 在景观之后�
 - 区域接力覆盖 `member - exclusions` 恰好一次；根起点必须是合法格，后继起点必须邻接父区域，断开或无法完成时 hard fail，跨 chunk 不重启。
 - `land_use_preview.png` 叠加冻结的区域边界、接力起点、父界面以及主题、田埂、水和地面角色，可直接审阅 Parcel 内部形态与 provenance。
 - 花田、绿化带、林场和农田都能通过目录 Profile 选择，不需要修改 Java。
-- RoadWeaver 是唯一道路来源，并能覆盖清理冲突景观。
+- City 自有区内路/城市主路与 RoadWeaver 长距连接职责分离，双方各自拥有冻结几何并按顺序清理冲突景观。

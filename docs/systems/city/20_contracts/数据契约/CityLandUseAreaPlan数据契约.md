@@ -1,6 +1,6 @@
 # CityLandUseAreaPlan 数据契约
 
-当前破坏性版本：`city_land_use_area_plan.v0.2`；户外意图为 `city_outdoor_intent_plan.v0.4`，SurfacePrint 为 `city_land_use_surface_print_plan.v0.6`。旧 artifact 不迁移。
+当前破坏性版本：`city_land_use_area_plan.v0.2`；户外意图为 `city_outdoor_intent_plan.v0.4`，SurfacePrint 为 `city_land_use_surface_print_plan.v0.7`。旧 artifact 不迁移。
 
 Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier/sharedBoundarySpans`。一 Parcel 仍对应一个独立 Area，不因同类型或接壤合并。fill program 含 `GROUND|BANK + CORRIDOR` 时，父子 Parcel 不直接贴边：child 从父边界外第二格接力，中间一格不被任何 Parcel claim，保留原地表作为随地形形成的自然路隙；若该格本来位于 Foundation 域内，则显露 Foundation owner。其余接壤关系的 `sharedBoundarySpans` 每格包含唯一 `writerParcelId`、边界材料和关系类型 `PARENT_CHILD|CROSS_LANDSCAPE`；owner chunk 只裁切这些冻结 spans，不重算归属。
 
@@ -21,7 +21,7 @@ required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆
 | 城市包络与残余空间 | `city_urban_space_plan.v0.1` |
 | 规则目录 | `city_land_use_rules.v0.1` |
 | 区域计划 | `city_land_use_area_plan.v0.2` |
-| 批量地表计划 | `city_land_use_surface_print_plan.v0.6` |
+| 批量地表计划 | `city_land_use_surface_print_plan.v0.7` |
 | 规划完成标记 | `city_land_use_planning_complete.v0.4` |
 | active registry | `city_active_land_use_area_plans.v0.2` |
 | worldgen ledger | `city_land_use_worldgen_ledger.v0.3` |
@@ -108,9 +108,9 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## D4 provenance 与 D6 权威
 
-- D4 `city_structure_anchor_plan.v0.2` / `city_structure_anchor_map.v0.2` 至少保留稳定 `anchorId`、`placementGroupId`、`placementProvenance={slotId,arrayId,parentArrayId,subZoneId}` 和结构语义。显式 group 先形成一个主体；未显式分组时服务端按 parent array -> array -> source slot -> anchorId 稳定派生 group ID，不得按 bbox 邻近关系反猜。
+- D4 `city_structure_anchor_plan.v0.3` / `city_structure_anchor_map.v0.3` 至少保留稳定 `anchorId`、`placementGroupId`、`placementProvenance={slotId,arrayId,parentArrayId,subZoneId}` 和结构语义。显式 group 先形成一个主体；未显式分组时服务端按 parent array -> array -> source slot -> anchorId 稳定派生 group ID，不得按 bbox 邻近关系反猜。
 - D6 `structure_materialization_plan.json` 的 `lockedActualFootprint` / `lockedCollisionEnvelope` 是最终结构排除区和种子几何权威。D4 planned footprint 只服务预案与预览。
-- 主路最终形状、D5 corridor 和模板 entrance 都不是正式 LandUse 几何输入。RoadWeaver 在户外地表之后覆盖并清除道路范围内的景观、作物和边界；LandUse 不为缺道路数据提供兜底线。
+- D4 `streetBands[].platformBounds` 中的区内道路和 Blueprint 城市主干路是 Foundation 正式几何输入。RoadWeaver 外部长距道路的最终形状、D5 corridor 和模板 entrance 本身不是 LandUse 几何输入；RoadWeaver 在户外地表之后覆盖并清除其道路范围内的景观、作物和边界，LandUse 不为缺失 RoadWeaver 数据提供兜底线。
 
 ## LandUseIntentPlan
 
@@ -276,7 +276,9 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityLandUseSurfacePrintPlan
 
-`city_land_use_surface_print_plan.v0.6` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`；hash 必须由严格 codec 的规范 JSON 计算。recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`，基础地板与景观通过 Area/层级顺序表达，不重新读取 catalog。
+`city_land_use_surface_print_plan.v0.7` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`、`featureCells[]`；hash 必须由严格 codec 的规范 JSON 计算。Area recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`；正式道路、建筑自带绿化和住宅外溢边界以精确 feature cells 表达，执行期不重新读取 Blueprint、目录或 D4 几何。
+
+`featureCells[]` 每项严格为 `{sourceId,x,z,blockId,surfaceOffset,kind,facing}`，同一 `{x,z,surfaceOffset}` 唯一。`kind` 只允许 `ROAD_SLAB|ROAD_STAIR|GREEN_GROUND|GREEN_PATH|GREEN_PLANT|OVERFLOW_BOUNDARY`；只有 `ROAD_STAIR` 的 `facing` 可为 `NORTH|EAST|SOUTH|WEST`，其余固定 `NONE`。道路 `widthBlocks` 范围全部冻结为 bottom slab，轴线两侧外加一格 bottom stair 路缘，stair 朝外、`shape=STRAIGHT`、`waterlogged=false`；相交路段以 slab 打开路口。建筑绿化以 D6 collision rectangle 为地块、actual footprint 为硬排除，FREEFORM 按密度稳定散布，FIELD_GRID 先冻结十字路，再按城市 style profile 的加权植物 palette 稳定选择 plant block；两种花纹都从 transformed entrance 留到地块外缘的连续引路。住宅外溢边界沿冻结矩形写 `boundaryBlockId`，所有关联 street bounds 从边界中扣除形成门洞。道路优先于绿化与边界，冲突植物上层必须删除。
 
 `sharedBoundarySpans[]` 在 AreaPlan 的单侧 owner 基础上再冻结最终 `boundaryBlockId`。双方均 `OPEN` 时允许空材料；否则 owner chunk 只裁切这些全局 spans 并写一次，不得按 chunk 邻接或执行顺序重算归属。
 
@@ -317,7 +319,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `WATER` | 写 water 基层。 |
 | `GROUND` | 只写 bank/ground 基层，用于土路、石子带等纯地面间隔。 |
 
-`contentWeights[]` 在 v0.5 中进入 plan hash、trace 和预览审计，但不由 SurfacePrint 把任意 semantic contentRef 解释成方块。多花种、树种和灌木随机落点必须由 Decoration 的内容目录继续消费；当前只会执行 Surface Recipe 已冻结的单一 crop/material 槽，禁止声称已完成多内容世界落地。
+Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计，不由 SurfacePrint 把任意 semantic contentRef 解释成方块；Landscape 多作物/多树种仍需对应内容目录。建筑自带绿化是独立已冻结能力：它只消费 Reference Catalog v0.9 `styleProfiles[].plantPalette[]` 的真实 blockId/weight，并通过 `GREEN_PLANT` feature cells 执行，不能与 Landscape semantic contentWeights 混用。
 
 同一个 surface-owned `landUseAreaId` 禁止 Decoration 使用 `uniform_fill`、`cross_section_repeat` 或 `parallel_rows`，避免批量地表重复落地；`deterministic_scatter`、`edge_repeat`、`grid_repeat` 等稀疏细节仍允许。
 
@@ -331,15 +333,16 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## Worldgen 交接
 
-- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.5、material palette/hash 与 prepared region index，不携带 LandUse catalog、prefab 或 run 状态。
-- 传入 SurfacePrintPlan 的 `land_use_preview` metadata 为 `city_land_use_preview.v0.3`，并以 `layeredFillAreas[]` 逐块报告 `fillProfileRef`、`primaryRoleRef`、重复周期、实际块数，以及每个角色的 `materialRole/targetShare/actualBlocks/actualShare`；该摘要只解释已冻结 spans，不参与执行决策。
-- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项记录 area / surface / palette identity，以及 FIELD / CHANNEL / crop / boundary 的阶段计数和结果摘要；不保存 placement datum、prefab decision 或旧 schema 迁移状态。
-- SurfacePrintPlan v0.1/v0.2/v0.3、旧 active registry、旧 ledger 和旧 completion 都不进入当前 parser / activation。切换版本前必须清理旧任务产物与 server-root LandUse 状态，再重跑 `city_plan_land_use -> city_execute_d5`；不做内存迁移、磁盘迁移或静默降级，历史实现只保留在 Git。
-- activation preflight 必须基于 AreaPlan + SurfacePrintPlan 的当前编译结果，只枚举实际包含 surface 或 boundary 操作的 owner；微整地 mask 只是 surface 操作的上下文，不能单独令 owner relevant，`PRESERVE + OPEN` 等零写入 owner 不得阻断激活。预检只读当前 loaded status 或 region NBT，不得申请 ticket。任一待写 owner 已到 FEATURES 返回 `CITY_LAND_USE_CHUNK_ALREADY_AT_FEATURES`，读取失败或状态无法证明返回 `CITY_LAND_USE_CHUNK_STATUS_UNKNOWN`，两者都整体拒绝激活。只有磁盘明确不存在才视为 `NOT_PRESENT`。
+- active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.7、material palette/hash 与 prepared owner index，不携带 LandUse catalog、prefab 或 run 状态。
+- 传入 SurfacePrintPlan 的 `land_use_preview` metadata 为 `city_land_use_preview.v0.5`；除 Landscape 区域摘要外，必须叠加道路 slab/curb、绿化 ground/path/plant 和外溢边界，并记录 `featureCellCount`。
+- owner chunk 编译产物为 `city_land_use_chunk_fragment.v0.3`，按世界坐标把 `featureCells[]` 与 Area spans 一起裁切；feature-only owner 同样 relevant，不得因没有 Area surface 操作而丢失。
+- ledger 文件：`geomantia_city_masks/city_land_use_worldgen_ledger.json`，当前 schema v0.3。owner applied 项增加 `featureOperationCount`，并继续记录 area / surface / palette identity 与 base/crop/boundary 阶段计数。
+- SurfacePrintPlan v0.1-v0.6、旧 active registry、旧 ledger 和旧 completion 都不进入当前 parser / activation。切换版本前必须清理旧任务产物与 server-root LandUse 状态，再重跑 `city_plan_land_use -> city_execute_d5`；不做内存迁移、磁盘迁移或静默降级。
+- activation preflight 必须基于 AreaPlan + SurfacePrintPlan v0.7 的当前编译结果，枚举实际包含 surface、boundary 或 feature 操作的 owner。预检只读当前 loaded status 或 region NBT；任一待写 owner 已到 FEATURES 或状态不明都整体拒绝。
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
 - owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 band spans、不读取无关 owner 状态。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。
 - 普通 PAVE 微整地固定使用 7x7 真实顶层高度的中位数作为局部参考，只接受补高 1..3 格、连通面积 <=16 且 X/Z span <=4 的封闭低洼。Foundation PAVE 使用独立执行策略：以 7x7 外环中位高度为目标，低处最多补高 48 格并允许覆盖水/岩浆，小凸起最多削低 4 格；7x7 局部起伏达到 12 格的非低洼列视为山体并跳过 Foundation surface/boundary。两者都不读取或填充地下空洞；填方基层使用 `MICRO_FILL_SUBGRADE`，目标顶层仍使用原 PAVE surface material。
-- v0.2 direct-mask owner 先写 FIELD / BANK / WATER base 与 BANK overlay，再只在 FIELD mask 写 CROP，最后写不覆盖 BANK / WATER 的 BOUNDARY；相邻 WATER 状态更新与端点封口必须来自冻结全局邻接。整个 owner 共用一次预检、快照与逆序回滚。
+- owner 先写 Area base/overlay，再写 `surfaceOffset=0` 的道路/绿化 feature，随后写 crop/plant/外溢边界上层，最后执行 Area boundary finalize。ROAD_SLAB 使用 bottom slab；ROAD_STAIR 使用 bottom straight stair 和冻结外向。整个 owner 共用一次预检、快照与逆序回滚，任一 feature 写入失败也必须回滚同 owner 已写内容。
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
 - 整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / area plan hash / surface plan hash / palette hash / owner chunk 幂等阻断。
