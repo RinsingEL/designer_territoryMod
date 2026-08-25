@@ -7,7 +7,7 @@ City 承接 T4 `CitySeedRegistry` 和候选选址，在 D3-D7 生成可审查、
 ```text
 T4 CitySeed
 -> D3 局部地貌扫描与选址复核
--> D4 prepare / submit / compile CityBlueprint v0.11，并联合求解 required 建筑、内部街带与景观容量
+-> D4 prepare / submit / compile CityBlueprint v0.11，先落 required 建筑与内部街带，再按地形冻结景观容量
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
 -> D6 后在冻结容量内编译含区内路/城市主路台基的 Foundation、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
@@ -16,7 +16,7 @@ T4 CitySeed
 -> D7 ledger、现场观测、道路和城墙后处理
 ```
 
-正式 D4 只允许一次 CityBlueprint 决策。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑候选和其 required 景观容量必须联合求解、原子提交，fill/connectivity 不得进入冻结景观容量。AI 精确提交实例数和每实例 Parcel 数；required 不缩减、不按顺序抢地，全部有限组合无解就明确失败。D6 后每实例按冻结父子树逐格生成互斥但可接壤的独立 Parcel。
+正式 D4 只允许一次 CityBlueprint 决策。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑先按城市构图落位，景观再以 owner 为种子按地形生长，Patch 只作软偏好。景观目标数量或面积可被地形减少，完全零格写警告而不让整城失败；fill/connectivity 只排除实际冻结容量。D6 后各非零 Parcel 按冻结父子来源逐格生成。
 
 ## 当前实现边界
 

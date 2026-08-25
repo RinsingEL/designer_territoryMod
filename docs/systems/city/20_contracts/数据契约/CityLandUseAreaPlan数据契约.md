@@ -4,7 +4,7 @@
 
 Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier/sharedBoundarySpans`。一 Parcel 仍对应一个独立 Area，不因同类型或接壤合并。fill program 含 `GROUND|BANK + CORRIDOR` 时，父子 Parcel 不直接贴边：child 从父边界外第二格接力，中间一格不被任何 Parcel claim，保留原地表作为随地形形成的自然路隙；若该格本来位于 Foundation 域内，则显露 Foundation owner。其余接壤关系的 `sharedBoundarySpans` 每格包含唯一 `writerParcelId`、边界材料和关系类型 `PARENT_CHILD|CROSS_LANDSCAPE`；owner chunk 只裁切这些冻结 spans，不重算归属。
 
-required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆盖，主体引用、D6 footprint 或候选身份漂移直接 hard fail。optional 自由景观逐实例记录 `admitted` 或 `skipped_insufficient_space`；admitted 实例的 Parcel 数必须精确等于 Blueprint。
+required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实际冻结的非零容量；主体引用、D6 footprint 或候选身份漂移仍 hard fail。目标实例或 Parcel 因地形缩减、零格时继承 D4 warning，不得在 D6 重新补成固定形状或让整城失败。optional 自由景观逐实例记录 `admitted` 或 `skipped_insufficient_space`。
 
 ## 定位
 
@@ -80,9 +80,9 @@ required Parcel 必须被 D4 `city_landscape_capacity_reservation_plan.v0.1` 覆
 
 Parcel 外壳必须是根 seed 发出的四邻接逐格 claim。候选排序可读取规则地形成本、terrain bias、preferred patch、growth bias、局部同 Parcel 邻接和由 `generationSeed + Parcel identity` 派生的稳定连续扰动；不得由圆、菱形、矩形、bbox、全局距离环或预制 mask 直接生成，也不得把这些固定几何作为失败兜底。相同输入必须得到相同 claims，改变稳定 seed 或 terrain field 必须能够改变候选排序和外轮廓。
 
-required Parcel 先按 D4 容量域和冻结父子顺序生成，任何结果低于 `max(minAreaBlocks, relayStageCount)` 都以 `CITY_LANDSCAPE_CORE_BELOW_MINIMUM` hard fail，不提交部分实例。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 逐实例探测；实例内全部 Parcel 达标才整体合并，否则该实例候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<landscapeInstanceId>`。
+required Parcel 先按 D4 实际容量域和冻结父子来源生成。D4 已把非零实际面积作为有效地形结果，因此 LandUse 的最小面积为 1；若实际容量小于 AI 填充阶段数，只保留从主角色开始、当前面积能够承载的前序阶段并重新归一占比，不得因间隔阶段放不下拒绝整城。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 逐实例探测；实例内全部 Parcel 达标才整体合并，否则该实例候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<landscapeInstanceId>`。
 
-optional 实例若在户外编译阶段无法为全部精确 Parcel 取得合法 seed，则不创建该实例的任何 seed group，并记录 `skipped_insufficient_space:<landscapeInstanceId>`；required Parcel 缺 seed 或容量身份时继续 hard fail。
+optional 实例若在户外编译阶段无法为全部目标 Parcel 取得合法 seed，则不创建该实例的任何 seed group，并记录 `skipped_insufficient_space:<landscapeInstanceId>`；required 景观以 D4 v0.2 的 `instances[]/warnings[]` 为准，零格不创建 seed group，身份或 hash 漂移才 hard fail。
 
 bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 
@@ -257,12 +257,12 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 - `cityId`、`sourceBlueprintHash`、`sourceD6Hash`、`sourceTerrainFieldHash`、`sourceOutdoorCatalogHash`。
 - 唯一 Foundation 实际解析的 Profile、D6 anchors/footprints、rule、Surface recipe、结构外扩、请求闭合范围、实际闭合半径和连续性证明。
 - 每个 SpatialGround 的来源 Group、共享空间类型、层级和 membership；不含铺地规则、配方或道路 seed。
-- 每个 Landscape 实际解析的 Profile、`purpose/originMode`、owner 或 placement domain、精确实例数和每实例精确 Parcel 数。
+- 每个 Landscape 实际解析的 Profile、`purpose/originMode`、owner 或 placement domain、目标实例/Parcel 数，以及 D4 地形缩减后的实际数量。
 - 每个 Parcel 的 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier`、D4 capacity identity、独立 seed、面积预算和短缺原因。
 
 相同 Blueprint、D6、terrain field 和 catalog 必须输出相同规范 JSON 与 hash。任一来源漂移都不得复用旧 completion。
 
-围栏农田、花田、绿化带和林场都通过显式 Landscape 进入。AI 精确提交 `instanceCount` 和 `parcelCount`；程序只选择建筑候选、实例位置、父子拓扑和逐格外轮廓。ATTACHED required 必须复核 D4 owner anchor 与 footprint，所有 required Parcel 只能在对应容量域内生成；FREE_STANDING optional 逐实例原子准入。
+围栏农田、花田、绿化带和林场都通过显式 Landscape 进入。AI 提交目标 `instanceCount` 和 `parcelCount`；程序按 owner 种子与地形选择实际实例位置、父子拓扑、数量、面积和逐格外轮廓。ATTACHED required 必须复核 D4 owner anchor 与 footprint，所有实际非零 Parcel 只能在对应容量域内生成；FREE_STANDING optional 逐实例原子准入。
 
 ## CityUrbanSpacePlan
 

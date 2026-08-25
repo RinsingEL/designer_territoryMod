@@ -2,7 +2,7 @@
 
 ## 状态
 
-进入 active path。v0.7 将景观从 required/fill 建筑各自产生的小地块改为显式 `Landscape` 主体。AI 精确提交实例数和每实例 Parcel 数；程序联合选择 required 主体建筑候选、景观容量位置、父子拓扑和逐格外形。required 景观是同级硬约束，不缩减、不降级，全部有限组合无解时允许 D4 明确失败。
+进入 active path。v0.7 将景观从 required/fill 建筑各自产生的小地块改为显式 `Landscape` 主体。按最新《City景观约束松绑》修订：AI 提交目标实例数和每实例 Parcel 数；required 建筑先按城市构图落位，景观再由 owner 种子向外按地形生长。实际数量、位置、面积和轮廓服从地形，完全长不出时警告，不再让整城失败。
 
 当前只完成区域几何、阶段占比承载和稳定候选选择。AI 自主组合阶段、有效使用多候选权重，以及按 `contentWeights` 落地多作物、多花种和多树种尚未形成执行闭环，属于功能缺口，不归类为既有功能的 bug。
 
@@ -49,17 +49,17 @@ Foundation 的地形兼容由 owner-chunk 执行层处理：局部低洼、峡�
 
 每个景观必须显式声明语义和来源：`FUNCTIONAL|COMPOSITIONAL|AMBIENT` 表示用途；`ATTACHED` 精确绑定 `groupId + requiredStructureRef`，`FREE_STANDING` 通过 placement domain 声明城市剩余空间、建筑边缘、组间或沿水域。fill/connectivity 建筑永远不拥有景观，也不得进入 required 景观预留区。
 
-AI 提交精确 `instanceCount` 和每实例精确 `parcelCount`；`ATTACHED` 的实例数固定为 1。Profile 只规定 AI 可选的 Parcel 数量范围、单 Parcel 面积范围和父子最小共享边界，不再随机产生 core/fill 数量、分叉概率或 Parcel gap。
+AI 提交目标 `instanceCount` 和每实例目标 `parcelCount`；`ATTACHED` 的实例数固定为 1。Profile 规定 AI 可选的数量和面积范围；程序可因地形减少实际 Parcel 数或面积。
 
-每个实例固定为一棵连通父子树。根 Parcel 从绑定主体建筑真实外缘或自由景观冻结来源生长；每个非根 Parcel 必须从父 Parcel 真实外边界接力，并至少共享 Profile 指定的边界格数。Parcel 最终 mask 互斥，但同实例或不同实例都允许直接接壤；相邻不等于合并，各 Parcel 仍保留独立 Area 身份。
+每个非零实例形成可追踪的父子树。`ATTACHED` owner 只提供根种子和外向方向；近地受阻时根 Parcel 可以离开建筑门口，到周边好地生长。每个非根 Parcel 从父 Parcel 真实外边界接力。Parcel 最终 mask 互斥，但同实例或不同实例都允许直接接壤；相邻不等于合并，各 Parcel 仍保留独立 Area 身份。
 
-required 建筑与 required 景观在 D4 联合求解。任一候选冲突时依次尝试其他扩张方向、父子拓扑和主体建筑候选；不允许先规划者挤掉后规划者，不允许缩减精确 Parcel 数。对同一组 required 主体建筑，程序必须比较搜索预算内的完整可行景观联合方案，优先选择整体长宽比更均衡、树深更小、方向覆盖和分叉更丰富的构图；`generationSeed + landscapeInstanceId` 只用于同分方案的稳定择一，不得因固定遍历顺序永久偏向第一个单向直链。搜索穷尽返回 `CITY_BLUEPRINT_REQUIRED_LANDSCAPE_LAYOUT_UNSATISFIED`，达到独立搜索上限返回 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED`，两者都不继续 fill。联合成功后一次性提交 required anchors 与景观容量预留，fill/connectivity 把预留 spans 视为硬排除。
+required 建筑先按功能区、阵列和道路构图落位，景观不得为了规划完整性反向迫使建筑换位。景观从 owner 附近和周边好地中比较方向、父子拓扑与逐格外形，优先保留更多非零景观和更大实际面积；同面积时再比较距离、长宽比、树深、方向覆盖和分叉。目标 Parcel 放不满就按地形缩减，完全零格写警告；fill/connectivity 只避让实际冻结的景观 spans。
 
-每个 Parcel 的外轮廓必须从唯一根 seed 以四邻接 frontier 逐格生长。`preferredAreaBlocks` 是可用空间充足时的正常完成目标；`maxAreaBlocks` 只是不允许突破的防御上限，不能因为周围仍有空地就继续长满上限。若地形、规划边界、结构、其他 Parcel 竞争或 action budget 提前封闭 frontier，实际面积可以停在 `minAreaBlocks..preferredAreaBlocks`；低于最小可执行面积仍进入下述 required hard fail / optional 零占地 skip，不允许用扩大到 max 补偿其他 Parcel。
+每个 Parcel 的外轮廓必须从唯一根 seed 以四邻接 frontier 逐格生长。`preferredAreaBlocks` 是可用空间充足时的正常完成目标；`maxAreaBlocks` 只是不允许突破的防御上限，不能因为周围仍有空地就继续长满上限。若地形、规划边界、结构或其他 Parcel 提前封闭 frontier，实际面积可以小于目标；只要存在可用格就保留实际结果，完全零格才警告。不允许用扩大到 max 或固定图形补偿其他 Parcel。
 
 frontier 的逐格排序必须共同消费 D3 地形代价、局部同 Parcel 邻接聚合、Blueprint 稳定 seed 派生的多尺度连续扰动，以及 `TOWARD_REFERENCE|AWAY_FROM_REFERENCE|ALONG_WATER` 方向关系。它们决定同一面积下的凹凸、偏移和伸展，但不赋予 AI 逐格坐标。禁止用全局最短路距离场、曼哈顿半径或欧氏半径直接决定整块外壳；固定输入必须复现，改变稳定 seed 或真实地形必须能够改变外轮廓。
 
-LandUse 先在对应 D4 预留域内完整生成全部 required 实例；D6 footprint、主体身份或容量漂移均 hard fail，不向预留域外扩张兜底。随后逐实例探测 optional `FREE_STANDING`：只有能够完整达到精确 Parcel 数才准入，否则零占地记录 `skipped_insufficient_space`；一个 optional 实例失败不影响其他实例。
+LandUse 只执行 D4 按地形冻结的实际非零 Parcel；D6 footprint、主体身份或容量漂移仍明确失败，不在 D6 重新选地或补固定图形。D4 零格 warning 原样保留。optional `FREE_STANDING` 仍逐实例探测，一个 optional 实例失败不影响其他实例。
 
 每次扩张必须校验 D6 footprint、D4 容量、规划边界、地形可通行性和当前占用。候选轮廓可以在搜索时冲突，最终格只能有一个 owner；禁止重叠补数或离开容量兜底。
 
@@ -136,7 +136,7 @@ LandUse 先在对应 D4 预留域内完整生成全部 required 实例；D6 foot
 - 绿化带：`COMMON_GREEN`；城市基底上的狭长软覆盖，不承担道路连通。
 - 林场：`WOODLAND`；较大 Parcel、保留或补充树木、只在片区外缘形成边界。
 
-AI 只在一次 Blueprint 中选择 foundation/landscape Profile、景观用途与来源、精确实例/Parcel 数、自由景观 placement domain，以及填充候选权重、按序角色占比、`PATCH|CORRIDOR` 生长偏置和内容权重。AI 不提交 block ID、逐块坐标、mask、固定形状、方向或道路。程序完全消费冻结 Profile 生成实际几何。
+AI 只在一次 Blueprint 中选择 foundation/landscape Profile、景观用途与来源、目标实例/Parcel 数、自由景观 placement domain，以及填充候选权重、按序角色占比、`PATCH|CORRIDOR` 生长偏置和内容权重。AI 不提交 block ID、逐块坐标、mask、固定形状、方向或道路。程序按地形生成实际几何。
 
 prepare 不注入隐藏默认目录。调用方必须提交完整 `landscapeFillProfiles[]`；服务原样校验、冻结并放入 Context 供 AI 阅读。示例属于 Profile 正式字段，不是提示词外的口头约定。
 
@@ -157,11 +157,11 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城�
 - 基础域无入口线、MST 线、跨组关系线或其他道路状 LandUse 几何。
 - 城市基础域内部无未解释原群系洞。
 - D4 对完整结构占地执行 `water/slope/localRelief/elevation range` 门禁，不可承载时在同一规划范围内改选；合法城市硬质区域的小坑、沟槽和流体被补平，小凸起被削平，未改高度列不得漏铺 Foundation 地表或边界。
-- required 建筑和 required 景观联合求解并原子提交；不得顺序抢地、缩减 Parcel 或让 fill/connectivity 进入容量预留。
+- required 建筑先按城市构图落位；景观不得反向迫使建筑换位，目标数量或面积可按地形缩减，零格只警告；fill/connectivity 只避让实际容量。
 - 存在多个完整可行容量方案时不得固定接受首个候选；大型多 Parcel 景观优先形成二维、多方向父子构图，同分方案随稳定 seed 可改变方位但固定输入必须复现。
-- 每个成功实例的 Parcel 数必须精确等于 Blueprint；optional 实例空间不足以零占地 `skipped_insufficient_space` 退出。
+- required 景观在近地受阻时能离开 owner 与 preferred Patch 找好地；实际 Parcel 数和面积可小于 Blueprint 目标，零格有明确 warning；optional 实例空间不足以零占地 `skipped_insufficient_space` 退出。
 - 可用空间充足时每个 Parcel 的实际面积等于自身 `preferredAreaBlocks` 而非统一长到 `maxAreaBlocks`；同面积 Parcel 的外轮廓由稳定 seed、地形和方向关系逐格形成，不得退化为固定圆、菱形或距离球。
-- 每个实例形成父子树，根来自主体外缘或自由来源，非根来自父 Parcel 真实边界；固定输入重复编译 hash 一致。
+- 每个非零实例形成父子树，根由主体种子向外选择地形，不强制紧贴；非根来自父 Parcel 真实边界；固定输入重复编译 hash 一致。
 - 各 Parcel 保留独立 Area 和边界，不因同类型或相邻而合并。
 - AI 可为同一景观提供多个填充候选及选择权重；固定输入下每个 Parcel 的候选选择稳定。
 - 角色目标占比会改变各接力区域的目标面积，`PATCH|CORRIDOR` 只影响 frontier 偏置，不定义固定轮廓或固定宽度。

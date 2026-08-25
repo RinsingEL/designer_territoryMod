@@ -72,9 +72,9 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 | `originMode` | enum | `ATTACHED | FREE_STANDING`。 |
 | `owner` | object/null | `ATTACHED` 必填，严格为 `{groupId,requiredStructureRef}`；必须指向该 Group 唯一 required 条目。`FREE_STANDING` 必须为 null。 |
 | `placementDomain` | enum/null | `FREE_STANDING` 必填：`URBAN_RESIDUAL | FOUNDATION_EDGE | BETWEEN_GROUPS | ALONG_WATER`；`ATTACHED` 必须为 null。 |
-| `instanceCount` | positive int | AI 精确提交；`ATTACHED` 固定为 1。 |
-| `parcelCount` | positive int | AI 精确提交的每实例数量，必须落在 Profile `parcelCountMin..Max`。 |
-| `required` | boolean | true 时所有实例完整满足，否则 D4/D6 hard fail；false 仅允许 `FREE_STANDING`，逐实例准入。 |
+| `instanceCount` | positive int | AI 提交目标实例数；`ATTACHED` 固定为 1。 |
+| `parcelCount` | positive int | AI 提交的每实例目标数量，必须落在 Profile `parcelCountMin..Max`；实际数量可被地形减少。 |
+| `required` | boolean | true 表示功能区必须尝试提供此类景观；位置、形状、实际 Parcel 数与面积服从地形。完全无可用格时写警告并继续 D4/D6。false 仅允许 `FREE_STANDING`，逐实例准入。 |
 | `preferredPatchRefs` / `terrainPolicy` / `fillSelection` | existing | 自由选址偏好、地形策略和 Parcel 内填充方案。 |
 
 `groups[].requiredStructureRefs[]` 在 v0.11 必须唯一。fill/connectivity 结构不允许作为 owner，也不从自身派生 Landscape。
@@ -83,15 +83,15 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 ### D4 景观容量预留
 
-新增 `city_landscape_capacity_reservation_plan.v0.1`。根字段为 `schemaVersion/cityId/sourceBlueprintHash/sourceD4Hash/planHash/status/searchNodeCount/instances/failures`。每个 required instance 冻结：
+当前产物为 `city_landscape_capacity_reservation_plan.v0.2`。根字段为 `schemaVersion/cityId/sourceBlueprintHash/sourceD4Hash/planHash/status/searchNodeCount/selectionPolicy/patchBoundaryPolicy/attachedOriginPolicy/layoutScore/instances/warnings/failures`。每个取得地形容量的 required instance 冻结：
 
 - `landscapeId/landscapeInstanceId/profileRef/ownerGroupId/ownerRequiredStructureRef/ownerAnchorId`；
-- `capacityCandidateId/directionVariant/topologyVariant/parcelCount/parcelAreaBlocks`；
+- `capacityCandidateId/directionVariant/topologyVariant/requestedParcelCount/parcelCount/parcelAreaBlocks/actualAreaBlocks/capacityStatus/ownerSeedDistanceBlocks`；
 - `reservationSpans[]` 和逐 Parcel `parcelReservations[]`；
-- `parentParcelId/rootSource/sharedBoundaryProof` 连通证明；
-- 失败时的候选原因，不生成部分成功 artifact。
+- `parentParcelId/rootSource/seed/targetAreaBlocks/actualAreaBlocks/sharedBoundaryProof` 来源与接力证明；
+- `warnings[]` 逐实例记录 `REQUIRED_LANDSCAPE_NO_TERRAIN_FIT_WARNING` 或 `REQUIRED_LANDSCAPE_TERRAIN_REDUCED_WARNING`；地形缩减仍生成可消费 artifact。
 
-景观容量格彼此互斥但允许四邻接。D4 容量预留和 D6 Parcel 实际扩张必须使用同一相邻高程连续性门禁：`CONFORM|BALANCED|ASSERTIVE` 的相邻 terrain-field cell 高程差上限分别为 `4|6|10`；种子与每一步生长都不得跨越该断崖门禁。联合搜索最多访问 100000 节点；穷尽为 `CITY_BLUEPRINT_REQUIRED_LANDSCAPE_LAYOUT_UNSATISFIED`，达到上限为 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED`。
+景观只保留地形门禁与真实占用避让：未采样、水体、陡坡和断崖格不得进入容量；景观不得覆盖结构或其他已冻结景观。`preferredPatchRefs[]` 只作软偏好，不能裁断扩张；`ATTACHED owner` 只提供外向生长种子和方向，近地受阻或面积缩水时必须允许在同一 D3 规划域寻找更合适地形。根 Parcel 可离开 owner，后续 Parcel 仍从父 Parcel 局部边界逐格接力。容量格彼此互斥但允许四邻接；相邻高程连续性门禁继续按 `CONFORM|BALANCED|ASSERTIVE = 4|6|10`。目标面积不可满足时保留实际非零格并警告；完全零格也只警告，不得切换固定图形、预制 mask 或让整城 D4 失败。搜索达到 100000 节点仍以 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED` 报内部求解失败。
 
 引用目录根对象所有数组必填且非空：
 
@@ -229,11 +229,11 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | `originMode` | `ATTACHED|FREE_STANDING` | 严格判别字段。 |
 | `owner` | object | 仅 ATTACHED 使用；严格为 `groupId/requiredStructureRef`，必须定位唯一 required 结构。 |
 | `placementDomain` | `URBAN_RESIDUAL|FOUNDATION_EDGE|BETWEEN_GROUPS|ALONG_WATER` | 仅 FREE_STANDING 使用。 |
-| `instanceCount` | positive integer | AI 提交的精确实例数；ATTACHED 固定为 1。 |
-| `parcelCount` | positive integer | AI 提交的每实例精确 Parcel 数，必须落入 Profile 范围。 |
+| `instanceCount` | positive integer | AI 提交的目标实例数；ATTACHED 固定为 1。 |
+| `parcelCount` | positive integer | AI 提交的每实例目标 Parcel 数，必须落入 Profile 范围；实际结果服从地形。 |
 | `preferredPatchRefs[]` | string[] | 可为空；非空项必须命中冻结 D3 patch。 |
 | `terrainPolicy` | `CONFORM|BALANCED|ASSERTIVE` | 景观地形适配档位。 |
-| `required` | boolean | required 所有实例和 Parcel 必须完整满足；FREE_STANDING 当前必须 optional。 |
+| `required` | boolean | required 必须尝试提供该景观功能；非零可用地按实际形状/面积冻结，零格写警告；FREE_STANDING 当前必须 optional。 |
 | `fillSelection` | object | 必填候选填充方案；AI 只提交目录引用、候选权重、有序接力区域的角色/生长偏置/目标占比和内容权重。 |
 
 `fillSelection` 严格只含非空 `variants[]`。每个 variant 必填：
@@ -283,7 +283,7 @@ AI 可直接参考目录示例后调整占比，例如：
 
 `selectionWeight` 决定不同 Parcel 使用哪套方案；每个 occurrence 的 `targetShare` 决定该接力区域的目标面积，同角色合计决定该角色总体占比。AI 不提交固定层宽、坐标、mask 或方块 ID。程序严格按 `roleShares[]` 顺序执行逐格 frontier 扩张，并冻结每块区域的父子关系与实际面积。
 
-required Landscape 在 D4 与 required 结构候选联合求解；数量严格等于 `instanceCount × parcelCount`，不得按 required/fill anchor 倍增、缩减或降级。程序只枚举容量方向、父子拓扑和主体候选位置，成功后原子提交，fill/connectivity 结构把全部预留 spans 当硬排除。FREE_STANDING optional 在 D6 后从剩余空间逐实例准入；成功实例同样必须达到精确 Parcel 数。固定 Blueprint、catalog、D3、D6 与 seed 必须完全复现。
+required Landscape 在 required 建筑落位后，以 owner 为种子枚举近地与远端好地、方向和父子拓扑；景观不得为了满足规划完整性反向迫使建筑换位。程序优先保留更多非零实例与更多地形可用格，同面积时优先离 owner 更近且形态更好的方案。实际 `instanceCount/parcelCount/area` 可被地形减少，减少或零格都写 warning；fill/connectivity 结构只排除实际冻结 spans。FREE_STANDING optional 在 D6 后从剩余空间逐实例准入。固定 Blueprint、catalog、D3、D6 与 seed 必须完全复现。
 
 `residualPolicy` 已删除。单一 Foundation domain 内部全部使用同一基础地板，Landscape Parcel 后写覆盖；不得按 SpatialGround 分配不同铺地，也不得保留原群系残余。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
 
