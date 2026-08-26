@@ -27,4 +27,4 @@
 2. 回到目标领域 README，再进入对应文档层。
 3. 无法命中时使用 `rg`，不得只凭记忆猜测归属。
 
-实现仓库结构细则见 `../02_standards/实现仓库结构规范.md`，过程记录细则见 `../01_workflows/开发与Bug留档规则.md`。
+实现仓库结构细则见 `../02_standards/实现仓库结构规范.md`，过程记录入口见 `E:\Mod_Dev\StructureBinder\dev_docs\README.md`，写入与归档细则见 `../01_workflows/开发与Bug留档规则.md`。

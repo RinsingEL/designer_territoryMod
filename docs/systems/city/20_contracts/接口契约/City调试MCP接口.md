@@ -80,6 +80,10 @@
 
 `city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|worldedit_debug|none`。RoadWeaver plan v0.2 只允许 `long_distance_inter_group_mst`：禁止 intra-group 边，SIMPLE 仅保留距离 >=128 blocks 的组间边；HIERARCHICAL `cityMainRoadPlan=planned` 时 `delegatedToCityMainRoad=true/connectionCount=0`。`auto` 缺 Mod 只跳过该长距层，不启用 WorldEdit fallback。
 
+`city_execute_d5` 写出的 `active_planned_structure_registry.json` 必须包含 `activationProvenance`：schema、D5 plan hash、D6 plan hash、LandUse completion hash、Decoration completion hash 与规范化 `roadProvider`。`city_run_workflow skipExisting=true` 只有在这些身份全部与当前输入一致时才能跳过 D5；任一来源变化或旧 artifact 缺 provenance 都必须重新执行激活。
+
+RoadWeaver endpoint 必须同时保留模板冻结的 `entrancePoint` 与实际注册使用的 `roadPoint`。存在 `lockedActualFootprint` 时，`roadPoint` 必须沿冻结入口方向投影到 footprint 外一格，`coordinateSource=directional_gateway_outside_locked_footprint`；不得把 footprint 内的门点直接交给长距道路作为首段起点。
+
 ## 运行与日志
 
 Node handler 为每次调用记录统一 `callId`、started/completed、UTC 时间、单调耗时和 timeout 分类。外层超时不等于 Java 端没有继续执行，复查时必须用 call log 与 artifact identity 对齐，不能仅凭客户端等待时间判断阶段状态。

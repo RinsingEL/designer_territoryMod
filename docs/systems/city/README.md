@@ -16,7 +16,7 @@ T4 CitySeed
 -> D7 ledger、现场观测、道路和城墙后处理
 ```
 
-正式 D4 只允许一次 CityBlueprint 决策。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑先按城市构图落位，景观再以 owner 为种子按地形生长，Patch 只作软偏好。景观目标数量或面积可被地形减少，完全零格写警告而不让整城失败；fill/connectivity 只排除实际冻结容量。D6 后各非零 Parcel 按冻结父子来源逐格生成。
+正式 D4 只允许一次 CityBlueprint 决策。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑必须留在 Blueprint 显式选择的 Patch，Patch 内无合法位置时留空并记录地形缺口，不得换 Patch。景观再以 owner 为种子按地形生长，其 preferred Patch 仍只作软偏好。景观目标数量或面积可被地形减少，完全零格写警告而不让整城失败；fill/connectivity 只排除实际冻结容量。D6 后各非零 Parcel 按冻结父子来源逐格生成。
 
 ## 当前实现边界
 
