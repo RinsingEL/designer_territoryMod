@@ -32,21 +32,10 @@ T4 CitySeed
 
 | 能力 | 当前文档 |
 | --- | --- |
-| 单次递归蓝图与自愈编译 | `10_product/案子/City单次递归蓝图与自愈编译-v0.1/README.md` |
-| 嵌套阵列与关系位置 | `10_product/案子/City嵌套阵列与关系位置-v0.1/README.md` |
-| 阵列拓扑分类与功能约束 | `10_product/案子/City阵列拓扑分类与功能约束-v0.1/README.md` |
-| 阵列主从骨架与街带 | `10_product/案子/City阵列主从骨架与街带-v0.2/README.md` |
-| 主从路网与景观层 | `10_product/案子/City主从路网与景观层-v0.1/README.md` |
-| 功能区预分配与受约束扩张 | `10_product/案子/City功能区预分配与受约束扩张-v0.1/README.md` |
-| 固定模板唯一落地 | `10_product/案子/City固定模板唯一落地主线-v0.1/README.md` |
-| 单次 Blueprint、Foundation 与 Landscape | `10_product/案子/City单次蓝图户外空间编译-v0.1/README.md` |
-| LandUse 执行层 | `10_product/案子/City建筑驱动LandUseAreaPlan-v0.1/README.md` |
-| Decoration v0.4 | `10_product/案子/City通用装饰阵列系统-v0.4/README.md` |
-| required 装饰候选 | `10_product/案子/City关键装饰锚点候选-v0.1/README.md` |
-| RoadWeaver 交接 | `10_product/案子/RoadWeaver结构连接-v0.1/README.md` |
-| 城市边界与城墙 | `10_product/案子/城市边界与城墙.md` |
+| City 产品案职责索引 | `10_product/案子/README.md` |
+| D4 蓝图编译链实现当前案 | `10_product/案子/City单次递归蓝图与自愈编译-v0.1/README.md` |
 
-产品案状态总表见 `10_product/案子/README.md`。已完成计划、失败原型、未实现方向和单次城市实例不再保留在当前文档仓库，历史只从 Git 查询。
+各独立能力的实现当前案、设计中案和能力参考只在产品案职责索引维护，不在本页复制清单。已完成计划、失败原型、未实现方向和单次城市实例不保留在当前文档仓库，历史只从 Git 查询。
 
 ## 契约入口
 
