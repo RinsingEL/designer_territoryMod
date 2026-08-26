@@ -15,7 +15,7 @@
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.9。 |
 | `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.11；支持 Group 关系位置和父阵列编排。 |
-| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。`status=compiled` 只表示已生成可审查预览，是否可验收必须读取 `compilationAcceptance` 和最终 D4 quality。 |
+| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
 | `city_plan_d4` | `/realm/city/plan_d4` | 生成标准 anchor/group artifact。正式 workflow 使用 Blueprint mode。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
@@ -69,6 +69,8 @@
 | Worldgen observation | `city_worldgen_block_observation.v0.1` |
 
 同一链路中的 `cityId`、D3 hash、catalog hash、Blueprint hash、D6 hash、plan hash 和 schema 必须完整匹配。当前 parser 明确拒绝的旧 artifact 不迁移、不猜字段、不静默降级。
+
+`city_compile_d4_blueprint.artifacts` 在 anchor 终审成功或失败时均返回 `structureAnchorPreview`，并以 `groupStructurePreviews.<groupId>` 返回每个功能区局部 PNG。终审失败不得在 renderer 前提前返回；局部图必须同时绘制已提交结构、功能区实际 claims、该区景观和 `selections[].attempts[].failedAttemptPositions[]` 中的失败位置与 reasonCode。
 
 ## 修改世界与配置
 
