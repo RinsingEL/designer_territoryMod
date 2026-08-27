@@ -240,6 +240,7 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 
 ### RoadWeaver 与 legacy
 
+- `city_roadweaver_connection_plan.v0.3` 只接受另行提供的城市规划域外显式交通意图；当前模板主路径没有该输入时必须返回空连接，禁止按入口距离、Group、HIERARCHY 或阵列成员自行求 MST。城区 `CONNECTION` 及跨水桥由 City 自有道路计划与 SurfacePrint 落地，RoadWeaver 只保留 transformed endpoint 注册能力。
 - `ROADWEAVER_UNAVAILABLE`：`roadProvider=roadweaver` 缺少 mod；`auto` 下为 skip，不得回退旧 debug road。
 - `ROADWEAVER_REGISTRATION_FAILED`：mod 存在但 endpoint / connection 注册失败。
 - `CITY_TEMPLATE_TRANSFORMED_ENTRANCE_INVALID`：transformed entrance 越界、方向或 anchor 不一致。
