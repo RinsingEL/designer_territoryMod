@@ -46,7 +46,9 @@ AI 在 Blueprint 中选择 Foundation Profile、Landscape Profile、ParcelStyle 
 
 `CityLandUseSurfacePrintPlan v0.7` 冻结 fill profile、稳定 seed、有序 region、角色 spans、接力 trace 与道路/建筑绿化/住宅外溢 `featureCells[]`。执行期按 owner chunk 建索引，先预检和快照，再写基础、overlay、道路与绿化地面、crop/plant/外溢边界、Area boundary；任一步失败按 owner 事务回滚，成功后才写 ledger。
 
-正式 Blueprint 路径不生成自动连接 corridor、近邻桥线或 residual 补洞。LandUse 只执行 D4 已冻结的 City 自有 roads，不猜路线；RoadWeaver 只拥有长距通用连接的最终覆盖权。旧 chunk 不回填，停用 active plan 也不回滚已写世界。
+建筑可以带可选的矩形绿化地块，但喷泉、广场等开放结构可以不带。绿化不得种满：必须从真实建筑入口留出连接实际街巷的连续引路；可使用自由式或田字式花纹，植物只能来自本城冻结 palette。AI 选中的填充住宅还可以向外阵列形成有明确边界、入口和内部道路的住宅子区；其边界由实际建筑与街巷形成，不得先画空壳区域。
+
+正式 Blueprint 路径不生成自动连接 corridor、近邻桥线或 residual 补洞。LandUse 只执行 D4 已冻结、具有真实目的地的 City 自有 roads，不猜路线；RoadWeaver 只可覆盖另行确认的外部长距道路，不得从距离或功能区关系自行生成连接。旧 chunk 不回填，停用 active plan 也不回滚已写世界。
 
 ## 硬边界
 

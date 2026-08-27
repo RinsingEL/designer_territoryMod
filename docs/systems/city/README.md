@@ -10,7 +10,7 @@ T4 CitySeed
 -> D4 prepare / submit / compile CityBlueprint v0.11，先落 required 建筑与内部街带，再按地形冻结景观容量
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
--> D6 后在冻结容量内编译含区内路/城市主路台基的 Foundation、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
+-> D6 后按邻域主高程编译城区分级平台、真实目的地道路、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
 -> execute_d5 激活结构、LandUse、Decoration 和 RoadWeaver 交接
 -> worldgen createStructures / FEATURES 分片落地
 -> D7 ledger、现场观测、道路和城墙后处理
@@ -23,7 +23,7 @@ T4 CitySeed
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
 - D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.11` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
-- D6 后生成一个 Foundation owner，其中可含多个连续、有限的局部平台组件，再生成独立 Landscape Parcel；GRID/COURTYARD/LINEAR/COMPACT、可选 CENTER 轴街及 HIERARCHICAL 父阵列城市主路均由 D4 `streetBands[]` 冻结，SurfacePrint v0.7 逐 block 执行台阶路缘/半砖路面、建筑绿化与住宅外溢边界。ORGANIC 只保留自然缝隙；RoadWeaver 只负责规划域外或超出本城主路范围的远距通用连接。
+- D6 后生成一个 Foundation owner：城区建设面按邻域主高程形成分级平台，台基只处理剩余局部高差；Landscape Parcel 保留自然地形。GRID/COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街只冻结服务实际建筑入口的区内街巷，城市主路必须连接真实目的地且沿途具有实际交通用途；功能区关系、相向扩张和距离不得自动生成道路或桥梁。SurfacePrint 逐 block 执行分级材质道路、建筑绿化与住宅外溢边界；RoadWeaver 只消费 Blueprint 另行确认、两端具有正式出口的外部长距道路。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。
 - `key_then_array`、array loop、sequential session 和 cluster groups 仍是显式 legacy/debug endpoint，不是默认 workflow。
 - 城墙默认 D5 reservation 版本为 v2；workflow 可显式使用 v3/v4/v5，v1 只保留为 debug。

@@ -15,21 +15,21 @@ D6 locked structure footprint
 -> 单一城市基础地板
 -> 显式景观 Parcel 覆盖
 -> 稀疏景观装饰
--> RoadWeaver 道路后写覆盖与清障
+-> 已确认外部长距道路可选后写覆盖与清障
 ```
 
 各层职责：
 
 1. 城市基础地板只回答“整座城市的通用建设地表在哪里”，不规划道路。
 2. 农田、花田、绿化带、林场、池塘等景观先形成独立 Parcel，再在 Parcel mask 内按选中的接力填充方案逐格生成主题区、间隔带、水、地面等内部角色。
-3. D4 `streetBands[]` 是 City 区内街巷和 HIERARCHICAL 父阵列城市主路的权威，D6 后由 SurfacePrint 精确执行；RoadWeaver 只负责规划域外或超出本城主路范围的长距通用连接。
+3. D4 `streetBands[]` 只冻结服务真实目的地的 City 区内街巷和城市主路，D6 后由 SurfacePrint 精确执行；功能区关系和距离本身不产生道路。RoadWeaver 只可执行另行确认、两端具有真实交通出口的外部长距道路。
 4. 建筑结构本身继续由 D6 locked footprint 排除，Beardifier 继续负责结构地形融合。
 
 ## 单一城市基础域
 
 `CityBlueprint` 在 `outdoorPlan.foundationProfileRef` 选择冻结的基础地板 Profile。程序收集全部纳入城市主体的 D6 footprint，按 Profile 的建筑外扩和形态闭合参数生成一个单一连续执行域，并使用同一 Surface recipe 铺地。D6/ Foundation 规划只确定城市覆盖范围与几何连接，不得以 D3 的水体、坡度或局部起伏把城市域切碎或拒绝整座城市。
 
-Foundation 的地形兼容由 owner-chunk 执行层处理：局部低洼、峡沟和水/岩浆列向邻近稳定高度补平，小凸起允许削平。原“局部高差达到山体阈值就跳过该列地表与边界”已被最新《City台基与地形适应》需求替代：D4 必须先拒绝完整占地不可承载的建筑位置，合法城市硬质区域再执行有界填挖，不得因为局部窗口 relief 让未改高度列留下零星空洞。Landscape 仍按自身显式规则覆盖 Foundation，本规则不把山体变成新的 Landscape，也不改变 D6 locked footprint。
+Foundation 的地形兼容由 owner-chunk 执行层处理：城区建设面先按《City城市基面与路网形态-v0.1》冻结的邻域主高程形成分级平台，削平孤立小凸起并填实小坑洼，较大平台边缘做挡土收边；不得把地板逐列贴回原始微地形。D4 仍必须先拒绝完整占地不可承载的建筑位置，台基只处理整地后剩余的建筑局部高差。Landscape 按自身自然地形规则覆盖 Foundation，不进入城区整地，也不改变 D6 locked footprint。
 
 基础域禁止使用：
 
@@ -142,7 +142,7 @@ prepare 不注入隐藏默认目录。调用方必须提交完整 `landscapeFill
 
 ## RoadWeaver 边界
 
-LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城市主路和窄宽 transition 已由 D4 冻结为精确 bands，并在 SurfacePrint v0.7 中转成 slab/curb feature cells；这不是缺 RoadWeaver 时的兜底。RoadWeaver 在景观之后只覆盖自己拥有的长距 corridor；缺少 RoadWeaver 时只影响该长距连接，不删除 City 自有路。
+LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城市主路和窄宽 transition 必须先通过真实目的地与临街使用校验，再由 D4 冻结为精确 bands，并在 SurfacePrint v0.7 中转成 slab/curb feature cells；这不是缺 RoadWeaver 时的兜底。RoadWeaver 在景观之后只覆盖 Blueprint 另行确认的外部长距 corridor；缺少 RoadWeaver 时只影响该条已确认连接，不删除 City 自有路。
 
 ## 破坏性规则
 
@@ -168,4 +168,4 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城�
 - 区域接力覆盖 `member - exclusions` 恰好一次；根起点必须是合法格，后继起点必须邻接父区域，断开或无法完成时 hard fail，跨 chunk 不重启。
 - `land_use_preview.png` 叠加冻结的区域边界、接力起点、父界面以及主题、田埂、水和地面角色，可直接审阅 Parcel 内部形态与 provenance。
 - 花田、绿化带、林场和农田都能通过目录 Profile 选择，不需要修改 Java。
-- City 自有区内路/城市主路与 RoadWeaver 长距连接职责分离，双方各自拥有冻结几何并按顺序清理冲突景观。
+- City 自有区内路/城市主路与已确认的 RoadWeaver 外部长距道路职责分离，双方各自拥有冻结几何并按顺序清理冲突景观；距离或功能区关系不能自动造路。

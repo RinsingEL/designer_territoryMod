@@ -2,13 +2,13 @@
 
 ## 状态
 
-已完成 v0.1 接入并并入当前 City 主线；连接计划 v0.2 当前只承担长距 placement group 连接。
+已完成 v0.1 optional adapter 接入。旧 v0.2 的自动长距 placement group 最小生成树已被《City城市基面与路网形态-v0.1》废止；适配器只能消费 Blueprint 另行确认的外部长距真实交通连接。
 
-本案把“规划域外或超出 City 主路范围的长距通用连接”从 D7 WorldEdit 调试后处理迁移到生成期 RoadWeaver optional adapter。City 区内路和 HIERARCHICAL 父阵列主路由 D4/SurfacePrint 自己负责；缺 RoadWeaver 只跳过长距层，不影响 City 自有道路。
+本案只定义生成期 RoadWeaver optional adapter。City 区内路、城市主路和城区桥梁由 D4/SurfacePrint 自己负责；RoadWeaver 不得根据 placement group、功能区关系或距离自行决定连接。缺 RoadWeaver 只跳过明确委托给它的外部长距道路，不影响 City 自有道路。
 
 ## 当前口径
 
-- RoadWeaver 是可选长距依赖，不是 mandatory mod；不生成 placement group 内道路。
+- RoadWeaver 是可选长距依赖，不是 mandatory mod；只接收两端均为真实道路出口、且 Blueprint 已显式确认的外部长距连接，不生成 placement group 内道路，不做自动组间连线。
 - 当前开发验收固定验证 Forge `2.3.0-1.20.1`；City 仍只经反射调用 API，升级后必须复核 `RoadNetworkApi.registerStructureEndpoint` 与 `ensureConnection` 签名。
 - 开发运行标准启动不再加载 RTF / ReTerraForged，只启用结构包和 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
@@ -26,10 +26,10 @@
 D6 locked plan
   -> lockedActualFootprint / priority
   -> city_execute_d5
-  -> roadweaver_connection_plan.json v0.2
-  -> HIERARCHICAL CityMainRoad 已 planned：仅注册 endpoint，连接数 0
-  -> SIMPLE：只在 placement group 间筛选距离 >=128 blocks 的最近入口
-  -> 对长距可行边生成最小生成树，不生成 intra_group 边
+  -> roadweaver_connection_plan.json
+  -> 读取 Blueprint 显式确认的外部长距道路意图
+  -> 校验两端真实目的地、冻结入口和正式道路出口
+  -> 未确认连接保持 connectionCount=0
   -> RoadNetworkApi.registerStructureEndpoint(...)
   -> RoadNetworkApi.ensureConnection(..., generateImmediately=false)
   -> chunk 首次生成时由 RoadWeaver 自己生成道路
@@ -66,14 +66,13 @@ D6 locked plan
 - `lockedActualFootprint` / `footprint`
 - `roadEntrances[]`：模板局部入口经 rotation / mirror 变换后的世界入口，至少包含 `entranceId`、`worldPosition`、`direction`
 - `placementGroupId`
-- `long_distance_inter_group_mst` 连接骨架：只含距离不小于 128 blocks 的 `inter_group` 边；`intraGroupConnectionCount=0`
-- `delegatedToCityMainRoad`：HIERARCHICAL City 主路已接管时为 true，此时 RoadWeaver `connectionCount=0`
+- 显式道路意图标识、两端真实目的地与冻结道路出口；缺少任一项时不得形成连接
+- `delegatedToCityMainRoad`：城区道路或桥梁已由 City 接管时为 true，此时 RoadWeaver `connectionCount=0`
 - 每条连接的 `distanceBlocks`、两端 group / anchor / endpoint
 - `generateImmediately=false`
 
 后续可扩展：
 
-- roadAccessIntent
 - D3 坡度 / 水岸 / 禁行区域
 - actual footprint avoidance
 - bridge / shore policy
@@ -87,7 +86,7 @@ D6 locked plan
 - RoadWeaver 注册发生在 `city_execute_d5`，早于目标 chunk 首次生成。
 - RoadWeaver 模式下 D7 不再默认生成 WorldEdit road operation。
 - `roadweaver_connection_plan.json` 能解释哪些结构被连接、连接顺序和端点。
-- 同 priority 的不同功能区不得按 anchorId 交替串链；连接数应保持全图 `endpointCount-1`，并分别报告组内 / 组间边数。
+- 没有显式道路意图时 `connectionCount=0`；不得再按 priority、anchorId、最近距离或最小生成树把功能区串链。
 
 ## 暂不处理
 
