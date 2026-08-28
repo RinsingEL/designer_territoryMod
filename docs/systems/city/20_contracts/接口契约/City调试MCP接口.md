@@ -14,7 +14,7 @@
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.9。 |
-| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.11；支持 Group 关系位置和父阵列编排。 |
+| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.12；支持 Group 关系位置、父阵列编排和功能区建筑绿化策略。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
 | `city_plan_d4` | `/realm/city/plan_d4` | 生成标准 anchor/group artifact。正式 workflow 使用 Blueprint mode。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
@@ -56,7 +56,7 @@
 | Artifact | 当前 schema |
 | --- | --- |
 | Blueprint Context | `city_blueprint_context.v0.10` |
-| Blueprint | `city_blueprint.v0.11` |
+| Blueprint | `city_blueprint.v0.12` |
 | Catalog Snapshot | `city_blueprint_catalog_snapshot.v0.10` |
 | Reference Catalog | `city_blueprint_reference_catalog.v0.9` |
 | Validation / Submission | `city_blueprint_validation_report.v0.4` / `city_blueprint_submission_trace.v0.4` |

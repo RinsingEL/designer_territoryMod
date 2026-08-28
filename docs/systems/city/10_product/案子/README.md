@@ -17,6 +17,7 @@
 | `City固定模板唯一落地主线-v0.1` | **实现当前案**（模板落地链） | 固定 NBT identity、D4-D6 几何冻结、single-piece StructureStart 和 worldgen ledger。 |
 | `City单次蓝图户外空间编译-v0.1` | **实现当前案**（Foundation/Landscape 编译链） | CityBlueprint、单一 Foundation、Landscape/Group 总预算和区域接力；Landscape 内容权重仍是本职责链内的明确缺口。 |
 | `City建筑驱动LandUseAreaPlan-v0.1` | **实现当前案**（LandUse 执行链） | D3 terrain field、D6 footprint 排除、LandUse/SurfacePrint 和 owner worldgen 执行。 |
+| `City建筑地块与附属绿化-v0.1` | **实现当前案**（建筑地块与附属绿化链） | D4 阵列前置建筑地块、硬碰撞与可压缩空间分层，以及由 Blueprint 表达功能区绿化意图、程序逐栋稳定生成差异化花坛。 |
 | `City通用装饰阵列系统-v0.4` | **实现当前案**（Decoration 执行链） | 分层 Decoration content、placement、terrain outcome 与冻结执行。 |
 | `City关键装饰锚点候选-v0.1` | **能力参考** | required 单点 prefab 的完整 footprint、clearance 候选与相对坐标 Patch。 |
 | `RoadWeaver结构连接-v0.1` | **实现当前案**（外部道路适配链） | 结构入口注册和真实道路交接；缺 Mod 时 `auto` 跳过。 |

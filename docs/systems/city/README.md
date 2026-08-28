@@ -7,7 +7,7 @@ City 承接 T4 `CitySeedRegistry` 和候选选址，在 D3-D7 生成可审查、
 ```text
 T4 CitySeed
 -> D3 局部地貌扫描与选址复核
--> D4 prepare / submit / compile CityBlueprint v0.11，先落 required 建筑与内部街带，再按地形冻结景观容量
+-> D4 prepare / submit / compile CityBlueprint v0.12，先落 required 建筑与内部街带，再按地形冻结景观容量
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
 -> D6 后按邻域主高程编译城区分级平台、真实目的地道路、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
@@ -21,7 +21,7 @@ T4 CitySeed
 ## 当前实现边界
 
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
-- D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.11` 必须严格匹配。
+- D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.12` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
 - D6 后生成一个 Foundation owner：城区建设面按邻域主高程形成分级平台，台基只处理剩余局部高差；Landscape Parcel 保留自然地形。GRID/COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街只冻结服务实际建筑入口的区内街巷，城市主路必须连接真实目的地且沿途具有实际交通用途；功能区关系、相向扩张和距离不得自动生成道路或桥梁。SurfacePrint 逐 block 执行分级材质道路、建筑绿化与住宅外溢边界；RoadWeaver 只消费 Blueprint 另行确认、两端具有正式出口的外部长距道路。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。

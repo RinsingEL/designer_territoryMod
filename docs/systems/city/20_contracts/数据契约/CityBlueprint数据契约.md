@@ -13,7 +13,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | 上下文 | `city_blueprint_context.v0.10` |
 | 引用目录 | `city_blueprint_reference_catalog.v0.9` |
 | 目录快照 | `city_blueprint_catalog_snapshot.v0.10` |
-| 蓝图 | `city_blueprint.v0.11` |
+| 蓝图 | `city_blueprint.v0.12` |
 | 校验报告 | `city_blueprint_validation_report.v0.4` |
 | 提交 trace | `city_blueprint_submission_trace.v0.4` |
 
@@ -77,7 +77,7 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 | `required` | boolean | true 表示功能区必须尝试提供此类景观；位置、形状、实际 Parcel 数与面积服从地形。完全无可用格时写警告并继续 D4/D6。false 仅允许 `FREE_STANDING`，逐实例准入。 |
 | `preferredPatchRefs` / `terrainPolicy` / `fillSelection` | existing | 自由选址偏好、地形策略和 Parcel 内填充方案。 |
 
-`groups[].requiredStructureRefs[]` 在 v0.11 必须唯一。fill/connectivity 结构不允许作为 owner，也不从自身派生 Landscape。
+`groups[].requiredStructureRefs[]` 在 v0.12 必须唯一。fill/connectivity 结构不允许作为 owner，也不从自身派生 Landscape。
 
 `ParcelStyle` 严格字段为 `parcelCountMin`、`parcelCountMax`、`parcelAreaMinBlocks`、`parcelAreaMaxBlocks`、`minSharedBoundaryBlocks`。删除的 `coreParcelCount*`、`fillParcelCount*`、`branchFromExistingChance`、`gapMinBlocks`、`gapMaxBlocks` 均按未知旧字段拒绝。
 
@@ -122,13 +122,13 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field.v0.1`，不触发扫�
 
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
-## CityBlueprint v0.11
+## CityBlueprint v0.12
 
 根字段全部必填，未知字段拒绝：
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `schemaVersion` | string | 固定 `city_blueprint.v0.11`；旧 Blueprint 不兼容且不迁移。 |
+| `schemaVersion` | string | 固定 `city_blueprint.v0.12`；旧 Blueprint 不兼容且不迁移。 |
 | `cityId` | string | 与 context / D3 一致。 |
 | `sourceD3Ref` / `catalogSnapshotRef` | ArtifactRef | 与 context 逐字段一致。 |
 | `generationSeed` | safe integer | `-9007199254740991..9007199254740991`；后续编译器唯一记录随机源。 |
@@ -146,7 +146,7 @@ Group 必填字段：
 | 字段 | 值域 |
 | --- | --- |
 | `groupId` | 蓝图内唯一非空字符串。 |
-| `groupKind` | v0.11 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
+| `groupKind` | v0.12 仍只接受 `STRUCTURE`；景观只能进入 `outdoorPlan.landscapes[]`。 |
 | `preferredPatchRefs[]` | 非空当前 D3 `landformPatchId` 列表；多个 Group 可以共享。 |
 | `preferredPatchZone` | `CENTER | NORTH | EAST | SOUTH | WEST`；核心在全部偏好 patch 精确 member-cell 并集内的起步方位。北=-Z、南=+Z、西=-X、东=+X；不表示世界坐标，也不约束连接阶段。 |
 | `placementRelation` | 可选严格对象；使用 `BETWEEN_PATCHES | ALONG_PATCH_BOUNDARY | BETWEEN_GROUPS` 表达城市内部关系位置。 |
@@ -161,6 +161,7 @@ Group 必填字段：
 | `fillPoolRef` / `compositionProfileRef` | 冻结目录引用；composition 不限制数量。 |
 | `spaceComposition` | 严格对象 `buildingShare/landscapeShare/openSpaceShare`；三者均为 `0..1` 且和为 `1.0`。 |
 | `expansionPolicy` | 严格对象 `allowOutwardExpansion/allowRelationConnection/stopWhenTargetReached`；均为 boolean。 |
+| `buildingGreeneryPolicy` | 严格对象 `{coverage,patternPreference,densityPreference}`。`coverage=NONE|SPARSE|BALANCED|LUSH`；`patternPreference=TEMPLATE_DEFAULT|FREEFORM|FIELD_GRID|MIXED`；`densityPreference=TEMPLATE_DEFAULT|LOW|MEDIUM|HIGH`。AI 只表达功能区整体意图，不提交逐栋坐标、mask、逐栋开关或方块材料。 |
 | `connectionPlan` | 可选连接专用覆写；不填时继承本 Group 的 fill pool、算法和疏密。 |
 | `attachedFeatures[]` | 当前版本必须为空；案子 04 才定义景观归属。 |
 
@@ -351,6 +352,8 @@ connectivity selection 另必填 `requestedBatchSize`、`terminalBatch`、`initi
 required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate。门禁以 transformed collision footprint 为范围，对 `terrainModes` 做 OR 解析；当前 SURFACE 要求全部相交 D3 terrain-field cells 存在、已采样、非水并满足 Group `terrainPolicy` 的完整占地坡度、起伏和高程范围上限，不得只检查 anchor 点、首个 patch 或 dominant biome。候选生成必须逐点应用该门禁，不合法时继续搜索同一合法域。首个 required 只搜索 `preferredPatchRefs[]`，不得用 `d3_terrain_fallback` 改认领同一 D3 review grid 的其他 Patch；该域没有任何完整占地合法候选时单栋留空。selection 必须写 `CITY_BLUEPRINT_SELECTED_PATCH_TERRAIN_UNFIT` 与具体 `terrainFailureReasonCounts`，Group 写入 `terrainPlacementFailures[]`，验收写入 `SELECTED_PATCH_TERRAIN_UNABLE_TO_SUPPORT_REQUIRED_STRUCTURE`；普通局部起伏允许提交时仍记录 `terrainAdaptationRequired=true` 与 `foundation_or_skip`，不得误升级为承载失败。trace 至少记录 `structureRef`、`declaredTerrainModes`、`resolvedTerrainMode`、footprint、相交/已评估/拒绝格数、阈值、reasonCode 和有限失败样本；anchor 同样冻结 `resolvedTerrainMode`。`styleTerms` 不得出现在 gate、分数或候选排序依据中。
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、单调递增但可因非法留空而跳号的 `slotIndex`、`spacingBlocks`、`theoreticalAnchor`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。GRID、COURTYARD、LINEAR、CENTER_SYMMETRIC 使用全组最大 collision span 派生一次固定 pitch，锁世界轴或主入口显式轴，只能尝试精确 guide；不得追加 member-cell center、随机旋转或其他形状兜底，不合法槽位写 `skipped_illegal_slot/EXACT_SLOT_ILLEGAL_LEFT_EMPTY` 后留空。GRID 另写 `gridRow/gridColumn/gridPitchBlocks/worldAxisLocked=true`；COURTYARD 另写 `courtyardRing/courtyardRow/courtyardColumn/courtyardCenter/courtyardGateSide=SOUTH`，slot 0–4 必须构成北侧主建筑、东、东南、西、西南且中心空置；COMPACT 写 `compactLaneRank/compactLaneSide/compactLaneTarget`，建筑在允许旋转内朝弯巷；ORGANIC_COMPACT 只使用程序随机 guides，在功能区内保持 collision gap 1–3 blocks，不产正式道路。需要朝路的结构必须写 `frontageRotation/frontageEntranceId/frontageDirection/frontageAlignmentScore/frontageMinimumAlignmentScore/frontageTargetRef`；规则直路要求满分朝向，弯巷/院角接受最近合法四向且不得低于 0.7。
+
+每个最终 anchor 另必填 `buildingParcelPlan`，schema=`city_building_parcel_plan.v0.1`。它冻结 `planningStage=D4_BEFORE_ARRAY_COMMIT`、`collisionPolicy=HARD_STRUCTURE_SOFT_COMPRESSIBLE_PARCEL`、`marginBlocks`、`preferredBounds`、`resolvedBounds`、`hardCollisionEnvelope`、`parcelStatus=FULL|COMPRESSED`、`greenerySelected`、`greeneryStatus`、`usableGreenCells`，选中绿化时另写 `greeneryPattern` 与 `greeneryDensity`。`preferredBounds` 必须等于 `hardCollisionEnvelope` 向外扩张 `marginBlocks` 后与规划边界相交前的完整地块范围；`marginBlocks` 从硬碰撞外缘计算，不能从 NBT footprint 计算后再由本栋 clearance 吞掉。`usableGreenCells` 只扣除本栋 `hardCollisionEnvelope` 与其他硬占位，因此正常 FULL 地块在正数边距下应保留外圈可用格。阵列 pitch 必须把 NBT、必要 clearance 与 Foundation 建筑边距三者相加形成的完整地块跨度计入模板空间需求；候选合法性仍只由 NBT 与必要保留范围的硬碰撞决定。规划地块命中边界、其他建筑硬碰撞或先到地块时只能压缩；绿化空间不足必须写 `INSUFFICIENT_SPACE_SKIPPED` 并保留建筑，不得升级为 Blueprint、功能区或整城失败。D6 必须原样保留该计划，户外编译不得再从 collision rectangle 临时推导另一块花坛。
 
 每个候选生成或编译器二次门禁拒绝的位置必须写入对应 `selections[].attempts[].failedAttemptPositions[]`。每项至少包含 `templateId`、`anchorBlock{x,z}` 与 `reasonCode`；已经计算出几何时同时保存 `plannedFootprint/estimatedCollisionEnvelope/estimatedMaskEnvelope`。没有生成 raw point 的精确槽失败也必须以 `blueprintLayout.theoreticalAnchor` 留下位置，不能只保存原因计数。该数组是失败功能区局部预览的正式输入，不得因最终 quality 失败而丢弃。
 

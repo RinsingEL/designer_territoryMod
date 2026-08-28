@@ -8,7 +8,7 @@
 
 ```text
 D3 LandUseTerrainField
--> D4 CityBlueprint v0.11
+-> D4 CityBlueprint v0.12
 -> D5 轻量 reservation
 -> D6 lockedActualFootprint
 -> 单一 Foundation
