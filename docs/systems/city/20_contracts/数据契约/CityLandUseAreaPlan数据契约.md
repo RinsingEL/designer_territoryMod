@@ -346,4 +346,5 @@ Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计�
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
 - 整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / area plan hash / surface plan hash / palette hash / owner chunk 幂等阻断。
-- 非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。
+- 普通 worldgen 回调中，非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。唯一例外是显式 `city_execute_d7 + executeStructurePlacement=true`：D7 可按当前完整 plan identity 对计划 owner 与成功 ledger 做差集，并以 `CONTROLLED_D7_BACKFILL` 只补缺失 owner；该能力不得作为任意旧区块重铺入口。
+- D7 受控补写继续使用整 owner 预检、快照、写入、rollback 与成功 ledger 事务，并写 `steps/d7/land_use_owner_completion.json`（schema `city_land_use_owner_completion.v0.1`）。至少包含 city/area/surface identity、`plannedOwnerCount/appliedBeforeCount/backfilledOwnerCount/appliedAfterCount`、`missingOwners[]` 与 `failures[] {chunkX,chunkZ,reasonCode,rollbackComplete}`。`appliedAfterCount != plannedOwnerCount` 必须返回 `CITY_LAND_USE_D7_OWNER_INCOMPLETE`。

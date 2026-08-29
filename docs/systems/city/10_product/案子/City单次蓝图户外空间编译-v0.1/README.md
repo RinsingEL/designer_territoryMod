@@ -31,6 +31,8 @@ D6 locked structure footprint
 
 Foundation 的地形兼容由 owner-chunk 执行层处理：城区建设面先按《City城市基面与路网形态-v0.1》冻结的邻域主高程形成分级平台，削平孤立小凸起并填实小坑洼，较大平台边缘做挡土收边；不得把地板逐列贴回原始微地形。D4 仍必须先拒绝完整占地不可承载的建筑位置，台基只处理整地后剩余的建筑局部高差。Landscape 按自身自然地形规则覆盖 Foundation，不进入城区整地，也不改变 D6 locked footprint。
 
+LandUse owner 的首次 worldgen 写入与 D7 验收必须形成闭环。正常路径仍只允许在首次 FEATURES 写入；但异步区块生成可能在 D5 预检与 active plan 生效之间穿过 FEATURES，因此 D7 在 `executeStructurePlacement=true` 的显式世界修改流程中，必须按当前 `dimension + city + areaPlanHash + surfacePrintPlanHash + paletteHash` 对计划 owner 与成功 ledger 做差集，只对缺失 owner 执行一次受控、整 owner、可回滚的幂等补写。已成功 owner 不得重写，其他城市或其他 plan identity 不得顺带回填。补写后计划 owner 与 ledger 仍不相等时，D7 必须以 `CITY_LAND_USE_D7_OWNER_INCOMPLETE` 失败并输出缺失区块和逐 owner reasonCode，禁止让裸露原地貌的城市通过验收。
+
 基础域禁止使用：
 
 - 模板 `roadEntrances[]`；
