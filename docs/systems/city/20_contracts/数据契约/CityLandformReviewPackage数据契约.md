@@ -74,6 +74,7 @@
 - D3 必须在全部已刷新 region 上统一重算邻域指标，并按全局四邻接合并相同 `landformType`；内部 GIS region 接缝不得产生人为 Patch 边界。`landformPatchId` 与 `memberCells` 统一引用这批跨 region 合并结果。
 - D3 的 `grid.cellStepBlocks` 与 GIS 重采样固定为 16。W 来源 step 仍负责旧 grid 坐标、`planningRadiusCells` 到 block 半径和 territory cell 的换算；固定 D3 step 不得缩小城市物理规划范围。
 - D3 默认优先 RTF 二维快速采样，未安装或不可用时整次扫描回退 Minecraft prior；一个 D3 包内禁止逐点混用 provider。
+- D3 完整扫描在 API worker 执行；服务器线程只用于取得当前 `ServerLevel` 和后续确实需要世界写入的阶段。响应必须报告 `executionMode=api_worker`、`serverThreadBlocked=false` 和本次 `durationMs`，不得因总耗时已降到秒级就把单次多秒主线程停顿视为通过。
 
 ## 面积分级
 

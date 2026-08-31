@@ -34,6 +34,14 @@
 - `cellStepBlocks` 是兼容字段，只允许省略或传 `16`；其他值返回 `CITY_D3_CELL_STEP_FIXED`。D3 不用该字段覆盖 W 来源 step。
 - `preferGeneratorNativeTerrain` 可选，默认 `true`。RTF 可用时走二维 Heightmap fast path；未安装或运行时不可用时整次 D3 回退 Minecraft prior，响应和 review package 的 `terrainProvider` 必须说明实际来源。
 - 响应 `artifacts` 至少包含 `landformReviewMap`、`biomeOverview`、`cityLandformReviewPackage`、`landUseTerrainField`。`biomeOverview` 使用 D3 16-block cell 的最终 Minecraft biome id。
+- D3 采样、Patch 分析、PNG 和 artifact 写入必须在 API worker 执行，不得把完整 handler 包入服务器线程。响应返回 `executionMode=api_worker`、`serverThreadBlocked=false` 与 `durationMs`；workflow 同样只把确实需要世界读写的后续步骤送回服务器线程。
+
+### city_execute_d7 在线队列契约
+
+- `executeStructurePlacement=true` 不得同步遍历城市 owner 或调用阻塞式 `level.getChunk(...)`。缺失 LandUse owner 进入服务器 tick 队列，以异步 FULL chunk future 逐块请求。
+- 每个服务器 tick 全局最多启动一次 chunk 请求或执行一个 owner 事务；队列进行中返回 `status=waiting_for_worldgen`、`reasonCode=CITY_LAND_USE_D7_BACKFILL_IN_PROGRESS`，调用方以同一 `runId + citySeedId` 轮询。
+- `landUseOwnerCompletion` 使用 `city_land_use_owner_completion.v0.2`，必须返回 `status`、`maxOwnerActionsPerTick=1`、`synchronousChunkLoads=false`、可选 `currentOwner`，并保留全部 identity、计数、missing 与 failure 字段。
+- 单 owner 仍使用完整预检、快照、写入、rollback 与 ledger 事务；队列只改变调度，不得把 owner 事务拆成无回滚的小写入。
 
 ## 目录与诊断工具
 
