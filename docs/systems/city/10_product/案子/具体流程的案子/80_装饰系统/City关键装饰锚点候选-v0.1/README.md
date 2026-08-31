@@ -50,7 +50,7 @@ Agent 提交一个关键单点 DecorationProgram 意图
 4. 同一 plan 内已经回填候选 patch 的其他单点 Decoration programs 作为 `fixedDecorationObstacles` 参与 clearance 避让。
 5. 候选之间稳定去重；同一输入重复调用得到相同 candidateId 和排序。
 
-RoadWeaver 尚未落地的真实路线不可被猜成对角矩形或直线障碍；候选阶段只使用已经冻结且可证明的 gateway / corridor。真实地形也不在此阶段伪造：响应固定 `terrainSampling=not_performed`，运行期 terrain validator 仍是最终守门。
+尚未冻结的道路路线不可被猜成对角矩形或直线障碍；候选阶段只使用已经冻结且可证明的 gateway / corridor。真实地形也不在此阶段伪造：响应固定 `terrainSampling=not_performed`，运行期 terrain validator 仍是最终守门。
 
 ## 评分与输出
 

@@ -22,7 +22,7 @@
 | `city_plan_city_dressing` | `/realm/city/plan_city_dressing` | 规划稀疏 DecorationProgram。 |
 | `city_plan_decoration_anchor_candidates` | `/realm/city/plan_decoration_anchor_candidates` | 为 required 单点装饰计算完整 footprint/clearance 候选。 |
 | `city_plan_land_use` | `/realm/city/plan_land_use` | 显式规划 LandUse；正式 workflow 在 D6 后由 Blueprint outdoorPlan 驱动。 |
-| `city_execute_d5` | `/realm/city/execute_d5` | 激活结构、LandUse、Decoration 与 RoadWeaver 生成期计划。 |
+| `city_execute_d5` | `/realm/city/execute_d5` | 激活结构、LandUse 与 Decoration 生成期计划。 |
 | `city_execute_d7` | `/realm/city/execute_d7` | 查询并汇总落地 ledger，执行允许的后处理。 |
 | `city_query_worldgen_observations` | `/realm/city/query_worldgen_observations` | 只读查询 post-features / chunk-save 方块观测。 |
 | `city_plan_city_walls` | `/realm/city/plan_city_walls` | 按所选 wallVersion 生成城墙计划。 |
@@ -80,11 +80,9 @@
 - `city_upgrade_default_decoration_catalog` 必须显式传 `confirmConfigMutation=true`。
 - plan、query、probe、preview 类接口不得修改世界。
 
-`city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|none`。RoadWeaver connection plan v0.3 固定为 `explicit_external_traffic_intents_only`：不得从组间距离、父子关系、阵列成员或功能区关系求 MST；没有另行提供的城市规划域外显式交通意图时 `connectionCount=0`。城区显式 `CONNECTION` 由 City 主路与桥计划拥有，`delegatedToCityMainRoad=true`；`auto` 缺 Mod 只跳过外部道路层。旧 WorldEdit 沙砾道路提供器和 D7 延迟道路后处理已删除。
+`city_execute_d5` 只接收当前结构、LandUse 与 Decoration 激活参数。城区显式 `CONNECTION`、区内道路和桥均由 City 自有计划拥有；旧沙砾道路、外部道路 provider 和 D7 延迟道路后处理均已删除。
 
-`city_execute_d5` 写出的 `active_planned_structure_registry.json` 必须包含 `activationProvenance`：schema、D5 plan hash、D6 plan hash、LandUse completion hash、Decoration completion hash 与规范化 `roadProvider`。`city_run_workflow skipExisting=true` 只有在这些身份全部与当前输入一致时才能跳过 D5；任一来源变化或旧 artifact 缺 provenance 都必须重新执行激活。
-
-RoadWeaver endpoint 必须同时保留模板冻结的 `entrancePoint` 与实际注册使用的 `roadPoint`。存在 `lockedActualFootprint` 时，`roadPoint` 必须沿冻结入口方向投影到 footprint 外一格，`coordinateSource=directional_gateway_outside_locked_footprint`；不得把 footprint 内的门点直接交给长距道路作为首段起点。
+`city_execute_d5` 写出的 `active_planned_structure_registry.json` 必须包含 `activationProvenance`：D5 plan hash、D6 plan hash、LandUse completion hash 与 Decoration completion hash。`city_run_workflow skipExisting=true` 只有在这些身份全部与当前输入一致时才能跳过 D5；任一来源变化或旧 artifact 缺 provenance 都必须重新执行激活。
 
 ## 运行与日志
 

@@ -181,7 +181,7 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 | `terrainPosePolicy` | string | 从目录冻结；所有 City catalog 模板在目录模型和 D6 规划期强制归一为 `structure_start_beard_thin`，不得由 D4 item 或 worldgen 覆盖 |
 | `templateDatumPolicy` | string | 固定为 `generator_base_height_motion_blocking_no_leaves`；不存在 direct-template datum policy |
 
-`roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。RoadWeaver 使用 worldPosition / direction 注册，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
+`roadEntrances[]` 必须由目录局部入口按同一 rotation / mirror 变换并加 anchor 得到。City 自有道路使用 `worldPosition / direction` 选择真实接入点，禁止使用 `bbox + 外扩距离` 推导入口。`templateFootprint`、`bbox`、`footprint` 不是模板目录或阵列 item 的合法输入；它们不会作为另一套本地尺寸真值保存。
 
 ## Active registry `city_active_template_placement_registry.v0.1`
 
@@ -189,9 +189,6 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
-- `roadProvider=auto|roadweaver|none`
-
-`roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail。旧 WorldEdit 沙砾道路提供器与 D7 延迟道路后处理不存在。
 
 模板 D6 item 的 lock 必须包含 `locked=true`、`templateId`、`templateRef`、`templateHash`、`variantId`、`rawSize`、`rotation`、`mirror`、`anchorBlock`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]`、`terrainPosePolicy` 和 `templateDatumPolicy`。D6 必须重新读取当前世界 NBT，并重新校验 hash、rawSize、变换、footprint、collision、mask 与 owner chunks。`pieceBoxes`、start signature、bbox group 和 envelope sample 均为非法旧字段；运行时单-piece start 的内部 bbox 不写回此 schema。worldgen 不能得到高于 `minBuildHeight` 的 generator datum 时必须失败，不能静默以世界最低高度放置。
 
@@ -238,11 +235,10 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `CITY_TEMPLATE_ACTIVE_REGISTRY_MISSING`：worldgen 前未找到对应 active template placement registry。
 - `CITY_TEMPLATE_CHUNK_ALREADY_GENERATED`：目标 chunk 已过 worldgen 交接窗口且没有可用 ledger。
 
-### RoadWeaver 与 legacy
+### 道路与 legacy
 
-- `city_roadweaver_connection_plan.v0.3` 只接受另行提供的城市规划域外显式交通意图；当前模板主路径没有该输入时必须返回空连接，禁止按入口距离、Group、HIERARCHY 或阵列成员自行求 MST。城区 `CONNECTION` 及跨水桥由 City 自有道路计划与 SurfacePrint 落地，RoadWeaver 只保留 transformed endpoint 注册能力。
-- `ROADWEAVER_UNAVAILABLE`：`roadProvider=roadweaver` 缺少 mod；`auto` 下为 skip，不得回退旧 debug road。
-- `ROADWEAVER_REGISTRATION_FAILED`：mod 存在但 endpoint / connection 注册失败。
+- 城区 `CONNECTION`、区内道路及跨水桥均由 City 自有道路计划与 SurfacePrint 落地。模板入口只作为 City 路网的真实目的地，不再注册给外部道路 Mod。
+- 旧 WorldEdit 沙砾道路提供器、外部道路 provider 和 D7 延迟道路后处理均不存在，不得恢复为兼容或调试路径。
 - `CITY_TEMPLATE_TRANSFORMED_ENTRANCE_INVALID`：transformed entrance 越界、方向或 anchor 不一致。
 - `CITY_TEMPLATE_LEGACY_INPUT_REJECTED`：旧建筑输入被拒绝；响应必须带具体 legacy reason。
 - `CITY_TEMPLATE_LEGACY_STRUCTURE_REGISTRY_INPUT`：试图用 `Registries.STRUCTURE` 作为 active 模板来源。
@@ -257,5 +253,4 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、外部 StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。唯一例外是冻结 `terrainPosePolicy=structure_start_beard_thin` 后由 City 创建的单-piece terrain start。
 - 目录更新必须重新计算 `templateHash`，并使旧 plan / active registry 失效；不能只改文件名、variant 或尺寸字段绕过 hash 校验。
 - active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
-- RoadWeaver 缺失时，`auto` 的唯一兼容行为是跳过道路并写 `ROADWEAVER_UNAVAILABLE`；不得回退或重建旧 debug road。
 - 外部 StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据；City 配置化 terrain start 必须单独验证 policy、datum、piece 和 Beardifier 结果。

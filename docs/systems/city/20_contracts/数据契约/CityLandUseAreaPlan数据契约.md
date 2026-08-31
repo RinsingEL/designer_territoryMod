@@ -110,7 +110,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 - D4 `city_structure_anchor_plan.v0.3` / `city_structure_anchor_map.v0.3` 至少保留稳定 `anchorId`、`placementGroupId`、`placementProvenance={slotId,arrayId,parentArrayId,subZoneId}` 和结构语义。显式 group 先形成一个主体；未显式分组时服务端按 parent array -> array -> source slot -> anchorId 稳定派生 group ID，不得按 bbox 邻近关系反猜。
 - D6 `structure_materialization_plan.json` 的 `lockedActualFootprint` / `lockedCollisionEnvelope` 是最终结构排除区和种子几何权威。D4 planned footprint 只服务预案与预览。
-- D4 `streetBands[].platformBounds` 中的区内道路和 Blueprint 城市主干路是 Foundation 正式几何输入。RoadWeaver 外部长距道路的最终形状、D5 corridor 和模板 entrance 本身不是 LandUse 几何输入；RoadWeaver 在户外地表之后覆盖并清除其道路范围内的景观、作物和边界，LandUse 不为缺失 RoadWeaver 数据提供兜底线。
+- D4 `streetBands[].platformBounds` 中的区内道路和 Blueprint 城市主干路是 Foundation 正式几何输入。模板 entrance 本身不是 LandUse 几何输入；只有 D4 已冻结的 City 道路几何可以在 SurfacePrint 中覆盖并清除其范围内的景观、作物和边界。
 
 ## LandUseIntentPlan
 
@@ -235,7 +235,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `areaId` | string | 稳定逻辑区域 ID。正式城市 Foundation 只有一个连续 Area；每个景观 Parcel 都有独立 Area，禁止同类型相邻合并。 |
 | `ruleRef` / `landUseType` | string | 规则引用和用途。 |
 | `sourceGroupIds[]` / `sourceAnchorIds[]` | string[] | 可追溯来源。 |
-| `seedPoints[]` | BlockPoint[] | Foundation 记录建筑影响域的稳定来源；景观记录 Parcel 自身 seed。正式路径禁止入口、组内最小连接树、跨组关系线和 RoadWeaver corridor seed。 |
+| `seedPoints[]` | BlockPoint[] | Foundation 记录建筑影响域的稳定来源；景观记录 Parcel 自身 seed。正式路径禁止入口、组内最小连接树和跨组关系线充当 seed。 |
 | `spans[]` | ScanlineSpan[] | block 成员；每项为 `z,minX,maxX`，两端包含。 |
 | `structureFootprintExclusions[]` | BlockBounds[] | D6 locked 结构硬排除区。 |
 | `boundaryLoops[]` | object[] | `points[]` 与 `hole`；内部孔洞不得生成外边界。 |

@@ -22,7 +22,7 @@ D6 locked structure footprint
 
 1. 城市基础地板只回答“整座城市的通用建设地表在哪里”，不规划道路。
 2. 农田、花田、绿化带、林场、池塘等景观先形成独立 Parcel，再在 Parcel mask 内按选中的接力填充方案逐格生成主题区、间隔带、水、地面等内部角色。
-3. D4 `streetBands[]` 只冻结服务真实目的地的 City 区内街巷和城市主路，D6 后由 SurfacePrint 精确执行；功能区关系和距离本身不产生道路。RoadWeaver 只可执行另行确认、两端具有真实交通出口的外部长距道路。
+3. D4 `streetBands[]` 只冻结服务真实目的地的 City 区内街巷和城市主路，D6 后由 SurfacePrint 精确执行；功能区关系和距离本身不产生道路。
 4. 建筑结构本身继续由 D6 locked footprint 排除，Beardifier 继续负责结构地形融合。
 
 ## 单一城市基础域
@@ -142,9 +142,9 @@ AI 只在一次 Blueprint 中选择 foundation/landscape Profile、景观用途�
 
 prepare 不注入隐藏默认目录。调用方必须提交完整 `landscapeFillProfiles[]`；服务原样校验、冻结并放入 Context 供 AI 阅读。示例属于 Profile 正式字段，不是提示词外的口头约定。
 
-## RoadWeaver 边界
+## 道路边界
 
-LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城市主路和窄宽 transition 必须先通过真实目的地与临街使用校验，再由 D4 冻结为精确 bands，并在 SurfacePrint v0.7 中转成 slab/curb feature cells；这不是缺 RoadWeaver 时的兜底。RoadWeaver 在景观之后只覆盖 Blueprint 另行确认的外部长距 corridor；缺少 RoadWeaver 时只影响该条已确认连接，不删除 City 自有路。
+LandUse 不读取或猜测道路路径。City 自有区内路、城市主路和窄宽 transition 必须先通过真实目的地与临街使用校验，再由 D4 冻结为精确 bands，并在 SurfacePrint v0.7 中转成 slab/curb feature cells；不存在外部道路提供器或缺失 Mod 时的兜底链。
 
 ## 破坏性规则
 
@@ -170,4 +170,4 @@ LandUse 不读取或猜测 RoadWeaver 最终路径。City 自有区内路、城�
 - 区域接力覆盖 `member - exclusions` 恰好一次；根起点必须是合法格，后继起点必须邻接父区域，断开或无法完成时 hard fail，跨 chunk 不重启。
 - `land_use_preview.png` 叠加冻结的区域边界、接力起点、父界面以及主题、田埂、水和地面角色，可直接审阅 Parcel 内部形态与 provenance。
 - 花田、绿化带、林场和农田都能通过目录 Profile 选择，不需要修改 Java。
-- City 自有区内路/城市主路与已确认的 RoadWeaver 外部长距道路职责分离，双方各自拥有冻结几何并按顺序清理冲突景观；距离或功能区关系不能自动造路。
+- City 自有区内路和城市主路各自拥有冻结几何，并按顺序清理冲突景观；距离或功能区关系不能自动造路。

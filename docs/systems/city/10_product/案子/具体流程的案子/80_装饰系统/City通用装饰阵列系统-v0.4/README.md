@@ -2,7 +2,7 @@
 
 ## 状态
 
-v0.4 是 v0.3 连续地形与嵌入落地后的农业分层扩展。它只改变 Decoration content 的组装和 FEATURES 落地顺序，不改变 D3、D4、D6、LandUse、建筑模板、RoadWeaver 或 Beardifier 的职责。
+v0.4 是 v0.3 连续地形与嵌入落地后的农业分层扩展。它只改变 Decoration content 的组装和 FEATURES 落地顺序，不改变 D3、D4、D6、LandUse、建筑模板、City 自有道路或 Beardifier 的职责。
 
 目标是把原先同一个 NBT 中的“耕地 + 小麦”拆成两个独立内容：基底仍是地表 prefab，小麦是受支撑条件约束的独立 plant 内容。它们在同一个几何 slot 内组合，不能通过两个普通 program 分别投影。
 

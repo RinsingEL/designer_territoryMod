@@ -34,7 +34,7 @@ D2 和 catalog query 只暴露可检索的模板事实。D4 负责建筑之间�
 
 ## 道路与地形
 
-RoadWeaver 只读取模板入口经旋转、镜像后的世界坐标；缺失入口时不得从 bbox 猜门。模板本体由 `beard_thin` 参与噪声地形适配，LandUse 批量地表和 Decoration foundation 不得改写模板 identity 或规划 footprint。
+City 自有道路只读取模板入口经旋转、镜像后的世界坐标；缺失入口时不得从 bbox 猜门。模板本体由 `beard_thin` 参与噪声地形适配，LandUse 批量地表和 Decoration foundation 不得改写模板 identity 或规划 footprint。
 
 ## 明确拒绝
 
