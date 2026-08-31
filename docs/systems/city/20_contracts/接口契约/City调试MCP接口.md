@@ -11,10 +11,14 @@
 | 工具 | HTTP | 职责 |
 | --- | --- | --- |
 | `city_plan_d2` | `/realm/city/plan_d2` | 建立 CitySiteContext 与模板检索上下文。 |
+| `city_design_queue_refresh` | `/realm/city/design_queue/refresh` | 从当前 CitySeedRegistry 建立或合并持久化城市设计队列。 |
+| `city_design_queue_status` | `/realm/city/design_queue/status` | 返回队列状态、唯一当前城市和下一动作。 |
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.9。 |
-| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.12；支持 Group 关系位置、父阵列编排和功能区建筑绿化策略。 |
+| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.12；默认在接受后加入 D4 后自动编译队列，可用 `autoAdvanceAfterD4=false` 关闭。 |
+| `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 需要 Agent 处理。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 修复失败原因后重试当前城市的 D4 后程序阶段，不重复 AI D4。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
 | `city_plan_d4` | `/realm/city/plan_d4` | 生成标准 anchor/group artifact。正式 workflow 使用 Blueprint mode。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
@@ -28,6 +32,22 @@
 | `city_plan_city_walls` | `/realm/city/plan_city_walls` | 按所选 wallVersion 生成城墙计划。 |
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
+
+### D4 后自动编译队列契约
+
+- `city_submit_d4_blueprint` 成功且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
+- 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
+- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。服务重启后恢复 `queued` / `running` 项；失败写 `needs_agent`、原因码与错误信息，不继续吞错。
+- `needs_agent` 修复后使用 `city_post_d4_auto_compile_retry` 重跑后半段；不允许用同一一次性 Context 重复提交 Blueprint。
+
+### 城市设计调度队列契约
+
+- T4 CitySeedRegistry 覆盖全部国度首都后自动建立 `<runId>/automation/city_design_queue.json`。单国 T4 finalize 尚未覆盖其他国度时返回 `cityDesignQueueStatus=awaiting_remaining_realms`，不得提前启动 City。
+- 默认 `orderingMode=global_radial`：按 `anchorBlock` 到世界 `0,0` 的距离升序，稳定 tie-break 为 `realmId + citySeedId`。`realm_grouped` 先按各国首都到 `0,0` 的距离排序国度，再按城市到本国首都的距离排序。
+- 整合包默认值写在 `config/geomantia/city_design_queue.json`，schema 为 `geomantia_city_design_queue_config.v0.1`，字段为 `enabled` 和 `orderingMode`。T4/refresh 请求可为单个 run 覆盖 ordering mode，不改全局配置。
+- 队列一次只暴露一个 `currentCity`。正式 D2、D3、D3 review、D4 Context 和 D4 submit 请求若不是当前城市，返回 `CITY_DESIGN_QUEUE_OUT_OF_ORDER`；没有 Registry 的旧调试 run 不受该门禁影响。
+- 当前状态为 `waiting_for_agent` 时 Agent 从 `currentCity` 开始完成 D3/D4；D4 接受后转 `post_d4_running`。后半段进入 `waiting_for_generation` 后，上层队列自动把下一项变为当前城市。
+- 后半段失败时当前城市保持 `needs_agent`，后续城市全部保持 `pending`，不得跳过失败城市继续推进。全部城市进入 `waiting_for_generation` 后队列状态为 `completed`。
 
 ### city_plan_d3 固定采样契约
 

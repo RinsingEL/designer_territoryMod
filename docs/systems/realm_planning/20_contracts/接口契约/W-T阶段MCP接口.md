@@ -99,13 +99,15 @@
 | `tagAuditRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部精扫半径，默认 `32`。 |
 | `tagAuditStrideBlocks` | number | 否 | v1.5 Tag Audit 局部精扫步长，默认 `4`。 |
 | `tagAuditSlopeRadiusBlocks` | number | 否 | v1.5 Tag Audit 局部坡度半径，默认 `4`。 |
-| `centerBlockX` / `centerBlockZ` | number | 否 | 粗扫中心；省略时使用玩家位置或测试默认点。 |
+| `centerBlockX` / `centerBlockZ` | number | 否 | 本次完整粗扫的配置中心。城市距 0,0 的调度顺序不由该字段决定。 |
 | `dimensionId` | string | 否 | 维度 ID，默认玩家维度或 `minecraft:overworld`。 |
 | `playerName` | string | 否 | W 扫描进度聊天消息的接收玩家；省略时使用当前在线玩家。 |
 | `worldTheme` | object/string | 否 | 世界主题摘要。 |
 | `runId` | string | 否 | 指定 run ID；省略则自动生成。 |
 
-扫描运行期间，服务端每秒更新 `world_survey_progress.json`；有目标玩家时，聊天框每 5 秒显示一次当前阶段、进度百分比和 ETA，阶段切换、完成或失败立即显示。无人在线时不发送聊天消息，不影响扫描和进度文件写出。
+W 对请求配置的规划范围执行一次完整扫描。tile 结果写入既有缓存，`resumePolicy=use_cache` 可恢复中断前已完成部分，但缓存恢复不把 W 变成随城市逐圈扩张的长期队列。扫描主循环在 API worker 执行，不阻塞服务器主线程。
+
+扫描运行期间，服务端每秒更新 `world_survey_progress.json`；有目标玩家时，聊天框每 5 秒显示一次当前阶段、进度百分比和 ETA，阶段切换、完成或失败立即显示。聊天通知转交服务器线程执行。无人在线时不发送聊天消息，不影响扫描和进度文件写出。
 
 返回产物：
 

@@ -23,15 +23,17 @@ strict T3 默认使用 `action_budget`；旧 quota frontier 只作为测试对�
 3. `10_product/案子/Patch探索式选址-v0.1/README.md`
 4. `10_product/案子/首都AI候选选址-v0.1/README.md`
 5. `10_product/案子/T4生成器原生粗地形预览-v0.1/README.md`
-6. `20_contracts/数据契约/W-T阶段数据契约.md`
-7. `20_contracts/接口契约/W-T阶段MCP接口.md`
-8. `30_code_guide/代码导览.md`
-9. `40_tests/测试入口.md`
-10. `40_tests/真实游玩验收计划.md`
+6. `10_product/案子/W一次完整扫描-v0.1/README.md`（**实现当前案**：W 执行方式）
+7. `10_product/案子/初始活动区与规划区域开放-v0.1/README.md`
+8. `20_contracts/数据契约/W-T阶段数据契约.md`
+9. `20_contracts/接口契约/W-T阶段MCP接口.md`
+10. `30_code_guide/代码导览.md`
+11. `40_tests/测试入口.md`
+12. `40_tests/真实游玩验收计划.md`
 
 ## 当前实现能力
 
-- W 支持 sealed artifact、checkpoint 恢复、provider 隔离、micro-sampling 和轻量批量预览。
+- W 对配置的规划范围执行一次完整扫描，支持 sealed artifact、checkpoint 恢复、provider 隔离、micro-sampling 和轻量批量预览；城市排序不属于 W。
 - T1/T2 通过 Patch Explorer 浏览与选择国度核心。
 - T3 按行动力、地形成本、竞争压力和状态分类扩张国度。
 - T4 在 owned territory 生成城市候选、生成器粗览证据和最终城市名册。
