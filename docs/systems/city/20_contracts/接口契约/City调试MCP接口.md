@@ -80,7 +80,7 @@
 - `city_upgrade_default_decoration_catalog` 必须显式传 `confirmConfigMutation=true`。
 - plan、query、probe、preview 类接口不得修改世界。
 
-`city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|worldedit_debug|none`。RoadWeaver connection plan v0.3 固定为 `explicit_external_traffic_intents_only`：不得从组间距离、父子关系、阵列成员或功能区关系求 MST；没有另行提供的城市规划域外显式交通意图时 `connectionCount=0`。城区显式 `CONNECTION` 由 City 主路与桥计划拥有，`delegatedToCityMainRoad=true`；`auto` 缺 Mod 只跳过外部道路层，不启用 WorldEdit fallback。
+`city_execute_d5` 的 `roadProvider` 为 `auto|roadweaver|none`。RoadWeaver connection plan v0.3 固定为 `explicit_external_traffic_intents_only`：不得从组间距离、父子关系、阵列成员或功能区关系求 MST；没有另行提供的城市规划域外显式交通意图时 `connectionCount=0`。城区显式 `CONNECTION` 由 City 主路与桥计划拥有，`delegatedToCityMainRoad=true`；`auto` 缺 Mod 只跳过外部道路层。旧 WorldEdit 沙砾道路提供器和 D7 延迟道路后处理已删除。
 
 `city_execute_d5` 写出的 `active_planned_structure_registry.json` 必须包含 `activationProvenance`：schema、D5 plan hash、D6 plan hash、LandUse completion hash、Decoration completion hash 与规范化 `roadProvider`。`city_run_workflow skipExisting=true` 只有在这些身份全部与当前输入一致时才能跳过 D5；任一来源变化或旧 artifact 缺 provenance 都必须重新执行激活。
 

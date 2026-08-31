@@ -189,9 +189,9 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
-- `roadProvider=auto|roadweaver|worldedit_debug|none`
+- `roadProvider=auto|roadweaver|none`
 
-`roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail；`worldedit_debug` 只授权旧 debug road，不授权旧建筑物化路径。
+`roadProvider=auto` 缺 RoadWeaver 时只写 skip state 和 `ROADWEAVER_UNAVAILABLE`；`roadProvider=roadweaver` 缺 mod 或注册失败时 hard fail。旧 WorldEdit 沙砾道路提供器与 D7 延迟道路后处理不存在。
 
 模板 D6 item 的 lock 必须包含 `locked=true`、`templateId`、`templateRef`、`templateHash`、`variantId`、`rawSize`、`rotation`、`mirror`、`anchorBlock`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]`、`terrainPosePolicy` 和 `templateDatumPolicy`。D6 必须重新读取当前世界 NBT，并重新校验 hash、rawSize、变换、footprint、collision、mask 与 owner chunks。`pieceBoxes`、start signature、bbox group 和 envelope sample 均为非法旧字段；运行时单-piece start 的内部 bbox 不写回此 schema。worldgen 不能得到高于 `minBuildHeight` 的 generator datum 时必须失败，不能静默以世界最低高度放置。
 
@@ -257,5 +257,5 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、外部 StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。唯一例外是冻结 `terrainPosePolicy=structure_start_beard_thin` 后由 City 创建的单-piece terrain start。
 - 目录更新必须重新计算 `templateHash`，并使旧 plan / active registry 失效；不能只改文件名、variant 或尺寸字段绕过 hash 校验。
 - active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
-- RoadWeaver 缺失时，`auto` 的唯一兼容行为是跳过道路并写 `ROADWEAVER_UNAVAILABLE`；只有显式 `worldedit_debug` 可产生旧 debug road，且不能改变模板建筑落地路径。
+- RoadWeaver 缺失时，`auto` 的唯一兼容行为是跳过道路并写 `ROADWEAVER_UNAVAILABLE`；不得回退或重建旧 debug road。
 - 外部 StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据；City 配置化 terrain start 必须单独验证 policy、datum、piece 和 Beardifier 结果。

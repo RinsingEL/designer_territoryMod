@@ -13,11 +13,11 @@
 - 开发运行标准启动不再加载 RTF / ReTerraForged，只启用结构包和 RoadWeaver：`.\gradlew.bat runClient -PgeomantiaDevUseStructurePacks=true -PgeomantiaDevUseRoadWeaver=true`。
 - Java 端通过 `ModList` + 反射调用 `net.shiroha233.roadweaver.api.RoadNetworkApi`，避免缺 mod 时类加载崩溃。
 - `city_execute_d5` 是 RoadWeaver 注册点，必须发生在目标 chunk 首次生成前。
-- endpoint 和 MCP 新增 `roadProvider=auto|roadweaver|worldedit_debug|none`：
-  - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则跳过道路，记录 `status=skipped` / `reasonCode=ROADWEAVER_UNAVAILABLE` / `useWorldEditDebugFallback=false`。
+- endpoint 和 MCP 的 `roadProvider=auto|roadweaver|none`：
+  - `auto`：RoadWeaver 存在则注册 RoadWeaver；缺失则跳过道路，记录 `status=skipped` / `reasonCode=ROADWEAVER_UNAVAILABLE`。
   - `roadweaver`：RoadWeaver 缺失时 hard fail `ROADWEAVER_UNAVAILABLE`。
-  - `worldedit_debug`：显式走 D7 WorldEdit 调试道路。
 - `none`：禁用道路生成。
+- 旧 WorldEdit 沙砾道路提供器及 D7 延迟后处理已经删除，不再是调试或兜底选项。
 - 实机道路验收把 `run/config/roadweaver/roadweaver.json` 的 `roadAppearance.roadsEnabled=true`；同时固定 `spawnCabinEnabled=false`、`roadsideStructure.enabled=false`，避免 RoadWeaver 在道路附近额外生成小屋或 roadside 结构干扰 City 结构 / 道路验收。
 
 ## 当前流程
@@ -48,7 +48,6 @@ D6 locked plan
 
 - `roadProvider`
 - `roadWeaverRegistered`
-- `useWorldEditDebugFallback`
 - `roadWeaverAvailable`
 - `reasonCode`
 
@@ -80,11 +79,10 @@ D6 locked plan
 
 ## 验收
 
-- 缺 RoadWeaver 时 `roadProvider=auto` 不崩溃、不生成旧 debug 道路，state / trace 标记 `skipped`、`ROADWEAVER_UNAVAILABLE` 和 `useWorldEditDebugFallback=false`。
+- 缺 RoadWeaver 时 `roadProvider=auto` 不崩溃、不生成道路，state / trace 标记 `skipped`、`ROADWEAVER_UNAVAILABLE`。
 - 缺 RoadWeaver 时 `roadProvider=roadweaver` hard fail `ROADWEAVER_UNAVAILABLE`。
-- 只有显式 `roadProvider=worldedit_debug` 时，D7 才允许生成旧 WorldEdit 调试道路。
 - RoadWeaver 注册发生在 `city_execute_d5`，早于目标 chunk 首次生成。
-- RoadWeaver 模式下 D7 不再默认生成 WorldEdit road operation。
+- D7 不存在 WorldEdit road operation 或延迟道路后处理。
 - `roadweaver_connection_plan.json` 能解释哪些结构被连接、连接顺序和端点。
 - 没有显式道路意图时 `connectionCount=0`；不得再按 priority、anchorId、最近距离或最小生成树把功能区串链。
 
