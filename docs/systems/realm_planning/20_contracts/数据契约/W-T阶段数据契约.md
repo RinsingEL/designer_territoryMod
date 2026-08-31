@@ -476,8 +476,9 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 
 | 产物 | schemaVersion | 关键字段 |
 | --- | --- | --- |
-| 会话 | `patch_explorer_session.v0.1` | `sessionId`、`runId`、`scopeType`、`scopeId`、`candidateModel`、`candidateBasis`、`sourceArtifacts[]`、`sourceIdentity`、`scopeSnapshotIdentity`、`displayedCandidates[]`；三个 scope 均冻结 `preferGeneratorNativeTerrain`。 |
-| 紧凑 scope 快照 | `patch_explorer_scope_snapshot.v0.1` | 候选 cell、来源 patch、scope 裁剪、hard occupied 扣除结果；用于避免每次翻页重读大型 W JSON。 |
+| 会话 | `patch_explorer_session.v0.1` | `sessionId`、`runId`、`scopeType`、`scopeId`、`candidateModel`、`candidateBasis`、`sourceArtifacts[]`、`sourceIdentity`、`scopeSnapshotIdentity`、`displayedCandidates[]`；三个 scope 均冻结 `preferGeneratorNativeTerrain`。T2/T4 另含 `tScaleRefinementArtifact`、`tScaleRefinementIdentity`、`tScaleRefinementCacheHit`。 |
+| 紧凑 scope 快照 | `patch_explorer_scope_snapshot.v0.1` | T2/T4 只冻结共享 `tScaleRefinementArtifact` 及内容 identity；City D4 和兼容路径内联候选 cell、来源 patch、scope 裁剪、hard occupied 扣除结果。用于避免翻页重读大型 W JSON，并避免同范围多国重复展开百 MB T cell。 |
+| T 尺度共享 refinement | `t_scale_refinement_cache.v0.1` | 一次 T 尺度重采样、分类和跨 region 合并结果；缓存 key 必须绑定规范化搜索 cell、实际 provider / dimension / source fingerprint / sampling semantics、尺度和算法版本。会话仅引用，不复制内容。 |
 | 候选页 | `patch_explorer_candidate_page.v0.1` | `interestTypes[]`、`page`、`pageSize`、`typePages[]`（各自含 `nextPageToken` 与 `candidates[]`）、`relations[]`；每个候选含 `terrainPreview`，artifact 以 `candidateTerrainPreviews.<candidateId>` 汇总。 |
 | 选择 | `patch_selection.v0.1` | `selectionId`、`sessionId`、`scopeType`、`scopeId`、`candidateId`、`candidateType`、`sourcePatchRefs[]`、面积字段、`suggestedAnchor`、来源 identity、`confirmationPreviewPath`；另冻结城市尺度 `terrainPreview`。 |
 
@@ -493,7 +494,7 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 - `relations[]`：只引用当前兴趣集合、当前页已展示候选；关系只含可计算的相邻、距离、方位和共享边界事实。
 - `suggestedAnchor`：程序按候选内部连通性与硬边界生成的粗锚点，不代表文明叙事上的最佳选择。
 
-`candidateModel=landform_patch_candidates_v0_2` 必须进入来源 identity。W Patch 只提供 T2/T4 的允许范围与来源关系；T 以不大于 32 格的 cell step 重新采样、计算地貌指标并跨 GIS region 合并连续 Patch。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；存在高程预览证据时还必须验证证据 JSON 内容 identity，任何漂移都返回 stale，不得静默重算成另一个候选。
+`candidateModel=landform_patch_candidates_v0_2` 必须进入来源 identity。W Patch 只提供 T2/T4 的允许范围与来源关系；T 以不大于 32 格的 cell step 重新采样、计算地貌指标并跨 GIS region 合并连续 Patch。共享 refinement 文件在恢复会话时必须校验内容 SHA-256，缺失或被改写时返回 stale / tampered，不得静默使用。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；存在高程预览证据时还必须验证证据 JSON 内容 identity，任何漂移都返回 stale，不得静默重算成另一个候选。
 
 ## RealmSeed
 
