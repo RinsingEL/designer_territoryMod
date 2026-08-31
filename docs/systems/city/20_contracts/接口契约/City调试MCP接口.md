@@ -29,6 +29,12 @@
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
+### city_plan_d3 固定采样契约
+
+- `cellStepBlocks` 是兼容字段，只允许省略或传 `16`；其他值返回 `CITY_D3_CELL_STEP_FIXED`。D3 不用该字段覆盖 W 来源 step。
+- `preferGeneratorNativeTerrain` 可选，默认 `true`。RTF 可用时走二维 Heightmap fast path；未安装或运行时不可用时整次 D3 回退 Minecraft prior，响应和 review package 的 `terrainProvider` 必须说明实际来源。
+- 响应 `artifacts` 至少包含 `landformReviewMap`、`biomeOverview`、`cityLandformReviewPackage`、`landUseTerrainField`。`biomeOverview` 使用 D3 16-block cell 的最终 Minecraft biome id。
+
 ## 目录与诊断工具
 
 | 工具 | HTTP | 是否写状态 |

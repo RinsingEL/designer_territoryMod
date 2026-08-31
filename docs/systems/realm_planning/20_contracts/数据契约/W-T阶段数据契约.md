@@ -137,6 +137,8 @@ W 调度层还必须写出 `world_survey_manifest.json`，用于断点续扫和�
 
 `terrainProvider` 必须包含 `generatorNativeRequested`、`providerId`、`sourceKind`、`fastPath`、`fallbackReason`、`sourceFingerprint` 和 `samplingSemantics`。完整 provider 身份必须进入 `configHash`；开关变化、RTF 设置变化或实际 provider 变化时，不得命中旧 W tile / feature cache。
 
+W 完成后必须额外写出 `world_biome_preview.png`，并通过 `artifacts.worldBiomePreview` 返回。每个 W cell 使用 `biomeHist` 中计数最高的最终 Minecraft biome id 着色；它与 `world_patch_preview.png` 分离，不改变 W Patch 分类。
+
 ## WorldSurveyProgress
 
 开发期 W 扫描可额外写出 `world_survey_progress.json`，并按约 1 秒间隔输出同内容的 debug 日志。该文件用于观察长时间扫描，不是 T 阶段输入，也不替代 sealed 的 `world_survey_manifest.json`。
@@ -495,6 +497,8 @@ T2 产物，记录 AI 原始选择、程序转换和校验结果。
 - `suggestedAnchor`：程序按候选内部连通性与硬边界生成的粗锚点，不代表文明叙事上的最佳选择。
 
 `candidateModel=landform_patch_candidates_v0_2` 必须进入来源 identity。W Patch 只提供 T2/T4 的允许范围与来源关系；T 以不大于 32 格的 cell step 重新采样、计算地貌指标并跨 GIS region 合并连续 Patch。共享 refinement 文件在恢复会话时必须校验内容 SHA-256，缺失或被改写时返回 stale / tampered，不得静默使用。模型变化时旧探索会话和选择凭证直接 stale。`pageToken` 必须绑定兴趣类型集合、页大小、页号和来源 identity。`PatchSelection` 消费时必须重新验证来源文件 hash、scope 快照、候选类型、面积与来源 patch；存在高程预览证据时还必须验证证据 JSON 内容 identity，任何漂移都返回 stale，不得静默重算成另一个候选。
+
+T2/T4 会话必须写 `biome_overview.png`，并在 open/show 的 `artifacts.biomeOverview` 与会话 `overviewArtifacts.biomeOverview` 中返回。图片读取本次 T 尺度 refinement cell 的最终 Minecraft `biomeId`，不得退回用 W 粗 cell 群系代替。
 
 ## RealmSeed
 

@@ -19,6 +19,8 @@
 | `grid` | object | 是 | 局部网格，继承 CitySiteContext |
 | `targetScale` | object | 是 | `{ scale, radiusBlocks, cellStepBlocks }` |
 | `reviewMapImage` | string | D3 端点必填 | 预览图路径；D3 HTTP/MCP 输出必须指向 `landform_review_map.png`，纯 builder 单测可为空 |
+| `biomeOverviewImage` | string | D3 端点必填 | 独立群系总览 `biome_overview.png`；使用 D3 16-block cell 的最终 Minecraft biome id |
+| `terrainProvider` | object | D3 端点必填 | 实际 provider、`fastPath`、整批回退原因、fingerprint 与 sampling semantics |
 | `patchScanPaddingBlocks` | int | D3 端点必填 | patch 上下文相对 `grid.blockBounds` 的额外扫描 padding；默认 128 |
 | `patchContextBounds` | object | D3 端点必填 | D3 实际用于收集 patch/memberCells 的 bounds，等于 city grid 外扩 padding |
 | `refreshedRegions[]` | object[] | D3 端点必填 | 本次 D3 刷新的 GIS region 列表，至少含 `regionId`、`regionX`、`regionZ`、`patchCount` |
@@ -70,6 +72,8 @@
 - `grid` 是城市核心规划域；`patchContextBounds` 是额外 patch 覆盖域。D4 候选必须受 `grid` 约束，不能把 padding 区当成新的城市核心可选域。
 - D3 必须按 `patchContextBounds` 覆盖多个 GIS region。只刷新中心 region 会导致靠近 region 边界的结构 / v4 城墙缺少 patch 背景。
 - D3 必须在全部已刷新 region 上统一重算邻域指标，并按全局四邻接合并相同 `landformType`；内部 GIS region 接缝不得产生人为 Patch 边界。`landformPatchId` 与 `memberCells` 统一引用这批跨 region 合并结果。
+- D3 的 `grid.cellStepBlocks` 与 GIS 重采样固定为 16。W 来源 step 仍负责旧 grid 坐标、`planningRadiusCells` 到 block 半径和 territory cell 的换算；固定 D3 step 不得缩小城市物理规划范围。
+- D3 默认优先 RTF 二维快速采样，未安装或不可用时整次扫描回退 Minecraft prior；一个 D3 包内禁止逐点混用 provider。
 
 ## 面积分级
 
@@ -91,6 +95,7 @@
 `POST /realm/city/plan_d3` / `city_plan_d3` 必须写出：
 
 - `run/realm_debug/<runId>/city_test_runs/<citySeedId>/steps/d3/landform_review_map.png`
+- `run/realm_debug/<runId>/city_test_runs/<citySeedId>/steps/d3/biome_overview.png`
 - `run/realm_debug/<runId>/city_test_runs/<citySeedId>/steps/d3/city_landform_review_package.json`
 
 返回体中：

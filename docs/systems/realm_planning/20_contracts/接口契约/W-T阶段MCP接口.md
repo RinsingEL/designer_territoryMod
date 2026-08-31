@@ -219,11 +219,11 @@
 | `sessionId` | string | 否 | 自定义稳定会话 ID；省略时由服务端生成。 |
 | `preferGeneratorNativeTerrain` | boolean | 否 | 默认 `true`；`false` 强制 T Patch 重算和候选高程预览使用 Minecraft prior sampler。仅控制本次 session。 |
 
-当 `scopeType=realm_t2` 或 `realm_t4` 时，HTTP 层从运行中的 `ServerLevel` 选择 T Patch 重算使用的 provider；RTF 不可用或开关关闭时回退 Minecraft prior sampler。`realm_t4` 还会在打开会话前按需 ensure 当前 realm 的 `RealmT4CoarseTerrainEvidence`。调用方不需要传 RTF 专用字段，可选 `dimensionId` / `playerName` 仅用于现有世界上下文解析。
+当 `scopeType=realm_t2` 或 `realm_t4` 时，HTTP 层从运行中的 `ServerLevel` 选择 T Patch 重算使用的 provider；默认优先 RTF 二维 Heightmap 快速路径，RTF 未安装、运行时契约不可用或开关关闭时整次 refinement 回退 Minecraft prior sampler，禁止逐点混用。RTF random state 尚未初始化 generator context 时，provider 可使用当前世界 RegistryAccess 完成初始化后重试。`realm_t4` 还会在打开会话前按需 ensure 当前 realm 的 `RealmT4CoarseTerrainEvidence`。调用方不需要传 RTF 专用字段，可选 `dimensionId` / `playerName` 仅用于现有世界上下文解析。
 
 T Patch refinement 按规范化搜索 cell 集、实际 provider 身份、维度、尺度和算法版本形成共享缓存 identity。同一 run 内搜索范围和 provider identity 完全相同的 `realm_t2` / `realm_t4` open 必须复用一次重采样与分类结果；响应中的 `tScaleRefinementCacheHit` 表示本次是否命中，`tScaleRefinementArtifact` / `tScaleRefinementIdentity` 给出共享产物及其内容身份。provider、来源 fingerprint、sampling semantics 或搜索范围变化时不得命中旧缓存。
 
-返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。T和D共用 `patchTypePalette` 固定色表，`typeCatalog[].color` 返回对应色号。`artifacts.terrainOverview` 是当前 scope 的原始高程/水体总览，`artifacts.allPatchesOverview` 在完全相同的边界和比例上标出全部 Patch。`realm_t4` 额外返回：
+返回类型目录只给出当前 scope 的类型数量、面积与容量事实，不自动选择“最佳文明类型”。T和D共用 `patchTypePalette` 固定色表，`typeCatalog[].color` 返回对应色号。`artifacts.terrainOverview` 是当前 scope 的原始高程/水体总览，`artifacts.allPatchesOverview` 在完全相同的边界和比例上标出全部 Patch，`artifacts.biomeOverview` 是 T 尺度最终 Minecraft biome id 的独立群系总览。`realm_t4` 额外返回：
 
 | 字段 | 说明 |
 | --- | --- |
