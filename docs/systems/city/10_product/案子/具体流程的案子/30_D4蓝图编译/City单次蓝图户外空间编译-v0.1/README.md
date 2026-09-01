@@ -138,7 +138,7 @@ LandUse 只执行 D4 按地形冻结的实际非零 Parcel；D6 footprint、主�
 - 绿化带：`COMMON_GREEN`；城市基底上的狭长软覆盖，不承担道路连通。
 - 林场：`WOODLAND`；较大 Parcel、保留或补充树木、只在片区外缘形成边界。
 
-AI 只在一次 Blueprint 中选择 foundation/landscape Profile、景观用途与来源、目标实例/Parcel 数、自由景观 placement domain，以及填充候选权重、按序角色占比、`PATCH|CORRIDOR` 生长偏置和内容权重。AI 不提交 block ID、逐块坐标、mask、固定形状、方向或道路。程序按地形生成实际几何。
+AI 只在每个完整 Blueprint revision 中选择 foundation/landscape Profile、景观用途与来源、目标实例/Parcel 数、自由景观 placement domain，以及填充候选权重、按序角色占比、`PATCH|CORRIDOR` 生长偏置和内容权重；这里的“完整”不表示 Context 只能提交一次。AI 不提交 block ID、逐块坐标、mask、固定形状、方向或道路。程序按地形生成实际几何。
 
 prepare 不注入隐藏默认目录。调用方必须提交完整 `landscapeFillProfiles[]`；服务原样校验、冻结并放入 Context 供 AI 阅读。示例属于 Profile 正式字段，不是提示词外的口头约定。
 

@@ -2,7 +2,7 @@
 
 ## 定位
 
-本文冻结 D4 结构设计与 D6 后户外空间设计共用的单次城市决策边界。Java 不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI/Codex 随后只提交一次完整 `CityBlueprint`。上下文准备不计入 AI 城市设计调用。
+本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。Java 不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI/Codex 提交完整 `CityBlueprint` revision；程序编译明确失败时可在同一 Context 下修订重提，最多允许 5 次真实编译失败。上下文准备和提交校验拒绝均不计入失败预算。
 
 CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。
 
@@ -16,6 +16,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | 蓝图 | `city_blueprint` |
 | 校验报告 | `city_blueprint_validation_report` |
 | 提交 trace | `city_blueprint_submission_trace` |
+| 编译失败预算 | `city_blueprint_failure_budget` |
 
 ## ArtifactRef
 
@@ -43,7 +44,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
 | `catalogSnapshotRef` | ArtifactRef | 本次完整目录快照。 |
 | `generationSeedSuggestion` | safe integer | 程序按 city + D3 hash + catalog hash 稳定派生，范围为 JavaScript safe integer。 |
-| `decisionBoundary` | object | 明确 prepare 不计 AI 调用、最多一次提交、提交后不允许候选请求。 |
+| `decisionBoundary` | object | 明确 prepare 与提交校验拒绝不计失败、D4 编译失败上限为 5、编译失败后允许提交完整 revision；同时冻结 Agent 只能使用工具响应和明确返回 artifacts 的恢复边界。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
 | `catalogSnapshot` | object | `city_blueprint_catalog_snapshot`；包含 `city_semantic_profile_catalog` 结构画像、固定模板目录、`city_blueprint_reference_catalog` 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle、Landscape Fill Profile、建筑可选绿化标记与城市植物 palette，D6 后不得重新解释为另一份配置。 |
@@ -295,14 +296,17 @@ required Landscape 在 required 建筑落位后，以 owner 为种子枚举近�
 
 Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
 
-## 校验与一次提交
+## 校验与失败预算
 
-- 同一 `contextId` 最多接受一次 AI 城市设计提交。字段、枚举、引用或关系校验失败时释放提交 claim，不消耗设计次数；只有蓝图被接受后才冻结该 context。
+- 同一 `contextId` 可以提交完整 Blueprint revision；字段、枚举、引用、关系或 stale 等提交校验拒绝均不增加 `failureCount`。
+- 只有程序化 D4 编译或 D4 终审明确失败才原子增加 `failureCount`。第 1～4 次失败返回 `retryAllowed=true` 与 `nextAction=city_submit_d4_blueprint`；第 5 次失败后 `retryAllowed=false`，停止 Agent Loop 并请求人工处理。
+- `city_blueprint_failure_budget.json` 以当前 `contextId` 为身份，必填 `failureCount/maximumFailureCount=5/remainingFailureCount/status/retryAllowed/failures[]`。计数更新只锁定短 ledger 写入，不得把整个编译过程串行化，也不得引入“同一时间只允许一个 Blueprint 编译”的契约。
 - `preferredPatchRefs[]` 必须非空并命中 D3；多个 Group 可以共享 patch；Group ID 唯一；relation 端点存在且不自指。多 Group 城市的 relation-enabled Group 缺少关系时，以 `CITY_BLUEPRINT_FUNCTION_AREA_RELATION_UNSPECIFIED` 在提交前拒绝。
 - 所有 D3、catalog、structure、pool、algorithm、composition、style、road、surface 引用必须命中冻结快照。
 - `GENERATE` 必须完整覆盖全部 STRUCTURE Group；户外 group、landscape、patch、rule、recipe、profile 和 reference Group 必须命中同一冻结上下文。
-- 校验失败写 validation report 与 trace，但不得覆盖最后一次有效 `city_blueprint.json`。
-- trace 记录 `aiCityDesignSubmissionCount`、prepare 是否计数、D3/catalog refs、status 和 failure reasons；不保存被拒 Blueprint payload。
+- 最新校验通过的 revision 原子发布为 active `city_blueprint.json`、validation report 与 submission trace。校验拒绝写独立 last-rejection report/trace，不得覆盖 active accepted artifacts。
+- submission trace 记录 prepare 是否计数、D3/catalog refs、status 和 failure reasons；不再记录 `aiCityDesignSubmissionCount` 或 `attemptConsumed`，也不保存被拒 Blueprint payload。
+- 编译失败恢复时，Agent 只能使用工具响应、`failureCount/retryAllowed/nextAction` 和工具明确返回的 artifacts。不得读取服务端源码、项目文档或未由工具返回的原始 run 文件寻找答案。
 
 主要 reason code：
 
@@ -312,7 +316,7 @@ CITY_BLUEPRINT_FORBIDDEN_PLACEMENT_FIELD
 CITY_BLUEPRINT_CONTEXT_STALE
 CITY_BLUEPRINT_D3_STALE
 CITY_BLUEPRINT_CATALOG_STALE
-CITY_BLUEPRINT_AI_SUBMISSION_ALREADY_CONSUMED
+CITY_BLUEPRINT_FAILURE_BUDGET_EXHAUSTED
 CITY_BLUEPRINT_GROUP_KIND_UNSUPPORTED
 CITY_BLUEPRINT_PREFERRED_PATCH_UNKNOWN
 CITY_BLUEPRINT_RELATION_ENDPOINT_UNKNOWN
@@ -336,7 +340,7 @@ CITY_BLUEPRINT_OUTDOOR_REFERENCE_INVALID
 
 ## 01 -> 02 审查门
 
-案子 02 的冻结输入是：校验通过的 `city_blueprint.json`、同目录 `city_blueprint_catalog_snapshot.json`、Blueprint 中两份 ArtifactRef 和 `generationSeed`。编译器不得再次请求 AI 选择 candidate/slot/扩张方向，且最终必须输出现有标准 `structure_anchor_plan.json` / `structure_anchor_map.json`。
+案子 02 的冻结输入是：当前校验通过并原子发布的 active `city_blueprint.json`、同目录 `city_blueprint_catalog_snapshot.json`、Blueprint 中两份 ArtifactRef 和 `generationSeed`。编译器不得再次请求 AI 选择 candidate/slot/扩张方向，且最终必须输出现有标准 `structure_anchor_plan.json` / `structure_anchor_map.json`。
 
 02 已接通：`city_run_workflow` 只有 CityBlueprint 主线，不接收模式选择字段。`d4CandidateMode` 已删除并显式拒绝；candidate/session/manual anchor 接口仅是各自独立的 legacy/debug 工具，不得通过正式 workflow 选择。
 

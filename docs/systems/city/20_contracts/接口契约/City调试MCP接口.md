@@ -13,14 +13,13 @@
 | `city_plan_d2` | `/realm/city/plan_d2` | 建立 CitySiteContext 与模板检索上下文。 |
 | `city_design_queue_refresh` | `/realm/city/design_queue/refresh` | 从当前 CitySeedRegistry 建立或合并持久化城市设计队列。 |
 | `city_design_queue_status` | `/realm/city/design_queue/status` | 返回队列状态、唯一当前城市和下一动作。 |
-| `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field。 |
+| `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field；site review 完成后自动打开 `city_d4` Patch Explorer，并返回 Top Patch 复核下一动作。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
-| `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 输出 Context v0.10、snapshot v0.10 和 Reference Catalog v0.9。 |
-| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 一次提交完整 CityBlueprint v0.12；默认在接受后加入 D4 后自动编译队列，可用 `autoAdvanceAfterD4=false` 关闭。 |
-| `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 需要 Agent 处理。 |
-| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 修复失败原因后重试当前城市的 D4 后程序阶段，不重复 AI D4。 |
-| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译已接受 Blueprint；不进行第二次 AI 设计。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
-| `city_plan_d4` | `/realm/city/plan_d4` | 生成标准 anchor/group artifact。正式 workflow 使用 Blueprint mode。 |
+| `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
+| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 提交完整 CityBlueprint v0.12 revision；校验拒绝不增加 `failureCount`，编译失败且仍有预算时可用同一 `contextId` 修正重提。接受后默认加入 D4 后自动编译队列，可用 `autoAdvanceAfterD4=false` 关闭。 |
+| `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时改用 `city_submit_d4_blueprint` 提交 revision。 |
+| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint revision；真实编译/终审失败原子增加 `failureCount`。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
 | `city_plan_city_dressing` | `/realm/city/plan_city_dressing` | 规划稀疏 DecorationProgram。 |
@@ -39,7 +38,14 @@
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
 - 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。服务重启后恢复 `queued` / `running` 项；失败写 `needs_agent`、原因码与错误信息，不继续吞错。
-- `needs_agent` 修复后使用 `city_post_d4_auto_compile_retry` 重跑后半段；不允许用同一一次性 Context 重复提交 Blueprint。
+- `needs_agent` 若只需在 Blueprint 不变的前提下重跑已修复的程序/环境阶段，使用 `city_post_d4_auto_compile_retry`；若 `retryAllowed=true` 且需要修改设计或改选已审查 Patch，则使用同一 `contextId` 调用 `city_submit_d4_blueprint` 提交新的完整 revision。
+
+### D4 Blueprint 失败预算契约
+
+- 当前 Context 的 `maximumFailureCount` 固定为 `5`。提交参数、schema、枚举、引用、关系或 stale 校验拒绝不增加 `failureCount`，也不得覆盖当前 accepted Blueprint。
+- 只有程序化 D4 编译或终审明确失败才原子增加 `failureCount`。第 1～4 次失败返回 `retryAllowed=true`、`nextAction=city_submit_d4_blueprint`；第 5 次返回 `retryAllowed=false` 并停止请求人工处理。
+- failure ledger 与 active revision 发布只允许短原子写入；不得用“同一时间只允许一个 Blueprint 编译”的长锁替代失败预算。
+- Agent Loop 只允许使用工具响应和工具明确返回的 artifacts 恢复；不得读取服务端源码、项目文档或未返回的原始 run 文件。
 
 ### 城市设计调度队列契约
 
@@ -74,18 +80,6 @@
 | `city_upgrade_default_decoration_catalog` | `/realm/city/upgrade_default_decoration_catalog` | 是；仅在 `confirmConfigMutation=true` 时升级受管理默认目录并备份旧配置。 |
 | `city_probe_decoration_terrain` | `/realm/city/probe_decoration_terrain` | 否；只采样已加载 FULL chunk，不写 artifact 或世界。 |
 
-## D4 legacy/debug 工具
-
-下列接口仍在代码中，用于显式候选、阵列、loop 和 session 调试，不属于默认 Blueprint workflow：
-
-- 候选：`city_plan_d4_candidates`、`city_select_d4_candidates`。
-- 阵列：`city_plan_d4_array_candidates`、`city_create_d4_array_layout_loop`、`city_query_d4_array_expansion_space`、`city_plan_d4_array_expansion_candidates`、`city_select_d4_array_expansion_candidate`、`city_finalize_d4_array_layout_loop`。
-- 设计轮次：`city_create_d4_design_loop_state`、`city_read_d4_design_loop_state`、`city_append_d4_design_loop_round`、`city_write_d4_design_loop_state`。
-- cluster group：`city_plan_d4_structure_cluster_groups`、`city_select_d4_structure_cluster_group`。
-- sequential session：`city_create_d4_candidate_session`、`city_plan_d4_next_candidates`、`city_select_d4_candidate`、`city_finalize_d4_candidate_session`。
-
-这些工具不得被文档描述成正式 workflow 的保底路径。正式 Blueprint 失败时应修正 Blueprint 或编译错误，不自动切换到固定图形、array loop 或 sequential session。
-
 ## 当前关键 schema
 
 | Artifact | 当前 schema |
@@ -95,6 +89,7 @@
 | Catalog Snapshot | `city_blueprint_catalog_snapshot` |
 | Reference Catalog | `city_blueprint_reference_catalog` |
 | Validation / Submission | `city_blueprint_validation_report` / `city_blueprint_submission_trace` |
+| Failure Budget | `city_blueprint_failure_budget` |
 | Compile Trace / Group Extent | `city_generation_compile_trace` / `group_extent_map` |
 | Structure Anchor Plan / Map | `city_structure_anchor_plan` / `city_structure_anchor_map` |
 | Template Catalog | `city_template_catalog` |
