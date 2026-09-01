@@ -16,14 +16,14 @@ identity 或由它派生的 world footprint 漂移必须 hard fail。`terrainPos
 
 ## 版本与产物
 
-| 产物 | schemaVersion | 作用 | 主要阶段 |
+| 产物 | schema | 作用 | 主要阶段 |
 | --- | --- | --- | --- |
-| 模板目录 | `city_template_catalog.v0.1` | 登记模板 NBT、hash、变体、变换限制、道路入口和地形策略 | D2 |
+| 模板目录 | `city_template_catalog` | 登记模板 NBT、hash、变体、变换限制、道路入口和地形策略 | D2 |
 | placement plan | `city_template_placement_plan.v0.1` | 冻结每个建筑的模板 identity、anchor、NBT size、派生 world footprint、碰撞范围和道路入口 | D4 / D6 |
 | active template placement registry | `city_active_template_placement_registry.v0.1` | D5 -> worldgen 的 City 内部 active 交接 | D5 |
 | placement ledger | `city_template_placement_ledger.v0.1` | 记录 worldgen NBT 放置、跳过、失败和实际 closed footprint，保证幂等 | worldgen / D7 |
 
-`schemaVersion` 必须精确匹配。未知版本、未知字段、缺失必填字段和跨版本自动降级均 hard fail；`v0.1` 不承诺旧 Jigsaw 或 StructureStart artifact 兼容。
+`schema` 必须精确匹配。旧 `schemaVersion`、未知字段、缺失必填字段和静默降级均 hard fail；当前模板目录不承诺旧 Jigsaw 或 StructureStart artifact 兼容。
 
 ## 共同几何约定
 
@@ -96,13 +96,13 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 
 清洗输出采用 datapack 目录 `data/<namespace>/structures/<path>.nbt`。服务端 reload 后仍必须通过 `city_query_template_metadata` 回读当前 `StructureTemplateManager` 的 hash 与 rawSize，离线报告不能直接充当正式模板目录。
 
-## 模板目录 `city_template_catalog.v0.1`
+## 模板目录 `city_template_catalog`
 
 顶层必填字段：
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
-| `schemaVersion` | string | 是 | 固定为 `city_template_catalog.v0.1` |
+| `schema` | string | 是 | 固定为 `city_template_catalog` |
 | `templates[]` | object[] | 是 | 不得为空；`templateRef + variant` 唯一 |
 
 每个 `templates[]` 条目必填：
@@ -128,7 +128,7 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 
 ```json
 {
-  "schemaVersion": "city_template_catalog.v0.1",
+  "schema": "city_template_catalog",
   "templates": [
     {
       "buildingSemantic": "market",
@@ -217,7 +217,7 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 
 ### 模板目录与几何
 
-- `CITY_TEMPLATE_CATALOG_SCHEMA_UNSUPPORTED`：schemaVersion 不支持。
+- `CITY_TEMPLATE_CATALOG_SCHEMA_UNSUPPORTED`：schema 不支持。
 - `CITY_TEMPLATE_CATALOG_FIELD_MISSING` / `CITY_TEMPLATE_CATALOG_FIELD_UNKNOWN`：必填字段缺失或出现未声明字段。
 - `CITY_TEMPLATE_CATALOG_JSON_INVALID` / `CITY_TEMPLATE_CATALOG_ROOT_INVALID`：目录 JSON 根或语法非法。
 - `CITY_TEMPLATE_CATALOG_DUPLICATE_VARIANT`：`templateRef + variant` 重复。

@@ -36,6 +36,7 @@
 ### D4 后自动编译队列契约
 
 - `city_submit_d4_blueprint` 成功且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
+- 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
 - 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。服务重启后恢复 `queued` / `running` 项；失败写 `needs_agent`、原因码与错误信息，不继续吞错。
 - `needs_agent` 修复后使用 `city_post_d4_auto_compile_retry` 重跑后半段；不允许用同一一次性 Context 重复提交 Blueprint。
@@ -89,14 +90,14 @@
 
 | Artifact | 当前 schema |
 | --- | --- |
-| Blueprint Context | `city_blueprint_context.v0.10` |
-| Blueprint | `city_blueprint.v0.12` |
-| Catalog Snapshot | `city_blueprint_catalog_snapshot.v0.10` |
-| Reference Catalog | `city_blueprint_reference_catalog.v0.9` |
-| Validation / Submission | `city_blueprint_validation_report.v0.4` / `city_blueprint_submission_trace.v0.4` |
-| Compile Trace / Group Extent | `city_generation_compile_trace.v0.13` / `group_extent_map.v0.10` |
-| Structure Anchor Plan / Map | `city_structure_anchor_plan.v0.3` / `city_structure_anchor_map.v0.3` |
-| Template Catalog / Placement / Ledger | `v0.1` 系列 |
+| Blueprint Context | `city_blueprint_context` |
+| Blueprint | `city_blueprint` |
+| Catalog Snapshot | `city_blueprint_catalog_snapshot` |
+| Reference Catalog | `city_blueprint_reference_catalog` |
+| Validation / Submission | `city_blueprint_validation_report` / `city_blueprint_submission_trace` |
+| Compile Trace / Group Extent | `city_generation_compile_trace` / `group_extent_map` |
+| Structure Anchor Plan / Map | `city_structure_anchor_plan` / `city_structure_anchor_map` |
+| Template Catalog | `city_template_catalog` |
 | LandUse Intent / Area / Terrain Field | `v0.3` / `v0.1` / `v0.1` |
 | SurfacePrintPlan | `city_land_use_surface_print_plan.v0.7` |
 | Decoration content / program / active / ledger | `v0.4` 系列；只读旧版兼容以代码 parser 为准 |

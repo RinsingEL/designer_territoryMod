@@ -88,7 +88,7 @@ bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `fu
 
 bundled `default_v0_1` 同时包含 `military` 规则，用于 `barracks`、`guard_tower`、`watch_post` 及其中文语义；其默认保留地表、选择性清理植被并使用矮墙边界。
 
-正式 `d4CandidateMode=blueprint` 以 Blueprint `outdoorPlan.mode` 为唯一开关：`GENERATE` 在 D6 后自动规划，`PRESERVE` 明确跳过。正式模式禁止请求级 `enableLandUseLayer` 或 `landUseIntentPlan` 覆写。legacy/debug D4 仍按 settings / `enableLandUseLayer` 进入独立 LandUse intent；独立 `city_plan_land_use` 视为显式 debug 规划。
+正式 `city_run_workflow` 只有 Blueprint 主线，并以 `outdoorPlan.mode` 为唯一开关：`GENERATE` 在 D6 后自动规划，`PRESERVE` 明确跳过。正式模式禁止请求级 `d4CandidateMode`、`enableLandUseLayer` 或 `landUseIntentPlan` 覆写；独立 `city_plan_land_use` 仅视为显式 debug 规划。
 
 ## LandUseTerrainField
 
