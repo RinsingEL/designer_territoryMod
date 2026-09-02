@@ -21,6 +21,7 @@ identity 或由它派生的 world footprint 漂移必须 hard fail。`terrainPos
 | 模板目录 | `city_template_catalog` | 登记模板 NBT、hash、变体、变换限制、道路入口和地形策略 | D2 |
 | placement plan | `city_template_placement_plan.v0.1` | 冻结每个建筑的模板 identity、anchor、NBT size、派生 world footprint、碰撞范围和道路入口 | D4 / D6 |
 | active template placement registry | `city_active_template_placement_registry.v0.1` | D5 -> worldgen 的 City 内部 active 交接 | D5 |
+| server-root active registry collection | `city_active_template_placement_registries` | 同一存档内按城市保存多份 active registry；后续 D5 只替换同一 `cityId` | D5 / worldgen |
 | placement ledger | `city_template_placement_ledger.v0.1` | 记录 worldgen NBT 放置、跳过、失败和实际 closed footprint，保证幂等 | worldgen / D7 |
 
 `schema` 必须精确匹配。旧 `schemaVersion`、未知字段、缺失必填字段和静默降级均 hard fail；当前模板目录不承诺旧 Jigsaw 或 StructureStart artifact 兼容。
@@ -190,6 +191,24 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 - `registryStatus=active`
 - `worldgenSource=city_template_nbt`
 
+每次 D5 产出的城市级 artifact 仍保持上述单城市 registry。server-root 持久化不得再用后一城市整体覆盖前一城市，而必须写入集合外壳 `city_active_template_placement_registries`：
+
+```json
+{
+  "schema": "city_active_template_placement_registries",
+  "registries": [
+    {"schema": "city_active_template_placement_registry", "cityId": "city_a", "plannedStructures": []},
+    {"schema": "city_active_template_placement_registry", "cityId": "city_b", "plannedStructures": []}
+  ]
+}
+```
+
+- `registries[]` 以 `cityId` 唯一；同城新 revision 原子替换旧项，不同城市必须共存。
+- worldgen 按 owner chunk 在全部城市项中查询，ledger identity 仍使用 `runId + citySeedId + cityId + anchorId`。
+- 不同城市可复用相同 `anchorId + templateRef + templateHash`；运行时 piece 查找还必须匹配冻结 `anchorBlock`，不得命中另一城市同名建筑。
+- reservation mask 与模板 registry 必须以相同的多城市生命周期激活、持久化和重启恢复，不能只让 LandUse 多城共存。
+- 读取旧的单城市 server-root 文件时允许将其提升为仅含一项的集合；这只迁移当前模板 active schema，不兼容 configured structure、Jigsaw 或其他退役输入。
+
 模板 D6 item 的 lock 必须包含 `locked=true`、`templateId`、`templateRef`、`templateHash`、`variantId`、`rawSize`、`rotation`、`mirror`、`anchorBlock`、`actualFootprint`、`lockedActualFootprint`、`lockedCollisionEnvelope`、`maskEnvelope`、`ownerChunks[]`、`terrainPosePolicy` 和 `templateDatumPolicy`。D6 必须重新读取当前世界 NBT，并重新校验 hash、rawSize、变换、footprint、collision、mask 与 owner chunks。`pieceBoxes`、start signature、bbox group 和 envelope sample 均为非法旧字段；运行时单-piece start 的内部 bbox 不写回此 schema。worldgen 不能得到高于 `minBuildHeight` 的 generator datum 时必须失败，不能静默以世界最低高度放置。
 
 ## Placement ledger `city_template_placement_ledger.v0.1`
@@ -253,4 +272,5 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - `v0.1` 只兼容本契约四种 schema 的精确版本；只要涉及模板建筑 active path，就不兼容旧 `structureId`、`nbtFile`、configured structure、Jigsaw pool、外部 StructureStart、profile safety envelope 或 bbox 外侧 `roadPoint`。唯一例外是冻结 `terrainPosePolicy=structure_start_beard_thin` 后由 City 创建的单-piece terrain start。
 - 目录更新必须重新计算 `templateHash`，并使旧 plan / active registry 失效；不能只改文件名、variant 或尺寸字段绕过 hash 校验。
 - active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
+- 自动 workflow 只有在 D5 artifact 来源身份仍有效且当前 server-root 集合实际包含该 `runId + citySeedId + cityId` 时，才允许跳过 `city_execute_d5`；仅有旧 artifact 文件不能证明 runtime 已激活。
 - 外部 StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据；City 配置化 terrain start 必须单独验证 policy、datum、piece 和 Beardifier 结果。
