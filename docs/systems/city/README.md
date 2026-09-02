@@ -11,7 +11,7 @@ T4 CitySeed
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
 -> D6 后按邻域主高程编译城区分级平台、真实目的地道路、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
--> execute_d5 激活结构、LandUse 和 Decoration
+-> execute_d5 激活结构与 LandUse
 -> worldgen createStructures / FEATURES 分片落地
 -> D7 ledger、现场观测、道路和城墙后处理
 ```
@@ -44,7 +44,6 @@ T4 CitySeed
 - `20_contracts/数据契约/CityBlueprint数据契约.md`
 - `20_contracts/数据契约/City模板建筑主路径数据契约.md`
 - `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
-- `20_contracts/数据契约/CityDecorationLayeredContent-v0.4.md`
 - `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
 - `20_contracts/接口契约/City调试MCP接口.md`
 

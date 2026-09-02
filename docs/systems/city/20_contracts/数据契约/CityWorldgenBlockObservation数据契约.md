@@ -4,7 +4,6 @@
 
 `city_worldgen_block_observation.v0.1` 是 City 世界写入的调试证据，不是新的落地完成 ledger。
 
-- Structure、LandUse、Decoration ledger 只证明对应执行器成功提交及幂等状态。
 - 方块观测证明 Minecraft 在后续生命周期回调中实际返回了什么 `BlockState`。
 - 两者必须分开解释；禁止再把 `appliedOperationCount`、`appliedPrefabPlacementCount` 或“已落地 N 个”直接当成现场方块存在证明。
 
@@ -14,7 +13,6 @@
 
 | `phase` | `sourceCallback` | 语义 |
 | --- | --- | --- |
-| `post_features` | `ChunkGenerator.applyBiomeDecoration:TAIL` | City 在 HEAD 写入后，等待本次完整 biome decoration 回调结束，再从 `WorldGenLevel` 读取实际状态。可发现同一 FEATURES 流程中的后续覆盖。 |
 | `post_retry_tick` | `Forge.ServerTickEvent:END` | 模板首次生成延迟重试成功后，在该 tick 回调末尾读取实际状态。 |
 | `chunk_save` | `Forge.ChunkDataEvent.Save` | 目标 chunk 进入保存回调时，从待保存 `ChunkAccess` 再读一次。它是首版最晚的持久化检查点。 |
 
@@ -86,7 +84,6 @@ JSONL 每行必须是一个完整、紧凑 JSON object；禁止用 pretty-print 
 - `postWriteMatchesExpectedBlock=false` 表示执行器声称写入成功，但写入返回后现场就不是目标方块。`matchesExpectedBlock=false` 表示生命周期回调时目标方块不存在。`matchesPostWriteState=false` 表示方块在写入后到回调之间发生了 ID 或 properties 变化。
 - `postWriteState.properties` 与 `actualState.properties` 保留全部 BlockState 属性，因此 age、朝向、连接状态等变化进入 `matchedPostWriteStateCount/changedSinceWriteCount`；`matchedExpectedBlockCount` 仍只比较模板或请求声明的 registry ID。
 - `actualAirBlockCount > 0` 不自动等价于 bug，因为显式模板空气也可能是期望值；判断必须同时看 `expectedBlockId` 和 `matchesExpectedBlock`。
-- `source` 当前可为 `city_structure_template`、`land_use_direct`、`land_use_prefab`、`city_decoration_prefab`、`city_decoration_plant` 等 City 写入来源。
 - 本契约不保存 BlockEntity NBT，避免把容器内容、文本或玩家相关数据带入调试产物。
 
 ## 查询

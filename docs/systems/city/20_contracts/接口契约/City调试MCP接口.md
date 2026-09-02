@@ -22,10 +22,8 @@
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint revision；真实编译/终审失败原子增加 `failureCount`。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
-| `city_plan_city_dressing` | `/realm/city/plan_city_dressing` | 规划稀疏 DecorationProgram。 |
-| `city_plan_decoration_anchor_candidates` | `/realm/city/plan_decoration_anchor_candidates` | 为 required 单点装饰计算完整 footprint/clearance 候选。 |
 | `city_plan_land_use` | `/realm/city/plan_land_use` | 显式规划 LandUse；正式 workflow 在 D6 后由 Blueprint outdoorPlan 驱动。 |
-| `city_execute_d5` | `/realm/city/execute_d5` | 激活结构、LandUse 与 Decoration 生成期计划。 |
+| `city_execute_d5` | `/realm/city/execute_d5` | 激活结构 mask、locked structure registry 与 LandUse 生成期计划。 |
 | `city_execute_d7` | `/realm/city/execute_d7` | 查询并汇总落地 ledger，执行允许的后处理。 |
 | `city_query_worldgen_observations` | `/realm/city/query_worldgen_observations` | 只读查询 post-features / chunk-save 方块观测。 |
 | `city_plan_city_walls` | `/realm/city/plan_city_walls` | 按所选 wallVersion 生成城墙计划。 |
@@ -76,9 +74,6 @@
 | --- | --- | --- |
 | `city_query_structure_catalog` | `/realm/city/query_structure_catalog` | 否；查询固定模板目录。 |
 | `city_query_template_metadata` | `/realm/city/query_template_metadata` | 否；从当前世界模板管理器读取 hash、rawSize 等事实。 |
-| `city_query_decoration_catalog` | `/realm/city/query_decoration_catalog` | 否；查询 Decoration content/style。 |
-| `city_upgrade_default_decoration_catalog` | `/realm/city/upgrade_default_decoration_catalog` | 是；仅在 `confirmConfigMutation=true` 时升级受管理默认目录并备份旧配置。 |
-| `city_probe_decoration_terrain` | `/realm/city/probe_decoration_terrain` | 否；只采样已加载 FULL chunk，不写 artifact 或世界。 |
 
 ## 当前关键 schema
 
@@ -95,7 +90,6 @@
 | Template Catalog | `city_template_catalog` |
 | LandUse Intent / Area / Terrain Field | `v0.3` / `v0.1` / `v0.1` |
 | SurfacePrintPlan | `city_land_use_surface_print_plan.v0.7` |
-| Decoration content / program / active / ledger | `v0.4` 系列；只读旧版兼容以代码 parser 为准 |
 | Worldgen observation | `city_worldgen_block_observation.v0.1` |
 
 同一链路中的 `cityId`、D3 hash、catalog hash、Blueprint hash、D6 hash、plan hash 和 schema 必须完整匹配。当前 parser 明确拒绝的旧 artifact 不迁移、不猜字段、不静默降级。
@@ -107,12 +101,9 @@
 - `city_execute_d5` 必须显式传 `confirmWorldMutation=true`；否则拒绝激活。
 - `city_execute_city_walls` 必须显式传 `confirmWorldMutation=true`；否则拒绝放置。
 - `city_run_workflow` 未确认时返回 `waiting_for_confirmation`，不得代替用户确认。
-- `city_upgrade_default_decoration_catalog` 必须显式传 `confirmConfigMutation=true`。
 - plan、query、probe、preview 类接口不得修改世界。
 
-`city_execute_d5` 只接收当前结构、LandUse 与 Decoration 激活参数。城区显式 `CONNECTION`、区内道路和桥均由 City 自有计划拥有；旧沙砾道路、外部道路 provider 和 D7 延迟道路后处理均已删除。
 
-`city_execute_d5` 写出的 `active_planned_structure_registry.json` 必须包含 `activationProvenance`：D5 plan hash、D6 plan hash、LandUse completion hash 与 Decoration completion hash。`city_run_workflow skipExisting=true` 只有在这些身份全部与当前输入一致时才能跳过 D5；任一来源变化或旧 artifact 缺 provenance 都必须重新执行激活。
 
 ## 运行与日志
 

@@ -63,8 +63,7 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
       "mergeSameType": true,
       "surfacePolicy": "PRESERVE",
       "vegetationPolicy": "SELECTIVE_CLEAR",
-      "boundaryPolicy": "LOW_WALL",
-      "decorationPolicy": "military"
+      "boundaryPolicy": "LOW_WALL"
     }
   ]
 }
@@ -84,7 +83,6 @@ required Parcel 先按 D4 实际容量域和冻结父子来源生成。D4 已把
 
 optional 实例若在户外编译阶段无法为全部目标 Parcel 取得合法 seed，则不创建该实例的任何 seed group，并记录 `skipped_insufficient_space:<landscapeInstanceId>`；required 景观以 D4 v0.2 的 `instances[]/warnings[]` 为准，零格不创建 seed group，身份或 hash 漂移才 hard fail。
 
-bundled `default_v0_1` 的 `industry` 规则包含 TerraSense canonical term `function.矿业`，以及 `mining`、`mine`、`quarry`、`workshop` 等别名；其 `landUseType` 和 `decorationPolicy` 都为 `industry`。
 
 bundled `default_v0_1` 同时包含 `military` 规则，用于 `barracks`、`guard_tower`、`watch_post` 及其中文语义；其默认保留地表、选择性清理植被并使用矮墙边界。
 
@@ -244,7 +242,6 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `surfacePolicy` | enum | `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`。 |
 | `vegetationPolicy` | enum | `PRESERVE|SELECTIVE_CLEAR|CLEAR`。 |
 | `boundaryPolicy` | enum | `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。 |
-| `decorationPolicy` | string | Decoration profile / program 选择引用。 |
 
 正式 Blueprint v0.12 不执行相向扩张或事后桥线。Foundation 几何由专用 planner 一次生成；Landscape Parcel 即使 rule、配方和材料完全相同也不得融合。普通同实例父子接壤由 child 单侧占一格；启用自然路隙的父子 Parcel 保持一格 Foundation 间隔，不生成 shared boundary；跨实例接壤按非 `OPEN` 优先和规范化实例 ID 冻结唯一 owner。
 
@@ -321,7 +318,6 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计，不由 SurfacePrint 把任意 semantic contentRef 解释成方块；Landscape 多作物/多树种仍需对应内容目录。建筑自带绿化是独立已冻结能力：它只消费 Reference Catalog v0.9 `styleProfiles[].plantPalette[]` 的真实 blockId/weight，并通过 `GREEN_PLANT` feature cells 执行，不能与 Landscape semantic contentWeights 混用。
 
-同一个 surface-owned `landUseAreaId` 禁止 Decoration 使用 `uniform_fill`、`cross_section_repeat` 或 `parallel_rows`，避免批量地表重复落地；`deterministic_scatter`、`edge_repeat`、`grid_repeat` 等稀疏细节仍允许。
 
 ## LandUse 规划 Trace
 

@@ -88,9 +88,7 @@ LandUse 只执行 D4 按地形冻结的实际非零 Parcel；D6 footprint、主�
 - 灌溉农田：`CULTIVATED/PATCH -> BANK/CORRIDOR -> WATER/CORRIDOR -> BANK/CORRIDOR -> CULTIVATED/PATCH`，耕地占主要比例，田埂与水渠只作为局部间隔，不形成完整闭环。
 - 旱作拼田：`CULTIVATED/PATCH -> GROUND/CORRIDOR -> CULTIVATED/PATCH`，以土路或石子地面打断大块耕地。
 - 花田叶带：`FLOWER/PATCH -> LEAF_BREAK/CORRIDOR -> FLOWER/PATCH`，生成大小不同且由局部叶带接力的花片。
-- 林场：`TREE_GROVE/PATCH -> SHRUB_BREAK/PATCH|CORRIDOR -> TREE_GROVE/PATCH -> GRAVEL_PATH/CORRIDOR`；树、花具体品种的多内容随机落点仍由 Decoration 消费，不在 SurfacePrint 中伪装为已落地。
 
-角色不直接携带方块 ID。目录的 `materialRole=PRIMARY_CONTENT|BANK|WATER|GROUND` 决定使用 Surface Recipe 的哪个材料槽；AI 只能引用角色和内容白名单。`contentWeights` 本版进入 Blueprint、规划 trace 和 SurfacePrint 冻结产物，但 SurfacePrint 只执行地表/作物材料槽，树种、花种的多内容随机落点仍由 Decoration 后续接入。
 
 ## 功能缺口报告：AI 组合与内容权重未闭环
 
@@ -110,7 +108,6 @@ LandUse 只执行 D4 按地形冻结的实际非零 Parcel；D6 footprint、主�
 1. Catalog 同时给出完整角色序列和完整数值示例，现有真实 Blueprint 直接复制示例的阶段顺序、占比与内容权重，没有体现一次城市决策中的重新组合。
 2. 只有一个候选的 `variants[]` 仍可填写任意 `selectionWeight`，但单候选必然以 100% 命中，该权重不产生任何差异。首批配置中除农田有两个兼容 Profile 外，花田和林场都只有一个 Profile，方案权重缺少实际选择空间。
 3. `contentWeights[]` 目前只被校验并写入 Blueprint、trace 和 SurfacePrintPlan。LandUse worldgen 仍从 Surface Recipe 读取单一 `cropBlockId` 或固定 material slot，没有按权重选择作物、花或树。
-4. Decoration 尚未消费 Landscape fill 的 `contentWeights[]`。因此 `crop:wheat/carrot/potato`、`flower:poppy/dandelion/cornflower`、`tree:oak/birch/spruce` 等语义权重不会改变对应 Landscape 的最终多内容分布。
 5. 当前自动测试只证明字段可解析、可冻结和区域阶段可扩张，没有证明改变候选权重或内容权重会改变最终选择与世界方块。
 
 ### 完成标准
@@ -118,7 +115,6 @@ LandUse 只执行 D4 按地形冻结的实际非零 Parcel；D6 footprint、主�
 - Catalog 负责给出合法角色、占比范围、生长形式和内容白名单；示例只用于解释，不得成为 AI 必须照抄的唯一序列。
 - AI 必须能够在合法范围内重新排列或重复阶段、调整各阶段占比，并在存在多个兼容 Profile 时给出有实际意义的候选权重。
 - 单候选权重在契约和 trace 中明确规范化为 100%，不得用 `70/40/50` 等互不相干的数值制造已经发生跨 Landscape 抽样的假象。
-- `contentWeights[]` 必须由明确的执行层消费：批量作物/花地表归 LandUse，稀疏树木/灌木归 Decoration；同一内容不得由两层重复铺设。
 - 固定 Blueprint、Parcel 和 seed 下内容选择稳定；改变权重后统计分布应发生可验证变化，且仍满足主题内容明显强于间隔内容。
 - 自动测试必须覆盖多候选稳定选择、单候选规范化、非示例阶段组合、内容权重到执行操作的映射，以及真实新区块中的多作物、多花种和多树种观测。
 

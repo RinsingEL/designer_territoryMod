@@ -14,7 +14,6 @@ D3 LandUseTerrainField
 -> 单一 Foundation
 -> Landscape Parcels
 -> SurfacePrintPlan v0.7
--> 稀疏 Decoration
 -> execute_d5 激活
 -> FEATURES owner-chunk 执行
 ```
@@ -55,7 +54,6 @@ AI 在 Blueprint 中选择 Foundation Profile、Landscape Profile、ParcelStyle 
 - D3 terrain field 只提供已有扫描事实，不为规划主动加载新区块。
 - D6 `lockedActualFootprint` / collision / gate / reservation 是硬排除。
 - Landscape 实际成员必须是连通逐格结果，不能用 bbox 填满或按 chunk 造型。
-- LandUse 负责批量地表；Decoration 只负责稀疏内容，二者不得重复占有同一批量职责。
 - 旧 SurfacePrint schema、active registry、ledger 或 completion 不迁移，必须清理后完整重规划。
 
 ## 验收重点
