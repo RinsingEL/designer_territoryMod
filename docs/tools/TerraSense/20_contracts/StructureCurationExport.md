@@ -34,23 +34,16 @@ node studio/scripts/export-city-profiles.mjs --workspace <workspace> --out <outp
 - `review.review_state=approved`。
 - 至少一个 `functionTerms`。
 - 恰好一个 `planningRoleTerms`。
-- 至少一个 `terrainTerms`。
+- 一个 `terrainModes`，由 review 的 `terrain_mode` 生成；缺省为 `SURFACE`。
 - `styleTerms` 可为空。
 
 binder source 固定声明 `catalogMode=binder`、`sampleType=single_template`、`allowDebugUnapproved=false`，并携带 `terrasenseRunId`、`profilePath` 和 `vocabularySnapshotPath`。
 
-## 当前跨仓库断点
+## Binder 放置地形契约
 
-TerraSense 当前 binder exporter 输出 `terrainTerms`，而 StructureBinder 当前 `CityStructureProfileCatalog` 把 `terrainTerms` 视为退役字段，并要求 `terrainModes`（`SURFACE|EMBEDDED|FLOATING`）。两端 schema 版本虽然都写 v0.2，但字段目前不兼容，binder 产物不能宣称已被 City 正式消费。
+TerraSense binder exporter 输出 `terrainModes`，StructureBinder `CityStructureProfileCatalog` 直接消费该字段。数组当前固定为单元素，值为 `SURFACE|EMBEDDED|FLOATING`；Studio 默认 `SURFACE`，只有人工明确选择时才使用另外两种。旧 `terrainTerms` 不得出现在 binder 产物中。
 
-在实现统一前，文档不得把以下事项写成完成能力：
-
-- binder 导出可直接进入当前 City D4/D6。
-- `terrainTerms` 会被自动映射为 `terrainModes`。
-- official configured-structure 导出仍为 City 建筑几何真值。
-- TerraSense envelope facts 会覆盖固定 NBT rawSize/hash。
-
-修复时必须由两仓库共同选择并冻结一个字段契约，再增加 exporter -> `CityStructureProfileCatalog` 的真实集成测试；禁止在消费端按文件名或旧 placement term 猜值。
+configured/Jigsaw assembly 仍未进入 City active catalog，TerraSense envelope facts 也不会覆盖固定 NBT rawSize/hash。消费端禁止按文件名或旧 placement term 猜放置地形。
 
 ## 事实与语义边界
 

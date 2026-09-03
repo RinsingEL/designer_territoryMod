@@ -37,13 +37,17 @@ Studio 文件 API 必须限制在 workspace/imports 根目录。导入 zip 不�
 
 人工审核负责功能、规划角色、地形/拓扑语义、风格和推荐场景。以下内容始终是扫描或 Minecraft 事实：NBT 大小、palette、connector、pool、放置命令、实际 footprint 和截图来源。
 
+Studio 主审核口径只展示**功能、规划角色、风格**三组动态词，以及独立的**放置地形**单选项。放置地形默认是 `SURFACE`，人工可改为 `EMBEDDED` 或 `FLOATING`；它具有消费端执行语义，不属于自由 Tag，也不交给 AI 猜。词表属于 workspace 数据，Studio 不得在代码中维护并反复补写一套默认 Tag；空词表是合法状态。旧工作区的地形标签、摆放、用途、模板角色和质量词条可以继续读取，但不再占用主审核界面或进入新的 AI 初标。
+
+风格使用中文分层名称，格式为“维度·名称”，例如 **建筑传统·原版平原**、**主要材质·木石混合**、**构造形式·吊脚式**。具体名称仍由动态词表维护，不在代码中枚举；旧英文 ID 和旧称只作为迁移、别名或合并来源。
+
 debug 导出可以保留未审核信息，但必须显式 `catalogMode=debug`。official/binder 不得自动把 proposed term 当 approved，也不得根据结构 ID 或文件名猜缺失标签。
 
 ## 与 StructureBinder 的边界
 
 当前 City active path 只使用固定 NBT。模板几何由当前世界 `StructureTemplateManager` 与 City template catalog 冻结；TerraSense 最多提供 AI 可读、可审核的结构语义，不提供 configured/Jigsaw 几何、统计 envelope 或运行时放置计划。
 
-当前 binder 集成尚未闭环：TerraSense exporter 输出 `terrainTerms`，StructureBinder importer 要求 `terrainModes` 并拒绝前者。在字段统一和跨仓库 fixture 通过前，binder 产物只能作为待接入输出，不能宣称已经进入 D4/D6。
+TerraSense binder exporter 直接输出 StructureBinder 要求的单元素 `terrainModes`，取值固定为 `SURFACE|EMBEDDED|FLOATING`；旧 `terrainTerms` 不再进入 binder 产物。普通 official/debug 研究产物仍可保留旧地形语义，不得与 binder 契约混用。
 
 ## 验收
 

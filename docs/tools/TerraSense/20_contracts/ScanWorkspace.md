@@ -40,24 +40,26 @@ TerraSenseWorkspace/
 
 ## `vocabulary.json`
 
-`vocabulary.json` 是 Studio 维护的审核词表。词表允许 AI 发现新标签，但落盘后必须保持稳定、可搜索、可去重。
+`vocabulary.json` 是 Studio 维护的审核词表。词表允许 AI 发现新标签，但落盘后必须保持稳定、可搜索、可去重。词表是 workspace 数据；Studio 不提供代码内置默认词，也不会在启动时补回已删除词条。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `term_id` | string | canonical term id，由 `vocab_type` 和主标签生成 |
-| `vocab_type` | string | `function/style/placement/usage/template_role/quality` |
+| `term_id` | string | canonical term id，由 `vocab_type` 的中文命名空间和中文主标签生成；旧英文 ID 继续兼容 |
+| `vocab_type` | string | 主审核使用 `function/planning_role/style`；旧 workspace 仍可保存 `terrain/placement/usage/template_role/quality` |
 | `label` | string | 中文主标签，用于人工审核和正式展示 |
 | `aliases` | array | 英文别名、同义词或旧称，用于搜索和去重 |
 | `status` | string | `approved/proposed/deprecated` |
 | `description` | string | 术语说明 |
 | `merge_into` | string/null | 废弃或合并时指向的 canonical term |
 
-AI 初标提示词可以要求新增标签使用 `中文（English）` 格式，例如 `蘑菇图腾（Mushroom Totem）`。Studio 写入词表时不把整串作为主标签，而是归一化为：
+新增标签直接使用中文，不要求提供英文。若输入仍采用 `中文（English）` 格式，Studio 会兼容归一化为：
 
 - `label = 蘑菇图腾`
 - `aliases = ["Mushroom Totem"]`
 
 `ai_suggestion.json` 中的单项 `source_label` 保留模型原始输出，方便追溯模型当时给出的完整文本。只有括号内包含英文字母时才按英文别名拆分；类似 `道路节点（小型）` 的中文括注应作为完整中文标签保留。
+
+新建 `style` 词条必须使用“维度·名称”格式。维度和值都来自数据，不在代码中枚举；格式约束只用于避免把建筑传统、主要材质和构造形式继续混成同一层含糊词汇。
 
 ## `scan_manifest.json`
 
@@ -196,7 +198,8 @@ AI 初标只作为建议，不是最终真值。
 | `review_state` | string | `pending/approved/rejected/needs_review` |
 | `reviewer` | string | 审核人 |
 | `manual_override` | boolean | 是否覆盖 AI 建议 |
-| `curation` | object | 人工确认后的功能、风格、用途、位置、质量 |
+| `terrain_mode` | string | 放置地形单选，默认 `SURFACE`，可选 `EMBEDDED/FLOATING` |
+| `curation` | object | 人工确认后的动态语义；主审核使用功能、规划角色和风格 |
 | `vocabulary_refs` | array | 引用的 canonical term |
 | `manual_notes` | string | 人工备注 |
 | `updated_at` | string | 更新时间 |
