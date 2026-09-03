@@ -16,7 +16,7 @@
 
 | 案子 | 职责身份 | 当前作用 |
 | --- | --- | --- |
-| [`City固定模板唯一落地主线-v0.1`](./00_跨阶段主线/City固定模板唯一落地主线-v0.1/README.md) | **实现当前案**（模板落地主线） | 固定 NBT identity、D4-D6 几何冻结、single-piece StructureStart 和 worldgen ledger。 |
+| [`City固定模板唯一落地主线-v0.1`](./00_跨阶段主线/City固定模板唯一落地主线-v0.1/README.md) | **实现当前案**（模板落地主线） | 固定 NBT identity、D4-D6 几何冻结、single-piece StructureStart、worldgen ledger，以及 DH 伪生成隔离与真实城市远景刷新。 |
 | [`City整合包内容配置-v0.1`](./00_跨阶段主线/City整合包内容配置-v0.1/README.md) | **设计中案**（城市内容配置链） | 整合包作者配置城市密度、景观和结构内容。 |
 
 ## 20 D3 局部地貌复核

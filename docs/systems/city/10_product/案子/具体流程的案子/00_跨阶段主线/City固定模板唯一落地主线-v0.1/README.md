@@ -46,3 +46,7 @@ D2 和 catalog query 只暴露可检索的模板事实。D4 负责建筑之间�
 ## 验收重点
 
 验证普通、processor 和大型跨 chunk 模板的 hash/尺寸锁定、四向旋转、镜像、入口变换、clearance、owner chunk 完整性、`beard_thin` 地形结果、重启幂等，以及 ledger 与现场方块观测一致性。目标城市的现场落地状态只由本次 run artifact 和观测结果判断，不写入产品契约。
+
+## 远景兼容
+
+[City 与 Distant Horizons 远景兼容](./DistantHorizons远景兼容.md)规定 DH 伪生成不得成为城市真值，保留玩家接近后的正式生成节奏，并要求真实城市完成后刷新对应远景。

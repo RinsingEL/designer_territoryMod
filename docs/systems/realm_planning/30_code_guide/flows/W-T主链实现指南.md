@@ -8,7 +8,7 @@
 
 - MCP 工具 `realm_run_acceptance`
 - `POST /realm/acceptance/run`
-- Forge 命令 `/geomantia realm acceptance [planningRadiusBlocks] [cellStepBlocks]`
+- Forge 命令 `/geomantia realm acceptance`
 - Forge GameTest `RealmPlanningGameTests.realmPlanningPriorAcceptance`
 - JVM 测试中直接调用 `RealmPlanningService`
 
@@ -36,7 +36,8 @@ HTTP 入口必须通过 `callOnServerThread` 回到 Minecraft server thread 后�
 
 ## 前置条件
 
-- W 阶段需要 `planningRadiusBlocks` 或兼容字段 `radiusChunks`。
+- 正式 W 的中心固定为世界原点；范围只读取整合包作者/玩家拥有的 `config/geomantia/world_survey.json`，默认 `planningRadiusBlocks=8192`。MCP、Provider、HTTP body 与 Forge 命令均不能覆盖范围。
+- 配置半径小于 `planning_area_access.json.firstCityMinimumDistanceBlocks` 时，W 在扫描前以配置冲突失败，禁止生成数学上无法进入 T2 的 run。
 - `cellStepBlocks` 默认 `128`，用于国度规划粗 cell。
 - `microSampleStrideBlocks` 和 `localSlopeRadiusBlocks` 用于 W runner 内真实 micro-sampling；分片 W survey 会输出 `world_feature_grid.json` 并在 `WorldPatchMap.cells[]` 内嵌稳健统计。
 - `resumePolicy` 默认 `use_cache`，可复用同 run 目录下的 W tile snapshot。
@@ -90,7 +91,7 @@ realm_t4_build_registry
 | 字段 | 内容 |
 | --- | --- |
 | 目标 | 把 MCP / HTTP / 命令输入转换为世界扫描配置和执行上下文。 |
-| 输入 | `runId`、`planningRadiusBlocks`、`radiusChunks`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`、`playerName`、`dimensionId`、`centerBlockX/Z`。 |
+| 输入 | 请求提供 `runId`、`cellStepBlocks`、`microSampleStrideBlocks`、`localSlopeRadiusBlocks`、`sampleMode`、`resumePolicy`、`playerName`；W 范围仅来自 `config/geomantia/world_survey.json`。 |
 | 输出 | `WorldSurveyRunner.Config`、`ServerLevel`、`MinecraftPriorAtlasSampler`。 |
 | 允许读 | Minecraft server、在线玩家、世界边界、维度、玩家位置、请求 JSON。 |
 | 允许写 | HTTP/MCP 错误响应、命令提示、调试日志。 |
@@ -100,8 +101,8 @@ realm_t4_build_registry
 
 当前实现说明：
 
-- `planningRadiusBlocks` 未传入时，用 `radiusChunks * 16` 兼容旧参数。
-- 没有在线玩家且未传中心点时，HTTP 当前回落到 `(0,0)`；真实验收建议显式传中心或指定玩家。
+- `planningRadiusBlocks`、`radiusChunks`、`centerBlockX/Z` 即使出现在 HTTP / Provider 请求中也不参与正式 W 配置；中心固定为 `(0,0)`，半径读取 `world_survey.json`。
+- Provider discovery 只恢复世界种子、中心与配置半径均匹配的 run；配置变化后旧 W 保留为历史证据，但不会被自动规划继续消费。Provider 自动 runId 含半径后缀，避免不同范围共用同一目录。
 - `RealmPlanningHttpController.runWorldSurvey` 始终创建 `WorldSurveyRunner` 并使用 `MinecraftPriorAtlasSampler`。
 
 ### 2. W 分片扫描与缓存
