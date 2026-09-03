@@ -23,6 +23,7 @@ T4 CitySeed
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
 - D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.12` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
+- 托管规划配置中的版本化模板内容包在世界启动时自动安装到该世界 `generated`；manifest 必须完整覆盖当前 template catalog，D4 Context 前对全部模板执行当前世界 hash/尺寸预检。
 - D6 后生成一个 Foundation owner：城区建设面按邻域主高程形成分级平台，台基只处理剩余局部高差；Landscape Parcel 保留自然地形。普通 GRID 在建筑落位时预留街巷净空，全部建筑落位后冻结服务真实入口的最小路网；功能景观含 `GROUND_PATH + CORRIDOR` 的农业/林场组改由大小不一的景观 Parcel 与一格间隔承担内部流线，不生成城市式 GRID 街网。COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街同样只冻结服务实际建筑入口的区内街巷。城市主路必须连接真实目的地且沿途具有实际交通用途；功能区关系、相向扩张和距离不得自动生成道路或桥梁。SurfacePrint 逐 block 执行 City 自有的分级材质道路、建筑绿化与住宅外溢边界。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。
 - `key_then_array`、array loop、sequential session 和 cluster groups 只保留为实现层 legacy HTTP/测试代码，不再暴露为 Agent Loop MCP 工具，也不是正式 workflow 的失败保底。
@@ -43,6 +44,7 @@ T4 CitySeed
 - `20_contracts/数据契约/CityLandformReviewPackage数据契约.md`
 - `20_contracts/数据契约/CityBlueprint数据契约.md`
 - `20_contracts/数据契约/City模板建筑主路径数据契约.md`
+- `20_contracts/数据契约/City模板内容包配置数据契约.md`
 - `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
 - `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
 - `20_contracts/接口契约/City调试MCP接口.md`

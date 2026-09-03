@@ -79,7 +79,7 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
 
 Parcel 外壳必须是根 seed 发出的四邻接逐格 claim。候选排序可读取规则地形成本、terrain bias、preferred patch、growth bias、局部同 Parcel 邻接和由 `generationSeed + Parcel identity` 派生的稳定连续扰动；不得由圆、菱形、矩形、bbox、全局距离环或预制 mask 直接生成，也不得把这些固定几何作为失败兜底。相同输入必须得到相同 claims，改变稳定 seed 或 terrain field 必须能够改变候选排序和外轮廓。
 
-required Parcel 先按 D4 实际容量域和冻结父子来源生成。D4 已把非零实际面积作为有效地形结果，因此 LandUse 的最小面积为 1；若实际容量小于 AI 填充阶段数，只保留从主角色开始、当前面积能够承载的前序阶段并重新归一占比，不得因间隔阶段放不下拒绝整城。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 逐实例探测；实例内全部 Parcel 达标才整体合并，否则该实例候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<landscapeInstanceId>`。
+required Parcel 先按 D4 实际容量域和冻结父子来源生成。D4 已把非零实际面积作为有效地形结果，因此 LandUse 的最小面积为 1；若实际容量小于 AI 填充阶段数，只保留从主角色开始、当前面积能够承载的前序阶段并重新归一占比，不得因间隔阶段放不下拒绝整城。required 准入按 Landscape instance 汇总：`requiredThresholdBlocks = ceil(requestedBlocks * 90 / 100)`，`realizedBlocks >= requiredThresholdBlocks` 即可继续；未满 100% 时在 quality 的 `requiredLandscapeCapacityResults[]` 写出 instance、requested、realized、threshold、basis-points ratio、`status=degraded_capacity` 与 `CITY_LANDSCAPE_REQUIRED_CAPACITY_DEGRADED`，并在 plan warnings 留下同义稳定告警。低于门槛使用 `CITY_LANDSCAPE_CORE_BELOW_MINIMUM` 中止，不回滚或重跑 D4。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 逐实例探测；实例内全部 Parcel 达标才整体合并，否则该实例候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<landscapeInstanceId>`。
 
 optional 实例若在户外编译阶段无法为全部目标 Parcel 取得合法 seed，则不创建该实例的任何 seed group，并记录 `skipped_insufficient_space:<landscapeInstanceId>`；required 景观以 D4 v0.2 的 `instances[]/warnings[]` 为准，零格不创建 seed group，身份或 hash 漂移才 hard fail。
 
