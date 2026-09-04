@@ -73,7 +73,7 @@
 | --- | --- |
 | `serviceReady` | HTTP / Forge 侧国度规划服务是否在线。 |
 | `latestRunId` | 最近一次 W / T run。 |
-| `debugRoot` | 调试产物根目录。 |
+| `debugRoot` | 当前 Minecraft 存档 world root 下的 `realm_debug` 产物根目录；不得指向同一游戏实例内跨存档共享的目录。 |
 | `availableStages[]` | 已实现阶段。 |
 | `gisReady` | GIS 调试服务是否可用。 |
 

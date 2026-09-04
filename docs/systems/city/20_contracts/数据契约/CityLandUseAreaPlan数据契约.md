@@ -4,7 +4,7 @@
 
 Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootSource/sourceFrontier/sharedBoundarySpans`。一 Parcel 仍对应一个独立 Area，不因同类型或接壤合并。fill program 含 `GROUND|BANK + CORRIDOR` 时，父子 Parcel 不直接贴边：child 从父边界外第二格接力，中间一格不被任何 Parcel claim，保留原地表作为随地形形成的自然路隙；若该格本来位于 Foundation 域内，则显露 Foundation owner。其余接壤关系的 `sharedBoundarySpans` 每格包含唯一 `writerParcelId`、边界材料和关系类型 `PARENT_CHILD|CROSS_LANDSCAPE`；owner chunk 只裁切这些冻结 spans，不重算归属。
 
-required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实际冻结的非零容量；主体引用、D6 footprint 或候选身份漂移仍 hard fail。目标实例或 Parcel 因地形缩减、零格时继承 D4 warning，不得在 D6 重新补成固定形状或让整城失败。optional 自由景观逐实例记录 `admitted` 或 `skipped_insufficient_space`。
+required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实际冻结的非零容量；主体引用、D6 footprint 或候选身份漂移仍 hard fail。目标实例或 Parcel 因地形缩减、零格时继承 D4 warning，不得在 D6 重新补成固定形状或让整城失败。optional 自由景观逐 Parcel 记录 `admitted` 或 `skipped_insufficient_space`，同实例较早形成的非零 Parcel 不因后继失败被清空。
 
 ## 定位
 
@@ -75,13 +75,13 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
 
 正式 Blueprint v0.12 路径只有一个 Foundation owner；它可包含多个互不强接的局部平台组件。全部 SpatialGround 只贡献建筑学语义和 D6 footprint，不各自拥有规则、配方或面积。ATTACHED Landscape 只绑定唯一 required 主体，fill/connectivity 永不拥有 Landscape；FREE_STANDING optional 由 placement domain 从剩余空间选址。
 
-正式 Landscape 的每个 GrowthRegion 对应一个独立 Parcel 和唯一根 seed。`preferredAreaBlocks` 是正常停止目标，`maxAreaBlocks` 是硬上限而不是默认填充目标；可用空间充足时 `claimedAreaBlocks == preferredAreaBlocks`。frontier 因地形、边界、结构、竞争或 action budget 耗尽时允许 `minAreaBlocks <= claimedAreaBlocks < preferredAreaBlocks`，再由 required / optional 准入规则裁决；不得仅因存在剩余可通行格继续增长到 max。
+正式 Landscape 的每个 GrowthRegion 对应一个独立 Parcel 和唯一根 seed。`preferredAreaBlocks` 是正常停止目标，`maxAreaBlocks` 是硬上限而不是默认填充目标；可用空间充足时 `claimedAreaBlocks == preferredAreaBlocks`。frontier 因地形、边界、结构、竞争或 action budget 耗尽时允许 `0 <= claimedAreaBlocks < preferredAreaBlocks`；非零结果一律保留，零格才记为 skipped，不得仅因未达到 `minAreaBlocks` 或固定百分比门槛丢弃已形成的景观，也不得仅因存在剩余可通行格继续增长到 max。
 
 Parcel 外壳必须是根 seed 发出的四邻接逐格 claim。候选排序可读取规则地形成本、terrain bias、preferred patch、growth bias、局部同 Parcel 邻接和由 `generationSeed + Parcel identity` 派生的稳定连续扰动；不得由圆、菱形、矩形、bbox、全局距离环或预制 mask 直接生成，也不得把这些固定几何作为失败兜底。相同输入必须得到相同 claims，改变稳定 seed 或 terrain field 必须能够改变候选排序和外轮廓。
 
-required Parcel 先按 D4 实际容量域和冻结父子来源生成。D4 已把非零实际面积作为有效地形结果，因此 LandUse 的最小面积为 1；若实际容量小于 AI 填充阶段数，只保留从主角色开始、当前面积能够承载的前序阶段并重新归一占比，不得因间隔阶段放不下拒绝整城。required 准入按 Landscape instance 汇总：`requiredThresholdBlocks = ceil(requestedBlocks * 90 / 100)`，`realizedBlocks >= requiredThresholdBlocks` 即可继续；未满 100% 时在 quality 的 `requiredLandscapeCapacityResults[]` 写出 instance、requested、realized、threshold、basis-points ratio、`status=degraded_capacity` 与 `CITY_LANDSCAPE_REQUIRED_CAPACITY_DEGRADED`，并在 plan warnings 留下同义稳定告警。低于门槛使用 `CITY_LANDSCAPE_CORE_BELOW_MINIMUM` 中止，不回滚或重跑 D4。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 逐实例探测；实例内全部 Parcel 达标才整体合并，否则该实例候选 claims 全部丢弃并记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<landscapeInstanceId>`。
+required Parcel 先按 D4 实际容量域和冻结父子来源生成，`required` 只决定优先抢占顺序，不构成面积验收门槛。D4 已把非零实际面积作为有效地形结果，因此 LandUse 的最小落地面积为 1；若实际容量小于 AI 填充阶段数，只保留从主角色开始、当前面积能够承载的前序阶段并重新归一占比，不得因间隔阶段放不下拒绝整城。quality 的 `requiredLandscapeCapacityResults[]` 只审计 instance、requested、realized、basis-points ratio 与 `status=accepted|reduced_capacity`；未满目标时写 `CITY_LANDSCAPE_CAPACITY_REDUCED`，不设置百分比 threshold，也不因面积不足中止。required claims 冻结后，optional FREE_STANDING 按稳定实例 ID 探测；每个非零 Parcel 立即合并，零格 Parcel 记录 `CITY_LANDSCAPE_OPTIONAL_SKIPPED_INSUFFICIENT_SPACE:<parcelId>`，不得因同实例中某一 Parcel 为零而丢弃其他已形成 Parcel。
 
-optional 实例若在户外编译阶段无法为全部目标 Parcel 取得合法 seed，则不创建该实例的任何 seed group，并记录 `skipped_insufficient_space:<landscapeInstanceId>`；required 景观以 D4 v0.2 的 `instances[]/warnings[]` 为准，零格不创建 seed group，身份或 hash 漂移才 hard fail。
+optional 实例在户外编译阶段按父子顺序取得合法 seed；某一 Parcel 无 seed 时记录 `skipped_insufficient_space:<parcelId>` 并停止该依赖链，但保留此前已经创建的 seed group。required 景观以 D4 v0.2 的 `instances[]/warnings[]` 为准，零格不创建 seed group，身份或 hash 漂移才 hard fail。
 
 
 bundled `default_v0_1` 同时包含 `military` 规则，用于 `barracks`、`guard_tower`、`watch_post` 及其中文语义；其默认保留地表、选择性清理植被并使用矮墙边界。
@@ -259,7 +259,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 相同 Blueprint、D6、terrain field 和 catalog 必须输出相同规范 JSON 与 hash。任一来源漂移都不得复用旧 completion。
 
-围栏农田、花田、绿化带和林场都通过显式 Landscape 进入。AI 提交目标 `instanceCount` 和 `parcelCount`；程序按 owner 种子与地形选择实际实例位置、父子拓扑、数量、面积和逐格外轮廓。ATTACHED required 必须复核 D4 owner anchor 与 footprint，所有实际非零 Parcel 只能在对应容量域内生成；FREE_STANDING optional 逐实例原子准入。
+围栏农田、花田、牧场和林场都通过显式 Landscape 进入。AI 提交目标 `instanceCount` 和 `parcelCount`；程序按 owner 种子与地形选择实际实例位置、父子拓扑、数量、面积和逐格外轮廓。ATTACHED required 必须复核 D4 owner anchor 与 footprint，所有实际非零 Parcel 只能在对应容量域内生成；FREE_STANDING optional 同样保留每个实际非零 Parcel。当前整合包不再配置独立 `common_green` Landscape，建筑周边绿化继续由 building greenery policy 生成。
 
 ## CityUrbanSpacePlan
 
@@ -321,7 +321,7 @@ Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计�
 
 ## LandUse 规划 Trace
 
-`city_land_use_planning_trace.v0.6` 正式路径记录 Foundation `foundationComponentCount`、resolved close radius、各局部组件颈宽证明、Landscape Parcel 的 anchor phase、方向、请求/实际面积和失败重试。每个 admitted Parcel 的 `parcelExpansionOrigin` 必须冻结 `kind=ROOT_SOURCE|PARENT_PARCEL_INTERFACE|PARENT_PARCEL_ROAD_GAP`、实际 `start`、`parentParcelId` 和 nullable `sourceFrontier`。普通父接力要求 `sourceFrontier` 与 `start` 四邻接；`PARENT_PARCEL_ROAD_GAP` 要求曼哈顿距离恰为 2，中间格必须已采样、可通行、未被任一 Parcel claim；若中间格位于 Foundation 域内则保留 Foundation owner，否则保持未 claim 原地表。找不到合法界面必须明确失败，不得回落到预设 seed。带填充方案的 group 另记录 `fillProfileRef`、稳定 seed、主角色、有序区域阶段、角色/materialRole/growthForm/目标占比和内容权重。SurfacePrint 区域 trace 冻结每块区域的父子关系、接力界面和目标/实际面积。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.10 必须为空；非空只允许出现在显式 legacy/debug 规划。
+`city_land_use_planning_trace.v0.6` 正式路径记录 Foundation `foundationComponentCount`、resolved close radius、各局部组件颈宽证明、Landscape Parcel 的 anchor phase、方向、请求/实际面积和失败重试。每个 admitted Parcel 的 `parcelExpansionOrigin` 必须冻结 `kind=ROOT_SOURCE|PARENT_PARCEL_INTERFACE|PARENT_PARCEL_ROAD_GAP`、实际 `start`、`parentParcelId` 和 nullable `sourceFrontier`。普通父接力要求 `sourceFrontier` 与 `start` 四邻接；`PARENT_PARCEL_ROAD_GAP` 要求曼哈顿距离恰为 2，中间格必须已采样、可通行、未被任一 Parcel claim；若中间格位于 Foundation 域内则保留 Foundation owner，否则保持未 claim 原地表。找不到合法界面时当前 Parcel 及依赖它的后继记为零格并跳过，已经形成的父级与同实例其他 Parcel 必须保留；不得回落到预设 seed，也不得让整城失败。带填充方案的 group 另记录 `fillProfileRef`、稳定 seed、主角色、有序区域阶段、角色/materialRole/growthForm/目标占比和内容权重。SurfacePrint 区域 trace 冻结每块区域的父子关系、接力界面和目标/实际面积。每个 Parcel 是独立 group/area，不从其他 Parcel 借用上限。`automaticSurfaceConnections[]` 在正式 v0.10 必须为空；非空只允许出现在显式 legacy/debug 规划。
 
 区域几何与执行策略必须分离：`spans[]` 不得直接复制成 no-vegetation mask；例如 `forestry` 可以是 `PRESERVE + PRESERVE + FENCE`。
 

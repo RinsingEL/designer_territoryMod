@@ -81,3 +81,7 @@ W 完成后，先让本次世界规划范围内的**全部国度完成 T1 / T2**
 ### Agent 与 User Provider 边界
 
 User Provider 最后接入。在此之前，需要 AI 判断的 T 选址和城市设计由现有 Agent 处理，程序阶段与循环调度自动衔接；某个决策或城市推进失败时停在当前位置并提醒 Agent，不得跳过失败对象继续向后运行。以后接入 User Provider 时，它接替相同的 AI 决策位置，不改变 W、国度顺序和城市循环。
+
+User Provider 的 Agent 运行时使用独立 Hermes Agent sidecar。Mod 仍是世界状态、阶段队列、正式产物、失败预算和 D4 后台编译的唯一裁决者；Hermes 只负责持久会话、上下文压缩和 MCP 工具循环。会话按“存档 + run + 当前国度或城市”稳定隔离，重启 sidecar 后必须从 SQLite 会话历史续接，不能仅复用 session id 却重新开始推理。每个正式阶段只向 Hermes 暴露该阶段白名单内的 Geomantia MCP 工具；D4 提交后由 Mod 等待后台编译并在新确定性状态出现时再次唤醒 Agent，不允许 Agent 高频轮询编译状态。
+
+Hermes sidecar 必须随 Mod 携带完整的平台运行时，玩家不需要另行安装 Python、Node.js、Hermes 或配置 PATH。Windows x64 包内置固定版本的 CPython、Hermes 非 editable 安装和 Node.js，首次启用时解压至当前游戏目录 `config/geomantia/runtime/<runtime-version>/`，通过版本哈希标记复用；禁止把运行时或 profile 安装到玩家全局 AppData。其他操作系统必须提供各自的独立平台包，不得回退到系统 Python。
