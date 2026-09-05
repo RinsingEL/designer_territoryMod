@@ -35,7 +35,8 @@ node studio/scripts/export-city-profiles.mjs --workspace <workspace> --out <outp
 - 至少一个 `functionTerms`。
 - 恰好一个 `planningRoleTerms`。
 - 一个 `terrainModes`，由 review 的 `terrain_mode` 生成；缺省为 `SURFACE`。
-- `styleTerms` 可为空。
+- 至少一个人工批准的 `styleTerms`；功能、规划角色、风格引用必须存在于已批准词表且类型一致。
+- 独立 `entrance_review.state=approved`，绑定当前采集文件摘要；需要接路时至少一个合法边缘朝外出口，无需接路时必须明确 intent 和原因。
 
 binder source 固定声明 `catalogMode=binder`、`sampleType=single_template`、`allowDebugUnapproved=false`，并携带 `terrasenseRunId`、`profilePath` 和 `vocabularySnapshotPath`。
 
@@ -48,5 +49,13 @@ configured/Jigsaw assembly 仍未进入 City active catalog，TerraSense envelop
 ## 事实与语义边界
 
 TerraSense 可以导出扫描硬事实、截图来源、功能、规划角色、地形/拓扑标签、风格和审核状态。当前 City fixed-template 几何只认 Minecraft `StructureTemplateManager` 读取的 NBT hash/rawSize，以及 City template catalog 的旋转、镜像、clearance 和入口；TerraSense 语义不能覆盖这些字段。
+
+### 人工接路口 sidecar v1
+
+binder mode 另写 `StructureEntrances.approved.json`，schema=`terrasense_approved_entrances.v1`。`structures` 每行包含 `structureId/contentHash/size/reviewState/intent/note/captureDigest/roadEntrances`；roadEntrances 使用现有 Binder `entranceId/x/z/direction`。原始采集的 y 保留在 workspace，v1 只接受 y=1 的平面出口，不宣称支持立体道路连接。
+
+托管规划加载阶段按完整 templateRef 精确关联，校验 NBT 内容指纹、尺寸、独立审核、边界朝外方向，再将批准入口合并进冻结上下文；不改写原模板目录，不覆盖 NBT、变体、旋转镜像或 clearance。缺 sidecar、缺某模板审核、身份/指纹/尺寸不匹配均在调用模型前阻断。旧目录入口不能兜底。`no_connection` 必须空列表且有作者说明，不得由程序猜测。
+
+管理包必须在同一目录提供 sidecar，且 `TerraSenseStructureProfileSource.binder.json` 与 `.official.json` 只能存在一个，避免歧义。已有规划上下文不会被就地改写；重新规划时才使用新版审核数据。
 
 AI 初标不是正式真值。正式或 binder 导出必须经过人工 `approved`；debug mode 可保留未审核信息，但 source 必须明确为 debug，不能混入正式 catalog。

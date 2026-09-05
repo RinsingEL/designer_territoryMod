@@ -14,6 +14,12 @@ templateRef + templateHash + variant + rawSize + rotation + mirror + anchor
 
 identity 或由它派生的 world footprint 漂移必须 hard fail。`terrainPosePolicy` 是 D4 -> D6 -> D5 -> worldgen 的冻结 lifecycle 快照，不能由旧 active registry 或运行时目录改写。旧 `structureId`、外部 configured structure、Jigsaw、外部 StructureStart、旧 profile bbox 和 bbox 外侧伪入口不得被静默转换。
 
+## 作者语义权威
+
+结构的功能和风格必须由整合包作者在游戏开始前标注。模板目录的 `buildingSemantic/style` 与 TerraSense 画像的 `functionTerms/styleTerms` 都是作者配置，AI 只可据此选用、组合结构，不可根据名称或外观猜测并补写语义。
+
+宿主正式规划入口校验所有可引用结构拥有 `reviewState=approved`、非空功能和风格词；未标注、未批准或引用不存在时，返回 `PLANNING_AUTHOR_ANNOTATION_REQUIRED` 并指出结构，停止规划等待作者修正。外观预览用于构图，不具备改写功能/风格标签的权力。NBT hash、rawSize、碰撞、入口等仍是独立的程序事实预检，不由语义标注代替。
+
 ## 版本与产物
 
 | 产物 | schema | 作用 | 主要阶段 |

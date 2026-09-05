@@ -202,6 +202,7 @@ AI 初标只作为建议，不是最终真值。
 | `curation` | object | 人工确认后的动态语义；主审核使用功能、规划角色和风格 |
 | `vocabulary_refs` | array | 引用的 canonical term |
 | `manual_notes` | string | 人工备注 |
+| `entrance_review` | object | 独立入口审核：`state/intent/selected_ids/capture_digest/note`，缺省 pending；语义 approved 不代表入口 approved |
 | `updated_at` | string | 更新时间 |
 
 ## 约束
@@ -211,3 +212,11 @@ AI 初标只作为建议，不是最终真值。
 - `proposed` 术语默认不得进入正式 StructureBinder catalog。
 - `connectors` 必须从 `jigsaw_points.front` 为水平的 jigsaw 派生。
 - `front=up/down` 的 jigsaw 不得伪造成水平 connector。
+
+## `structures/<safeId>/entrance_candidates.json`
+
+MC 单人创造模式 `/ts_entrance open <template>`、`mark <id>`、`remove <id>` 产生事实文件，不写人工 review。schema=`terrasense_entrance_capture.v1`，包含 `structure_id/template_content_hash/size/ports`。指纹算法与 Binder 一致：`StructureTemplate.save` 后用 `NbtIo.write` 序列化并 SHA-256，不是 data.json 或 gzip 文件哈希。
+
+ports 每项 `id/x/y/z/direction/validation`；v1 只接受模板边缘朝外、y=1、脚下完整支撑、两格净空无碰撞无液体的入口，且三格必须与源模板方块一致。`validation=clear_supported_port` 不代表室内路径已验证；室内可达性由作者审核。多 palette、台阶、悬空出口拒绝，不能改为猜测方向。
+
+Studio 的 capture_digest 是对当前采集 JSON 解析后 `JSON.stringify` 的 SHA-256，绑定完整候选集合和模板指纹。新增、删除、改向、换模板后，旧审核不可导出；作者须重新确认。无连接结构同样需要模板指纹，intent=`no_connection`、空 selected_ids 及明确 note。候选列表不会从门朝向或 jigsaw 自动批准。

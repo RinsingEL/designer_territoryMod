@@ -45,6 +45,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 | `catalogSnapshotRef` | ArtifactRef | 本次完整目录快照。 |
 | `generationSeedSuggestion` | safe integer | 程序按 city + D3 hash + catalog hash 稳定派生，范围为 JavaScript safe integer。 |
 | `decisionBoundary` | object | 明确 prepare 与提交校验拒绝不计失败、D4 编译失败上限为 5、编译失败后允许提交完整 revision；同时冻结 Agent 只能使用工具响应和明确返回 artifacts 的恢复边界。 |
+| `designGuide` | object | 程序从实际可用引用目录生成的策划说明：作者语义权威、设计流程、起点边界、建筑阵列与功能区组合的不同职责、道路目的和修订边界。随 Context 冻结并进入 `contextId`，不是替代 AI 决策的默认设计。 |
 | `citySeed` | object | 当前 CitySeed 完整只读输入。 |
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
 | `catalogSnapshot` | object | `city_blueprint_catalog_snapshot`；包含 `city_semantic_profile_catalog` 结构画像、固定模板目录、`city_blueprint_reference_catalog` 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle、Landscape Fill Profile、建筑可选绿化标记与城市植物 palette，D6 后不得重新解释为另一份配置。 |

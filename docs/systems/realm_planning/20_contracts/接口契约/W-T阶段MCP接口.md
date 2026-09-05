@@ -34,7 +34,13 @@
 
 ## 通用返回字段
 
-所有工具返回 JSON 文本。成功时建议包含：
+工具返回 JSON 文本；包含预览时，同时返回真正的 MCP `image` 内容，不把本地 PNG 路径当作已看过图片。
+
+MCP 与内置 Provider 均使用 `X-Geomantia-Agent-View: true` 请求共享的 `planning_decision_view.v0.1`。它保留身份、目录语义、指标与产物引用，把密集 cell 集合替换为数量摘要；完整几何仍保存在正式 artifact 中，局部证据通过 Patch Explorer 获取。普通 HTTP 不带此头时仍返回完整原始响应。预览仅允许读取当前世界 debug root 内的 PNG（最多 4 张、单张 8 MiB），不可读取时返回 `previewWarnings`，不伪装成视觉证据。
+
+内置 Provider 的 6 MiB 文本预算不计图片 base64；传输总量另按上述图片上限约束。Hermes 首轮消息另受其 10 MB 请求上限约束，宿主为文本与初始图片预留合计约 8 MB；超限的初始图片必须告知未送达，不得让合法大图无解释地导致整轮 HTTP 413。
+
+`realm_w_refresh` 开始前校验宿主作者资料，成功时返回 `authoringBrief`。作者未确认结构功能/风格或来源不唯一时阻塞，不让模型寻找或补造配置。
 
 ### 运行时 checkpoint 恢复
 
@@ -140,10 +146,14 @@ W 对请求配置的规划范围执行一次完整扫描。tile 结果写入既�
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `runId` | string | 是 | 来源 W run。 |
-| `realmProfiles[]` | array | 否 | 外部提供的 RealmProfile 草案。 |
-| `realmCount` | number | 否 | 未提供 profiles 时由程序 / AI 生成草案数量。 |
-| `targetContinentId` | string | 否 | 限定大陆。 |
-| `allowAiDraftProfile` | boolean | 否 | 是否允许 AI 生成 RealmProfile 草案。 |
+| `realmProfiles[]` | array | 是 | 1～12 份完整显式设计；正式入口不生成默认国家。 |
+| `realmCount` | integer | 否 | 若提供，必须与 `realmProfiles` 实际数量相等。 |
+
+每份 profile 必须显式填写 `realmId/name/targetContinentId/theme`、`cultureTags/industryTags/materialTags/landformPreferences/avoidLandforms`、`scalePlan` 和 `expansionStyle`。标签数组允许显式为空；目标大陆不可省略后自动选择最大大陆。
+
+`scalePlan` 必须包含 `priority=minor|normal|major|empire`、`normalizationGroup` 和 `targetAreaRatio/minAreaRatio/maxAreaRatio`，比例属于 `[0,1]` 且满足 `min <= target <= max`。`expansionStyle` 必须包含全部七项数值性格以及 `seaCrossingPolicy=none|limited|allowed`；`mountainAffinity/forestAffinity` 属于 `[-1,1]`，其余属于 `[0,1]`。嵌套字段 schema 由 Java/Node 工具定义同步发布。
+
+缺字段、未知字段（包括 `civilizationTheme/preferredLandforms/avoidedLandforms`）、重复 ID、非整数数量或越界值均返回带精确字段路径的 `REALM_PROFILE_INPUT_INVALID`，且不得覆盖已有设计。底层 `rule_fixture` 验收仍可使用固定配置，但不属于正式 AI 工具输入。
 
 返回产物：
 
@@ -278,6 +288,8 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 | `qualityMode` | string | 否 | v1.2 调试字段，`smoke` 或 `strict`；正式验收使用 `strict`。 |
 | `expansionModel` | string | 否 | `quota_frontier` 或 `action_budget`；`strict` 默认 `action_budget`，`smoke` 默认 `quota_frontier`。 |
 
+分组标签不是地理 ID：地格归属以各 `RealmProfile.targetContinentId` 为准。省略分组时一次计算所有目标大陆；显式逻辑分组选中其成员所在大陆，也兼容显式大陆 ID。同一大陆上的其他国度必须一同参与竞争，不能通过改分组标签重复分配土地。不同大陆分别以各自可分配土地为分母，合并为本次 T3 产物。计算失败不得先清除此前已接受的内存状态和产物。
+
 返回产物：
 
 | 产物 | 说明 |
@@ -337,6 +349,14 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 5. `realm_t4_patch_planning_finalize`：只有会话内恰好一座带 `patchSelectionRef` 的首都时才合并写回全局 `CitySeedRegistry`，并同步重建 T4 派生产物。
 
 对应 HTTP 路径为 `/realm/t4/patch_planning/create`、`/realm/t4/patch_planning/select_capital`、`/realm/t4/patch_planning/add_city`、`/realm/t4/patch_planning/finalize`。
+
+### 宿主自动推进边界
+
+- W 扫描、T3 统一扩张和城市队列刷新由程序执行，不额外请求模型决定是否调用这些确定性步骤。
+- 全部国度完成 T1/T2 后才统一 T3。此后按 `RealmSeed.seedBlock` 距世界原点排序国度；当前国 T4 finalize 立即建立/合并城市队列，先完成已登记城市，再进入下一国 T4，不等待全世界 T4。
+- 每轮成功提交 T1、T2、T4 finalize 或 D4 Blueprint 后，由宿主结束该模型轮并核对真实阶段推进。Hermes 必须经过本地能力桥接调用同一 scope-locked executor，不能旁路直连 HTTP；共享的停止策略不依赖模型口头宣布完成。
+- 作者资料/宿主故障立即阻塞；连续三次相同拒绝结束本轮并显式报告停滞，不消耗 D4 真实编译的五次失败预算。程序/环境重试不暴露给自动城市设计轮，需先修复故障再由人发起。
+- Hermes 0.18.2 的 session-stream 通过独立取消适配层中断 agent worker；不修改 vendor 文件。断流检测与上游请求取消仍取决于运行时，不能据此承诺零额外请求或真实首城耗时。
 
 ## realm_run_acceptance
 

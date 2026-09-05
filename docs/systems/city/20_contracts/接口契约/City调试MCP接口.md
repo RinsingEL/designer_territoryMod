@@ -30,6 +30,14 @@
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
+### 作者资料与设计上下文
+
+- 正式 `city_prepare_d4_blueprint_context` 只接收 `runId/citySeedId`。`terrasenseProfileSource/templateCatalogSource/blueprintReferenceCatalog` 由宿主绑定，调用方传入时返回 `PLANNING_SOURCE_HOST_OWNED`，不得由模型拼装或替换目录。
+- 来源使用作者显式配置的 `geomantia.providerPlanningSourceDir`；未配置时只接受安装目录中唯一的完整 bundle，多份时返回 `PROVIDER_MANAGED_CITY_SOURCES_AMBIGUOUS`，不按修改时间挑选。
+- 可引用结构必须有作者 `approved` 的非空 `functionTerms/styleTerms`，模板目录仍要求 `buildingSemantic/style`。缺标返回 `PLANNING_AUTHOR_ANNOTATION_REQUIRED` 并指出结构引用；真实模板 NBT/hash/rawSize 预检仍保留。
+- Context 增加 `designGuide`，依据实际 Reference Catalog 说明设计流程、建筑阵列、功能区组合、道路目的与修订边界。它是能力说明，不生成固定蓝图、不代替作者标注。
+- MCP 和内置 Provider 共用模型视图与真正的图片内容；详见 [W/T 通用返回约定](../../../realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md)。完整 Context/Snapshot 的身份与 hash 不因展示压缩改变。
+
 ### D4 后自动编译队列契约
 
 - `city_submit_d4_blueprint` 成功且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
@@ -47,12 +55,12 @@
 
 ### 城市设计调度队列契约
 
-- T4 CitySeedRegistry 覆盖全部国度首都后自动建立 `<runId>/automation/city_design_queue.json`。单国 T4 finalize 尚未覆盖其他国度时返回 `cityDesignQueueStatus=awaiting_remaining_realms`，不得提前启动 City。
-- 默认 `orderingMode=global_radial`：按 `anchorBlock` 到世界 `0,0` 的距离升序，稳定 tie-break 为 `realmId + citySeedId`。`realm_grouped` 先按各国首都到 `0,0` 的距离排序国度，再按城市到本国首都的距离排序。
+- 每次单国 T4 finalize 即建立/合并 `<runId>/automation/city_design_queue.json`，无需等待其他国度首都。自动调度先处理当前已登记城市，完成后再开启下一国 T4。
+- 默认 `orderingMode=realm_grouped`：队列内先按各国首都到 `0,0` 的距离分组，再按城市到世界 `0,0` 的距离排序，稳定 tie-break 为 `realmId + citySeedId`。`global_radial` 保留为显式兼容配置。自动 T4 finalize 固定使用 `realm_grouped`；Provider 在国度尚未建立城市前使用 RealmSeed 核心距原点决定下一国。
 - 整合包默认值写在 `config/geomantia/city_design_queue.json`，schema 为 `geomantia_city_design_queue_config.v0.1`，字段为 `enabled` 和 `orderingMode`。T4/refresh 请求可为单个 run 覆盖 ordering mode，不改全局配置。
 - 队列一次只暴露一个 `currentCity`。正式 D2、D3、D3 review、D4 Context 和 D4 submit 请求若不是当前城市，返回 `CITY_DESIGN_QUEUE_OUT_OF_ORDER`；没有 Registry 的旧调试 run 不受该门禁影响。
 - 当前状态为 `waiting_for_agent` 时 Agent 从 `currentCity` 开始完成 D3/D4；D4 接受后转 `post_d4_running`。后半段进入 `waiting_for_generation` 后，上层队列自动把下一项变为当前城市。
-- 后半段失败时当前城市保持 `needs_agent`，后续城市全部保持 `pending`，不得跳过失败城市继续推进。全部城市进入 `waiting_for_generation` 后队列状态为 `completed`。
+- 后半段失败时当前城市保持 `needs_agent`，后续城市全部保持 `pending`，不得跳过失败城市继续推进。当前已登记城市全部进入 `waiting_for_generation` 后队列状态为 `completed`；仍有国度未完成 T4 时不代表全世界规划完成，宿主继续安排下一国。
 
 ### city_plan_d3 固定采样契约
 

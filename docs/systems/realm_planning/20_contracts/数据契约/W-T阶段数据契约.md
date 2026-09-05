@@ -376,9 +376,11 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | `targetAreaRatio` | `0..1` | 是 | 目标面积比例。 |
 | `minAreaRatio` | `0..1` | 是 | 最小可接受比例。 |
 | `maxAreaRatio` | `0..1` | 是 | 最大可接受比例。 |
-| `normalizationGroup` | string | 是 | 比例归一化分组，通常为 continent id。 |
+| `normalizationGroup` | string | 是 | 逻辑分组标签，通常为 continent id，但不得作为地格大陆 ID；比例分母以 `targetContinentId` 指定的实际大陆为准，同大陆国度共同参与归一化和竞争。 |
 
 `expansionStyle` 控制“怎么长”。数值建议先用语义化范围，不让 AI 填 T3 算法裸参数：
+
+比例是大陆面积的绝对份额，不是必须铺满大陆的相对权重。目标总和小于 1 时保留原比例；超额时按比例缩减并保留 min/max 边界，最小比例总和超过 1 时明确拒绝。不得 clamp 后再次归一化突破 max。`action_budget` 保留行动力/地形竞争，但最大面积仍是硬上限；`quota_frontier` 以归一化目标配额停止。`allowUnclaimedLand=false` 不得覆盖明确的面积上限或将未申请土地强塞给国家。
 
 | 字段 | 范围 / 枚举 | 说明 |
 | --- | --- | --- |
