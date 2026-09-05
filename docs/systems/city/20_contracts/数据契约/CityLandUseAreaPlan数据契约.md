@@ -307,6 +307,8 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 核心分类器在完整 `memberSpans - exclusionSpans` 上使用 4 邻接逐格 frontier 扩张。第一块区域从根起点生长；后继区域的首格必须邻接父区域的局部边界，区内每格必须邻接本区已生长格。`PATCH` 偏向局部凝聚分叉，`CORRIDOR` 偏向活跃端点和方向连续，但两者都不是固定形状或固定宽度。根起点非法、mask 断开、接力界面耗尽或覆盖不能完成时 hard fail；不得吸附到图形中心、静默重播种、使用距离环或 bbox/fixed-shape fallback。chunk 执行只查冻结 region span，不得重新计算 frontier、父子关系、占比或随机内容。
 
+局部比例允许有限的拓扑适配：当冻结根 source 是割点、首区域原配额不足以留下单个连通 remainder 时，可从后续区域调剂最多 `ceil(allowedCellCount × 1%)` 格。优先同 roleRef，再选剩余配额较大的区域，稳定顺序打破平局；每个阶段至少保留 1 格，总面积、mask、source、父子接力、角色顺序与内容不变。`targetAreaBlocks` 继续记录按原 targetShare 分配的请求数量，`actualAreaBlocks` 记录最终实际数量；quality.warnings 逐差异区域记录 `LANDSCAPE_LOCAL_SHARE_ADJUSTED:<printAreaId>:<regionId>:requested=<n>:actual=<n>`。不改作者 Blueprint 或 targetShare，不再以删掉后继角色来掩盖不可分区；超出调剂限额、角色无法保留、真实 mask 断开仍报具体错误。
+
 `materialRole` 的执行映射固定为：
 
 | materialRole | SurfacePrint 行为 |

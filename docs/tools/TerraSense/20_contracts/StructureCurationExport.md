@@ -58,4 +58,10 @@ binder mode 另写 `StructureEntrances.approved.json`，schema=`terrasense_appro
 
 管理包必须在同一目录提供 sidecar，且 `TerraSenseStructureProfileSource.binder.json` 与 `.official.json` 只能存在一个，避免歧义。已有规划上下文不会被就地改写；重新规划时才使用新版审核数据。
 
+### 显式旧素材池兼容
+
+默认 `entrancePolicy=reviewed_required`，仍执行上述严格审核。用户明确保留旧目录测试时，可在 source descriptor 配置 `entrancePolicy=legacy_catalog`，仅在没有 sidecar 且未声明 `entranceCatalogPath` 时使用原 template catalog 的入口。功能/风格审核、NBT 可用性及碰撞验收不放宽。上下文 authoringBrief 标明 `entranceAuthority=legacy_catalog_unreviewed`，不会生成 approved 记录。
+
+已安装或已声明的 sidecar 不允许因损坏、缺失或审核失败退回旧入口。已有 sidecar 时仍优先严格核验。未知 policy 直接报错；正式 TerraSense exporter 不自动输出 legacy policy。
+
 AI 初标不是正式真值。正式或 binder 导出必须经过人工 `approved`；debug mode 可保留未审核信息，但 source 必须明确为 debug，不能混入正式 catalog。

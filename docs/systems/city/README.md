@@ -20,6 +20,7 @@ T4 CitySeed
 
 ## 当前实现边界
 
+- D4 采用“落地底线 / 布局质量”分层：最终同 Group 同 ref 指定内容、资源/边界/碰撞、功能区与必需关系必须通过；入口局部断路、阵列视觉缺口告警，允许继续 D5/D6。保留原阶段缺口与全部质量明细，不将可落地标成质量完善。详见 CityBlueprint 数据契约。
 - D3 地貌事实由 `CityLandformReviewBuilder` 和 `LandUseTerrainFieldCompiler` 生成，不在 D4 重扫世界。
 - D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.12` 必须严格匹配。
 - D2/D4/D6 只读取 `city_template_catalog.v0.1` 和当前世界 NBT，所有 City 模板冻结为 `structure_start_beard_thin`。
