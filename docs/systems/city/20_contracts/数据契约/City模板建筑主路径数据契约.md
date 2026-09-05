@@ -131,6 +131,14 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 
 目录 loader 必须从 NBT 重新确认 `rawSize` 和 `templateHash`。配置不能覆盖 NBT 尺寸，不能把 `nbtFile`、`structureId` 或 TerraSense 静态 footprint 当作 `templateRef` 的兼容别名。
 
+可选作者字段 `frontagePolicy`：
+
+- `FIXED_FRONT`（省略时默认）：保持原规则，显式 `frontageEntranceId` 优先，其次唯一命名为 `front` 的入口，再其次唯一入口；其余多入口素材需要明确正面，不自动猜测。
+- `ANY_AUTHORED_ENTRANCE`（无固定正面）：作者允许程序从已标注 `roadEntrances[]` 中择优朝向道路/设计目标。显式 `frontageEntranceId` 或命名主入口 `front` 仍优先；无此指定时，每个允许旋转只选一个最佳入口，方向对齐同分按入口 ID 排序，旋转同分保持作者配置顺序。不增加旋转、镜像或新入口。
+- 未知值、非字符串、显式 null，以及无入口却声明 `ANY_AUTHORED_ENTRANCE` 均返回 `CITY_TEMPLATE_CATALOG_FRONTAGE_POLICY_INVALID`。多入口本身不是无固定正面的授权。
+- 该字段归整合包作者所有，随完整模板目录冻结进 D4 snapshot 并参与 Context hash；AI 不可在蓝图中改写。配置改变后须正式重建受影响 Context/编译产物，不能直接改旧冻结文件。只改该语义不改变 NBT 内容 hash，但内容包 `catalogSha256` 必须按新目录字节更新。
+- 配置示例：四向喷泉经作者确认可添加 `"frontagePolicy": "ANY_AUTHORED_ENTRANCE"`。普通房屋、城门等不能仅因存在多个门就批量添加。
+
 目录条目示例：
 
 ```json
