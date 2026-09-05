@@ -4,6 +4,8 @@
 
 本文件只维护当前公开工具、阶段职责和破坏性调用边界。字段级 JSON Schema 的实现真值是实现仓库 `country_designer_mcp/src/realm/tools.ts`，HTTP 路由真值是 `RealmPlanningHttpController`；修改工具字段时必须同步更新本文件和对应 Node/Java 测试。
 
+Provider 自动规划使用宿主范围锁定的决策适配器，其工具定义由 ProviderPlanningToolCatalog 同时供内嵌模型和 Hermes 的认证桥读取；Hermes 不再误用原始分阶段 MCP schema。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；同错三次停止由宿主控制。已有同 Context、非空设计会话续跑不重复注入整包目录和图片。
+
 所有 City MCP 工具调用本地 `/realm/city/<snake_case_action>` HTTP 入口。常规阶段调用至少使用 `runId`、`citySeedId` 定位任务；需要世界上下文的入口可再使用 `dimensionId` 或 `playerName`。
 
 ## 正式主链工具
@@ -16,10 +18,10 @@
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field；site review 完成后自动打开 `city_d4` Patch Explorer，并返回 Top Patch 复核下一动作。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
-| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 提交完整 CityBlueprint v0.12 revision；校验拒绝不增加 `failureCount`，编译失败且仍有预算时可用同一 `contextId` 修正重提。接受后默认加入 D4 后自动编译队列，可用 `autoAdvanceAfterD4=false` 关闭。 |
+| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 提交完整设计或哈希绑定的 replace-only blueprintPatch；支持省略宿主身份字段和显式 RELATIVE_WEIGHTS，最终仍严格验证完整 canonical v0.12。校验拒绝不计预算；接受后默认自动编译，可用 autoAdvanceAfterD4=false 关闭。 |
 | `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
 | `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时改用 `city_submit_d4_blueprint` 提交 revision。 |
-| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint revision；真实编译/终审失败原子增加 `failureCount`。无论最终 quality 成败，只要 D4 已形成结构化 anchor 结果，就必须渲染整城总览与每个功能区局部图；失败尝试位置及原因必须进入局部图。是否可验收仍必须读取 `compilationAcceptance` 和最终 D4 quality。 |
+| `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
 | `city_plan_land_use` | `/realm/city/plan_land_use` | 显式规划 LandUse；正式 workflow 在 D6 后由 Blueprint outdoorPlan 驱动。 |
@@ -43,13 +45,13 @@
 - `city_submit_d4_blueprint` 成功且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
-- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。服务重启后恢复 `queued` / `running` 项；失败写 `needs_agent`、原因码与错误信息，不继续吞错。
-- `needs_agent` 若只需在 Blueprint 不变的前提下重跑已修复的程序/环境阶段，使用 `city_post_d4_auto_compile_retry`；若 `retryAllowed=true` 且需要修改设计或改选已审查 Patch，则使用同一 `contextId` 调用 `city_submit_d4_blueprint` 提交新的完整 revision。
+- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突写 needs_agent + city_submit_d4_blueprint；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
+- blocked_by_program 仅在程序/环境修复后使用 city_post_d4_auto_compile_retry。设计修订使用同一 contextId 完整输入或哈希绑定局部补丁，由程序组装完整 revision。上层城市队列保留阻塞且不跳到下一城。
 
 ### D4 Blueprint 失败预算契约
 
 - 当前 Context 的 `maximumFailureCount` 固定为 `5`。提交参数、schema、枚举、引用、关系或 stale 校验拒绝不增加 `failureCount`，也不得覆盖当前 accepted Blueprint。
-- 只有程序化 D4 编译或终审明确失败才原子增加 `failureCount`。第 1～4 次失败返回 `retryAllowed=true`、`nextAction=city_submit_d4_blueprint`；第 5 次返回 `retryAllowed=false` 并停止请求人工处理。
+- 可操作的设计冲突才原子增加 failureCount；明确的 REQUIRED_STRUCTURE_SEARCH_LIMIT_EXHAUSTED、LANDSCAPE_SEARCH_LIMIT_EXHAUSTED、INTERNAL_SAFETY_LIMIT_REACHED 及 COMPILED_ANCHOR_FINALIZATION_FAILED 保留当前计数，failureOwner=program，nextAction=city_post_d4_auto_compile_retry。第 1～4 次设计失败允许修订，第五次停止请求人工处理。
 - failure ledger 与 active revision 发布只允许短原子写入；不得用“同一时间只允许一个 Blueprint 编译”的长锁替代失败预算。
 - Agent Loop 只允许使用工具响应和工具明确返回的 artifacts 恢复；不得读取服务端源码、项目文档或未返回的原始 run 文件。
 

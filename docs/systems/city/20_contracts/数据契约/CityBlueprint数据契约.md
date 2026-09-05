@@ -2,7 +2,7 @@
 
 ## 定位
 
-本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。Java 不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI/Codex 提交完整 `CityBlueprint` revision；程序编译明确失败时可在同一 Context 下修订重提，最多允许 5 次真实编译失败。上下文准备和提交校验拒绝均不计入失败预算。
+本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
 CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。
 
@@ -125,6 +125,18 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field`，不触发扫描或
 所有 namespace 内引用唯一。案子 02 必须按这些冻结 ID 读取配置，不得把 Blueprint 字符串解释为自由算法或隐藏模板路径。
 
 ## CityBlueprint
+
+### 设计输入适配（不改变 canonical schema）
+
+`city_submit_d4_blueprint` 接受 `cityBlueprint` 或 `blueprintPatch`，严格二选一。完整设计输入可以省略 `schema/cityId/sourceD3Ref/catalogSnapshotRef/generationSeed`；宿主从当前冻结 Context 补齐，显式身份/引用冲突仍走原验证拒绝。非 DISTANCE/DIRECTION 关系可省略对应 preference，宿主只补无歧义的 `NONE`，不替模型选择距离或方向。
+
+默认 `proportionMode=EXACT_SHARES` 保持原占比语义及误差门槛。显式 `RELATIVE_WEIGHTS` 将所有 Group 的 targetAreaShare、各 Group 的 spaceComposition 三项、各 Landscape fillSelection.variants 的 roleShares.targetShare 分别按相对权重归一化。必须是有限非负数且每组总量非零；之后原有正值、角色范围、角色完整性和作者白名单继续验证，不能借归一化越过作者限制。
+
+局部修订必带 `baseBlueprintHash`（accepted submissionTrace.cityBlueprintHash），`blueprintPatch` 为 1～128 条 `{op:"replace",path:<JSON Pointer>,value:<JSON value>}`。仅替换已有路径，可替换数组/对象整体；新增或删除成员需替换父数组/对象，或完整重提。禁止修订身份、来源引用和 generationSeed；不接受相对权重模式。宿主在同一提交锁内检查原文件及 accepted trace 的哈希/Context，组装完整 revision 并执行全部原校验。过期、未知路径、无效结果不得覆盖 accepted Blueprint，也不重置预算。
+
+### 冻结 canonical 对象
+
+多入口模板出现 `D4_ARRAY_LAYOUT_FRONTAGE_ENTRANCE_AMBIGUOUS` 时，即使外层归并为 `REQUIRED_STRUCTURE_NO_LEGAL_PLACEMENT`，也必须按真实 hardBlocks 归为配置/程序阻塞，不要求 AI 更换 required 结构、改 Patch 或猜主入口。该路由不新增主入口推断，不改变既有朝向规则，也不减写历史失败计数。
 
 根字段全部必填，未知字段拒绝：
 

@@ -16,7 +16,9 @@ T4 CitySeed
 -> D7 ledger、现场观测、道路和城墙后处理
 ```
 
-正式 D4 每次提交一份完整 CityBlueprint revision，但同一 Context 不再采用一次性消费：提交参数、schema 与引用校验拒绝不计失败；只有程序化编译或终审明确失败才增加 `failureCount`，最多 5 次。第 1～4 次失败允许 Agent 仅依据工具响应和返回 artifacts 修正完整 Blueprint 后重提，第 5 次才停止并请求人工处理。`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 主体共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑以 Blueprint 选择的 Patch 定位起点，后续连续阵列可跨 Patch 边界。景观再以 owner 为种子按地形生长，其 preferred Patch 仍只作软偏好。景观目标数量或面积可被地形减少，完全零格写警告而不让整城失败；fill/connectivity 只排除实际冻结容量。D6 后各非零 Parcel 按冻结父子来源逐格生成。
+正式 D4 冻结完整 CityBlueprint revision，输入允许完整设计或带 baseBlueprintHash 的局部替换补丁；宿主补齐省略的身份字段，并在显式相对权重模式下换算占比，再执行原有完整校验。同一 Context 的设计编译失败最多 5 次；提交校验拒绝、明确的程序搜索/安全上限及锚点终审故障不消耗设计预算。程序故障进入 blocked_by_program，保留方案，不要求 AI 重写。具体输入和恢复规则以 CityBlueprint 数据契约为准。
+
+`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑以所选 Patch 起步，后续连续阵列可跨 Patch 边界。景观以 owner 为种子按地形生长，preferred Patch 仅为软偏好；数量或面积可被地形减少，零格写警告，不让整城失败。fill/connectivity 只排除实际冻结容量，D6 后非零 Parcel 按冻结父子来源逐格生成。
 
 ## 当前实现边界
 

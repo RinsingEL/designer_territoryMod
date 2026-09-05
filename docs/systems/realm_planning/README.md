@@ -36,6 +36,8 @@ strict T3 默认使用 `action_budget`；旧 quota frontier 只作为测试对�
 
 ## 当前实现能力
 
+- Provider 宿主执行 W、统一 T3、队列刷新、D3 扫描和城市首批候选准备；T2/T4 会话与初始候选在模型启动前备齐。AI 仍选择国度/城市起点、决定城市角色、明确复核 D3 并设计蓝图；候选冻结后的引用提交由宿主代办。图片作为实际图像输入，不要求模型找路径或读取原始资料。
+
 - W 对配置的规划范围执行一次完整扫描，支持 sealed artifact、checkpoint 恢复、provider 隔离、micro-sampling 和轻量批量预览；城市排序不属于 W。
 - T1/T2 通过 Patch Explorer 浏览与选择国度核心。
 - T3 按行动力、地形成本、竞争压力和状态分类扩张国度。
