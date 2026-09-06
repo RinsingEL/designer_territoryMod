@@ -313,7 +313,7 @@ Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、ro
 
 - 同一 `contextId` 可以提交完整 Blueprint revision；字段、枚举、引用、关系或 stale 等提交校验拒绝均不增加 `failureCount`。
 - 只有程序化 D4 编译或 D4 终审明确失败才原子增加 `failureCount`。第 1～4 次失败返回 `retryAllowed=true` 与 `nextAction=city_submit_d4_blueprint`；第 5 次失败后 `retryAllowed=false`，停止 Agent Loop 并请求人工处理。
-- `city_blueprint_failure_budget.json` 以当前 `contextId` 为身份，必填 `failureCount/maximumFailureCount=5/remainingFailureCount/status/retryAllowed/failures[]`。计数更新只锁定短 ledger 写入，不得把整个编译过程串行化，也不得引入“同一时间只允许一个 Blueprint 编译”的契约。
+- `city_blueprint_failure_budget.json` 以当前 `contextId` 为身份，必填 `failureCount/maximumFailureCount=5/remainingFailureCount/status/retryAllowed/failures[]`。程序阻塞后因作者目录修正而正式刷新 Context 时，旧文件随旧方案归档，原 failureCount/failures 不减写并迁移至新 contextId，previousContextId 标识来源；预算耗尽不能经此入口重置。旧 Blueprint 仅作设计参考，需完整提交到新 Context，旧哈希补丁仍拒绝。计数更新只锁定短 ledger 写入，不得把整个编译过程串行化，也不得引入“同一时间只允许一个 Blueprint 编译”的契约。
 - `preferredPatchRefs[]` 必须非空并命中 D3；多个 Group 可以共享 patch；Group ID 唯一；relation 端点存在且不自指。多 Group 城市的 relation-enabled Group 缺少关系时，以 `CITY_BLUEPRINT_FUNCTION_AREA_RELATION_UNSPECIFIED` 在提交前拒绝。
 - 所有 D3、catalog、structure、pool、algorithm、composition、style、road、surface 引用必须命中冻结快照。
 - `GENERATE` 必须完整覆盖全部 STRUCTURE Group；户外 group、landscape、patch、rule、recipe、profile 和 reference Group 必须命中同一冻结上下文。
@@ -389,7 +389,9 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 plan/trace 根级 `compilationAcceptance` 必填 `acceptancePolicy=SAFETY_AND_REQUIRED_CONTENT_V1/passed/qualityFullySatisfied/previewCompiled/requiredRelationCount/requiredRelationsSatisfied/structureGraphConnected/allFunctionAreasFormed/allRequiredStructuresCommitted/allRequiredContentPresent/arrayVisualGeometryPassed/allStreetEntrancesConnected/hardBlocks[]/warnings[]`。`passed` 表示落地底线通过，不表示质量满分；`qualityFullySatisfied` 仅在没有硬失败和警告时为 true。`previewCompiled=true` 仅表示预览已形成，失败也必须保留 PNG。局部入口 `UNRESOLVED` 逐项写 `STREET_ENTRANCE_UNRESOLVED` warning，`allStreetEntrancesConnected` 仍为 false，不伪造道路连通。
 
-资源身份、规划边界、建筑及道路碰撞、空功能区、必需关系和指定建筑最终内容仍是落地硬门槛。多个 Group 中，凡 `expansionPolicy.allowRelationConnection=true` 的 Group 必须显式参与 relation；孤立 Group 必须显式关闭该能力，所需连接仍须达到 handoff。指定内容按同一 Group 最终 `structureCounts` 中完全相同的 `structureRef` 和请求数量核对，允许 REQUIRED/fill/connectivity 已实际提交的同种建筑共同满足 `allRequiredContentPresent`，禁止跨 Group 抵扣或按名字、风格、推测功能替换。最终不足仍逐项写 `REQUIRED_STRUCTURE_MISSING` hard block。原 `requiredStructureCounts/missingRequiredStructures/allRequiredStructuresCommitted` 保持 REQUIRED 阶段真值不变，阶段缺口另写 `REQUIRED_PHASE_STRUCTURE_MISSING` warning；Group 增加 `missingRequiredContent[]/allRequiredContentPresent` 说明最终内容。地形跳过继续保留原诊断和 `SELECTED_PATCH_TERRAIN_UNABLE_TO_SUPPORT_REQUIRED_STRUCTURE` warning。
+资源身份、规划边界、建筑及道路碰撞、空功能区、必需关系和指定建筑内容仍是落地硬门槛。多个 Group 中，凡 `expansionPolicy.allowRelationConnection=true` 的 Group 必须显式参与 relation；孤立 Group 必须显式关闭该能力。REQUIRED 阶段候选被拒绝时回溯已选候选，不得因 `D4_ARRAY_COUNT_UNSATISFIED` 或地形不适合跳过必需项，寄望后续填充补齐。有限候选组合穷尽后及时返回 `CITY_BLUEPRINT_REQUIRED_STRUCTURE_NO_LEGAL_PLACEMENT` 及分组、建筑、过滤原因，停止后续道路/填充；搜索预算耗尽与作者 frontage 缺口仍归程序处理。最终 `missingRequiredContent[]/allRequiredContentPresent` 继续按同一 Group 中同一 structureRef 的所有实际提交数量复核，不足仍写 `REQUIRED_STRUCTURE_MISSING`，兼容旧产物的阶段缺口诊断，不允许按推测功能替换。
+
+交通验收以 `cityMainRoadPlan.connections[]` 和具备实际街带的 `bridgeConnections[status=PLANNED_BY_CITY]` 为依据；不以 `allowOutwardExpansion` 作为修路前提。`CONNECTION` 的满足与组间交通连通由道路结果判定；ADJACENCY/HIERARCHY 的建筑扩张约束仍由 connectivityPlan 判定。无路、跳过连接或仅声明桥委托不能视为通路。`group_extent_map.structureGraphConnected` 仍仅描述结构扩张拓扑，不能替代交通验收。COMPACT 与 COURTYARD 的首个成员偏离阵列中心，提交首个成员后不得把阵列中心平移到该成员位置。
 
 最终 `StructureAnchorMap.quality.metrics.compilationAcceptance` 原样保存结果；只合并安全与必需内容 hardBlocks，质量问题只合并 warnings，外层 `qualityFullySatisfied` 同时考虑 warnings 和 needsReview。MCP 决策展示中，已有正式 artifact 引用的 `structureAnchorPlan/structureAnchorMap/cityGenerationCompileTrace/groupExtentMap` 可替换为包含 artifactPath、状态、计数与验收结论的摘要；完整质量报告、警告、作者选择及磁盘产物不截断、不删除。展示超限阈值不因此提高。
 

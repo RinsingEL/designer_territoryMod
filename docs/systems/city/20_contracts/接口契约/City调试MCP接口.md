@@ -6,9 +6,17 @@
 
 Provider 自动规划使用宿主范围锁定的决策适配器，其工具定义由 ProviderPlanningToolCatalog 同时供内嵌模型和 Hermes 的认证桥读取；Hermes 不再误用原始分阶段 MCP schema。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；同错三次停止由宿主控制。已有同 Context、非空设计会话续跑不重复注入整包目录和图片。
 
-所有 City MCP 工具调用本地 `/realm/city/<snake_case_action>` HTTP 入口。常规阶段调用至少使用 `runId`、`citySeedId` 定位任务；需要世界上下文的入口可再使用 `dimensionId` 或 `playerName`。
+公开 City MCP 工具调用本地 `/realm/city/<snake_case_action>` HTTP 入口。常规阶段调用至少使用 `runId`、`citySeedId` 定位任务；需要世界上下文的入口可再使用 `dimensionId` 或 `playerName`。
+
+Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排名摘要和实际地图，不装入整包网格。宿主专用只读工具 `city_inspect_d3_patches` 直接查询本轮已锁定城市的完整 D3 快照，无独立 HTTP 路由，不接受 runId、cityId 或文件路径；支持 `landformType`、精确 `landformPatchId`、零起始 `page` 和 `pageSize`（默认 8，范围 1–16）。每页保留完整地貌块记录及 memberCells，返回 totalMatched/hasMore/nextPage；按需查证，不要求遍历全部页面。原始 D3 产物不变。
+
+程序自动执行步骤请求 `X-Geomantia-Host-Result` 回执，不生成模型展示或嵌入图片，失败证据仍完整返回。模型展示和 Hermes 初始输入不再使用 90000/262144 字符门槛，也不截断作者资料；实际 HTTP 请求体、响应传输及图片安全限制独立保留，不代表模型上下文容量。
 
 ## 正式主链工具
+
+冒险家地图右上角提供“重试当前城市”，位于 Agent 过程左侧。客户端仅在具名当前城市 `blocked_by_program` 且未加载/提交时启用；通过冒险家地图网络协议 v5 的 C2S 请求发送 runId/cityId（各最多256字符），由服务端验证单人存档主人或2级管理员权限、当前服务器、队列当前城市/状态/nextAction，再调用与 HTTP `city_post_d4_auto_compile_retry` 相同的入口。过期页面不得重试旧城市，已运行或等待AI修订不得作为程序重试；不清空方案、失败预算或世界扫描。S2C 回执显示提交、状态变化、权限不足、服务未就绪或失败并刷新地图；客户端10秒无回执只刷新和提示，不自动重发。重试功能依赖当前服务器已启动的规划服务，不从客户端固定连接 localhost。
+
+编译候选穷尽返回具体必需建筑的修订证据并按既有预算进入 needs_agent；不得跳过必需项后继续填充。终审失败摘要优先报告最终 qualityReport/compilationAcceptance.hardBlocks，不能使用无关的最后一次填充失败覆盖最终原因。仅有明确缺失设计关系的终审证据可进入设计修订；搜索上限、资源缺口、未知安全错误或编译成功后出现必需内容缺失仍归宿主处理，保留方案和预算，不把通用终审码一律归设计。
 
 | 工具 | HTTP | 职责 |
 | --- | --- | --- |
@@ -46,7 +54,7 @@ Provider 自动规划使用宿主范围锁定的决策适配器，其工具定�
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
 - 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突写 needs_agent + city_submit_d4_blueprint；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
-- blocked_by_program 仅在程序/环境修复后使用 city_post_d4_auto_compile_retry。设计修订使用同一 contextId 完整输入或哈希绑定局部补丁，由程序组装完整 revision。上层城市队列保留阻塞且不跳到下一城。
+- blocked_by_program 在仅修复程序/环境、冻结资料不变时使用 city_post_d4_auto_compile_retry。作者目录实际改变时，允许当前城市通过 city_prepare_d4_blueprint_context 正式重建 Context：仍须作者审批、NBT 预检和有效 D3 review，拒绝在途/完成任务、其他城市及预算耗尽；资料未变返回 CITY_BLUEPRINT_AUTHOR_SOURCES_UNCHANGED。成功后旧 Context、snapshot、accepted Blueprint/trace/报告及预算保存到 steps/blueprint/context_history，旧失败任务保存到 automation/post_d4/history；旧 accepted 文件不删除但不再匹配新 Context。原 failureCount/failures 原样迁移，不清零；后半段任务改为 needs_agent + city_submit_d4_blueprint，重启不再被旧阻塞覆盖，也不直接启动编译。GLM 收到旧方案作为参考，必须按新 Context 完整提交；不能使用旧哈希补丁。普通设计修订仍用同一 contextId 完整输入或哈希绑定局部补丁，上层队列不跳过当前城。
 
 ### D4 Blueprint 失败预算契约
 
