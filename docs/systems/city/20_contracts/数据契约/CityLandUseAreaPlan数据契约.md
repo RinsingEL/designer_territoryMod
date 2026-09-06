@@ -206,7 +206,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 - PAVE 和 CULTIVATE 使用不同 `compatibilityCategory`，不会互相自动连接；同类别允许具体方块不同，例如两种城区石材仍可连接。兼容类别与 `autoConnect` 属于 LandUse 扩张层，不由 `surfaceAlgorithm` 推导连接结果。
 - PRESERVE / WATER 显式 `surfacePrintEnabled=true` 且提供地表方块时提升为 PAVE 兼容类别；`autoConnect` 未显式关闭时随之默认开启。
 - `uniform` 只做最终 mask 内单方块刷地，不改变 LandUse 几何或连接。
-- `contour_bands` 在连续高程场上计算梯度 / 等高线法向距离，按 SurfaceRecipe 冻结的 `fieldBeforeBlocks + channelWidthBlocks + fieldAfterBlocks` 分类；CHANNEL 内冻结两侧 BANK 与中间 WATER，法向不稳定的连续平地使用 `algorithmAnchor` 做 `RADIAL_FALLBACK`。旧 v0.2 四象限 `radial` 不再接受。
+- `contour_bands` 在连续高程场上计算梯度 / 等高线法向距离，按 SurfaceRecipe 冻结的 `fieldBeforeBlocks + channelWidthBlocks + fieldAfterBlocks` 分类；CHANNEL 内冻结两侧 BANK 与中间 WATER，法向不稳定的连续平地使用共享 `algorithmAnchor` 相位的缓弯平行条带 `DIRECTIONAL_CURVES`，不再新建同心圆。旧冻结 `RADIAL_FALLBACK` spans 仍可读取，执行期不重算形状。
 - 规则选择优先级为 `subjectOverrides` > `groupOverrides.ruleRef` > D4 semantic 自动解析。未知 target、重复 surface target、group 成员冲突和未知 `ruleRef` hard fail；无法解析规则的主体写 warning 并跳过。
 
 ## LandUseAreaPlan
@@ -291,14 +291,16 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 `uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。
 
-`contour_bands` 冻结配置的正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks` 及其和 `repeatPeriodBlocks`，并冻结 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、可选 `boundaryBlockId`、`classificationMode`、`anchor` 与 `bandSpans[]`。`classificationMode` 只允许 `CONTOUR_NORMAL|RADIAL_FALLBACK`；`bandSpans[]` 每项为 `{z,minX,maxX,role}`。核心分类器先输出 `field|channel_before_bank|channel_water|channel_after_bank`，planner 再按完整全局 WATER 四邻接把所有开放端点改为 `channel_end_cap`；最终 SurfacePrintPlan 接受这五种 role。
+`contour_bands` 冻结配置的正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks` 及其和 `repeatPeriodBlocks`，并冻结 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、可选 `boundaryBlockId`、`classificationMode`、`anchor` 与 `bandSpans[]`。`classificationMode` 允许 `CONTOUR_NORMAL|DIRECTIONAL_CURVES|RADIAL_FALLBACK`，后者只用于读取旧冻结结果；`bandSpans[]` 每项为 `{z,minX,maxX,role}`。核心分类器先输出 `field|channel_before_bank|channel_water|channel_after_bank`，planner 再按完整全局 WATER 四邻接把所有开放端点改为 `channel_end_cap`；最终 SurfacePrintPlan 接受这五种 role。
 
 - 先对 D3 粗格高程做确定性的连续插值 / 平滑，再计算局部梯度与法向距离；不得直接把粗 cell 边界当等高线。
 - 在完整 member mask 上一次性分类并扣除 exclusions，再冻结全局 spans；chunk 只裁切，不重算梯度、anchor、相位或 role。
 - 把每条三格水槽解释为 `CHANNEL_BEFORE_BANK + CHANNEL_WATER + CHANNEL_AFTER_BANK`；开放 `CHANNEL_WATER` 端点按完整全局邻接冻结 bank 封口，禁止按 owner chunk 局部猜测。
 - 固定输入、算法版本和 seed 得到相同 spans；输入 spans 顺序或 chunk 执行顺序不得改变结果。
 
-`relay_region_growth` 是正式 Blueprint v0.12 景观填充配方。它冻结：
+正式 Blueprint 中，作者 SurfaceRecipe 显式为 `CONTOUR_BANDS` 且已选择的 fill program 含 `WATER` materialRole 时，保留作者水渠配方并冻结等高线条带；其余景观继续使用 `relay_region_growth`。此改动只影响内部表面布局，不改变 Parcel 的逐格扩张、面积、父子来源或作者材料。旧旱田选择不会自动变成灌溉田。水渠的宽度来自作者配方而非 relay 目标占比；原 fill program 仍保存在规划 trace 中，不把条带实际比例伪装成 relay 达标结果。
+
+`relay_region_growth` 冻结：
 
 - Surface Recipe 已解析材料：`surfaceBlockId`、可选 `cropBlockId`、可选 bank/water/overlay、可选 `boundaryBlockId`。
 - AI/目录决策：`fillProfileRef`、`primaryRoleRef`、`stableSeed`、有序区域阶段的角色、`PATCH|CORRIDOR` 生长偏置及 `targetShare`、内容权重。
@@ -343,6 +345,7 @@ Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计�
 - owner 先写 Area base/overlay，再写 `surfaceOffset=0` 的道路/绿化 feature，随后写 crop/plant/外溢边界上层，最后执行 Area boundary finalize。ROAD_SLAB 使用 bottom slab；ROAD_STAIR 使用 bottom straight stair 和冻结外向。整个 owner 共用一次预检、快照与逆序回滚，任一 feature 写入失败也必须回滚同 owner 已写内容。
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
+- WATER 操作在实际地面方块同一 Y 替换地面，水面低于田面；不得放在地面上方，也不得为“下挖”把水放到无法灌溉的田块 Y-1。槽底必须是实体支撑，四侧必须可封水（同层已生成源水可连续）；高差开口或无槽底时改为作者 bank 材料封口。此检查只读一格邻域，不跨 owner 写入、不进行额外地形扩张。未铺实体底座的水面/空洞上不生成普通围栏。
 - 整 owner 成功后才追加 applied ledger。重复回调必须由 dimension / city / area plan hash / surface plan hash / palette hash / owner chunk 幂等阻断。
 - 普通 worldgen 回调中，非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。唯一例外是显式 `city_execute_d7 + executeStructurePlacement=true`：D7 可按当前完整 plan identity 对计划 owner 与成功 ledger 做差集，并以 `CONTROLLED_D7_BACKFILL` 只补缺失 owner；该能力不得作为任意旧区块重铺入口。
 - D7 受控补写继续使用整 owner 预检、快照、写入、rollback 与成功 ledger 事务，但调度必须进入服务器 tick 队列：异步请求 FULL chunk，每 tick 最多一个 chunk 请求或 owner 事务，禁止在 HTTP/workflow 调用中循环同步 `level.getChunk(...)`。
