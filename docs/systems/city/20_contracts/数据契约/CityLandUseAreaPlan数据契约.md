@@ -263,9 +263,9 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityUrbanSpacePlan
 
-`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.12 分层规划返回 disabled plan，覆盖证明改由 Foundation 各局部组件的 resolved close radius 和最小颈宽承担；它不进入 worldgen recipe parser。
+`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.12 分层规划返回 disabled plan，覆盖由 Foundation 近距簇完整建设域承担；trace 的 resolved close radius/最小颈宽为旧诊断兼容字段，不再代表一次实际闭合搜索。它不进入 worldgen recipe parser。
 
-城市基础域由纳入主体的 D6 structure footprint、LINEAR `platformBounds` 和 Foundation Profile 支撑，不读取 D5 corridor/gate。程序先按 `maxJoinDistanceBlocks` 分局部簇，再从 `closeRadiusBlocks` 开始为每簇选择首个通过最小颈宽验收的闭合半径；全城强连只会形成细桥时，按 close radius 重分局部平台，不生成细长地板桥。几何闭合只受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与通行判定。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
+城市基础域由纳入主体的 D6 structure footprint、LINEAR `platformBounds` 和 Foundation Profile 支撑，不读取 D5 corridor/gate。2026-09-07 用户确认：先按 `maxJoinDistanceBlocks` 分近距连通簇，再填满每簇结构外扩后的凸包建设域，不再因细桥验收拆回逐栋铺装；超距簇不强连。`closeRadiusBlocks` 暂保留输入兼容，不再控制拆簇。几何范围受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与几何通行判定。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
 
 正式路径 `residualRegions[]` 必须为空。Foundation domain 内除 Landscape 覆盖外必须全部归属同一 Foundation Area；任何按 SpatialGround 分配 residual、原群系洞或道路 corridor 空洞都是旧产物或规划失败。自然与绿地必须是 Blueprint 显式 landscape。
 
@@ -289,7 +289,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `surfaceAlgorithm` / `algorithmAnchor` | `uniform|contour_bands|relay_region_growth` 与 nullable/有效根起点；nullable 字段必须显式写 JSON null。 |
 | `recipe` | `uniform`、`contour_bands` 或 `relay_region_growth` 判别联合。 |
 
-`uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。
+`uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。正式 Foundation 新计划另冻结 `platformSpans: [{z,minX,maxX,targetY}]`：整片最终基面连通域在 owner 裁切前按 D3 非水采样的主导四格高度统一定高，低坑不另生成低台。区块只裁切冻结高度，不按本块重新投票；主干道优先使用所在基面高度。普通铺装及旧计划允许省略此字段，省略时保持旧 hash 与读取兼容；新增高度参与 planHash。Landscape 覆盖区不由 Foundation 强行刷平。超出执行土方安全范围仍报明确错误，不静默留裸地。
 
 `contour_bands` 冻结配置的正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks` 及其和 `repeatPeriodBlocks`，并冻结 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、可选 `boundaryBlockId`、`classificationMode`、`anchor` 与 `bandSpans[]`。`classificationMode` 允许 `CONTOUR_NORMAL|DIRECTIONAL_CURVES|RADIAL_FALLBACK`，后者只用于读取旧冻结结果；`bandSpans[]` 每项为 `{z,minX,maxX,role}`。核心分类器先输出 `field|channel_before_bank|channel_water|channel_after_bank`，planner 再按完整全局 WATER 四邻接把所有开放端点改为 `channel_end_cap`；最终 SurfacePrintPlan 接受这五种 role。
 
@@ -332,6 +332,14 @@ Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计�
 规划成功后最后发布严格的 `city_land_use_planning_complete.v0.4`。正式 Blueprint 路径字段为 `schemaVersion`、`cityId`、`planningSource=city_blueprint`、`sourceBlueprintHash`、`sourceCatalogSnapshotHash`、`sourceReferenceCatalogHash`、`sourceTerrainFieldHash`、`sourceD6Hash`、`outdoorIntentPlanHash`、`urbanSpacePlanHash`、`planHash`、`surfacePrintPlanHash`、`ruleProfileHash` 和 `completedAt`。AreaPlan、SurfacePrintPlan、OutdoorIntent、disabled UrbanSpace 与 completion identity 必须一致；缺少任一当前产物或 hash 漂移时 hard fail。
 
 ## Worldgen 交接
+
+### 主路冻结高度（2026-09-06 用户确认的高侧下挖方案）
+
+SurfacePrint `featureCells[]` 增加可选整数 `targetSurfaceY`，仅允许零 offset 的 `ROAD_SLAB/ROAD_STAIR`；未提供时沿用原执行语义且序列化不写入该字段，提供时参与计划哈希。chunk feature operation 必须原样传递，不得在 owner 内重新估算该道路高度。
+
+非桥主路在整段冻结地形上求连续纵断面，默认水平3格上升1格，空间不足尝试2格；规划下挖/填方各不超过12格。端点、交叉口及入口附近锁定冻结采样高度，不为坡道移动建筑。当前采样固定值不是实测门槛Y。无法满足固定点/坡长时保留旧路径并记录诊断警告，尚不包含自动绕行。
+
+执行固定高度时清除高侧占用、填实低侧支撑，不仅移动表面材质。实际采样和固定目标冲突且超出安全整地界限时明确报错，不移动已冻结高度。该字段不会自动改写旧档已有计划；新纵断面需要重新编译后才能生效。
 
 - active 文件：`geomantia_city_masks/active_city_land_use_area_plans.json`。每项只冻结 dimension、city、area plan、SurfacePrintPlan v0.7、material palette/hash 与 prepared owner index，不携带 LandUse catalog、prefab 或 run 状态。
 - 传入 SurfacePrintPlan 的 `land_use_preview` metadata 为 `city_land_use_preview.v0.5`；除 Landscape 区域摘要外，必须叠加道路 slab/curb、绿化 ground/path/plant 和外溢边界，并记录 `featureCellCount`。

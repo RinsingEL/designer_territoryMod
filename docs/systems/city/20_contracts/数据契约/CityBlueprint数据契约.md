@@ -63,6 +63,14 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field`，不触发扫描或
 
 ## Blueprint 引用目录
 
+### 2026-09-06 编译可靠性与局部修订补充
+
+- 作者可在引用目录根配置 `automaticConnectionMaxDistanceBlocks`（非负整数，省略 256，0 关闭自动近邻扩张）。初始阵列形成后，仅对没有显式关系且双方允许连接/外扩的近邻建立自动连接；接合完成间距仍来自阵列 handoff 参数，与启动距离不同。显式关系（包括 FAR）优先，不被自动连接改写；显式 HARD 关系保持必需性。未声明道路或可选连接不足记录 warning，不能凭 `allowRelationConnection` 能力标记推导整城必须道路连通；明确 HARD 道路无法实现仍阻断。
+- `fillPools[]` 可选 `maxCopiesPerStructurePerGroup`，非负整数，0/省略不限。计数包含同组已放下的 required/fill/connectivity/percentage 同种结构；限制只阻止继续填充，不删除或替换必需建筑。各自动填充阶段优先选择池内当前使用较少的合法结构，同次数按稳定游标选择，不按名称猜功能。
+- 核心区在初始阵列与连接后冻结，禁止百分比阶段继续补建筑；旧 `stopWhenTargetReached=false` 不再把目标扩大为整个预览区。其他区用包含连接建筑的同口径面积计算缺额。景观服从配置 landscapeShare 和剩余目标，不得把建筑缺口或 openSpaceShare 自动改成田地；核心景观不追加面积预算。
+- 局部修订沿用 `baseBlueprintHash + blueprintPatch`。编译器可复用成功的单阵列搜索检查点，键绑定冻结 context、当前布局状态、请求、占用及邻区避让依赖，输入变更即失效；最多保留 128 个、每个 1 MiB，损坏或不可用时正常计算。检查点不是成功城市/成功分区的整体快照，共享道路、景观和最终验收必须重新执行。独立统计在 `city_array_checkpoint_statistics.json`，不得让缓存命中改变正式布局或其 hash。
+- 程序内部骨架道路在填充前对全部已放置建筑进行包含路缘的有限绕行，并以同样横截面预留占地。绕行失败保留程序错误，不跳过安全检查、不删除建筑。检查点只复用未改变的精确搜索输入，不承诺修改一个功能区后其他所有功能区完全不受共享依赖影响。
+
 ### Landscape v0.10
 
 `outdoorPlan.landscapes[]` 使用严格判别结构：
@@ -363,6 +371,10 @@ CITY_BLUEPRINT_OUTDOOR_REFERENCE_INVALID
 
 根字段：`cityId`、`status=compiled|failed`、`reasonCode`、`generationSeed`、`selectionMode`、`aiCandidateSelectionCount=0`、`manualCandidateSelectionCount=0`、`sourceD3Ref`、`catalogSnapshotRef`、`functionAreaFormationPlan`、`connectivityPlan`、`arrayCompositionSlots[]`、`selections[]`、`groupResults[]`、`cityMainRoadPlan`、`streetFirstNetworkTrace`、`residentialOverflowPlan`、`compilationAcceptance` 与 `dynamicAreaPlan`。`functionAreaFormationPlan` 只能由 D4 根据已提交建筑形成，调用方不能补写；其中 `preallocatedAreaCount` 必须为 `0`。
 
+组合槽分配失败同样返回 `CompilationResult` 并落盘 trace，不直接抛出无恢复动作的异常。`failureSummary.phase=array_composition` 保存失败原因；非对称成员联合分配无解时另保存 `compositionId/searchVisited/searchLimitReached/members[]`，成员项记录 `groupId/formationSpanBlocks/candidateCount/legalCandidateCount/outsidePlanningBoundsCount/reservedOverlapCount/outsidePreferredPatchCount`。成员候选联合避让并允许回溯，不能因前一个成员的首次选择阻塞后一个成员。`CITY_BLUEPRINT_ARRAY_COMPOSITION_SEARCH_LIMIT_EXHAUSTED` 属于程序搜索预算失败，不得据此要求 AI 改设计；完整候选域内无法分配时返回具体槽位约束。COMPACT 空间需求按实际每环八槽的径向算法计算，包含模板起始锚点的完整尺寸外伸，不再按旧长条队列预留正方形。
+
+正式 Blueprint D4 的外部 `quality_report.json` 保存 `sourceAnchorMapHash`，绑定同次最终输出的 `structure_anchor_map.json` 原始 UTF-8 内容。workflow 复用除校验 accepted Blueprint/context/hash 外，还必须要求最终质量 `passed=true` 且该 hash 一致；缺失、失败、旧版无 hash 或漂移的报告必须重编译，不得把失败时遗留的 map 视为成功产物。
+
 每个 selection 按执行顺序记录 `phase=required|fill|connectivity_growth`。全部 Group 的 required 先完成并尝试各自第一批 fill，随后才允许规划 Landscape 起点；Landscape 容量结果不得触发 required/fill 建筑换位。`roadProfile.hierarchy=SIMPLE` 才允许最后执行既有 connectivity structure growth；`HIERARCHICAL` 由父阵列城市主干路承担区际连接，必须不生成 `connectivity_growth` 建筑。required/fill 继续记录单结构候选、评分、envelope 与提交状态；SIMPLE 的 connectivity selection 仍按完整阵列批次记录并原子提交，不得部分落地。
 
 connectivity selection 另必填 `requestedBatchSize`、`terminalBatch`、`initialBodyGapBlocks`、`frontierGapCorrectionBlocks`；对应 `frontierSearchTrace[].rings[]` 记录 `correctedForBodyGap`。批量从解析后的配置规模按 `N..1` 确定性降级重试，失败尝试同样进入 trace；一组完整合法候选即可提交，零组才失败。`minCandidateCount` 不属于 Blueprint 或编译请求，旧字段必须以 `D4_ARRAY_LAYOUT_MIN_CANDIDATE_COUNT_REMOVED` 明确拒绝。
@@ -382,6 +394,8 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 `cityMainRoadPlan.schema=city_main_road_plan`，必填 `cityId/roadProfileRef/hierarchy/density/planningOwner=BLUEPRINT_EXPLICIT_TRAFFIC_CONNECTIONS/sharedNetworkPolicy=ONE_NETWORK_SERVES_MULTIPLE_TRAFFIC_DEMANDS/geometryMode=TERRAIN_AWARE_AXIS_ALIGNED_90_DEGREE/surfacePolicy=FOLLOW_TERRAIN_STEP_GRADED/crossSectionProfile=STAIR_SLAB_STAIR/internalStreetMaxWidthBlocks/mainRoadWidthBlocks/status/reasonCode/connectionCount/segmentCount/sharedNetworkReuseBlocks/connections[]`。只有 `relations[].relationKind=CONNECTION` 表示需要修路的显式交通意图；`HIERARCHY/ADJACENCY/BUFFER/DISTANCE/DIRECTION`、父阵列成员关系和功能区空间关系都不得自动生成主路或桥。每条显式交通连接的两端必须解析到真实模板 `roadEntrances[]` 或已冻结区内街端点，不再使用 Group 边界伪 gateway；连接项写 `routingPolicy=SHARED_NETWORK_REUSE_BEFORE_NEW_CORRIDOR/sharedNetworkReuseBlocks`。路径先在 D3 terrain field 四邻域避崖、再在 block 级按完整路面和路缘宽度避开实际建筑 footprint；已冻结主路 cell 的代价低于新走廊，后续需求优先复用同一网络。没有显式交通连接时合法输出空计划，显式连接缺真实出口或无合法路径时记录明确失败。
 
 主干路每个直段 schema 为 `city_main_road_band`，写入同一 `streetBands[]`；主路半砖面宽取不小于 7 的奇数，且严格大于本城最大区内道路半砖面宽，两侧路缘另各加 1 block。陆地主路进入 Foundation 整地和 SurfacePrint；确认通路跨水时由 City 生成 `roadKind=CITY_BRIDGE` 的直线或 L 形桥段，桥段不填水、不进入 Foundation，使用独立桥面、护栏与水中桥墩，并保持两岸正式道路出口。所有正式道路均写入 City 自有冻结几何，不向外部道路 Mod 委托。
+
+模板入口位于 footprint 内部时，城市主路接驳只沿作者门向在 footprint 外侧生成；模板内部既有院落/通道由模板保留，不生成穿过模板的接驳面。接驳可以穿过所属建筑的外部 clearance 留白，但不得豁免该建筑 body，也不得豁免其他建筑；起点及全段路面、两侧路缘均需避让。该投影只确定外部接入位置，不证明模板内部一定存在可通行路径，不得据此伪造入口连通验收。
 
 `residentialOverflowPlan.schema=city_residential_overflow_plan`。程序只使用同 Group 已提交的 `phase=fill + blueprintLayout.outwardGuided=true` 建筑；至少 3 栋且其区内正式道路与子区范围相交时，冻结一个 `RESIDENTIAL_OVERFLOW` 子区。每项写 `zoneId/parentGroupId/generationMode=OUTWARD_GUIDED_FILL_BUILDINGS/buildingCount/boundaryBounds/boundaryBlockId/anchorIds[]/streetBandIds[]`，并把 `residentialOverflowZoneId` 回写成员 layout。执行层沿矩形边界写墙，所有关联道路 bounds 自动形成门洞；不足数量或无道路时不伪造子区。
 
