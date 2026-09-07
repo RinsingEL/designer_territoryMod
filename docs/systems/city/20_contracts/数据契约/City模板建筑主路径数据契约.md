@@ -127,7 +127,8 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 | `roadEntrances[]` | object[] | 模板局部道路入口；每项含 `entranceId`、`position{x,z}`、`direction` |
 | `terrainPosePolicy` | string | 模板地形姿态策略，也是 placement lifecycle 配置；所有 City catalog 模板无条件归一为 `structure_start_beard_thin`，不存在 direct-template 分支 |
 | `supportPolicy` | string | 支撑 / 基础策略 |
-| `clearanceBlocks` | int | 非负；只用于从 actual footprint 派生 collision bbox |
+
+`clearanceBlocks` 已废弃，不再必填；旧目录可保留该字段，但执行统一按 0 处理。新编译的 collision bbox 等于 actual footprint，不附加模板安全距离。布局间距、道路宽度和软地块余量保持独立；历史冻结产物不自动重排。
 
 目录 loader 必须从 NBT 重新确认 `rawSize` 和 `templateHash`。配置不能覆盖 NBT 尺寸，不能把 `nbtFile`、`structureId` 或 TerraSense 静态 footprint 当作 `templateRef` 的兼容别名。
 
@@ -158,8 +159,7 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
         {"entranceId": "front", "position": {"x": 4, "z": 11}, "direction": "SOUTH"}
       ],
       "terrainPosePolicy": "structure_start_beard_thin",
-      "supportPolicy": "full_footprint_support",
-      "clearanceBlocks": 2
+      "supportPolicy": "full_footprint_support"
     }
   ]
 }
