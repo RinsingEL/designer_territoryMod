@@ -10,6 +10,15 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 
 ### D4 提交的几何接受边界（2026-09-07）
 
+#### 局部失败反馈与未接受草稿（2026-09-07）
+
+- 几何拒绝直接返回 `designFeedback`（`city_design_failure_feedback.v1`）：失败group/structure、精确group字段路径、候选过滤原因计数、至多8个失败坐标样本。中途失败后成功的槽位不当作最终失败；坐标样本非完整搜索空间证明。
+- `capacityInsufficiencyProven=false`、空 `parameterAdjustments` 表示没有可证明的数值调整，禁止据此声称“面积太小”。当前submit的必需建筑候选耗尽按程序待诊断处理，保留设计并停止盲重试；不改变旧post-D4故障分类。
+- 数值校验中，景观parcelCount和景观角色占比范围/总和失败可携带 `issues[].constraint`：measurement、actual、minimumInclusive、maximumInclusive、instruction。比例总和容差仍为1e-6。建议只指向已有字段，不虚构院落宽深等尚未接入的字段。
+- 未通过几何接受的canonical方案保存为 `city_blueprint_draft.json`（`city_blueprint_draft.v1`），并通过 `revisionEvidence` 内联回传。草稿不代表accepted、不进入worldgen。
+- `blueprintPatch` 可选 `baseDraftHash` 作为拒绝草稿修订基准，与 `baseBlueprintHash` 严格二选一；两者都只允许EXACT_SHARES和replace操作。绑定当前Context、城市、草稿内容哈希以及保存草稿时的accepted版本，过期即拒绝。成功接受后使草稿失效。
+- prepare/重启设计回合即使failureCount=0，也优先提供当前有效拒绝草稿及反馈，不再只依赖旧steps/d4产物。局部补丁保留其他输入，但**这不是逐功能区独立几何验收或整区冻结**；主阵列数值参数与独立功能区预览仍未接入。
+
 - 新提交在发布 accepted 之前执行 D4 布局编译和 `compilationAcceptance`。仅 JSON/schema 合法不等于设计被接受。
 - 成功后保存 `city_blueprint_geometry_commit.json`，schema 为 `city_blueprint_geometry_commit.v1`；内容包含 canonical `blueprintHash` 和完整 `CompilationResult`。接受 trace 增加 `designGeometryValidated=true` 与该文件的 `geometryCommitHash`。
 - 正式 `city_compile_d4_blueprint` 校验 Context/D3/catalog/terrain/blueprint 和几何文件 hash 后复用冻结结果，不重新排建筑。几何文件损坏或缺失不得退回重新搜索。
