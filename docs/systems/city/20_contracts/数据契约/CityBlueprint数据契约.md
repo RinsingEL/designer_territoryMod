@@ -8,6 +8,17 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 
 ## 当前 schema
 
+### D4 提交的几何接受边界（2026-09-07）
+
+- 新提交在发布 accepted 之前执行 D4 布局编译和 `compilationAcceptance`。仅 JSON/schema 合法不等于设计被接受。
+- 成功后保存 `city_blueprint_geometry_commit.json`，schema 为 `city_blueprint_geometry_commit.v1`；内容包含 canonical `blueprintHash` 和完整 `CompilationResult`。接受 trace 增加 `designGeometryValidated=true` 与该文件的 `geometryCommitHash`。
+- 正式 `city_compile_d4_blueprint` 校验 Context/D3/catalog/terrain/blueprint 和几何文件 hash 后复用冻结结果，不重新排建筑。几何文件损坏或缺失不得退回重新搜索。
+- 几何拒绝写独立 rejection trace，不覆盖上一版已接受的蓝图/几何。异常或已识别的程序搜索故障标记 `failureOwner=program`，保留 `city_blueprint_blocked_proposal.json`，不要求 AI 重设计，也不调用可能执行旧 revision 的 post-D4 retry。
+- 未带几何冻结标记的旧 accepted 存档仍走旧 D4 编译入口。
+- **当前冻结范围仅是 D4 结构布局及该编译器输出，不宣称 D5/D6/D7 全部工程已完成预验。** 新场景阵列的正式 Blueprint 字段尚未接入；不得因 Java 几何核心存在便向 Agent 宣告这些算法已正式可用。
+
+铺台面的功能区（`outdoorPlan.mode=GENERATE` 且列于 `spatialGrounds`）将局部坡度/起伏作为台面实现要求，仍检查采样覆盖、水陆与作者拓扑类型。保留自然地面的功能区不自动获得这项工程承诺。已冻结台面的区块实现采用浅凹填土、深凹桥面、凸起切除，不再以填土深度阈值否决桥面。
+
 | 对象 | schema |
 | --- | --- |
 | 上下文 | `city_blueprint_context` |
