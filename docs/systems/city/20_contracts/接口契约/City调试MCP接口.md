@@ -140,3 +140,8 @@ submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功�
 
 
 有效工作草稿的 `revisionEvidence.compiledDesignReview` 保留当前 `compilationAcceptance`（包括质量告警）以及尚未接通的 `unresolvedEntrances`，供模型看预览后继续修订。不会因为精简 compiledLayout 而丢掉告警；安全准入成功不表示入口全部连通或观感合格。
+
+
+### 多池外扩提交
+
+`city_submit_d4_blueprint` 的功能区可提交 `fillPools:[{poolRef,weight},...]`，与 `fillPoolRef` 二选一。`connectionPlan` 可使用 `structurePools` 或 `structurePoolRef`，均不填时继承功能区池。引用必须存在于冻结目录，列表非空、不重复，权重为有限正数。算法优先级由宿主固定，不增加 AI 选点或算法排序参数。将旧单池改为多池时使用完整 Blueprint 或替换整个 group；局部 patch 仍是 replace-only，不把原本不存在的字段当作可替换路径。

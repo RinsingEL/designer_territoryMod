@@ -25,14 +25,13 @@ strict T3 默认使用 `action_budget`；旧 quota frontier 只作为测试对�
 5. `10_product/案子/T4生成器原生粗地形预览-v0.1/README.md`
 6. `10_product/案子/W一次完整扫描-v0.1/README.md`（**实现当前案**：W 执行方式）
 7. `10_product/案子/AI场景策划与程序执行分工-v0.1/README.md`（**实现当前案**：世界自动规划总调度链，含 AI/程序分工、作者标注真值与运行方式）
-8. `10_product/案子/世界自动规划调度-v0.1/README.md`（已被上方案接管，不再作为该职责链实现依据；待后续清理）
-9. `10_product/案子/冒险者地图-v0.1/README.md`（**实现当前案**：规划地图与进度展示链）
-10. `10_product/案子/初始活动区与规划区域开放-v0.1/README.md`
-11. `20_contracts/数据契约/W-T阶段数据契约.md`
-12. `20_contracts/接口契约/W-T阶段MCP接口.md`
-13. `30_code_guide/代码导览.md`
-14. `40_tests/测试入口.md`
-15. `40_tests/真实游玩验收计划.md`
+8. `10_product/案子/冒险者地图-v0.1/README.md`（**实现当前案**：规划地图与进度展示链）
+9. `10_product/案子/初始活动区与规划区域开放-v0.1/README.md`
+10. `20_contracts/数据契约/W-T阶段数据契约.md`
+11. `20_contracts/接口契约/W-T阶段MCP接口.md`
+12. `30_code_guide/代码导览.md`
+13. `40_tests/测试入口.md`
+14. `40_tests/真实游玩验收计划.md`
 
 ## 当前实现能力
 

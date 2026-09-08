@@ -57,7 +57,7 @@
 | town | 512-640 blocks | 16 | 城镇；保持 GIS region 可整除 |
 | city | 768+ blocks | 32 | 城市；保持 GIS region 可整除 |
 
-T4 兼容映射：`capital`/`large_city` → city，`town` → town。
+T4 兼容映射：`capital`/`large_city` → `city`，`outpost` → `hamlet`；`hamlet`、`village`、`town`、`city` 保持原值。前哨站使用最小规模的规划半径，城市角色 `cityRole` 与 T4 种子中的原始规模不改写。D3 网格固定为 16 格，不受上表 D2 Cell Step 影响。
 
 ## Run 元数据恢复规则
 

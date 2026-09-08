@@ -208,7 +208,8 @@ Group 必填字段：
 | `algorithmProfileRef` | 冻结算法引用。 |
 | `terrainPolicy` | `CONFORM | BALANCED | ASSERTIVE`。 |
 | `requiredStructureRefs[]` | 非空、组内唯一且全部在结构白名单；`groupId + requiredStructureRef` 唯一定位 Landscape owner。 |
-| `fillPoolRef` / `compositionProfileRef` | 冻结目录引用；composition 不限制数量。 |
+| `fillPoolRef` / `fillPools` | 二选一：单池引用，或非空 `[{poolRef, weight}]`。池引用唯一、权重必须为有限正数。用于初始填充和外扩。 |
+| `compositionProfileRef` | 冻结目录引用；composition 不限制数量。 |
 | `spaceComposition` | 严格对象 `buildingShare/landscapeShare/openSpaceShare`；三者均为 `0..1` 且和为 `1.0`。 |
 | `expansionPolicy` | 严格对象 `allowOutwardExpansion/allowRelationConnection/stopWhenTargetReached`；均为 boolean。 |
 | `buildingGreeneryPolicy` | 严格对象 `{coverage,patternPreference,densityPreference}`。`coverage=NONE|SPARSE|BALANCED|LUSH`；`patternPreference=TEMPLATE_DEFAULT|FREEFORM|FIELD_GRID|MIXED`；`densityPreference=TEMPLATE_DEFAULT|LOW|MEDIUM|HIGH`。AI 只表达功能区整体意图，不提交逐栋坐标、mask、逐栋开关或方块材料。 |
@@ -219,7 +220,7 @@ Group 必填字段：
 
 | 字段 | 值域与继承 |
 | --- | --- |
-| `structurePoolRef` | 可选；连接阶段使用的结构池，不填继承 `fillPoolRef`，允许与 fill pool 相同。 |
+| `structurePoolRef` / `structurePools` | 可选，最多配置一种；连接单池或加权多池，均省略时继承功能区的全部填充池。 |
 | `algorithmProfileRef` | 可选；连接阵列算法，不填继承 Group 的 `algorithmProfileRef`。 |
 | `densityClass` | 可选 `SPARSE | BALANCED | DENSE`；不填继承 Group 疏密，并由程序换算实体间距与 handoff。 |
 | `parameters.clusterShape` | `ORGANIC_COMPACT | GRID | COURTYARD | L_SHAPE | U_SHAPE`；只适用于解析为 `compound_cluster` 的算法。 |
@@ -485,3 +486,12 @@ D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStruct
 - 最终 geometry acceptance 存在时，designFeedback 只提取当前 hardBlocks，关联精确 relations 路径及主路 skippedConnections，不把已解决的候选失败当作修改目标。必需建筑的有限候选失败若具备具体结构/位置证据，可进行相关局部设计修订；没有证据或达到搜索安全上限仍由程序处理。
 - `arrayRoadInterfaces[]` 在 required 阵列街道形成后、填充扩张前冻结接入候选与保护范围。reserved 接入区用于碰撞保护，不等于已经铺设的道路。LINEAR/院门/轴线接口优先于个别建筑门口；COMPACT 通过巷道出口接入。主路先按接口等级和距离排序，失败后尝试其他可用接口组合；不移动建筑让路。
 - Foundation 只来自需要城区铺地的 URBAN 成员及局部间隙闭合，不再求全城连通凸包。高度依据附近实际建筑与地形局部主高程量化为台阶；连通不再要求同一标高。PRESERVE 仍保留 D4 道路，LANDSCAPE 成员不生成统一城区地板。建筑底板下空洞由独立基础支撑保护。
+
+
+## 多池与局部组合外扩（2026-09-08）
+
+功能区的 `fillPools` 与引用目录中的 `fillPools` 不同：前者仅保存 `poolRef/weight`，后者定义池内容和单结构复用上限。旧 `fillPoolRef` 视为唯一候选池；序列化保留单池或多池形式，不同时输出两种。连接的 `structurePools` 使用相同权重格式。初始填充逐次选择池，比例外扩每个组合选择一次；种子、功能区、阶段、组合序号和池引用决定可复现的加权顺序。池内仍优先选择本组使用较少、未耗尽的结构，计数跨阶段累计。
+
+比例外扩使用程序固定枚举顺序 `GRID → LINEAR → COURTYARD → COMPACT → ORGANIC_COMPACT`，按算法优先级尝试可放置的小组合；不由 AI 配置优先级，不重新排列已提交建筑。每个组合最多六栋，受限时尝试较小组合，院落至少五栋。城市既有正交阵列方向延续到新增组合；内部巷道及接续段与建筑一起检查，原子提交后立即加入后续扩张的道路保护范围。道路与建筑碰撞、门口无法接续、无法接到已有道路时，该候选不提交。缺少任何既有道路时允许第一个小组合建立自己的内部通路，最终整城道路仍按主线验收。
+
+外扩 anchor 的 `blueprintLayout` 增加 `expansionUnitId`、`expansionAlgorithm`、`selectedPoolRef`；组合首栋携带 `expansionStreetBands`，最终道路进入标准 `streetBands`，等级 SECONDARY、窄巷横断面 SURFACE_ONLY。选择 trace 同步记录实际算法、池和整组提交的 anchor IDs。达到面积目标停止；无合法组合保留已提交结果并记录空间不足，不因新组合失败留下部分建筑。
