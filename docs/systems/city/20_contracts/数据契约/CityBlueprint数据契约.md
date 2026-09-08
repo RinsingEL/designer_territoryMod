@@ -472,3 +472,16 @@ D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStruct
 单栋建筑遇到水体、缺失/未采样地形或特别陡地形时，记录 `CITY_STRUCTURE_TERRAIN_UNFIT_SKIP_MEMBER` 并跳过该成员，继续其余阵列；普通坡度/起伏允许以 foundation/platform 适配。不得因单成员跳过使整座城市失败。连接结构只能满足显式关系，不能代替组内建筑最低意图。
 
 编译成功后必须输出 `city_structure_anchor_plan`、`city_structure_anchor_map` 与结构预览。D4 总览和每个功能区局部结构预览必须用独立颜色、半透明填充和清晰边线叠加各 Group 的精确 `functionArea.formationSpans[]`；`functionAreaEnvelope` 只可作为辅助轮廓，不得替代实际范围。预览还必须画出全部区内 `streetBands[]`、棕色粗线城市主干路和建筑 geometry；局部预览只画当前 Group 及与其相接的主干路。预览同时叠加 `landscapeCapacityReservationPlan.reservationSpans[]` 的精确格点面积，并以独立颜色和图例区分各 Landscape；不得只画外接矩形或只列文字数量。D5/D6 只消费这些标准产物，不读取 Blueprint、compile trace 或 extent map 建立特殊分支。
+
+
+## 2026-09-08 逐区设计与地形保护主线更新
+
+本节按 City逐区设计与地形保护落地-v0.1 覆盖旧文中的整城一次提交、连通即统一标高及整体凸包铺地语义。
+
+- `city_submit_d4_blueprint.submissionMode` 为 `DRAFT|FINAL`，默认 FINAL 兼容已有调用。DRAFT 对当前已有功能区执行完整 canonical 校验与几何预览；可用 RELATIVE_WEIGHTS 为当前部分功能区归一化。新增功能区使用完整 cityBlueprint，局部修改仍使用 replace-only blueprintPatch。FINAL 才发布正式 Blueprint/geometry commit 并允许后续编译队列推进。
+- DRAFT 成功返回 `ok=true, designInProgress=true, nextAction=city_submit_d4_blueprint`。`city_blueprint_draft.json.status=preview_valid` 保留可修订基底；正式拒绝草稿仍为 rejected。二者均带 baseDraftHash，不能作为世界生成输入。成功预览另存 `city_blueprint_last_valid_preview.json`；失败保留该底图，working_preview 标记本次已知失败采样位置或受影响建筑。没有有效底图时明确标识，不制造建筑。
+- `revisionEvidence.compiledPreview` 指向宿主生成的 PNG；宿主下一轮附加该图供模型检查。较大的几何保存在草稿文件，不在每次反馈中重复展开。旧 baseDraftHash/baseBlueprintHash 返回 recovery 和当前有效 revisionEvidence，不要求模型猜测新的哈希。
+- 格式错误使用独立 `city_submission_format_budget.json`，按 contextId 记录 failedAttempts/maximumAttempts=10/remainingAttempts/retryAllowed。到第十次停止自动格式纠错。它不扣除原五次设计编译失败预算；程序故障、失效上下文和草稿恢复不算格式失败。外层三轮无进度不得截断此格式纠错区间；设计进展以草稿身份变化为依据，不能把重复回传同一草稿算新进展。
+- 最终 geometry acceptance 存在时，designFeedback 只提取当前 hardBlocks，关联精确 relations 路径及主路 skippedConnections，不把已解决的候选失败当作修改目标。必需建筑的有限候选失败若具备具体结构/位置证据，可进行相关局部设计修订；没有证据或达到搜索安全上限仍由程序处理。
+- `arrayRoadInterfaces[]` 在 required 阵列街道形成后、填充扩张前冻结接入候选与保护范围。reserved 接入区用于碰撞保护，不等于已经铺设的道路。LINEAR/院门/轴线接口优先于个别建筑门口；COMPACT 通过巷道出口接入。主路先按接口等级和距离排序，失败后尝试其他可用接口组合；不移动建筑让路。
+- Foundation 只来自需要城区铺地的 URBAN 成员及局部间隙闭合，不再求全城连通凸包。高度依据附近实际建筑与地形局部主高程量化为台阶；连通不再要求同一标高。PRESERVE 仍保留 D4 道路，LANDSCAPE 成员不生成统一城区地板。建筑底板下空洞由独立基础支撑保护。

@@ -4,7 +4,7 @@
 
 本文是 City 固定模板建筑主路径的当前数据真值，覆盖 D2 模板目录、D4 placement plan、D5 active registry、worldgen 交接和 D7 ledger。
 
-City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询外部 `Minecraft Registries.STRUCTURE`，不使用 Jigsaw pool。凡进入 City catalog 的模板，不分命名空间，目录模型与 D6 都必须把有效 `terrainPosePolicy` 归一为 `structure_start_beard_thin`，并只创建 City 自有的单-piece `StructureStart` 以借用 `beard_thin` 地形适配。该 start 的 terrain-adaptation bbox 只供 Minecraft 内部使用，不能进入 D4-D7 几何、active registry、ledger 或预览。
+City active 主建筑只读取 `StructureTemplate` NBT 和本契约的模板目录，不查询外部 `Minecraft Registries.STRUCTURE`，不使用 Jigsaw pool。凡进入 City catalog 的模板，不分命名空间，目录模型与 D6 都必须把有效 `terrainPosePolicy` 归一为 `structure_start_beard_thin`，并创建 City 自有 `StructureStart`（同一 origin chunk 的多个建筑以多个 piece 共存） 以借用 `beard_thin` 地形适配。该 start 的 terrain-adaptation bbox 只供 Minecraft 内部使用，不能进入 D4-D7 几何、active registry、ledger 或预览。
 
 D2、D4、D6、D7 对同一建筑必须保持以下 identity 完全一致：
 
@@ -288,3 +288,10 @@ ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 
 - active registry、worldgen ledger、D7 汇总均必须保留相同 identity；每次使用 `templateSize + rotation + mirror + anchor` 复算并校验 closed `actualFootprint`。缺字段、hash 漂移、变换漂移、派生 footprint 漂移和入口漂移均 hard fail。
 - 自动 workflow 只有在 D5 artifact 来源身份仍有效且当前 server-root 集合实际包含该 `runId + citySeedId + cityId` 时，才允许跳过 `city_execute_d5`；仅有旧 artifact 文件不能证明 runtime 已激活。
 - 外部 StructureStart / Jigsaw 自动生成的旧测试和旧 artifact 只用于历史保护，不能作为模板专项验收通过依据；City 配置化 terrain start 必须单独验证 policy、datum、piece 和 Beardifier 结果。
+
+
+## 同区块建筑与细地形基础（2026-09-08）
+
+同一 chunk 的 City StructureStart 必须合并全部固定模板 pieces；幂等检查按 anchorId+anchor 坐标识别，不能因为已有有效 start 就跳过后续建筑。每个 piece 继续独立核对模板身份、footprint 并记载生成片段。
+
+已生成模板的实心底板列下方若为空气或流体，补必要基础；空院落不补统一地板。超过 maximumSolidFillHeight 时采用薄底板和稀疏 `minecraft:blackstone_wall` 支撑，避免整列填实。仅写当前 owner chunk 范围，仍受世界高度约束。

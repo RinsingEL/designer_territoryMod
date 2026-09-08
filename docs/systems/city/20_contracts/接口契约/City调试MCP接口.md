@@ -4,7 +4,7 @@
 
 本文件只维护当前公开工具、阶段职责和破坏性调用边界。字段级 JSON Schema 的实现真值是实现仓库 `country_designer_mcp/src/realm/tools.ts`，HTTP 路由真值是 `RealmPlanningHttpController`；修改工具字段时必须同步更新本文件和对应 Node/Java 测试。
 
-Provider 自动规划使用宿主范围锁定的决策适配器，其工具定义由 ProviderPlanningToolCatalog 同时供内嵌模型和 Hermes 的认证桥读取；Hermes 不再误用原始分阶段 MCP schema。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；同错三次停止由宿主控制。已有同 Context、非空设计会话续跑不重复注入整包目录和图片。
+Provider 自动规划使用宿主范围锁定的决策适配器，其工具定义由 ProviderPlanningToolCatalog 同时供内嵌模型和 Hermes 的认证桥读取；Hermes 不再误用原始分阶段 MCP schema。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；一般同错三次停止由宿主控制；D4 格式修正使用独立十次机会，已记录的新草稿继续设计。已有同 Context、非空设计会话续跑不重复注入整包目录和地形图；工作草稿的当前 revisionEvidence 和新 compiledPreview 必须注入，不能误称设计图未变化。
 
 公开 City MCP 工具调用本地 `/realm/city/<snake_case_action>` HTTP 入口。常规阶段调用至少使用 `runId`、`citySeedId` 定位任务；需要世界上下文的入口可再使用 `dimensionId` 或 `playerName`。
 
@@ -130,3 +130,13 @@ Node handler 为每次调用记录统一 `callId`、started/completed、UTC 时�
 City artifact 不再按阶段散落在 `<runId>/` 根目录。新测试统一写入 `<runId>/city_test_runs/<citySeedId>/steps/`，包根 `test_run_manifest.json` 保存 `latestRequest`、`status`、`nextAction` 和追加式 `attempts[]`。MCP call log 仍只解释调用边界，运行包清单才是恢复一次 City 测试的入口。
 
 `city_run_workflow` 可通过 `skipExisting` 复用身份匹配的冻结 artifact。它必须在以下边界停止并返回明确状态：D3 需要复核、Blueprint 尚未提交、世界修改未确认、目标 chunk 尚未 worldgen、hash/schema 漂移或下游 artifact 不完整。
+
+
+## D4 逐区工作草稿
+
+submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功预览时仍停留 awaiting_city_blueprint，不进入 postD4AutoCompile；FINAL 接受后才按 autoAdvanceAfterD4 推进。Provider 初始提示要求逐区选择 Top Patch、以 DRAFT 查看建筑/道路/景观结果，修正后再增加功能区，最终明确 FINAL。
+
+格式拒绝返回独立 formatRetryBudget（最多10次），设计编译原5次预算不变。草稿过期响应保留 ok=false、rejectionKind=recovery，同时提供当前 revisionEvidence，恢复不消耗格式额度。每次提交仍只允许 cityBlueprint 或 blueprintPatch 之一。
+
+
+有效工作草稿的 `revisionEvidence.compiledDesignReview` 保留当前 `compilationAcceptance`（包括质量告警）以及尚未接通的 `unresolvedEntrances`，供模型看预览后继续修订。不会因为精简 compiledLayout 而丢掉告警；安全准入成功不表示入口全部连通或观感合格。

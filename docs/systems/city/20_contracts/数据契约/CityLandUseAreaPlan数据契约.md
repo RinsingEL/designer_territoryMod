@@ -358,3 +358,20 @@ SurfacePrint `featureCells[]` 增加可选整数 `targetSurfaceY`，仅允许零
 - 普通 worldgen 回调中，非 `WorldGenRegion` 或已到 FEATURES 的旧 chunk 返回 `CITY_LAND_USE_OLD_CHUNK_NOT_BACKFILLED`，不写方块、不记成功 ledger。唯一例外是显式 `city_execute_d7 + executeStructurePlacement=true`：D7 可按当前完整 plan identity 对计划 owner 与成功 ledger 做差集，并以 `CONTROLLED_D7_BACKFILL` 只补缺失 owner；该能力不得作为任意旧区块重铺入口。
 - D7 受控补写继续使用整 owner 预检、快照、写入、rollback 与成功 ledger 事务，但调度必须进入服务器 tick 队列：异步请求 FULL chunk，每 tick 最多一个 chunk 请求或 owner 事务，禁止在 HTTP/workflow 调用中循环同步 `level.getChunk(...)`。
 - `steps/d7/land_use_owner_completion.json` 当前 schema 为 `city_land_use_owner_completion.v0.2`。除 city/area/surface identity、`plannedOwnerCount/appliedBeforeCount/backfilledOwnerCount/appliedAfterCount`、`missingOwners[]` 与 `failures[] {chunkX,chunkZ,reasonCode,rollbackComplete}` 外，必须包含 `status`、`maxOwnerActionsPerTick=1`、`synchronousChunkLoads=false` 与可选 `currentOwner`。队列处理中返回 `CITY_LAND_USE_D7_BACKFILL_IN_PROGRESS`；只有存在失败时才返回 `CITY_LAND_USE_D7_OWNER_INCOMPLETE`，尚在排队或加载不能冒充失败。
+
+
+## 按需局部台面与架空支撑（2026-09-08）
+
+Foundation 来源仅为 URBAN spatialGround 成员的实际建筑及局部间隙闭合；LANDSCAPE 成员不要求城区地板，PRESERVE 仍消费 D4 roadBands。Foundation 不再使用整城连通凸包或整组件统一高度；生成前冻结的局部平台参考实际建筑附近地形，生成时用填、切、架空保护此设计。
+
+服务器启动读取 `config/geomantia/city_land_use/foundation_support.json`，缺失时创建默认：`maximumSolidFillHeight=16`（0..128）、`pierSpacingBlocks=4`（2..16）。超过阈值使用薄底板及黑石墙柱，柱网按世界坐标 floorMod 对齐，负坐标和相邻 owner chunk 一致。该配置也供独立建筑底板基础使用。修改配置后重启服务器生效；已有生成区块不会自动重铺。
+
+
+自然 ConfiguredFeature 的嵌套执行使用线程作用域标识，在 WorldGenRegion.setBlock 层保护冻结台面及道路的 targetY-1..targetY+3 范围。保护按写入位置生效，外部起点也不能覆盖城区表层；City 主动写入及玩家编辑不处于该作用域。未知地形高度的 legacy 表层不伪造冻结高程。运行时缓存按城市与 planHash 区分，先通过 planningBounds 筛选。
+
+
+### 2026-09-08 次级道路窄巷横断面
+
+`crossSectionProfile=SURFACE_ONLY` 表示一格宽的无路缘巷道，编译碰撞范围与落地方块范围都限定在道路 bounds 内，不得在两侧额外写入路缘。用于既有建筑间的窄间隙、建筑门口接续段。次级道路可以接入本功能区内部道路、相关跨区接入段或城市 MAIN 主路；只靠距离近不能判为入口已连通，必须有实际相接的道路或生成可行短通路。阵列街道、入口巷道和共享延伸段标记 SECONDARY。
+
+主路与次级道路均按完整道路段冻结纵向标高，跨区块切片使用同一结果。次级道路在缓坡解不可行时允许逐格台阶解，仍保持交会处固定高程与土方约束。
