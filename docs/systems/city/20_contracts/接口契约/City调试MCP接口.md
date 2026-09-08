@@ -145,3 +145,12 @@ submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功�
 ### 多池外扩提交
 
 `city_submit_d4_blueprint` 的功能区可提交 `fillPools:[{poolRef,weight},...]`，与 `fillPoolRef` 二选一。`connectionPlan` 可使用 `structurePools` 或 `structurePoolRef`，均不填时继承功能区池。引用必须存在于冻结目录，列表非空、不重复，权重为有限正数。算法优先级由宿主固定，不增加 AI 选点或算法排序参数。将旧单池改为多池时使用完整 Blueprint 或替换整个 group；局部 patch 仍是 replace-only，不把原本不存在的字段当作可替换路径。
+
+
+## D4 拒绝后的修正指引
+
+字段与语义校验保留 `reasonCode`、`fieldPath`，在 `message` 中提供当前数量/值、允许范围或枚举及局部修正方法；优先保留算法、必需建筑和功能区。独立景观与附属景观分别说明保持当前模式的修正路径，不能为通过校验默认删除必需内容。几何无落位时提示按候选拒绝证据调整局部范围、选区与约束，不承诺单纯扩大范围必然成功。
+
+提交封装错误保留原始 `error`，附 `instruction` 解释 FINAL 仍需蓝图或非空 replace 补丁、精确份额、当前 hash 与 JSON Pointer 用法。格式失败仍为 10 次门槛，设计失败计数及校验放行条件不变。
+
+入口歧义属于模板声明故障：反馈须直接列出模板、已标记入口 ID/方向及宿主修正方式，不建议通过面积、间距或阵列算法纠正。所有候选均因入口歧义失败时停止无效的槽位/组合搜索；仍有其他候选时保留正常搜索。作者可为经过核对的模板声明 `frontagePolicy=ANY_AUTHORED_ENTRANCE`，不自动对所有多入口模板授予该策略。
