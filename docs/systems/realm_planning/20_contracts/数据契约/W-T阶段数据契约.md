@@ -824,3 +824,22 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 | 扫描边界水体不直接等价海岸 | W v1.6 | 仅因水体触达扫描边界且缺少 ocean / 大水体证据时，应输出 `boundary_truncated` / `open_water_unknown` 或降低 `waterBoundaryConfidence`，不得直接给高置信 `seacoast`。 |
 | 城市种子不得同格重叠 | T4 v1.2 | 除显式复合城市 / 卫星节点外，同格城市直接阻断。 |
 | 坏质量不能只靠 `passed=true` 放行 | 验收 v1.2 | `score_manifest.json` 的硬阻断优先于端到端链路状态。 |
+
+
+## 地理开放区域与城市保护（2026-09-09）
+
+当前功能依据《大陆大洋分区开放与城市郊区隔离-v0.1》，取代按城市圆圈和旅行走廊开放的规则。
+
+- 地理输入为 sealed W 的 `world_feature_grid.json`；格网与 manifest 的 `configHash` 必须一致。`waterFrac < 0.5` 的四邻接连通陆地形成大陆；水域按最短水上格网距离附属于最近大陆，等距时使用稳定格序。默认近海距离 1024 格。
+- 剩余远海先按默认宽 4096 格的地理扇区切分，再各自按四邻接连通分量划区。单个远海区域必须连续，全球连通海水不能合并成一个区域。负坐标使用 floor division。政治领土不参与地理分区。
+- T4 创建时写出 `geographic_regions.json`（`geomantia_geographic_regions.v0.1`）：`cellStepBlocks`、`regions[].regionId/kind/cells/adjacentRegions`、近海/大洋配置、源文件 identity。运行时从 W 与当前配置确定性重算，不把过期展示产物当开放许可。
+- `planning_area_access.json` 保留 v0.1 schema，新增可选 `nearSeaDistanceBlocks=1024`、`oceanRegionSpanBlocks=4096`。旧配置不填时使用这些默认值。
+- 新 T4 种子由程序写入 `designBounds` 和 `protectionBounds`，均为 inclusive block rectangle。设计范围使用与 D3 相同的规模半径及 clamp；保护矩形将原宽高扩大到 1.5 倍并向外取整。外圈仅用于安全，不增加建筑、道路、景观或外扩面积。不同规模、对角排列、跨国度和卫星城统一检查保护矩形不重叠。
+- D3 必须沿用持久化的 `designBounds`。D4 最终建筑完整占地和道路路幅不得越出原预览边界；原有阵列、外扩、地块冻结继续在该边界内运行。
+- 选址同时检查当前名册和其他未结束会话的预留；finalize 对合并名册再次检查。正式游戏入口读取已加载状态及磁盘 NBT，不申请区块票据。保护圈存在任何已加载/保存区块或状态不明即拒绝选址。初始活动区外另留 1024 格生成缓冲，城市完整保护圈必须避开它。旧自动建议可以由同国正式选址替换，已选定的保护范围不能被忽略。
+- T4 finalize 写 `finalizedRealmIds` 和 `finalizedTerritoryIdentity`；territory identity 为带 `sha256:` 前缀的文件摘要。旧 finalized session 仅在 territory identity 一致时可提供名册封存证明。重新打开会话会撤销该国的封存状态。
+- 大陆所触及的所有国度名册封存、全部关联城市状态为 `waiting_for_generation` / `waiting_for_worldgen` / `completed`，且结构和对应维度的 LandUse 生成方案都已激活，才开放大陆及附属海洋。不能仅凭 queue 的 completed 或 D4 成功开放。城市保护圈跨过分区边缘时，所有被触及分区都纳入该城市依赖。
+- 大洋分别依赖分区邻接图上最近的大陆；等距的大陆全部作为依赖。依赖大陆均开放且海域本身没有未完成城市/名册时，该大洋区域开放。没有任何大陆依赖的未知海域保持关闭。
+- 冒险者地图显示整片已开放区域。移动/传送共享同一开放结果，并在未开放边缘内留视距与生成依赖缓冲；服务端使用 `(viewDistance + 12) * 16` 格、最少 160 格，按方形区块依赖计算，不能用圆形距离漏掉对角加载。
+- `ChunkMap.schedule` 在 EMPTY 读取或任何后续生成阶段前拒绝未开放区块，返回已完成的 `UNLOADED_CHUNK_FUTURE`；不推进状态、不创建等待开放的悬空 future。开放后由原版 ChunkHolder 正常重试。初始活动区的 1024 格加载缓冲可正常生成，但不得选作城市。
+- 新 T4 变更在服务器线程串行写入并立即使开放缓存失效。已存安全位置若落入重新关闭区域，改回初始安全区。保护不删除既有区块，不把旧城回滚为未生成，也不在既有地形补建。

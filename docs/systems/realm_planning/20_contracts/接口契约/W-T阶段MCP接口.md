@@ -478,3 +478,20 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 | P3 | `realm_t4_build_registry`。 |
 
 只有 P0-P3 全部落地后，才算具备 W / T 真实游玩验收闭环。
+
+
+## T4 地理开放与选址隔离补充（2026-09-09）
+
+`realm_t4_patch_planning_select_capital/add_city` 无新增 AI 坐标或圈选参数。程序返回的 `designBounds` 是唯一设计边界，`protectionBounds` 为外围安全圈，不能用于设计。工具描述已同步此约束。
+
+新增可纠正错误：
+
+| 错误 | 下一步 |
+| --- | --- |
+| `T4_CITY_PROTECTION_OVERLAP` | 返回冲突城市、请求矩形和已占矩形；在 Patch Explorer 另选更远地块，不能靠卫星身份或缩小安全比例绕过。 |
+| `T4_CITY_PROTECTION_INSIDE_INITIAL_AREA` | 整个保护矩形移出初始活动区及 1024 格加载缓冲，不能只移动中心。 |
+| `T4_CITY_PROTECTION_ALREADY_LOADED` | 返回首个冲突区块及状态；改选未加载地形，不要继续修改 D4 或尝试补建。 |
+| `CITY_D3_RESERVATION_BOUNDS_CHANGED` | 恢复 T4 冻结中心、规模和原预览范围，保护圈不是 D3 设计边界。 |
+| `CITY_BLUEPRINT_OUTSIDE_DESIGN_BOUNDS` / `CITY_BLUEPRINT_ROAD_OUTSIDE_DESIGN_BOUNDS` | 将指定边缘阵列/道路接口向内调整，或减少边缘填充；不得扩到安全圈。 |
+
+finalize 封存该国名册，不直接解锁大陆。地图和服务端会等相关国度名册全部封存、大陆城市全部准备好首次生成后整体开放。
