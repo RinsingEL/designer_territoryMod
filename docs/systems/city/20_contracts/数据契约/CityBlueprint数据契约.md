@@ -253,7 +253,11 @@ Group 必填字段：
 | `centerGroupId` | 中心完整 Group；可按 Patch 关系定位，但不能使用 `BETWEEN_GROUPS`。 |
 | `memberGroupIds[]` | 非空、组内唯一的完整子 Group。成员由父阵列给出起点，不能再声明 `placementRelation`。 |
 
-一个 Group 最多属于一个父阵列。当前正式契约只允许一层 Group 级编排，不允许父阵列再次作为另一父阵列的成员。父阵列按 required/fill 模板 transformed footprint、最低成形数量、子算法、密度和区内街带推导 `plannedSpanBlocks`，预留互不相交且不越出 D3 城市边界的播种槽位；不得把 `extentClass` 最大跨度直接当作槽位边长。每个子槽中心必须命中该子 Group 自己的 `preferredPatchRefs[]`，子 Group 仍独立使用自身 `requiredStructureRefs/fillPoolRef/algorithmProfileRef/terrainPolicy`。父算法为 `CENTER_SYMMETRIC` 时，`memberGroupIds[]` 必须为偶数，相邻两项组成一对；程序可旋转轴线并交换这一对的两侧位置，使两个完整 Group 槽位既关于中心 Group 成对对称，也分别满足各自 Patch 限制。
+一个 Group 最多作为一个父组合的成员，同时可以作为另一个组合的中心继续组织子阵列；每个中心只定义一个组合，成员归属不得成环。组合本身不是额外建筑组，不重复计入底层阵列数量。程序先由内向外估算子树范围，再由外向内分配槽位，子 Group 保留自身素材、算法、街巷和入口。父阵列按 required/fill 模板 transformed footprint、最低成形数量、子算法、密度和区内街带推导范围，预留互不相交且不越出 D3 城市边界的播种槽位；不得把 `extentClass` 最大跨度直接当作槽位边长。每个子槽中心必须命中该子 Group 自己的 `preferredPatchRefs[]`。父算法为 `CENTER_SYMMETRIC` 时，`memberGroupIds[]` 必须为偶数，相邻两项组成一对；仍保持完整 Group 槽位的成对对称。
+
+2026-09-10 起，新 prepare 的 Context 增加 `scaleDesignTask`，在设计前说明五档任务。初始底层阵列建议：hamlet 1–2、village 2–4、town 4–7、city 8–12、large_city 12–18；范围是建议，不成为数量或面积拒绝阀门。CITY 要求主体实际嵌套，最低结构校验要求 CORE 参与非空组合；LARGE_CITY 还要求多个非空组合。该最低检查不等于美观验收，不能用一个很小的组合冒充完整主体。有效嵌套的更细数量阈值尚未定义。首都身份仍不自动升级为 LARGE_CITY。旧 frozen Context 缺少此任务时不追溯追加新规则。
+
+`ALONG_PATCH_BOUNDARY` 沿实际相邻采样单元的共同边缘生成候选，第一 patch 为落位侧。COMPACT / ORGANIC_COMPACT 可沿边缘落建筑，非对称父组合可沿边缘放完整子阵列；CENTER_SYMMETRIC 保留自身对称语义。没有共同边缘时返回 `CITY_BLUEPRINT_PATCH_BOUNDARY_UNAVAILABLE`，不会回退普通点位；水域、碰撞和工程限制不放宽。不增加专用功能区枚举或逐侧接路配置。
 
 Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`distancePreference`、`directionPreference`。`relationKind` 为 `HIERARCHY | ADJACENCY | CONNECTION | BUFFER | DISTANCE | DIRECTION`，`strength` 为 `HARD | SOFT`。只有 `DISTANCE` 可使用 `distancePreference=NEAR|FAR`，其他关系必须为 `NONE`；只有 `DIRECTION` 可使用 `directionPreference=NORTH|EAST|SOUTH|WEST`，其他关系必须为 `NONE`。`HIERARCHY` 按 `fromGroupId -> toGroupId` 表示父到子，必须无环；编译器据此做稳定拓扑排序，同批节点再按 priority 和 `groupId` 排序。
 
@@ -338,7 +342,7 @@ AI 可直接参考目录示例后调整占比，例如：
 
 `selectionWeight` 决定不同 Parcel 使用哪套方案；每个 occurrence 的 `targetShare` 决定该接力区域的目标面积，同角色合计决定该角色总体占比。AI 不提交固定层宽、坐标、mask 或方块 ID。程序严格按 `roleShares[]` 顺序执行逐格 frontier 扩张，并冻结每块区域的父子关系与实际面积。
 
-required Landscape 在 required 建筑落位后，以 owner 为种子枚举近地与远端好地、方向和父子拓扑；景观不得为了满足规划完整性反向迫使建筑换位。程序优先保留更多非零实例与更多地形可用格，同面积时优先离 owner 更近且形态更好的方案。实际 `instanceCount/parcelCount/area` 可被地形减少，减少或零格都写 warning；fill/connectivity 结构只排除实际冻结 spans。FREE_STANDING optional 在 D6 后从剩余空间逐实例准入。固定 Blueprint、catalog、D3、D6 与 seed 必须完全复现。
+required Landscape 在 required 建筑落位后，以 owner 为种子枚举近地与远端好地、方向和父子拓扑；景观不得为了满足规划完整性反向迫使建筑换位。程序优先保留更多非零实例与更多地形可用格，同面积时优先离 owner 更近且形态更好的方案。实际 `instanceCount/parcelCount/area` 可被地形减少，减少或零格都写 warning；景观在 fill 前冻结初始形状；fill/connectivity/percentage 建筑及道路可以占用景观，最终从原 spans 裁除，不迁移景观，不反向挤建筑。裁让记录初始与保留面积及 warning。FREE_STANDING optional 在 D6 后从剩余空间逐实例准入。固定 Blueprint、catalog、D3、D6 与 seed 必须完全复现。
 
 `residualPolicy` 已删除。单一 Foundation domain 内部全部使用同一基础地板，Landscape Parcel 后写覆盖；不得按 SpatialGround 分配不同铺地，也不得保留原群系残余。显式自然、绿地和农田只能通过 `landscapes[]` 声明。
 
@@ -452,7 +456,7 @@ plan/trace 根级 `compilationAcceptance` 必填 `acceptancePolicy=SAFETY_AND_RE
 
 ## Landscape owner 的跨阶段一致性
 
-D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStructureRef` 的实际建筑选择主人；先选 REQUIRED 阶段，再按 `anchorId` 字典序选择。缺少首轮实例但 fill/connectivity/percentage 已有同种实例时可以作为主人，不按名称猜功能，不跨 Group 替代。Group-owned 仍限定该 Group 并使用同一排序。最终 D4 百分比景观重规划冻结 ownerAnchorId/ownerFootprint，D6 继续严格核对，真实身份或 footprint 漂移仍拒绝。旧 D4 若未包含后来主人，必须正式重新编译容量，不得补写 artifact 绕过 hash。
+D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStructureRef` 的实际建筑选择主人；先选 REQUIRED 阶段，再按 `anchorId` 字典序选择。缺少首轮实例但 fill/connectivity/percentage 已有同种实例时可以作为主人，不按名称猜功能，不跨 Group 替代。Group-owned 仍限定该 Group 并使用同一排序。最终 D4 景观裁让结果冻结 ownerAnchorId/ownerFootprint，D6 继续严格核对，真实身份或 footprint 漂移仍拒绝。旧 D4 若未包含后来主人，必须正式重新编译容量，不得补写 artifact 绕过 hash。
 
 ## GroupExtentMap v0.11
 
