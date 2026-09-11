@@ -495,3 +495,7 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 | `CITY_BLUEPRINT_OUTSIDE_DESIGN_BOUNDS` / `CITY_BLUEPRINT_ROAD_OUTSIDE_DESIGN_BOUNDS` | 将指定边缘阵列/道路接口向内调整，或减少边缘填充；不得扩到安全圈。 |
 
 finalize 封存该国名册，不直接解锁大陆。地图和服务端会等相关国度名册全部封存、大陆城市全部准备好首次生成后整体开放。
+
+## 冒险者地图客户端视口协议
+
+Forge `adventurer_map` 通道协议版本为 `6`。快照请求依次发送 `zoom`、`centerX`、`centerZ` 三个 double，中心为客户端当前浏览的世界 X/Z 坐标。缩放限制为 0.5–4；中心非有限时回退玩家坐标，有限值限制到 ±30000000 格，再按既有 256 格中心量化。服务端继续按 `4096 / zoom`（1024–8192 格半径）裁剪 W 底图和节点并应用实际开放蒙版，不因浏览远处生成区块或揭示未开放区域。响应结构不变；客户端同时最多一个在途快照，拖动期间合并刷新，最短间隔 4 tick，松手刷新最终视口。客户端绘制中心独立于响应底图范围，旧响应不得重置浏览位置。

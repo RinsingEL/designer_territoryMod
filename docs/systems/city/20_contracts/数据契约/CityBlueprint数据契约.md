@@ -481,7 +481,7 @@ D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStruct
 
 ## 2026-09-08 逐区设计与地形保护主线更新
 
-本节按 City逐区设计与地形保护落地-v0.1 覆盖旧文中的整城一次提交、连通即统一标高及整体凸包铺地语义。
+本节记录当前逐区提交、按需台面与支撑契约。下一阶段规模与嵌套需求见 City意图驱动规模与嵌套设计-v0.1；尚未实施的新需求不代表本节接口已更新。
 
 - `city_submit_d4_blueprint.submissionMode` 为 `DRAFT|FINAL`，默认 FINAL 兼容已有调用。DRAFT 对当前已有功能区执行完整 canonical 校验与几何预览；可用 RELATIVE_WEIGHTS 为当前部分功能区归一化。新增功能区使用完整 cityBlueprint，局部修改仍使用 replace-only blueprintPatch。FINAL 才发布正式 Blueprint/geometry commit 并允许后续编译队列推进。
 - DRAFT 成功返回 `ok=true, designInProgress=true, nextAction=city_submit_d4_blueprint`。`city_blueprint_draft.json.status=preview_valid` 保留可修订基底；正式拒绝草稿仍为 rejected。二者均带 baseDraftHash，不能作为世界生成输入。成功预览另存 `city_blueprint_last_valid_preview.json`；失败保留该底图，working_preview 标记本次已知失败采样位置或受影响建筑。没有有效底图时明确标识，不制造建筑。
