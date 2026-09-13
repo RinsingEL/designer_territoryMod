@@ -8,11 +8,22 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 
 ## 当前 schema
 
+### 意图、计划阵列与逐栋结果（2026-09-13）
+
+- `city_submit_d4_blueprint` 可先提交工具根级 `designIntent={groups:[{groupId,role,intent,preferredPatchRefs}]}`；该对象不是蓝图内部的城市主题 designIntent。再批量提交 `materialSelections=[{groupId,query?,structureRefs?,fillPoolRefs?}]` 搜索作者元数据或确认素材。两阶段与 cityBlueprint/blueprintPatch 分开调用，返回 `designInProgress=true`，不推进生成。会话按 contextId 保存，prepare 与后续草稿返回已确认意图和估算。
+- Group 可填 `structureCount`：1–256 的整数且不少于 required 引用数；省略采用已有规模、extent 和算法建议值。CENTER_SYMMETRIC 总数为奇数（一中心与若干同素材成对计划成员）。数量是计划输入，地形筛选不另设保留数量门槛。
+- 同一 DRAFT 可提交一个完整嵌套组团及之前的设计。部分草稿暂不执行整城规模嵌套门槛，FINAL 执行既有 CITY 核心参与组合、LARGE_CITY 至少两个有效组合规则；没有新增面积或主体比例硬门槛。
+- 编译先确定阵列位置、模板和完整矩形占地，再逐栋筛选。正常水域、山体、边界或碰撞导致成员跳过，不换模板、搜索替补槽位或搬动其余建筑。全空组保留记录。作者入口/不支持的地形能力及格式错误仍明确拒绝。
+- `designReview` 同时记录 planned/retained 建筑、底层阵列及嵌套承载量；`skippedMembers` 记录槽位、plannedBounds、原始过滤原因。DRAFT 的 revisionEvidence.compiledDesignReview 内联报告，预览橙色虚框 S 对应跳过位置。程序可编译不代表 AI 已认可效果。
+- 取消百分比面积补建筑和连接补建筑。fillPools 仅提供 AI 已计划槽位的素材；旧 expansionPolicy/connectionPlan 保留读取兼容，但不能再触发额外建筑。ADJACENCY 对完整阵列做整体相邻落位，CONNECTION 只请求道路。内部通路预留，主路在建筑筛选后路由；缺失端点或无法通行明确记录跳过，不伪装连通。
+- 普通起伏沿用台面；超过现有 terrainPolicy 适配上限两倍的极端坡度、起伏或高差逐栋跳过。浅水坑还要求四周八个采样单元都是陆地、无显著岸壁高差且地貌非河湖海/峡谷，不将水深单独作为可铺平的依据。细地形仍依赖真实落地基础保护。
+
+
 ### D4 提交的几何接受边界（2026-09-07）
 
 #### 设计优先硬门槛收敛（2026-09-07）
 
-- 编译器推导的功能区formationBounds/formationSpan仅用于初始槽位、容量估计和布局引导，不是作者禁建边界。必需、填充、连接和比例补足仍不得越过真实cityPlanningBounds、实体碰撞和明确硬关系。
+- 编译器推导的功能区formationBounds/formationSpan仅用于初始槽位、容量估计和布局引导，不是作者禁建边界。计划建筑仍不得越过真实cityPlanningBounds、实体碰撞和明确硬关系。
 - COMPACT/ORGANIC_COMPACT等的最大建筑间距参与评分，不因超过推导最大gap而直接拒绝候选；显式道路所需的最小通行间隙与真实道路碰撞仍检查。默认功能区隔离距离不再作为硬门槛，明确BUFFER/DISTANCE关系仍由关系检查执行。
 - 同一对功能区的相反HARD方向约束在submit前置返回 `CITY_BLUEPRINT_RELATION_CONTRADICTION`，同时指出当前与冲突关系字段。不会把可兼容的多轴方位或软偏好判为矛盾。
 - 数学搜索槽位耗尽不是设计不成立的证明。保留程序故障分类和上一版accepted；不可伪造宽深修正建议。局部自然高差的工程承诺、作者水陆/拓扑限制及采样覆盖规则沿用下述边界；审美质量仍为warning，不冒充硬安全失败。
@@ -21,11 +32,11 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 #### 局部失败反馈与未接受草稿（2026-09-07）
 
 - 几何拒绝直接返回 `designFeedback`（`city_design_failure_feedback.v1`）：失败group/structure、精确group字段路径、候选过滤原因计数、至多8个失败坐标样本。中途失败后成功的槽位不当作最终失败；坐标样本非完整搜索空间证明。
-- `capacityInsufficiencyProven=false`、空 `parameterAdjustments` 表示没有可证明的数值调整，禁止据此声称“面积太小”。当前submit的必需建筑候选耗尽按程序待诊断处理，保留设计并停止盲重试；不改变旧post-D4故障分类。
+- 正常地形/碰撞候选失败以逐栋缺口回传；只有作者能力缺失、异常和程序安全故障保留阻塞分类。不得将普通空阵列升级为程序阻塞。
 - 数值校验中，景观parcelCount和景观角色占比范围/总和失败可携带 `issues[].constraint`：measurement、actual、minimumInclusive、maximumInclusive、instruction。比例总和容差仍为1e-6。建议只指向已有字段，不虚构院落宽深等尚未接入的字段。
 - 未通过几何接受的canonical方案保存为 `city_blueprint_draft.json`（`city_blueprint_draft.v1`），并通过 `revisionEvidence` 内联回传。草稿不代表accepted、不进入worldgen。
 - `blueprintPatch` 可选 `baseDraftHash` 作为拒绝草稿修订基准，与 `baseBlueprintHash` 严格二选一；两者都只允许EXACT_SHARES和replace操作。绑定当前Context、城市、草稿内容哈希以及保存草稿时的accepted版本，过期即拒绝。成功接受后使草稿失效。
-- prepare/重启设计回合即使failureCount=0，也优先提供当前有效拒绝草稿及反馈，不再只依赖旧steps/d4产物。局部补丁保留其他输入，但**这不是逐功能区独立几何验收或整区冻结**；主阵列数值参数与独立功能区预览仍未接入。
+- prepare 与恢复回传有效草稿和设计会话。DRAFT 支持逐组团推进，哈希补丁仍只支持替换；新增组使用保留其他组的完整蓝图。
 
 - 新提交在发布 accepted 之前执行 D4 布局编译和 `compilationAcceptance`。仅 JSON/schema 合法不等于设计被接受。
 - 成功后保存 `city_blueprint_geometry_commit.json`，schema 为 `city_blueprint_geometry_commit.v1`；内容包含 canonical `blueprintHash` 和完整 `CompilationResult`。接受 trace 增加 `designGeometryValidated=true` 与该文件的 `geometryCommitHash`。
@@ -93,9 +104,9 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field`，不触发扫描或
 
 ### 2026-09-06 编译可靠性与局部修订补充
 
-- 作者可在引用目录根配置 `automaticConnectionMaxDistanceBlocks`（非负整数，省略 256，0 关闭自动近邻扩张）。初始阵列形成后，仅对没有显式关系且双方允许连接/外扩的近邻建立自动连接；接合完成间距仍来自阵列 handoff 参数，与启动距离不同。显式关系（包括 FAR）优先，不被自动连接改写；显式 HARD 关系保持必需性。未声明道路或可选连接不足记录 warning，不能凭 `allowRelationConnection` 能力标记推导整城必须道路连通；明确 HARD 道路无法实现仍阻断。
+- `automaticConnectionMaxDistanceBlocks` 保留旧目录兼容，不再触发连接补建筑。
 - `fillPools[]` 可选 `maxCopiesPerStructurePerGroup`，非负整数，0/省略不限。计数包含同组已放下的 required/fill/connectivity/percentage 同种结构；限制只阻止继续填充，不删除或替换必需建筑。各自动填充阶段优先选择池内当前使用较少的合法结构，同次数按稳定游标选择，不按名称猜功能。
-- 核心区在初始阵列与连接后冻结，禁止百分比阶段继续补建筑；旧 `stopWhenTargetReached=false` 不再把目标扩大为整个预览区。其他区用包含连接建筑的同口径面积计算缺额。景观服从配置 landscapeShare 和剩余目标，不得把建筑缺口或 openSpaceShare 自动改成田地；核心景观不追加面积预算。
+- 所有组的建筑量由计划阵列决定，核心与普通组都不再按目标面积追加建筑。景观仍按自身配置处理，本次不接管景观独立生长案。
 - 局部修订沿用 `baseBlueprintHash + blueprintPatch`。编译器可复用成功的单阵列搜索检查点，键绑定冻结 context、当前布局状态、请求、占用及邻区避让依赖，输入变更即失效；最多保留 128 个、每个 1 MiB，损坏或不可用时正常计算。检查点不是成功城市/成功分区的整体快照，共享道路、景观和最终验收必须重新执行。独立统计在 `city_array_checkpoint_statistics.json`，不得让缓存命中改变正式布局或其 hash。
 - 程序内部骨架道路在填充前对全部已放置建筑进行包含路缘的有限绕行，并以同样横截面预留占地。绕行失败保留程序错误，不跳过安全检查、不删除建筑。检查点只复用未改变的精确搜索输入，不承诺修改一个功能区后其他所有功能区完全不受共享依赖影响。
 
@@ -230,7 +241,7 @@ Group 必填字段：
 
 连接参数与解析后的 planner family 不匹配时返回 `CITY_BLUEPRINT_CONNECTION_PARAMETERS_INVALID`。AI 不提交 focus、外扩方向、block gap、候选数量、candidateId 或逐栋坐标；这些都由编译器按当前已提交阵列和目标 Group 自动派生。
 
-`CENTER_SYMMETRIC` 是正式中心对称阵列。使用该算法的 Group 必须且只能提交一个 `requiredStructureRef`，该结构成为冻结中心主体；fill pool 中每次选择一个结构类型，并在中心两侧生成两个互为中心对称的候选。每一对必须使用同一模板候选，以两栋为一个原子批次同时通过地形、碰撞、范围和关系门禁；任一侧失败时程序旋转整对候选继续搜索，不得单侧提交或退化为普通 `GRID/COURTYARD`。中心主体之外的内部结构数因此只能按偶数增长。中心主体提交后，编译器必须先原子预留该 Group 的最低成形对数，再允许其他 Group 播种 required 核心，避免相邻核心抢占阵列轴线；每层依次使用两组正交轴线，下一层整体旋转 45 度。连接阶段不承担内部对称成形，继承该算法时只使用 `COURTYARD` 形态生成跨组连接批次。
+`CENTER_SYMMETRIC` 计划一个 required 中心和同模板成对成员，先固定对称几何，再分别筛选各栋。单侧地形失败留下单侧缺口，不能旋转重试整对或替换算法填洞。
 
 ### 关系位置
 
@@ -238,9 +249,9 @@ Group 必填字段：
 
 - `BETWEEN_PATCHES`：恰好两个不同 `patchRefs`，`groupRefs` 为空；以两 Patch 最近合法 member cell 中心的中点起步，首个核心候选域只包含这两个 Patch。
 - `ALONG_PATCH_BOUNDARY`：恰好两个不同 `patchRefs`，`groupRefs` 为空；`patchRefs[0]` 是落地方，以其最接近 `patchRefs[1]` 的边界 member cell 起步，首个核心候选域只包含第一个 Patch。
-- `BETWEEN_GROUPS`：`patchRefs` 为空，恰好两个不同 `groupRefs`，且不能引用自身；编译器先完成两个端点 Group 的 required 核心，再以两端实际 extent 中心的中点起步，候选域为当前 D3 城市规划边界。
+- `BETWEEN_GROUPS`：`patchRefs` 为空，恰好两个不同 `groupRefs`，且不能引用自身；编译器先完成两个端点 Group 的 required 核心，再以两端计划包围盒中心的中点起步，候选域为当前 D3 城市规划边界。
 
-显式关系位置的首个核心无合法候选时直接失败，不得回退到普通 `preferredPatchRefs` 或整张 D3。没有 `placementRelation` 时，首个核心仍按 `preferredPatchRefs + preferredPatchZone` 起步；该起点域无合法候选时留空并记录缺口，不得改投其他 Patch。首个核心成功提交后，同 Group 后续 required、fill、街巷与景观按自身阵列连续向外生长，可跨越相邻 Patch 标签边界，但不得越过 D3 规划边界。
+显式关系和 preferredPatchRefs/preferredPatchZone 确定计划位置；正常地形不适配只跳过对应建筑。后续计划槽位不随前项保留情况移动，不改投其他 Patch 补洞。
 
 ### 父阵列
 
@@ -253,7 +264,7 @@ Group 必填字段：
 | `centerGroupId` | 中心完整 Group；可按 Patch 关系定位，但不能使用 `BETWEEN_GROUPS`。 |
 | `memberGroupIds[]` | 非空、组内唯一的完整子 Group。成员由父阵列给出起点，不能再声明 `placementRelation`。 |
 
-一个 Group 最多作为一个父组合的成员，同时可以作为另一个组合的中心继续组织子阵列；每个中心只定义一个组合，成员归属不得成环。组合本身不是额外建筑组，不重复计入底层阵列数量。程序先由内向外估算子树范围，再由外向内分配槽位，子 Group 保留自身素材、算法、街巷和入口。父阵列按 required/fill 模板 transformed footprint、最低成形数量、子算法、密度和区内街带推导范围，预留互不相交且不越出 D3 城市边界的播种槽位；不得把 `extentClass` 最大跨度直接当作槽位边长。每个子槽中心必须命中该子 Group 自己的 `preferredPatchRefs[]`。父算法为 `CENTER_SYMMETRIC` 时，`memberGroupIds[]` 必须为偶数，相邻两项组成一对；仍保持完整 Group 槽位的成对对称。
+一个 Group 最多作为一个父组合的成员，同时可以作为另一个组合的中心继续组织子阵列；每个中心只定义一个组合，成员归属不得成环。组合本身不是额外建筑组，不重复计入底层阵列数量。程序先由内向外估算子树范围，再由外向内分配槽位，子 Group 保留自身素材、算法、街巷和入口。父阵列按 required/fill 模板 transformed footprint、最低成形数量、子算法、密度和区内街带推导范围，预留互不相交且不越出 D3 城市边界的播种槽位；不得把 `extentClass` 最大跨度直接当作槽位边长。每个独立选址沿用该 Group 的 `preferredPatchRefs[]`；嵌套子槽由父阵列的整体关系安排。父算法为 `CENTER_SYMMETRIC` 时，`memberGroupIds[]` 必须为偶数，相邻两项组成一对；仍保持完整 Group 槽位的成对对称。
 
 2026-09-10 起，新 prepare 的 Context 增加 `scaleDesignTask`，在设计前说明五档任务。初始底层阵列建议：hamlet 1–2、village 2–4、town 4–7、city 8–12、large_city 12–18；范围是建议，不成为数量或面积拒绝阀门。CITY 要求主体实际嵌套，最低结构校验要求 CORE 参与非空组合；LARGE_CITY 还要求多个非空组合。该最低检查不等于美观验收，不能用一个很小的组合冒充完整主体。有效嵌套的更细数量阈值尚未定义。首都身份仍不自动升级为 LARGE_CITY。旧 frozen Context 缺少此任务时不追溯追加新规则。
 
@@ -416,7 +427,9 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 `selections[]` 的 committed 项与最终 `StructureAnchorPlan.anchors[]` 必填 `blueprintLayout`：`algorithm`、单调递增但可因非法留空而跳号的 `slotIndex`、`spacingBlocks`、`theoreticalAnchor`、`outwardGuided`、`densityParameters`、`preferredPatchZone`，首个核心另写精确 `coreSeedCell`，anchor 另冻结 `acceptedAnchor`。GRID、COURTYARD、LINEAR、CENTER_SYMMETRIC 使用全组最大 collision span 派生一次固定 pitch，锁世界轴或主入口显式轴，只能尝试精确 guide；不得追加 member-cell center、随机旋转或其他形状兜底，不合法槽位写 `skipped_illegal_slot/EXACT_SLOT_ILLEGAL_LEFT_EMPTY` 后留空。GRID 另写 `gridRow/gridColumn/gridPitchBlocks/worldAxisLocked=true`；COURTYARD 另写 `courtyardRing/courtyardRow/courtyardColumn/courtyardCenter/courtyardGateSide=SOUTH`，slot 0–4 必须构成北侧主建筑、东、东南、西、西南且中心空置；COMPACT 写 `compactLaneRank/compactLaneSide/compactLaneTarget`，建筑在允许旋转内朝弯巷；ORGANIC_COMPACT 只使用程序随机 guides，在功能区内保持 collision gap 1–3 blocks，不产正式道路。需要朝路的结构必须写 `frontageRotation/frontageEntranceId/frontageDirection/frontageAlignmentScore/frontageMinimumAlignmentScore/frontageTargetRef`；规则直路要求满分朝向，弯巷/院角接受最近合法四向且不得低于 0.7。
 
-每个最终 anchor 另必填 `buildingParcelPlan`，schema=`city_building_parcel_plan`。它冻结 `planningStage=D4_BEFORE_ARRAY_COMMIT`、`collisionPolicy=HARD_STRUCTURE_SOFT_COMPRESSIBLE_PARCEL`、`marginBlocks`、`preferredBounds`、`resolvedBounds`、`hardCollisionEnvelope`、`parcelStatus=FULL|COMPRESSED`、`greenerySelected`、`greeneryStatus`、`usableGreenCells`，选中绿化时另写 `greeneryPattern` 与 `greeneryDensity`。`preferredBounds` 必须等于 `hardCollisionEnvelope` 向外扩张 `marginBlocks` 后与规划边界相交前的完整地块范围；`marginBlocks` 从硬碰撞外缘计算，不能从 NBT footprint 计算后再由本栋 clearance 吞掉。`usableGreenCells` 只扣除本栋 `hardCollisionEnvelope` 与其他硬占位，因此正常 FULL 地块在正数边距下应保留外圈可用格。阵列 pitch 必须把 NBT、必要 clearance 与 Foundation 建筑边距三者相加形成的完整地块跨度计入模板空间需求；候选合法性仍只由 NBT 与必要保留范围的硬碰撞决定。规划地块命中边界、其他建筑硬碰撞或先到地块时只能压缩；绿化空间不足必须写 `INSUFFICIENT_SPACE_SKIPPED` 并保留建筑，不得升级为 Blueprint、功能区或整城失败。D6 必须原样保留该计划，户外编译不得再从 collision rectangle 临时推导另一块花坛。
+每个最终 anchor 另必填 `buildingParcelPlan`，schema=`city_building_parcel_plan`。`planningStage=D4_BEFORE_ARRAY_COMMIT`、`collisionPolicy=RAW_NBT_FOOTPRINT`、`marginBlocks=0`；`preferredBounds`、`resolvedBounds` 与 `hardCollisionEnvelope` 使用同一原始 NBT 占地（旋转只交换宽深）。不得叠加旧 clearance、Foundation 边距、间距或面积倍率，不为建筑分配额外绿化外圈。`usableGreenCells=0`，旧绿化配置可兼容读取但不能增加建筑占地；D6 原样保留计划。道路、院落布局空间和台面自身铺装另行处理，不反向扩大建筑占地。选材容量的 `footprintBasis=RAW_NBT_WIDTH_DEPTH`、`assumedGapBlocks=0`，仅为不含道路景观的基础估计。
+
+紧凑布局的内部道路无法绕行时，保留建筑并在 `streetWarnings` 返回 `CITY_INTERNAL_STREET_REROUTE_UNAVAILABLE` 及省略组内道路的说明，不伪装连通或扩张建筑占地。
 
 每个候选生成或编译器二次门禁拒绝的位置必须写入对应 `selections[].attempts[].failedAttemptPositions[]`。每项至少包含 `templateId`、`anchorBlock{x,z}` 与 `reasonCode`；已经计算出几何时同时保存 `plannedFootprint/estimatedCollisionEnvelope/estimatedMaskEnvelope`。没有生成 raw point 的精确槽失败也必须以 `blueprintLayout.theoreticalAnchor` 留下位置，不能只保存原因计数。该数组是失败功能区局部预览的正式输入，不得因最终 quality 失败而丢弃。
 
@@ -428,7 +441,7 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 
 主干路每个直段 schema 为 `city_main_road_band`，写入同一 `streetBands[]`；主路半砖面宽取不小于 7 的奇数，且严格大于本城最大区内道路半砖面宽，两侧路缘另各加 1 block。陆地主路进入 Foundation 整地和 SurfacePrint；确认通路跨水时由 City 生成 `roadKind=CITY_BRIDGE` 的直线或 L 形桥段，桥段不填水、不进入 Foundation，使用独立桥面、护栏与水中桥墩，并保持两岸正式道路出口。所有正式道路均写入 City 自有冻结几何，不向外部道路 Mod 委托。
 
-模板入口位于 footprint 内部时，城市主路接驳只沿作者门向在 footprint 外侧生成；模板内部既有院落/通道由模板保留，不生成穿过模板的接驳面。接驳可以穿过所属建筑的外部 clearance 留白，但不得豁免该建筑 body，也不得豁免其他建筑；起点及全段路面、两侧路缘均需避让。该投影只确定外部接入位置，不证明模板内部一定存在可通行路径，不得据此伪造入口连通验收。
+模板入口位于 footprint 内部时，城市主路接驳只沿作者门向在 footprint 外侧生成；模板内部既有院落/通道由模板保留，不生成穿过模板的接驳面。接驳不得穿过所属建筑原始 NBT 占地，也不得豁免其他建筑；起点及全段路面、两侧路缘均需避让。该投影只确定外部接入位置，不证明模板内部一定存在可通行路径，不得据此伪造入口连通验收。
 
 `residentialOverflowPlan.schema=city_residential_overflow_plan`。程序只使用同 Group 已提交的 `phase=fill + blueprintLayout.outwardGuided=true` 建筑；至少 3 栋且其区内正式道路与子区范围相交时，冻结一个 `RESIDENTIAL_OVERFLOW` 子区。每项写 `zoneId/parentGroupId/generationMode=OUTWARD_GUIDED_FILL_BUILDINGS/buildingCount/boundaryBounds/boundaryBlockId/anchorIds[]/streetBandIds[]`，并把 `residentialOverflowZoneId` 回写成员 layout。执行层沿矩形边界写墙，所有关联道路 bounds 自动形成门洞；不足数量或无道路时不伪造子区。
 
