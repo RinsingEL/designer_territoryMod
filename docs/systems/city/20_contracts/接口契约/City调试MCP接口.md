@@ -161,3 +161,10 @@ submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功�
 同一个 `city_submit_d4_blueprint` 入口支持独立 `designReview` 请求：`{baseDraftHash,groupIds:[...]}`（1～3 个）取当前局部图；看图后补 `assessment` 登记判断。局部复核完成后使用 `{baseDraftHash,overview:true}` 取整城图，再补 assessment。可保留合适设计；需要修饰时提交 DRAFT，受影响局部及整城重新复核。FINAL 必须与已复核的当前草稿一致。
 
 取图、判断和待复核均返回 `ok=true,designInProgress=true,designReviewWorkflow`，继续设计，不入后续生成队列、不消耗拒绝预算。实际图片经 `imageEvidence` 传给模型，非仅路径。详细字段及失效规则见 [CityBlueprint 数据契约](../数据契约/CityBlueprint数据契约.md)。
+
+
+### 后半段失败详情透传（2026-09-14）
+
+Post-D4 失败响应与持久化任务从最后失败工作流步骤提取 `failedStep`、`failureReasonCode`、`message/error` 和可用的 `failureSummary`；没有失败步骤时使用工作流顶层错误。程序阻塞的顶层 `reasonCode` 优先使用具体失败原因，`queueReasonCode` 保留原队列分类；`needs_agent` 保留原设计恢复 reasonCode。没有可用具体原因时保留原通用错误。`status/nextAction`、失败预算和是否请求 AI 修改保持原规则。
+
+这些详情同步到设计队列的当前城市和 Provider 状态；重试进入 queued/running 或成功后清除当前城市旧详情。查询及重启恢复旧持久化失败记录时可从已有 workflowResponse 提取，不为展示详情执行编译或修改世界。
