@@ -140,7 +140,7 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field`，不触发扫描或
 - `parentParcelId/rootSource/seed/targetAreaBlocks/actualAreaBlocks/sharedBoundaryProof` 来源与接力证明；
 - `warnings[]` 逐实例记录 `REQUIRED_LANDSCAPE_NO_TERRAIN_FIT_WARNING` 或 `REQUIRED_LANDSCAPE_TERRAIN_REDUCED_WARNING`；地形缩减仍生成可消费 artifact。
 
-景观只保留地形门禁与真实占用避让：未采样、水体、陡坡和断崖格不得进入容量；景观不得覆盖结构或其他已冻结景观。`preferredPatchRefs[]` 只作软偏好，不能裁断扩张；`ATTACHED owner` 只提供外向生长种子和方向，近地受阻或面积缩水时必须允许在同一 D3 规划域寻找更合适地形。根 Parcel 可离开 owner，后续 Parcel 仍从父 Parcel 局部边界逐格接力。容量格彼此互斥但允许四邻接；相邻高程连续性门禁继续按 `CONFORM|BALANCED|ASSERTIVE = 4|6|10`。目标面积不可满足时保留实际非零格并警告；完全零格也只警告，不得切换固定图形、预制 mask 或让整城 D4 失败。搜索达到 100000 节点仍以 `CITY_BLUEPRINT_LANDSCAPE_SEARCH_LIMIT_EXHAUSTED` 报内部求解失败。
+景观只保留地形门禁与真实占用避让：未采样、水体、陡坡和断崖格不得进入容量；景观不得覆盖结构或其他已冻结景观。`preferredPatchRefs[]` 只作软偏好，不能裁断扩张；未提供 growth 时，`ATTACHED owner` 提供外向生长种子和方向；显式 growth 以指定点为准，不可用时报告零格，普通地块无需强制父子接力。容量格彼此互斥但允许四邻接；相邻高程连续性门禁继续按 `CONFORM|BALANCED|ASSERTIVE = 4|6|10`。目标面积不可满足时保留实际非零格并警告；完全零格也只警告，不得切换固定图形、预制 mask 或让整城 D4 失败。本轮取消组合回溯：按景观逐项选择并冻结，计算预算用尽也只报告未实现需求。显式 growth 使用粗 cell 生长，不扫描全域寻找替代起点。
 
 引用目录根对象所有数组必填且非空：
 
@@ -270,7 +270,7 @@ Group 必填字段：
 
 `ALONG_PATCH_BOUNDARY` 沿实际相邻采样单元的共同边缘生成候选，第一 patch 为落位侧。COMPACT / ORGANIC_COMPACT 可沿边缘落建筑，非对称父组合可沿边缘放完整子阵列；CENTER_SYMMETRIC 保留自身对称语义。没有共同边缘时返回 `CITY_BLUEPRINT_PATCH_BOUNDARY_UNAVAILABLE`，不会回退普通点位；水域、碰撞和工程限制不放宽。不增加专用功能区枚举或逐侧接路配置。
 
-Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`distancePreference`、`directionPreference`。`relationKind` 为 `HIERARCHY | ADJACENCY | CONNECTION | BUFFER | DISTANCE | DIRECTION`，`strength` 为 `HARD | SOFT`。只有 `DISTANCE` 可使用 `distancePreference=NEAR|FAR`，其他关系必须为 `NONE`；只有 `DIRECTION` 可使用 `directionPreference=NORTH|EAST|SOUTH|WEST`，其他关系必须为 `NONE`。`HIERARCHY` 按 `fromGroupId -> toGroupId` 表示父到子，必须无环；编译器据此做稳定拓扑排序，同批节点再按 priority 和 `groupId` 排序。
+Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`distancePreference`、`directionPreference`。`relationKind` 为 `HIERARCHY | ADJACENCY | CONNECTION | BUFFER | DISTANCE | DIRECTION`，`strength` 为 `HARD | SOFT`。只有 `DISTANCE` 可使用 `distancePreference=NEAR|FAR`，其他关系必须为 `NONE`；只有 `DIRECTION` 可使用 `directionPreference=NORTH|EAST|SOUTH|WEST`，其他关系必须为 `NONE`。`HIERARCHY` 按 `fromGroupId -> toGroupId` 表示功能父到子，其自身必须无环，但不参与几何编译排序。几何排序仅使用 BETWEEN_GROUPS 的参考组依赖和阵列组合中心到成员的落位依赖；嵌套尺寸仍先解算子阵列再组合父阵列。无依赖节点保持既有算法/priority/groupId 稳定顺序。两种图分别校验，不能混合制造假循环。
 
 ## OutdoorPlan
 
@@ -546,3 +546,14 @@ AI 应大胆使用当前素材、阵列参数、嵌套及显式向外阵列，�
 - 台地 accessPaths 不得覆盖现有道路 feature。冻结道路台阶保持既定高度和朝向，未冻结道路仍可通过现有台地台阶替换机制衔接。
 - 新建固定模板 StructureStart 以原台面/地形 first-free 高度减去模板土基地面偏移作为 NBT 原点。偏移取 NBT 外缘土类方块各列最高层的 first-free 高度众数，同票取低层；不根据结构名称决定下沉，不把内部花盆作为地面。没有外缘土基证据时保留原点策略。偏移按模板实例缓存。已经冻结的 templateDatumY 保持不变，避免旧结构各区块错层。
 - 台地边缘按相邻台面的实际目标高度判断，不因 areaId 不同而把同高区域当悬崖。平行经过边缘的 accessPath 不再整段清掉护栏，仅跨越高差的路径、台阶及正式入口保留开口；原有高差门槛、建筑占用排除及墙/绿化交替保留。
+
+
+### 2026-09-14 功能层级与几何依赖分离
+
+提交前分别校验功能层级自身及几何依赖图；成环返回 `CITY_BLUEPRINT_DEPENDENCY_CYCLE`，issues 指明实际循环的组名、组合或关系来源、JSON 字段路径和局部修订建议。走既有提交校验纠错，不标记宿主程序故障，不改变预算上限；原有效草稿保持。旧蓝图直接编译也返回同类结构化失败，避免循环异常被包装成宿主故障。
+
+## 景观独立 cell 设计（2026-09-14）
+
+`outdoorPlan.landscapes[].growth` 可选对象：`seed:{x,z}` 为预览内世界坐标，`targetCellCount` 为每实例总目标 cell 数（正整数），`allowedLandformTypes` 复制 terrain field 的 landformType 名称，空数组表示在原有可落地限制内不额外筛选。当前用于 required=true、ATTACHED、owner.groupId 的景观，instanceCount=1；支持按功能区归属且配套建筑未落下时仍从指定点设计。数量不由建筑面积比例推算，parcelCount 只组织内部地块。
+
+cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区块。D4 按地形代价一次生长，边界在同一选中域内细化；输出 targetCellCount、actualCellCount、actualCellEquivalent、actualAreaBlocks、cellStepBlocks 和短缺警告。种不满或零格均为有效预览，不能回溯补满或越预览安全圈补量。已有未提供 growth 的方案保留输入兼容，但景观候选按顺序选择，不再组合回溯；内部内容比例允许近似。
