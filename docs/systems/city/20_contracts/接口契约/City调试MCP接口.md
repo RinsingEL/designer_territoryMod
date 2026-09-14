@@ -50,7 +50,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 
 ### D4 后自动编译队列契约
 
-- `city_submit_d4_blueprint` 成功且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
+- `city_submit_d4_blueprint` 成功、`designInProgress` 非 true 且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
 - 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突写 needs_agent + city_submit_d4_blueprint；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
@@ -154,3 +154,10 @@ submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功�
 提交封装错误保留原始 `error`，附 `instruction` 解释 FINAL 仍需蓝图或非空 replace 补丁、精确份额、当前 hash 与 JSON Pointer 用法。格式失败仍为 10 次门槛，设计失败计数及校验放行条件不变。
 
 入口歧义属于模板声明故障：反馈须直接列出模板、已标记入口 ID/方向及宿主修正方式，不建议通过面积、间距或阵列算法纠正。所有候选均因入口歧义失败时停止无效的槽位/组合搜索；仍有其他候选时保留正常搜索。作者可为经过核对的模板声明 `frontagePolicy=ANY_AUTHORED_ENTRANCE`，不自动对所有多入口模板授予该策略。
+
+
+### 设计复核循环（2026-09-14）
+
+同一个 `city_submit_d4_blueprint` 入口支持独立 `designReview` 请求：`{baseDraftHash,groupIds:[...]}`（1～3 个）取当前局部图；看图后补 `assessment` 登记判断。局部复核完成后使用 `{baseDraftHash,overview:true}` 取整城图，再补 assessment。可保留合适设计；需要修饰时提交 DRAFT，受影响局部及整城重新复核。FINAL 必须与已复核的当前草稿一致。
+
+取图、判断和待复核均返回 `ok=true,designInProgress=true,designReviewWorkflow`，继续设计，不入后续生成队列、不消耗拒绝预算。实际图片经 `imageEvidence` 传给模型，非仅路径。详细字段及失效规则见 [CityBlueprint 数据契约](../数据契约/CityBlueprint数据契约.md)。

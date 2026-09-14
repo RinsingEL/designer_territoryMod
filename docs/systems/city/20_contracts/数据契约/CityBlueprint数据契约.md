@@ -496,7 +496,7 @@ D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStruct
 
 本节记录当前逐区提交、按需台面与支撑契约。下一阶段规模与嵌套需求见 City意图驱动规模与嵌套设计-v0.1；尚未实施的新需求不代表本节接口已更新。
 
-- `city_submit_d4_blueprint.submissionMode` 为 `DRAFT|FINAL`，默认 FINAL 兼容已有调用。DRAFT 对当前已有功能区执行完整 canonical 校验与几何预览；可用 RELATIVE_WEIGHTS 为当前部分功能区归一化。新增功能区使用完整 cityBlueprint，局部修改仍使用 replace-only blueprintPatch。FINAL 才发布正式 Blueprint/geometry commit 并允许后续编译队列推进。
+- `city_submit_d4_blueprint.submissionMode` 为 `DRAFT|FINAL`，默认 FINAL，仍需通过当前草稿复核检查。DRAFT 对当前已有功能区执行完整 canonical 校验与几何预览；可用 RELATIVE_WEIGHTS 为当前部分功能区归一化。新增功能区使用完整 cityBlueprint，局部修改仍使用 replace-only blueprintPatch。FINAL 才发布正式 Blueprint/geometry commit 并允许后续编译队列推进。
 - DRAFT 成功返回 `ok=true, designInProgress=true, nextAction=city_submit_d4_blueprint`。`city_blueprint_draft.json.status=preview_valid` 保留可修订基底；正式拒绝草稿仍为 rejected。二者均带 baseDraftHash，不能作为世界生成输入。成功预览另存 `city_blueprint_last_valid_preview.json`；失败保留该底图，working_preview 标记本次已知失败采样位置或受影响建筑。没有有效底图时明确标识，不制造建筑。
 - `revisionEvidence.compiledPreview` 指向宿主生成的 PNG；宿主下一轮附加该图供模型检查。较大的几何保存在草稿文件，不在每次反馈中重复展开。旧 baseDraftHash/baseBlueprintHash 返回 recovery 和当前有效 revisionEvidence，不要求模型猜测新的哈希。
 - 格式错误使用独立 `city_submission_format_budget.json`，按 contextId 记录 failedAttempts/maximumAttempts=10/remainingAttempts/retryAllowed。到第十次停止自动格式纠错。它不扣除原五次设计编译失败预算；程序故障、失效上下文和草稿恢复不算格式失败。外层三轮无进度不得截断此格式纠错区间；设计进展以草稿身份变化为依据，不能把重复回传同一草稿算新进展。
@@ -512,3 +512,16 @@ D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStruct
 比例外扩使用程序固定枚举顺序 `GRID → LINEAR → COURTYARD → COMPACT → ORGANIC_COMPACT`，按算法优先级尝试可放置的小组合；不由 AI 配置优先级，不重新排列已提交建筑。每个组合最多六栋，受限时尝试较小组合，院落至少五栋。城市既有正交阵列方向延续到新增组合；内部巷道及接续段与建筑一起检查，原子提交后立即加入后续扩张的道路保护范围。道路与建筑碰撞、门口无法接续、无法接到已有道路时，该候选不提交。缺少任何既有道路时允许第一个小组合建立自己的内部通路，最终整城道路仍按主线验收。
 
 外扩 anchor 的 `blueprintLayout` 增加 `expansionUnitId`、`expansionAlgorithm`、`selectedPoolRef`；组合首栋携带 `expansionStreetBands`，最终道路进入标准 `streetBands`，等级 SECONDARY、窄巷横断面 SURFACE_ONLY。选择 trace 同步记录实际算法、池和整组提交的 anchor IDs。达到面积目标停止；无合法组合保留已提交结果并记录空间不足，不因新组合失败留下部分建筑。
+
+
+## 2026-09-14 功能区初版、局部修饰与整城复核
+
+设计指引由冻结 Context 的 `designGuide.designLoop` 提供：先根据地形、城市职能与素材池决定功能区意图，再按既有 `scaleDesignTask` 规划数量与嵌套。逐功能区初版和局部修饰后，检查整城总览，按需要显式添加有用途的相邻阵列、调整组合或保留留白。功能区可以由多个叶阵列组成，不新增构图枚举、面积门槛或强制修改次数。
+
+- 工具侧 `designIntent.groups` 按 groupId 增量合并，不删除未在本次请求中出现的意图。相同意图保留选材和估算，修改该意图则重新选材。
+- `city_submit_d4_blueprint.designReview` 与蓝图、补丁、选材或意图修改分开提交，不改变 canonical Blueprint。对象包含 `baseDraftHash`，以及 `groupIds`（1～3 个唯一当前叶组 ID）或 `overview=true`，可选 `assessment`。
+- 先不带 assessment 请求当前局部图，响应 `requestedPreviews` 经共享展示层转换成模型实际收到的 PNG 图片。看图后再次提交同一目标及 assessment，记录空间意图是否落实、实际规模、组合关系与保留理由或修改计划。允许一个判断覆盖同一功能区的多个子阵列。程序记录模型判断，不宣称已经自动审美验收。
+- 所有当前局部图已复核后，使用 overview 请求总览，再提交整城 assessment。修订使用 DRAFT；受影响的局部图内容变化使对应复核失效，未变局部保留。整城复核同时绑定草稿哈希与总览图内容，任意蓝图修订都需重新复核总览。模型未请求当前图片时不能直接登记 assessment。
+- 复核状态持久化在当前城市 `city_design_review.json` 并绑定 contextId；prepare 与 DRAFT 回传 `designReviewWorkflow`，包括阶段、pendingGroupIds、既有判断和 readyForFinal，支持恢复。
+- 正常取图、登记与等待复核返回 `ok=true, designInProgress=true`，不扣格式/设计失败预算，不发布正式产物、不推进生成队列。参数格式错误仍走原格式预算。
+- 工具入口 FINAL 只接受与已完成局部及整城复核的有效草稿相同的 canonical 输入。未复核或 FINAL 携带新设计时，返回待复核流程和下一步操作。底层程序提交入口保留直接验证能力，游戏内 Agent/MCP 一律经过复核入口。
