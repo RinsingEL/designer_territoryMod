@@ -557,3 +557,7 @@ AI 应大胆使用当前素材、阵列参数、嵌套及显式向外阵列，�
 `outdoorPlan.landscapes[].growth` 可选对象：`seed:{x,z}` 为预览内世界坐标，`targetCellCount` 为每实例总目标 cell 数（正整数），`allowedLandformTypes` 复制 terrain field 的 landformType 名称，空数组表示在原有可落地限制内不额外筛选。当前用于 required=true、ATTACHED、owner.groupId 的景观，instanceCount=1；支持按功能区归属且配套建筑未落下时仍从指定点设计。数量不由建筑面积比例推算，parcelCount 只组织内部地块。
 
 cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区块。D4 按地形代价一次生长，边界在同一选中域内细化；输出 targetCellCount、actualCellCount、actualCellEquivalent、actualAreaBlocks、cellStepBlocks 和短缺警告。种不满或零格均为有效预览，不能回溯补满或越预览安全圈补量。已有未提供 growth 的方案保留输入兼容，但景观候选按顺序选择，不再组合回溯；内部内容比例允许近似。
+
+## 可选材质覆盖与按需方块查询
+
+`cityBlueprint.surfaceMaterials` 和独立 `blockMaterials` 查询见 [AI 材质与方块检索契约](CityAI材质与方块检索数据契约.md)。它们不改变阵列与景观布局参数。

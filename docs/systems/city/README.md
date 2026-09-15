@@ -47,6 +47,8 @@ T4 CitySeed
 
 ## 契约入口
 
+- [AI 材质与方块检索](20_contracts/数据契约/CityAI材质与方块检索数据契约.md)
+
 - `20_contracts/数据契约/CitySiteContext数据契约.md`
 - `20_contracts/数据契约/CityLandformReviewPackage数据契约.md`
 - `20_contracts/数据契约/CityBlueprint数据契约.md`
