@@ -26,9 +26,12 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field；site review 完成后自动打开 `city_d4` Patch Explorer，并返回 Top Patch 复核下一动作。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
-| `city_submit_d4_blueprint` | `/realm/city/submit_d4_blueprint` | 提交完整设计或哈希绑定的 replace-only blueprintPatch；支持省略宿主身份字段和显式 RELATIVE_WEIGHTS，最终仍严格验证完整 canonical v0.12。校验拒绝不计预算；接受后默认自动编译，可用 autoAdvanceAfterD4=false 关闭。 |
+| `city_d4_overview` | `/realm/city/submit_d4_blueprint`（宿主注入 d4Tool） | 总览与功能区意图；可显式重开已有区或更新总览。 |
+| `city_d4_district` | 同上 | 当前区选材、局部阵列设计、看图评价、确认；程序合并此前保存的区。 |
+| `city_d4_integrate` | 同上 | 总览评价、实际向外阵列修饰、修改后复核与确认。 |
+| `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
 | `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
-| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时改用 `city_submit_d4_blueprint` 提交 revision。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时使用 `city_d4_overview.reopenDistrictId` 回到对应区。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
@@ -40,6 +43,19 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
+### D4 四阶段协议（2026-09-16）
+
+MCP 与内置 Provider 均发布上述四个独立工具，原 `city_submit_d4_blueprint` 不再是 Agent 工具。HTTP 地址保留作为传输入口，必须由工具路由注入 `d4Tool`；未指定阶段的整城提交直接拒绝。底层 canonical Blueprint 编译器保持职责，不是旧协议兜底。
+
+所有阶段请求包含 `contextId` 和 `workflowRevision`，后者取当前 `d4Workflow.revision`。状态和已保存的分区写入城市包 `steps/blueprint/city_d4_workflow.json`；预览、草稿和评价使用同目录现有文件。返回当前阶段、当前功能区、已保存区及其建筑组 ID、当前区方案、下一工具和中文操作说明。新上下文必须重新确认总览，不自动解释旧阶段数据；编译失败预算不重置。
+
+1. **总览**：`overview={citySettings,districts:[{groupId,role,intent,preferredPatchRefs}]}`。`citySettings` 是全城主题、风格、道路、表面材质及户外基础配置，不放建筑组、景观或场地。可先独立查询 `blockMaterials`/`designExample`。提交后进入第一个区。
+2. **逐区设计**：独立提交当前区 `materialSelections`、`districtDesign` 或 `designReview`。`districtDesign={groups,arrayCompositions,relations,spatialGrounds,landscapes}`，可含完整嵌套；程序保存并合并其他区，各区不能复用建筑组 ID。内部统一按相对权重编译。规模和嵌套沿用 `scaleDesignTask` 建议，不新加面积配额。有效设计必须先请求当前区全部子阵列图片，再提交完整评价，最后 `complete=true` 才能进入下一区；初版合适不强迫修改。
+3. **整体修饰**：先完成局部复核，查看并评价总览；随后提交 `integrationDesign`（同区设计结构）与 `integrationIntent`。新增向外阵列通过 `BETWEEN_GROUPS.groupRefs` 或 `ADJACENCY` 联系不同已设计区（只有一区时联系该区）。不能以独立外围组或道路连通代替。程序要求有这类联系的新增组实际保留了建筑，且草稿版本确实改变；全跳过不能完成。修改后再看受影响局部和总览、提交评价，才能 `complete=true` 进入最终确认。空间是否好看、过渡是否自然仍由模型看图判断，程序不宣称已证明美观。
+4. **提交城市**：仅传当前 `baseDraftHash`，不能夹带新几何；沿用现有最终校验和后半段队列。`autoAdvanceAfterD4=false` 可只接受不自动推进。
+
+每次只能执行一种操作，不能把设计、看图评价与确认混在一起。错误返回当前阶段和修正说明。显式 `city_d4_overview.reopenDistrictId` 保留各区存档、取消整体修饰，重新编译并逐区确认；更新完整 `overview` 保留仍存在的同 ID 区方案，但从第一区重新确认，不能沿用旧的最终验收。正常完成后发生后半段设计修订，同样通过重开对应区进入，禁止整城旧补丁绕过阶段。
+
 ### 作者资料与设计上下文
 
 - 正式 `city_prepare_d4_blueprint_context` 只接收 `runId/citySeedId`。`terrasenseProfileSource/templateCatalogSource/blueprintReferenceCatalog` 由宿主绑定，调用方传入时返回 `PLANNING_SOURCE_HOST_OWNED`，不得由模型拼装或替换目录。
@@ -50,11 +66,11 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 
 ### D4 后自动编译队列契约
 
-- `city_submit_d4_blueprint` 成功、`designInProgress` 非 true 且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
+- `city_d4_finalize` 成功、`designInProgress` 非 true 且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
-- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突写 needs_agent + city_submit_d4_blueprint；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
-- blocked_by_program 在仅修复程序/环境、冻结资料不变时使用 city_post_d4_auto_compile_retry。作者目录实际改变时，允许当前城市通过 city_prepare_d4_blueprint_context 正式重建 Context：仍须作者审批、NBT 预检和有效 D3 review，拒绝在途/完成任务、其他城市及预算耗尽；资料未变返回 CITY_BLUEPRINT_AUTHOR_SOURCES_UNCHANGED。成功后旧 Context、snapshot、accepted Blueprint/trace/报告及预算保存到 steps/blueprint/context_history，旧失败任务保存到 automation/post_d4/history；旧 accepted 文件不删除但不再匹配新 Context。原 failureCount/failures 原样迁移，不清零；后半段任务改为 needs_agent + city_submit_d4_blueprint，重启不再被旧阻塞覆盖，也不直接启动编译。GLM 收到旧方案作为参考，必须按新 Context 完整提交；不能使用旧哈希补丁。普通设计修订仍用同一 contextId 完整输入或哈希绑定局部补丁，上层队列不跳过当前城。
+- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突的队列下一动作指向 needs_agent + city_d4_overview；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
+- blocked_by_program 在仅修复程序/环境、冻结资料不变时使用 city_post_d4_auto_compile_retry。作者目录实际改变时，允许当前城市通过 city_prepare_d4_blueprint_context 正式重建 Context：仍须作者审批、NBT 预检和有效 D3 review，拒绝在途/完成任务、其他城市及预算耗尽；资料未变返回 CITY_BLUEPRINT_AUTHOR_SOURCES_UNCHANGED。成功后旧 Context、snapshot、accepted Blueprint/trace/报告及预算保存到 steps/blueprint/context_history，旧失败任务保存到 automation/post_d4/history；旧 accepted 文件不删除但不再匹配新 Context。原 failureCount/failures 原样迁移，不清零；后半段任务改为 needs_agent + city_submit_d4_blueprint，重启不再被旧阻塞覆盖，也不直接启动编译。GLM 收到旧方案作为参考，必须按新 Context 完整提交；不能使用旧哈希补丁。底层编译的历史修订记录使用同一 contextId 完整输入或哈希绑定局部补丁，上层队列不跳过当前城。
 
 ### D4 Blueprint 失败预算契约
 
