@@ -26,12 +26,12 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_plan_d3` | `/realm/city/plan_d3` | 生成局部地貌 review、patch 和 LandUse terrain field；site review 完成后自动打开 `city_d4` Patch Explorer，并返回 Top Patch 复核下一动作。 |
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
-| `city_d4_overview` | `/realm/city/submit_d4_blueprint`（宿主注入 d4Tool） | 总览与功能区意图；可显式重开已有区或更新总览。 |
-| `city_d4_district` | 同上 | 当前区选材、局部阵列设计、看图评价、确认；程序合并此前保存的区。 |
-| `city_d4_integrate` | 同上 | 总览评价、实际向外阵列修饰、修改后复核与确认。 |
+| `city_d4_overview` | `/realm/city/submit_d4_blueprint`（宿主注入 d4Tool） | 只提交总览与功能区意图、全城设置。 |
+| `city_d4_district` | 同上 | 当前区初版；程序保留其他区并返回局部预览。 |
+| `city_d4_integrate` | 同上 | 连接城区空当或扩大目标区；提交 changes 与 integrationIntent。 |
 | `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
 | `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
-| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时使用 `city_d4_overview.reopenDistrictId` 回到对应区。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时使用 `city_d4_reopen.districtId` 回到对应区。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
@@ -43,18 +43,30 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
-### D4 四阶段协议（2026-09-16）
+### D4 阶段职责协议（2026-09-16）
 
-MCP 与内置 Provider 均发布上述四个独立工具，原 `city_submit_d4_blueprint` 不再是 Agent 工具。HTTP 地址保留作为传输入口，必须由工具路由注入 `d4Tool`；未指定阶段的整城提交直接拒绝。底层 canonical Blueprint 编译器保持职责，不是旧协议兜底。
+Agent 工具按单一动作拆分；HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。旧整城工具不公开，底层 canonical Blueprint 仅供程序组装编译，不是旧协议兜底。
 
-所有阶段请求包含 `contextId` 和 `workflowRevision`，后者取当前 `d4Workflow.revision`。状态和已保存的分区写入城市包 `steps/blueprint/city_d4_workflow.json`；预览、草稿和评价使用同目录现有文件。返回当前阶段、当前功能区、已保存区及其建筑组 ID、当前区方案、下一工具和中文操作说明。新上下文必须重新确认总览，不自动解释旧阶段数据；编译失败预算不重置。
+请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档仍使用 OVERVIEW / DISTRICTS / INTEGRATION / FINAL / COMPLETE，回包提供 availableActions、当前区方案、已保存区及 revision。初版和局部修饰不另造存档阶段。
 
-1. **总览**：`overview={citySettings,districts:[{groupId,role,intent,preferredPatchRefs}]}`。`citySettings` 是全城主题、风格、道路、表面材质及户外基础配置，不放建筑组、景观或场地。可先独立查询 `blockMaterials`/`designExample`。提交后进入第一个区。
-2. **逐区设计**：独立提交当前区 `materialSelections`、`districtDesign` 或 `designReview`。`districtDesign={groups,arrayCompositions,relations,spatialGrounds,landscapes}`，可含完整嵌套；程序保存并合并其他区，各区不能复用建筑组 ID。内部统一按相对权重编译。规模和嵌套沿用 `scaleDesignTask` 建议，不新加面积配额。有效设计必须先请求当前区全部子阵列图片，再提交完整评价，最后 `complete=true` 才能进入下一区；初版合适不强迫修改。
-3. **整体修饰**：先完成局部复核，查看并评价总览；随后提交 `integrationDesign`（同区设计结构）与 `integrationIntent`。新增向外阵列通过 `BETWEEN_GROUPS.groupRefs` 或 `ADJACENCY` 联系不同已设计区（只有一区时联系该区）。不能以独立外围组或道路连通代替。程序要求有这类联系的新增组实际保留了建筑，且草稿版本确实改变；全跳过不能完成。修改后再看受影响局部和总览、提交评价，才能 `complete=true` 进入最终确认。空间是否好看、过渡是否自然仍由模型看图判断，程序不宣称已证明美观。
-4. **提交城市**：仅传当前 `baseDraftHash`，不能夹带新几何；沿用现有最终校验和后半段队列。`autoAdvanceAfterD4=false` 可只接受不自动推进。
+| 工具 | 单一职责 |
+| --- | --- |
+| city_d4_overview | overview={citySettings,districts}。outdoorPlan 仅 mode、envelopeProfile、foundationProfileRef，不接受景观和台地组占位数组。 |
+| city_d4_district | districtDesign 初版：groups、arrayCompositions、relations、foundationGroupIds、landscapes、局部 surfaceMaterials。 |
+| city_d4_district_refine | changes 按稳定 ID 递归合并 groups / arrayCompositions / landscapes；未提供字段保留，新对象须完整。removeGroupIds / removeCompositionIds / removeLandscapeIds 显式删除；relations 和 foundationGroupIds 提供时替换本设计内清单。 |
+| city_d4_integrate | changes + integrationIntent。省略 targetDistrictId 时修改区际连接阵列，需要指向已有区；指定时扩大该已保存区，不要求连接另一区。 |
+| city_d4_preview | baseDraftHash + groupIds（1–3）或 overview=true，只看图。 |
+| city_d4_assess | 同一目标和版本 + assessment，只登记评价；返回 assessmentRecorded。 |
+| city_d4_complete | 完成当前区或整城修饰，无设计载荷。 |
+| city_d4_reopen | districtId，保留其他区与已有修饰内容，目标区完成后回整城复核。 |
+| city_d4_finalize | baseDraftHash，可附 autoAdvanceAfterD4，不夹带新设计。 |
+| city_d4_materials / example / blocks / handbook | 独立选材、案例、方块与手册读取；对应 materialSelections / designExample / blockMaterials，handbook 无额外载荷。 |
 
-每次只能执行一种操作，不能把设计、看图评价与确认混在一起。错误返回当前阶段和修正说明。显式 `city_d4_overview.reopenDistrictId` 保留各区存档、取消整体修饰，重新编译并逐区确认；更新完整 `overview` 保留仍存在的同 ID 区方案，但从第一区重新确认，不能沿用旧的最终验收。正常完成后发生后半段设计修订，同样通过重开对应区进入，禁止整城旧补丁绕过阶段。
+初版和修饰编译后返回预览，局部最多三张，其余在同目录可再请求；进入整城修饰返回总览。允许先查看总览，仍保留局部全部评价后才能登记总览评价、登记初版总览评价后才能提交整城修饰的现有门槛。本轮未取消待确认的评价粒度。完成整城修饰须实际修改并产生保留几何变化；新增连接组和修改已有区均有效，全跳过不能完成。不新增面积、比例或次数要求。
+
+局部 surfaceMaterials 不允许 defaults；建筑组与景观覆盖限制在当前设计对象。spatialGrounds 已删除，台地对象由明确 foundationGroupIds 选择，不自动全城铺平。层次来自功能和几何，不保留空间主次标签。
+
+submissionRules 保留现行 CORE、必需结构等约束；stageValidationIssues 分清本区/其他区。changes 的对象错误按 ID 定位，避免把整城下标误当局部更新下标。失败设计不保存为成功阶段产物。返回的修复示例使用当前工具的平铺参数，不引导回旧 designReview 混合入口。
 
 ### 作者资料与设计上下文
 
@@ -184,3 +196,5 @@ submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功�
 Post-D4 失败响应与持久化任务从最后失败工作流步骤提取 `failedStep`、`failureReasonCode`、`message/error` 和可用的 `failureSummary`；没有失败步骤时使用工作流顶层错误。程序阻塞的顶层 `reasonCode` 优先使用具体失败原因，`queueReasonCode` 保留原队列分类；`needs_agent` 保留原设计恢复 reasonCode。没有可用具体原因时保留原通用错误。`status/nextAction`、失败预算和是否请求 AI 修改保持原规则。
 
 这些详情同步到设计队列的当前城市和 Provider 状态；重试进入 queued/running 或成功后清除当前城市旧详情。查询及重启恢复旧持久化失败记录时可从已有 workflowResponse 提取，不为展示详情执行编译或修改世界。
+
+局部更新中，每个 groups / arrayCompositions / landscapes 对象可带 clearFields 字段名数组，明确清除该对象可省略字段（如 placementRelation），不使用 JSON Pointer。禁止清除 ID、清除不存在字段或同时对同一字段赋值；最终完整对象仍须通过原字段校验。

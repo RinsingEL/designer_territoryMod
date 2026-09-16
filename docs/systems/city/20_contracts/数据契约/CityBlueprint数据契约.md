@@ -45,7 +45,7 @@ CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `grou
 - 未带几何冻结标记的旧 accepted 存档仍走旧 D4 编译入口。
 - **当前冻结范围仅是 D4 结构布局及该编译器输出，不宣称 D5/D6/D7 全部工程已完成预验。** 新场景阵列的正式 Blueprint 字段尚未接入；不得因 Java 几何核心存在便向 Agent 宣告这些算法已正式可用。
 
-铺台面的功能区（`outdoorPlan.mode=GENERATE` 且列于 `spatialGrounds`）将局部坡度/起伏作为台面实现要求，仍检查采样覆盖、水陆与作者拓扑类型。保留自然地面的功能区不自动获得这项工程承诺。已冻结台面的区块实现采用浅凹填土、深凹桥面、凸起切除，不再以填土深度阈值否决桥面。
+铺台面的功能区（`outdoorPlan.mode=GENERATE` 且列于 `foundationGroupIds`）将局部坡度/起伏作为台面实现要求，仍检查采样覆盖、水陆与作者拓扑类型。保留自然地面的功能区不自动获得这项工程承诺。已冻结台面的区块实现采用浅凹填土、深凹桥面、凸起切除，不再以填土深度阈值否决桥面。
 
 | 对象 | schema |
 | --- | --- |
@@ -274,20 +274,13 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 ## OutdoorPlan
 
-`outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`foundationProfileRef`、`spatialGrounds[]` 和 `landscapes[]`，未知字段拒绝。
+`outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`foundationProfileRef`、`foundationGroupIds[]` 和 `landscapes[]`，未知字段拒绝。旧 spatialGrounds 及其空间类型、主次声明已删除，不翻译旧输入。
 
-- `mode=GENERATE`：`foundationProfileRef` 必须命中冻结目录；每个 STRUCTURE Group 必须且只能有一项 spatial ground；D6 后自动编译基础地板与景观 Parcel。
-- `mode=PRESERVE`：`foundationProfileRef` 必须为空，`spatialGrounds[]` 与 `landscapes[]` 必须为空。
-- `envelopeProfile=COMPACT|BALANCED|LOOSE`：保留为城市总体紧凑度语义；正式几何参数以 Foundation Profile 冻结值为权威，不接受 Blueprint block 数。
-
-`spatialGrounds[]` 每项字段：
-
-| 字段 | 类型 / 值域 | 说明 |
-| --- | --- | --- |
-| `sourceGroupId` | string | 必须引用本 Blueprint 的 STRUCTURE Group；全表唯一。 |
-| `sharedSpaceType` | `CIVIC_SQUARE|MARKET_STREET|RESIDENTIAL_COURT|FARMSTEAD|GENERAL_URBAN` | 组团共享空间的建筑学类型。 |
-| `hierarchyLevel` | `PRIMARY|SECONDARY|LOCAL` | 建筑学层级；不生成道路或地表连接线。 |
-| `membership` | `URBAN|LANDSCAPE` | 是否纳入城市主体 footprint 集；不选择铺地材质。 |
+- `mode=GENERATE`：foundationProfileRef 命中冻结目录；foundationGroupIds 只列需要台地/铺地的建筑组 ID，引用存在且不重复，不要求全覆盖。列表用于地形工程适应判定和基础台地 footprint 选择。
+- `mode=PRESERVE`：foundationProfileRef 为空，foundationGroupIds 和 landscapes 为空。
+- `envelopeProfile=COMPACT|BALANCED|LOOSE`：保留总体紧凑度语义，正式几何参数仍由 Foundation Profile 决定。
+- 台地凹坑处理、自然地形保护和选材能力保留；不新增替代主次枚举。
+- AI 在功能区阶段提交台地对象与景观，宿主合并成 canonical OutdoorPlan；总览只配基础策略。
 
 `landscapes[]` 每项字段：
 
