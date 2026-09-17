@@ -27,11 +27,12 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
 | `city_d4_overview` | `/realm/city/submit_d4_blueprint`（宿主注入 d4Tool） | 只提交总览与功能区意图、全城设置。 |
-| `city_d4_district` | 同上 | 当前区初版；程序保留其他区并返回局部预览。 |
-| `city_d4_integrate` | 同上 | 连接城区空当或扩大目标区；提交 changes 与 integrationIntent。 |
+| `city_d4_district` | 同上 | 当前区一次初版；部分落位自动推进，仅整区全空可重做。 |
+| `city_d4_mark` | 同上 | 总览确认主体与外围独立区标记。 |
+| `city_d4_integrate` | 同上 | 调整当前区阵列/嵌套或向外扩张，遵循保护名单并保留其他区功能。 |
 | `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
 | `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
-| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；需要修改设计时使用 `city_d4_reopen.districtId` 回到对应区。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；不再通过已取消的重开工具要求 AI 重做有效初版。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
@@ -43,30 +44,29 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
-### D4 阶段职责协议（2026-09-16）
+### D4 一次初版与整体性扩张协议（2026-09-17）
 
-Agent 工具按单一动作拆分；HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。旧整城工具不公开，底层 canonical Blueprint 仅供程序组装编译，不是旧协议兜底。
+HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档主阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。不公开局部修饰、重开、逐区评价和完成工具。
 
-请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档仍使用 OVERVIEW / DISTRICTS / INTEGRATION / FINAL / COMPLETE，回包提供 availableActions、当前区方案、已保存区及 revision。初版和局部修饰不另造存档阶段。
-
-| 工具 | 单一职责 |
+| 工具 | 职责及输入 |
 | --- | --- |
-| city_d4_overview | overview={citySettings,districts}。outdoorPlan 仅 mode、envelopeProfile、foundationProfileRef，不接受景观和台地组占位数组。 |
-| city_d4_district | districtDesign 初版：groups、arrayCompositions、relations、foundationGroupIds、landscapes、局部 surfaceMaterials。 |
-| city_d4_district_refine | changes 按稳定 ID 递归合并 groups / arrayCompositions / landscapes；未提供字段保留，新对象须完整。removeGroupIds / removeCompositionIds / removeLandscapeIds 显式删除；relations 和 foundationGroupIds 提供时替换本设计内清单。 |
-| city_d4_integrate | changes + integrationIntent。省略 targetDistrictId 时修改区际连接阵列，需要指向已有区；指定时扩大该已保存区，不要求连接另一区。 |
-| city_d4_preview | baseDraftHash + groupIds（1–3）或 overview=true，只看图。 |
-| city_d4_assess | 同一目标和版本 + assessment，只登记评价；返回 assessmentRecorded。 |
-| city_d4_complete | 完成当前区或整城修饰，无设计载荷。 |
-| city_d4_reopen | districtId，保留其他区与已有修饰内容，目标区完成后回整城复核。 |
-| city_d4_finalize | baseDraftHash，可附 autoAdvanceAfterD4，不夹带新设计。 |
-| city_d4_materials / example / blocks / handbook | 独立选材、案例、方块与手册读取；对应 materialSelections / designExample / blockMaterials，handbook 无额外载荷。 |
+| city_d4_overview | overview={citySettings,districts,districtDisposition?}；outdoorPlan 仅全城基础设置。预标记可选。 |
+| city_d4_district | 当前区 districtDesign：groups、arrayCompositions、relations、foundationGroupIds、landscapes、局部 surfaceMaterials。有效落位后自动推进，只有本区建筑与景观全空返回 initialDistrictEmpty=true 并允许重做。 |
+| city_d4_mark | 看初版总览后以 baseDraftHash、assessment、districtDisposition 确认全城标记；每个 districtId 恰好一次，independent 为布尔值。独立区还需 peripheralRole（BORDER_OUTPOST / PERIPHERAL_RESOURCE / SUBURBAN_INDUSTRY / OTHER_PERIPHERAL）与 reason，仅限职责本身适合独立的外围区。 |
+| city_d4_integrate | baseDraftHash、assessment、targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes。只扩大一个非独立区。ADJUST_ARRAY 调整阵列参数/嵌套；OUTWARD_ARRAY 追加以 BETWEEN_GROUPS 指向本区及目标区的完整阵列。切换处理区须 previousExpansionComplete=true，说明上一处整体性已成立。 |
+| city_d4_preview | baseDraftHash + overview=true 或 groupIds（1–3），按需补看图。 |
+| city_d4_finalize | 当前 baseDraftHash、assessment、functionsPreserved=true，可附 autoAdvanceAfterD4；直接确认已预览的实际布局，不夹带新设计，不要求至少一次扩张。 |
+| city_d4_materials / example / blocks / handbook | 按需选材、案例、方块与手册读取。 |
 
-初版和修饰编译后返回预览，局部最多三张，其余在同目录可再请求；进入整城修饰返回总览。允许先查看总览，仍保留局部全部评价后才能登记总览评价、登记初版总览评价后才能提交整城修饰的现有门槛。本轮未取消待确认的评价粒度。完成整城修饰须实际修改并产生保留几何变化；新增连接组和修改已有区均有效，全跳过不能完成。不新增面积、比例或次数要求。
+设计与扩张返回当前实际总览，后续标记、扩张或提交必须基于已展示的当前版本；不要求逐区评价。整体性由 AI 判断，允许隔河、道路和合理空隙，不设固定距离、边界接触或道路连通门槛。空间独立标记不修改交通连接意图。
 
-局部 surfaceMaterials 不允许 defaults；建筑组与景观覆盖限制在当前设计对象。spatialGrounds 已删除，台地对象由明确 foundationGroupIds 选择，不自动全城铺平。层次来自功能和几何，不保留空间主次标签。
+changes 按 ID 合并；本轮扩张只接受 groups / arrayCompositions / relations / foundationGroupIds，不接受删除组、重做用途、素材或景观。已有组只能调整阵列参数；新增嵌套成员属于当前区。clearFields 只用于增加嵌套前清除独立 placementRelation。
 
-submissionRules 保留现行 CORE、必需结构等约束；stageValidationIssues 分清本区/其他区。changes 的对象错误按 ID 定位，避免把整城下标误当局部更新下标。失败设计不保存为成功阶段产物。返回的修复示例使用当前工具的平铺参数，不引导回旧 designReview 混合入口。
+宿主用上一草稿的真实建筑几何冻结其他区；保护名单禁止覆盖，未保护区允许替换冲突的完整建筑。新建筑通过地形和硬碰撞检查才执行替换，若会清空其他区则跳过该新建筑并记录 DISTRICT_WOULD_BE_EMPTIED。被替换建筑记录于 compiledLayout.displacedBuildings；下一次增量编译继续使用保留结果，不恢复被替换建筑。其他区景观保持既有范围并作为障碍。程序保底不代替 AI 对“功能主体仍成立”的判断。
+
+FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现有 geometry commit 与后续 D5/D6 链；不重新排布已确认建筑。compiledResult 不进入 revisionEvidence 的模型载荷。D4 提示词位于 `config/geomantia/prompts/city/d4_v2/`，旧 city/ 自定义提示保留但不再用于新协议。
+
+格式、参数、引用错误允许按具体反馈修正。正常地形裁减不触发局部美化重试；程序故障保留方案并归宿主处理。原有 CORE 唯一、作者素材、模板边界与实际安全校验继续有效，空间主次由功能与几何表达。
 
 ### 作者资料与设计上下文
 
@@ -162,7 +162,7 @@ City artifact 不再按阶段散落在 `<runId>/` 根目录。新测试统一写
 
 ## D4 逐区工作草稿
 
-submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功预览时仍停留 awaiting_city_blueprint，不进入 postD4AutoCompile；FINAL 接受后才按 autoAdvanceAfterD4 推进。Provider 初始提示要求逐区选择 Top Patch、以 DRAFT 查看建筑/道路/景观结果，修正后再增加功能区，最终明确 FINAL。
+submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功预览时仍停留 awaiting_city_blueprint，不进入 postD4AutoCompile；FINAL 接受后才按 autoAdvanceAfterD4 推进。Provider 使用上述阶段工具逐区一次初版，再看总览按整体性扩张并最终确认；不直接提交整城 DRAFT/FINAL。
 
 格式拒绝返回独立 formatRetryBudget（最多10次），设计编译原5次预算不变。草稿过期响应保留 ok=false、rejectionKind=recovery，同时提供当前 revisionEvidence，恢复不消耗格式额度。每次提交仍只允许 cityBlueprint 或 blueprintPatch 之一。
 

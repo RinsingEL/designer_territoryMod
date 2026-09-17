@@ -11,7 +11,7 @@ City 承接 T4 `CitySeedRegistry` 和候选选址，在 D3-D7 生成可审查、
 ```text
 T4 CitySeed
 -> D3 局部地貌扫描与选址复核
--> D4 prepare / submit / compile CityBlueprint v0.12，阵列先预留街巷净空并落 required 建筑，再按实际入口冻结必要街巷与景观容量
+-> D4 总览 / 各区一次初版 / 总览标记 / 阵列扩张 / 满意提交，CityBlueprint v0.12 保留实际建筑与功能区主体
 -> D5 reservation 与 wall mask 预案
 -> D6 当前世界 NBT identity / geometry lock
 -> D6 后按邻域主高程编译城区分级平台、真实目的地道路、Landscape Parcel、建筑绿化、住宅外溢边界与 LandUse
@@ -23,6 +23,8 @@ T4 CitySeed
 正式 D4 冻结完整 CityBlueprint revision，输入允许完整设计或带 baseBlueprintHash 的局部替换补丁；宿主补齐省略的身份字段，并在显式相对权重模式下换算占比，再执行原有完整校验。同一 Context 的设计编译失败最多 5 次；提交校验拒绝、明确的程序搜索/安全上限及锚点终审故障不消耗设计预算。程序故障进入 blocked_by_program，保留方案，不要求 AI 重写。具体输入和恢复规则以 CityBlueprint 数据契约为准。
 
 `groups[]`、`arrayCompositions[]` 与显式 `Landscape` 共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑以所选 Patch 起步，后续连续阵列可跨 Patch 边界。景观以 owner 为种子按地形生长，preferred Patch 仅为软偏好；数量或面积可被地形减少，零格写警告，不让整城失败。景观在 required owner 确立后、阵列 fill 前规划；后续建筑与道路可占用并裁去景观 spans，D6 后非零 Parcel 按冻结父子来源逐格生成。
+
+D4 当前流程以 2026-09-17 确认为准：有效初版自动推进，只有本区全空允许重做；AI 看总览判断整体性，允许隔河，不要求边界接触、固定距离或至少一次修改。扩张允许替换未保护区的部分结构建筑，但不能清空或破坏其功能主体；具体协议见 City 调试 MCP 接口。
 
 ## 当前实现边界
 
