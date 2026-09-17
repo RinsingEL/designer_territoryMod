@@ -143,14 +143,14 @@ SURFACE 门禁只读取已有 `city_land_use_terrain_field`，不触发扫描或
 | `landscapeId` / `landscapeProfileRef` | string | 城市内唯一 ID；Profile 必须存在。 |
 | `purpose` | enum | `FUNCTIONAL | COMPOSITIONAL | AMBIENT`。 |
 | `originMode` | enum | `ATTACHED | FREE_STANDING`。 |
-| `owner` | object/null | `ATTACHED` 必填，严格为 `{groupId,requiredStructureRef}`；必须指向该 Group 唯一 required 条目。`FREE_STANDING` 必须为 null。 |
+| `owner` | object/null | `ATTACHED` 必填 `{groupId}`，表示所属功能组；兼容可选 `requiredStructureRef` 作为初始位置参考，不依赖建筑落位。`FREE_STANDING` 必须为 null。 |
 | `placementDomain` | enum/null | `FREE_STANDING` 必填：`URBAN_RESIDUAL | FOUNDATION_EDGE | BETWEEN_GROUPS | ALONG_WATER`；`ATTACHED` 必须为 null。 |
 | `instanceCount` | positive int | AI 提交目标实例数；`ATTACHED` 固定为 1。 |
 | `parcelCount` | positive int | AI 提交的每实例目标数量，必须落在 Profile `parcelCountMin..Max`；实际数量可被地形减少。 |
 | `required` | boolean | true 表示功能区必须尝试提供此类景观；位置、形状、实际 Parcel 数与面积服从地形。完全无可用格时写警告并继续 D4/D6。false 仅允许 `FREE_STANDING`，逐实例准入。 |
 | `preferredPatchRefs` / `terrainPolicy` / `fillSelection` | existing | 自由选址偏好、地形策略和 Parcel 内填充方案。 |
 
-`groups[].requiredStructureRefs[]` 在 v0.12 必须唯一。fill/connectivity 结构不允许作为 owner，也不从自身派生 Landscape。
+`groups[].requiredStructureRefs[]` 在 v0.12 必须唯一。景观归属功能组；各阶段建筑均可作为初始位置参考，不产生存续依赖。
 
 `ParcelStyle` 严格字段为 `parcelCountMin`、`parcelCountMax`、`parcelAreaMinBlocks`、`parcelAreaMaxBlocks`、`minSharedBoundaryBlocks`。删除的 `coreParcelCount*`、`fillParcelCount*`、`branchFromExistingChance`、`gapMinBlocks`、`gapMaxBlocks` 均按未知旧字段拒绝。
 
@@ -242,7 +242,7 @@ Group 必填字段：
 | `densityClass` | `SPARSE | BALANCED | DENSE`。 |
 | `algorithmProfileRef` | 冻结算法引用。 |
 | `terrainPolicy` | `CONFORM | BALANCED | ASSERTIVE`。 |
-| `requiredStructureRefs[]` | 非空、组内唯一且全部在结构白名单；`groupId + requiredStructureRef` 唯一定位 Landscape owner。 |
+| `requiredStructureRefs[]` | 非空、组内唯一且全部在结构白名单；与 Landscape 归属分开；景观 owner.groupId 定位所属功能组。 |
 | `fillPoolRef` / `fillPools` | 二选一：单池引用，或非空 `[{poolRef, weight}]`。池引用唯一、权重必须为有限正数。用于初始填充和外扩。 |
 | `compositionProfileRef` | 冻结目录引用；composition 不限制数量。 |
 | `spaceComposition` | 严格对象 `buildingShare/landscapeShare/openSpaceShare`；三者均为 `0..1` 且和为 `1.0`。 |
@@ -314,7 +314,7 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 | `landscapeProfileRef` | string | 冻结景观 profile，决定 rule、surface recipe、基准面积和 membership。 |
 | `purpose` | `FUNCTIONAL|COMPOSITIONAL|AMBIENT` | 景观在城市构图中的意义。 |
 | `originMode` | `ATTACHED|FREE_STANDING` | 严格判别字段。 |
-| `owner` | object | 仅 ATTACHED 使用；严格为 `groupId/requiredStructureRef`，必须定位唯一 required 结构。 |
+| `owner` | object | 仅 ATTACHED 使用；填写 `groupId`，旧 `requiredStructureRef` 可选且仅作位置参考。 |
 | `placementDomain` | `URBAN_RESIDUAL|FOUNDATION_EDGE|BETWEEN_GROUPS|ALONG_WATER` | 仅 FREE_STANDING 使用。 |
 | `instanceCount` | positive integer | AI 提交的目标实例数；ATTACHED 固定为 1。 |
 | `parcelCount` | positive integer | AI 提交的每实例目标 Parcel 数，必须落入 Profile 范围；实际结果服从地形。 |
@@ -486,7 +486,9 @@ plan/trace 根级 `compilationAcceptance` 必填 `acceptancePolicy=SAFETY_AND_RE
 
 ## Landscape owner 的跨阶段一致性
 
-D4 容量规划与 D6 户外编译共同按同 Group、同 `owner.requiredStructureRef` 的实际建筑选择主人；先选 REQUIRED 阶段，再按 `anchorId` 字典序选择。缺少首轮实例但 fill/connectivity/percentage 已有同种实例时可以作为主人，不按名称猜功能，不跨 Group 替代。Group-owned 仍限定该 Group 并使用同一排序。最终 D4 景观裁让结果冻结 ownerAnchorId/ownerFootprint，D6 继续严格核对，真实身份或 footprint 漂移仍拒绝。旧 D4 若未包含后来主人，必须正式重新编译容量，不得补写 artifact 绕过 hash。
+景观由 `owner.groupId` 对应功能组拥有，与单栋建筑存续解耦。新设计省略 `requiredStructureRef`；旧字段兼容为初始位置参考，不要求该模板成功落位。显式 `growth.seed` 优先；无显式起点时可参考同组建筑，全部建筑为空则从景观/所属组偏好地形中确定稳定起点。`ownerAnchorId/ownerFootprint` 仅保留位置参考来源，D6 不因建筑缺失、后续填充或位置变化重新绑定或拒绝已冻结景观。D6 仍校验蓝图与容量 hash、所属功能组、地块、种子和实例完整性；旧容量几何直接保留，不补写存档绕过 hash。运行期景观 source anchor IDs 为空，建筑与道路仍通过占地排除规则协调。
+
+空间关系并未解耦：功能区 intent 说明景观服务对象、选址理由及可达方式，终审结合实际总览检查。农田牧场考虑生产通道/邻近聚落，林场考虑作业运输，公共花园融入公共步行空间。无需每块景观自动造路，不能把功能名称当作整体性证据。
 
 ## GroupExtentMap v0.11
 
