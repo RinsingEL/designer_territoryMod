@@ -591,3 +591,11 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 - 父 CONTIGUOUS 阵列按完整子阵列外框贴边组织，不拆平子成员。质量输出提供 `connectedComponents`、`retainedMemberCount` 与 `contactBasis=TEMPLATE_XZ_FOOTPRINT_EDGE`；分裂时报告 `CONTIGUOUS_DISCONNECTED_COMPONENTS`。
 - 接触指标证明 X/Z 模板外框连片，不等于素材内部田埂或高程接缝已验收。天然 `outdoorPlan.landscapes` 行为保持原契约。
 - AI 指引鼓励可用空间内数百块规模，禁止把高规模理解成高随机性；仍只选作者批准的功能素材。素材导入与语义审核仍走模板内容包流程，新增算法不会自动导入外部投影。
+
+## 建筑地形异常占比（2026-09-18）
+
+逐建筑 terrain gate 在原有浅封闭水坑豁免与普通坡度适配之外，增加异常面积预算。异常面积按 transformed collision footprint 与 terrain-field cell 的实际相交 block 面积求和，不按完整格数量估算；默认最大比例为 0.10（含边界）。面积比例适用于所有尺寸的建筑，不按模板名称判断巨构。
+
+原本会拒绝的水格、超过 policy 两倍坡度/局部起伏的格，以及整体高差超过 policy 两倍高差阈值时偏离面积加权高程中位数超过一倍高差阈值的格，合并计为异常，不重复累计。缺失或未采样、无 terrainPolicy、水深未知或超过一倍高差阈值、坡度/起伏/相对中位数高差超过四倍对应阈值仍为硬拒绝。异常八邻接连通分量接触 footprint 的两条相对边时仍拒绝，防止低面积占比掩盖贯穿沟壑。原浅封闭水坑豁免保持不变，不计入新增异常预算。
+
+其余异常比例不超过 10% 时允许进入基础适配，记录 CITY_STRUCTURE_LOCAL_TERRAIN_ANOMALY_TOLERATED / foundation_support_required；准入不等于真实 worldgen 已验收。超过比例仍返回原地形拒绝原因。trace 新增 anomalyAreaBlocks、footprintAreaBlocks、anomalyAreaRatio、maximumAnomalyAreaRatio、anomalyCellCount、referenceElevation、hardTerrainFailure、crossingAnomaly。通过时 rejectedCellCount 为 0，failureSamples 保留原始异常诊断，terrainAdaptations 标明适配要求。缺省 policy 的旧调用仍严格拒绝异常，不放宽采样与碰撞约束。此节细化上述单成员水体/陡地形拒绝口径，不改变景观容量门禁。
