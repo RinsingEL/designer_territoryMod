@@ -499,3 +499,22 @@ finalize 封存该国名册，不直接解锁大陆。地图和服务端会等�
 ## 冒险者地图客户端视口协议
 
 Forge `adventurer_map` 通道协议版本为 `6`。快照请求依次发送 `zoom`、`centerX`、`centerZ` 三个 double，中心为客户端当前浏览的世界 X/Z 坐标。缩放限制为 0.5–4；中心非有限时回退玩家坐标，有限值限制到 ±30000000 格，再按既有 256 格中心量化。服务端继续按 `4096 / zoom`（1024–8192 格半径）裁剪 W 底图和节点并应用实际开放蒙版，不因浏览远处生成区块或揭示未开放区域。响应结构不变；客户端同时最多一个在途快照，拖动期间合并刷新，最短间隔 4 tick，松手刷新最终视口。客户端绘制中心独立于响应底图范围，旧响应不得重置浏览位置。
+
+## 外部 Agent 存档大厅与任务接续
+
+外部 stdio MCP 在 initialize 响应的 instructions 中要求首次接入先调用 `geomantia_lobby`，呈现存档大厅并等待玩家选择。玩家已明确要求开始/继续时不重复确认。初始化只传指引，不自动扫描世界；是否主动显示由 Agent 客户端决定。`GEOMANTIA_PROVIDER_TOOL_URL` 内置桥接模式不发布大厅 instructions 或大厅/接续工具，继续使用宿主限定的工具表。
+
+| 工具 | 行为 |
+| --- | --- |
+| `geomantia_lobby` | 只读当前世界名称、阶段、任务、占用及阻塞，返回开始/继续、查看成果、查看状态菜单。 |
+| `planning_resume` | 玩家要求推进后获取世界级占用，从正式存档恢复 W/T/City 阶段。后台最多连续处理 8 个程序步骤，备齐与内置执行端共用的任务状态、工具 schema、指引和实际预览图。`retry=true` 仅用于问题已处理后的明确重试。 |
+| `planning_action` | 使用本轮 `taskId`、`actionId`、`tool`、`arguments` 执行允许的决策工具。旧 taskId 拒绝；最近一次相同 actionId/输入的网络重试返回已完成结果，不重复修改。不同输入不可复用 actionId。 |
+| `planning_wait` | 使用 cursor 等待状态变化，最长 20 秒；只返回进度，避免重复发送图片。任务准备好后 resume 取得任务包。程序阻塞返回 blocked 与原因。 |
+| `planning_release` | 暂停/完成时释放执行权，不删除进度；执行中的程序调用不能被强行释放。 |
+| `planning_artifact` | 当前 run 内只读 list/search/text/image；相对路径、真实路径校验、文本分页，图片作为 MCP image 返回。可在大厅查看成果时使用，不需先启动规划。 |
+
+HTTP 对应 `/planning/lobby|resume|action|wait|heartbeat|release|artifact`（POST）。外部桥接保存 ownerId 与 leaseToken，并通过 `X-Geomantia-Planning-Token` 请求头携带占用凭证；不把凭证传给模型。世界重开后从正式产物恢复，内存占用和旧任务凭证作废。
+
+公共 `PlanningSessionService`、`PlanningStepPolicy`、`PreparedPlanningTurn` 被内置和外部执行端共用。它不要求启用 Provider 或配置 API Key；W/T3/队列刷新/D3 等确定步骤由程序处理。原 D4 自动编译队列继续推进至 waiting_for_generation。
+
+占用覆盖当前世界规划。原 HTTP 修改入口在占用期间拒绝其他执行端，状态查询不受阻。操作执行中不会因租约到期转交；外部桥接活动时自动续租，空闲 2 分钟后停止心跳，剩余租约最长 2 分钟，避免已取消聊天永久占用。正常暂停立即 release；MCP 断开尽力释放。MCP 连接本身不触发模型回合，不依赖通知强行唤醒外部 Agent。
