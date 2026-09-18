@@ -35,7 +35,7 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 ### 意图、计划阵列与逐栋结果（2026-09-13）
 
 - `city_submit_d4_blueprint` 可先提交工具根级 `designIntent={groups:[{groupId,role,intent,preferredPatchRefs}]}`；该对象不是蓝图内部的城市主题 designIntent。再批量提交 `materialSelections=[{groupId,query?,structureRefs?,fillPoolRefs?}]` 搜索作者元数据或确认素材。两阶段与 cityBlueprint/blueprintPatch 分开调用，返回 `designInProgress=true`，不推进生成。会话按 contextId 保存，prepare 与后续草稿返回已确认意图和估算。
-- Group 可填 `structureCount`：1–256 的整数且不少于 required 引用数；省略采用已有规模、extent 和算法建议值。CENTER_SYMMETRIC 总数为奇数（一中心与若干同素材成对计划成员）。数量是计划输入，地形筛选不另设保留数量门槛。
+- Group 可填 `structureCount`：1–1024 的整数且不少于 required 引用数；省略采用已有规模、extent 和算法建议值。CENTER_SYMMETRIC 总数为奇数（一中心与若干同素材成对计划成员）。数量是计划输入，地形筛选不另设保留数量门槛。
 - 同一 DRAFT 可提交一个完整嵌套组团及之前的设计。部分草稿暂不执行整城规模嵌套门槛，FINAL 执行既有 CITY 核心参与组合、LARGE_CITY 至少两个有效组合规则；没有新增面积或主体比例硬门槛。
 - 编译先确定阵列位置、模板和完整矩形占地，再逐栋筛选。正常水域、山体、边界或碰撞导致成员跳过，不换模板、搜索替补槽位或搬动其余建筑。全空组保留记录。作者入口/不支持的地形能力及格式错误仍明确拒绝。
 - `designReview` 同时记录 planned/retained 建筑、底层阵列及嵌套承载量；`skippedMembers` 记录槽位、plannedBounds、原始过滤原因。DRAFT 的 revisionEvidence.compiledDesignReview 内联报告，预览橙色虚框 S 对应跳过位置。程序可编译不代表 AI 已认可效果。
@@ -580,3 +580,14 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 ## 可选材质覆盖与按需方块查询
 
 `cityBlueprint.surfaceMaterials` 和独立 `blockMaterials` 查询见 [AI 材质与方块检索契约](CityAI材质与方块检索数据契约.md)。它们不改变阵列与景观布局参数。
+
+
+## CONTIGUOUS 模板景观连片阵列（2026-09-18）
+
+- Reference Catalog `algorithmProfiles[].algorithm` 新增 `CONTIGUOUS`。托管内容源在未配置该算法时加入 `algorithm:contiguous`；作者已有同算法引用时保留其引用。Context 冻结后按原 catalog hash 流转，旧 Context 不动态补字段。
+- Group 使用现有 `algorithmProfileRef`、`requiredStructureRefs`、fill pool 和 `structureCount`；后者范围更新为 1–1024，仍不得少于 required 数量。填充仍遵守作者的 `maxCopiesPerStructurePerGroup`，0 表示无限制；提示词不能绕过作者限额。
+- 按选定模板首个合法旋转后的真实宽深预编排，固定 seed 与成员前缀可复现。模板外框四邻边接触，禁止角接触替代连片；内部间距、随机抖动和街带宽度均为 0。以紧凑、有缓慢轮廓变化的形态选择外缘位置，不生成每块农田的城市式街网。
+- 每个成员的 origin 和变换冻结后复用普通 template placement / `structure_start_beard_thin` 链路。地形或碰撞拒绝不移动其他成员；后续成员必须连接已有保留成员，根成员失败不能另生孤岛。报告 `CONTIGUOUS_ROOT_UNAVAILABLE` / `CONTIGUOUS_EDGE_CONTACT_REQUIRED`，仍采用原成员缺失反馈。
+- 父 CONTIGUOUS 阵列按完整子阵列外框贴边组织，不拆平子成员。质量输出提供 `connectedComponents`、`retainedMemberCount` 与 `contactBasis=TEMPLATE_XZ_FOOTPRINT_EDGE`；分裂时报告 `CONTIGUOUS_DISCONNECTED_COMPONENTS`。
+- 接触指标证明 X/Z 模板外框连片，不等于素材内部田埂或高程接缝已验收。天然 `outdoorPlan.landscapes` 行为保持原契约。
+- AI 指引鼓励可用空间内数百块规模，禁止把高规模理解成高随机性；仍只选作者批准的功能素材。素材导入与语义审核仍走模板内容包流程，新增算法不会自动导入外部投影。
