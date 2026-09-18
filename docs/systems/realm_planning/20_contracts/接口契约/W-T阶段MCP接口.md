@@ -502,7 +502,7 @@ Forge `adventurer_map` 通道协议版本为 `6`。快照请求依次发送 `zoo
 
 ## 外部 Agent 存档大厅与任务接续
 
-外部 stdio MCP 在 initialize 响应的 instructions 中要求首次接入先调用 `geomantia_lobby`，呈现存档大厅并等待玩家选择。玩家已明确要求开始/继续时不重复确认。初始化只传指引，不自动扫描世界；是否主动显示由 Agent 客户端决定。`GEOMANTIA_PROVIDER_TOOL_URL` 内置桥接模式不发布大厅 instructions 或大厅/接续工具，继续使用宿主限定的工具表。
+外部 MCP（游戏托管 Streamable HTTP 或开发 stdio）在 initialize 响应的 instructions 中要求首次接入先调用 `geomantia_lobby`，呈现存档大厅并等待玩家选择。玩家已明确要求开始/继续时不重复确认。初始化只传指引，不自动扫描世界；是否主动显示由 Agent 客户端决定。`GEOMANTIA_PROVIDER_TOOL_URL` 内置桥接模式不发布大厅 instructions 或大厅/接续工具，继续使用宿主限定的工具表。
 
 | 工具 | 行为 |
 | --- | --- |
@@ -518,3 +518,13 @@ HTTP 对应 `/planning/lobby|resume|action|wait|heartbeat|release|artifact`（PO
 公共 `PlanningSessionService`、`PlanningStepPolicy`、`PreparedPlanningTurn` 被内置和外部执行端共用。它不要求启用 Provider 或配置 API Key；W/T3/队列刷新/D3 等确定步骤由程序处理。原 D4 自动编译队列继续推进至 waiting_for_generation。
 
 占用覆盖当前世界规划。原 HTTP 修改入口在占用期间拒绝其他执行端，状态查询不受阻。操作执行中不会因租约到期转交；外部桥接活动时自动续租，空闲 2 分钟后停止心跳，剩余租约最长 2 分钟，避免已取消聊天永久占用。正常暂停立即 release；MCP 断开尽力释放。MCP 连接本身不触发模型回合，不依赖通知强行唤醒外部 Agent。
+
+## 游戏托管 MCP URL 服务
+
+MCP 在 Mod common setup 后异步启动，主菜单即可连接；进入世界后才调用具体规划服务。默认连接地址 `http://127.0.0.1:5001/mcp`，传输为标准 MCP Streamable HTTP（POST/GET/DELETE 会话），现有 stdio 开发入口保留。HTTP 会话各自创建 MCP Server 与 planning 客户端，不能共享不同 Agent 的占用凭证。只监听本机回环地址，校验 Host/Origin；非法会话返回 404，客户端需重新 initialize。
+
+实例配置 `config/geomantia/mcp_server.json` 包含 `enabled`（默认 true）与 `port`（默认 5001，允许 1024–65535，不得与内部游戏 API 端口重复）。在 Mods → Geomantia → Config，或游戏内 Provider 设置中的 MCP 设置，查看状态、复制 URL、修改端口、保存并重启。保存会重启 MCP 监听，外部客户端需使用新地址重新连接。配置损坏或端口占用明确显示失败，不默默切换端口或要求配置 Provider Key。
+
+服务使用 Mod 打包的 Node 运行环境和 MCP bundle，无需系统安装 Node；与内置 Harness 共用运行环境安装锁，但不会因启动 MCP 而请求模型或启用内置自动规划。MCP 随游戏进程退出，退出/切换存档时保持监听。Java 托管子进程，stdin 关闭与父进程监测用于避免游戏退出后残留服务。启动健康检查仅说明 MCP 监听已就绪，不代表存档、模型或城市设计已经可用。
+
+实现入口：`McpServerService`、`McpServerConfig`、`McpSettingsScreen`、`country_designer_mcp/src/server.ts` 和 `http-server.ts`。验证入口：`McpServerServiceTest`（实际内置运行环境启动、MCP initialize、端口变更与停用）、`country_designer_mcp/test/mcp-http.test.mjs`（标准客户端、独立会话、大厅、图片、拒绝跨来源和端口冲突）。
