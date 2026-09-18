@@ -4,13 +4,13 @@
 
 本文件只维护当前公开工具、阶段职责和破坏性调用边界。字段级 JSON Schema 的实现真值是实现仓库 `country_designer_mcp/src/realm/tools.ts`，HTTP 路由真值是 `RealmPlanningHttpController`；修改工具字段时必须同步更新本文件和对应 Node/Java 测试。
 
-Provider 自动规划使用宿主范围锁定的决策适配器，其工具定义由 ProviderPlanningToolCatalog 同时供内嵌模型和 Hermes 的认证桥读取；Hermes 不再误用原始分阶段 MCP schema。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；一般同错三次停止由宿主控制；D4 格式修正使用独立十次机会，已记录的新草稿继续设计。已有同 Context、非空设计会话续跑不重复注入整包目录和地形图；工作草稿的当前 revisionEvidence 和新 compiledPreview 必须注入，不能误称设计图未变化。
+内置 Harness 与外部 planning_resume/action 共用范围锁定的任务准备和决策适配器，其当前决策工具定义由 ProviderPlanningToolCatalog 提供；外部接续协议见 [W/T MCP 接口](../../../realm_planning/20_contracts/接口契约/W-T阶段MCP接口.md)。完整 validationReport（含负结论）不属于桥接传输故障，仍保留 ok=false 和原校验反馈；一般同错三次停止由宿主控制；D4 格式修正使用独立十次机会，已记录的新草稿继续设计。已有同 Context、非空设计会话续跑不重复注入整包目录和地形图；工作草稿的当前 revisionEvidence 和新 compiledPreview 必须注入，不能误称设计图未变化。
 
 公开 City MCP 工具调用本地 `/realm/city/<snake_case_action>` HTTP 入口。常规阶段调用至少使用 `runId`、`citySeedId` 定位任务；需要世界上下文的入口可再使用 `dimensionId` 或 `playerName`。
 
 Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排名摘要和实际地图，不装入整包网格。宿主专用只读工具 `city_inspect_d3_patches` 直接查询本轮已锁定城市的完整 D3 快照，无独立 HTTP 路由，不接受 runId、cityId 或文件路径；支持 `landformType`、精确 `landformPatchId`、零起始 `page` 和 `pageSize`（默认 8，范围 1–16）。每页保留完整地貌块记录及 memberCells，返回 totalMatched/hasMore/nextPage；按需查证，不要求遍历全部页面。原始 D3 产物不变。
 
-程序自动执行步骤请求 `X-Geomantia-Host-Result` 回执，不生成模型展示或嵌入图片，失败证据仍完整返回。模型展示和 Hermes 初始输入不再使用 90000/262144 字符门槛，也不截断作者资料；实际 HTTP 请求体、响应传输及图片安全限制独立保留，不代表模型上下文容量。
+程序自动执行步骤请求 `X-Geomantia-Host-Result` 回执，不生成模型展示或嵌入图片，失败证据仍完整返回。模型展示和 Harness 初始输入不再使用 90000/262144 字符门槛，也不截断作者资料；实际 HTTP 请求体、响应传输及图片安全限制独立保留，不代表模型上下文容量。
 
 ## 正式主链工具
 

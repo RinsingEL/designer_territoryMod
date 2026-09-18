@@ -38,7 +38,7 @@
 
 MCP 与内置 Provider 均使用 `X-Geomantia-Agent-View: true` 请求共享的 `planning_decision_view.v0.1`。它保留身份、目录语义、指标与产物引用，把密集 cell 集合替换为数量摘要；完整几何仍保存在正式 artifact 中，局部证据通过 Patch Explorer 获取。普通 HTTP 不带此头时仍返回完整原始响应。预览仅允许读取当前世界 debug root 内的 PNG（最多 4 张、单张 8 MiB），不可读取时返回 `previewWarnings`，不伪装成视觉证据。
 
-内置 Provider 的 6 MiB 文本预算不计图片 base64；传输总量另按上述图片上限约束。Hermes 首轮消息另受其 10 MB 请求上限约束，宿主为文本与初始图片预留合计约 8 MB；超限的初始图片必须告知未送达，不得让合法大图无解释地导致整轮 HTTP 413。
+内置 Provider 的 6 MiB 文本预算不计图片 base64；传输总量另按上述图片上限约束。当前内置运行时为 DeepSeek Harness，图像随原生消息与工具结果传递，不沿用旧 Gateway 的首轮 HTTP 大小限制。宿主续接时保留近期文字与资料引用，历史图片退出活跃上下文，需要时重新请求；当前必要预览仍实际返回。图片安全上限不等于模型上下文预算，不能用静默丢图代替明确反馈。
 
 `realm_w_refresh` 开始前校验宿主作者资料，成功时返回 `authoringBrief`。作者未确认结构功能/风格或来源不唯一时阻塞，不让模型寻找或补造配置。
 
@@ -354,9 +354,9 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 
 - W 扫描、T3 统一扩张和城市队列刷新由程序执行，不额外请求模型决定是否调用这些确定性步骤。
 - 全部国度完成 T1/T2 后才统一 T3。此后按 `RealmSeed.seedBlock` 距世界原点排序国度；当前国 T4 finalize 立即建立/合并城市队列，先完成已登记城市，再进入下一国 T4，不等待全世界 T4。
-- 每轮成功提交 T1、T2、T4 finalize 或 D4 Blueprint 后，由宿主结束该模型轮并核对真实阶段推进。Hermes 必须经过本地能力桥接调用同一 scope-locked executor，不能旁路直连 HTTP；共享的停止策略不依赖模型口头宣布完成。
+- 每轮成功提交 T1、T2、T4 finalize 或 D4 Blueprint 后，由宿主结束该模型轮并核对真实阶段推进。内置 Harness 经宿主工具执行器、外部接续经 planning_action 调用同一作用域与停止规则；共享的停止策略不依赖模型口头宣布完成。
 - 作者资料/宿主故障立即阻塞；连续三次相同拒绝结束本轮并显式报告停滞，不消耗 D4 真实编译的五次失败预算。程序/环境重试不暴露给自动城市设计轮，需先修复故障再由人发起。
-- Hermes 0.18.2 的 session-stream 通过独立取消适配层中断 agent worker；不修改 vendor 文件。断流检测与上游请求取消仍取决于运行时，不能据此承诺零额外请求或真实首城耗时。
+- 内置 Harness 的业务插件依据宿主完成状态停止后续模型步骤；外部 Agent 通过任务完成状态继续领取或停止。运行中操作与连接断开后的占用恢复见本页公共接续协议；不能据此承诺上游请求一定立即取消或固定城市耗时。
 
 ## realm_run_acceptance
 
