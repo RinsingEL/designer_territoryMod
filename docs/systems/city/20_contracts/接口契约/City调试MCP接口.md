@@ -40,7 +40,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_execute_d5` | `/realm/city/execute_d5` | 激活结构 mask、locked structure registry 与 LandUse 生成期计划。 |
 | `city_execute_d7` | `/realm/city/execute_d7` | 查询并汇总落地 ledger，执行允许的后处理。 |
 | `city_query_worldgen_observations` | `/realm/city/query_worldgen_observations` | 只读查询 post-features / chunk-save 方块观测。 |
-| `city_plan_city_walls` | `/realm/city/plan_city_walls` | 按所选 wallVersion 生成城墙计划。 |
+| `city_plan_city_walls` | `/realm/city/plan_city_walls` | 使用唯一的守卫塔模块城墙实现生成计划。 |
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
@@ -198,3 +198,13 @@ Post-D4 失败响应与持久化任务从最后失败工作流步骤提取 `fail
 这些详情同步到设计队列的当前城市和 Provider 状态；重试进入 queued/running 或成功后清除当前城市旧详情。查询及重启恢复旧持久化失败记录时可从已有 workflowResponse 提取，不为展示详情执行编译或修改世界。
 
 局部更新中，每个 groups / arrayCompositions / landscapes 对象可带 clearFields 字段名数组，明确清除该对象可省略字段（如 placementRelation），不使用 JSON Pointer。禁止清除 ID、清除不存在字段或同时对同一字段赋值；最终完整对象仍须通过原字段校验。
+
+## 城区与守卫塔模块城墙
+
+城墙模块独立读取 `config/geomantia/city_walls/modules.json`，不进入普通建筑目录。真实世界规划冻结 `wallModuleSnapshot`；执行时配置或 NBT 的 hash 不匹配则拒绝，要求重新规划。详见 [City 城墙配置数据契约](../数据契约/City城墙配置数据契约.md)。
+
+D5 的 `boundarySource=district_coarse_exterior`，只保留粗粒度正交外围长段。正式 Blueprint 的 `foundationGroupIds` 确定主体成员，外围结构仍进入安全覆盖检查。`gateSlots` 只来自 D4 道路实际穿越墙线的位置；没有出城道路时 `exitRoadStatus=EXIT_ROAD_REQUIRED`，禁止自动在最长墙段中点开门。
+
+墙计划冻结 `moduleSet=guard_tower`、墙段、塔楼、门位和 `wallPlacementProfile`。后者保存规划时地表列与墙顶共同基准，重复执行不从已造好的墙顶重新取高度。模块源为用户指定的 `ac3 城墙守卫塔.litematic`，NBT 与来源 hash 随 artifact 输出。墙面高度固定 10，步道地板在模块局部 Y9，塔楼保留原屋顶与内部楼梯并提供四向两格净空开口。
+
+执行在写入前统一检查建筑、实际道路、门洞净空、地表覆盖、世界高度及方块实体。未提供出城道路、无法接合的高差或水体边界返回明确 reason；不回退矩形、不截断塔楼、不静默留墙洞。当前高差由共同墙顶与基础消化，超出阈值返回 `WALL_TERRAIN_REQUIRES_REDESIGN`，尚未自动生成跨大高差的楼梯节点或绕河重规划。离线测试不代表素材在游戏中的通行与外观已验收。

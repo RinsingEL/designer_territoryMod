@@ -16,6 +16,18 @@ identity 或由它派生的 world footprint 漂移必须 hard fail。`terrainPos
 
 ## 作者语义权威
 
+### 道路可选树结构
+
+D6 在 D4 建筑及道路、D5 城墙预留冻结后追加内置树模板。资源来自 `geomantia:roadside/`，manifest 保存裁去展示地面后的尺寸、树根局部坐标与来源 hash；D6 仍读取当前世界 NBT 的实际 hash 和尺寸。树不参与建筑功能区推断，也不作为城区建设面的种子。
+
+树条目使用 `placementRole=roadside_tree`、`placementGroupId=__roadside`、`blueprintPlacementPhase=FILL`，携带 `sourceRoadId` 和经过同一 rotation/mirror 变换的世界 `treeRootBlock`。其他 template identity、closed footprint、ownerChunks 和锁定规则沿用主路径。active registry 必须持久化这些字段，并在激活时将已锁定路树的 `maskEnvelope` 追加到运行时 `noVegetationMask` 与 `noVanillaStructureMask`，保护树结构免受后续自然生成覆盖；原始 D5 文件不回写。
+
+`geomantia:roadside/` 模板冻结为 `terrainPosePolicy=structure_start_decoration`，通过 `geomantia:city_roadside_decoration` StructureStart 落地，`terrain_adaptation=none`，不执行建筑地基支撑。树根所在列的 generator base height 决定统一 datum，所有 owner chunk 共用持久化 datum。普通建筑继续使用 `structure_start_beard_thin`。
+
+候选按完整旋转树冠范围计算路侧偏移和间距，避让所有建筑碰撞范围、道路净空、入口、城墙/城门/塔楼预留、景观 reservationSpans 及先前树结构；桥面、水体、陡坎、缺失地形及超出覆盖范围的候选跳过。可选树在 D6 元数据、碰撞或 chunk 状态预检失败时记 `skipped_optional`，累计 `optionalSkippedCount`，不解除主体建筑锁定；主体建筑失败仍按原规则处理。候选统计保存在 `sourceStructureAnchorMap.roadsideTreeReport`。
+
+树不进入建筑模板目录的功能/风格选择；内置资源不替代该目录的作者审批约束。当前新增的是树结构，路灯继续沿用既有 SurfacePrint 能力。
+
 结构的功能和风格必须由整合包作者在游戏开始前标注。模板目录的 `buildingSemantic/style` 与 TerraSense 画像的 `functionTerms/styleTerms` 都是作者配置，AI 只可据此选用、组合结构，不可根据名称或外观猜测并补写语义。
 
 宿主正式规划入口校验所有可引用结构拥有 `reviewState=approved`、非空功能和风格词；未标注、未批准或引用不存在时，返回 `PLANNING_AUTHOR_ANNOTATION_REQUIRED` 并指出结构，停止规划等待作者修正。外观预览用于构图，不具备改写功能/风格标签的权力。NBT hash、rawSize、碰撞、入口等仍是独立的程序事实预检，不由语义标注代替。

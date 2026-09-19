@@ -8,6 +8,8 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
 
 ## 定位
 
+D6 `placementRole=roadside_tree` 的结构不作为 Foundation 建筑来源，其 `lockedActualFootprint` 作为自然保留空间从城区建设面扣除，避免铺地和台面覆盖树根。树自身由固定 NBT StructureStart 放置，不由 LandUse 生成树种或按方块拼树。
+
 本契约定义城市空间织体的 block 级执行投影和 worldgen 交接。它位于 D6 locked actual footprint 之后与 worldgen 执行之前。正式 Blueprint v0.12 路径把 AreaPlan 解释为一个 Foundation 底层加若干显式 Landscape Parcel，不再是逐建筑竞争占地。
 
 ## 版本与开关
@@ -69,7 +71,7 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
 }
 ```
 
-规则目录不再包含事后桥接阈值。正式 Blueprint v0.12 路径固定关闭 LandUse 自动连接：城市连通由一块 Foundation domain 保证，景观 Parcel 保持独立 Area；历史父子来源可继续读取，新显式 growth 不强制父子树。相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
+规则目录不再包含事后桥接阈值。正式 Blueprint v0.12 路径固定关闭 LandUse 自动连接：建设面由城区归纳确定，不强制全城铺地连通，景观 Parcel 保持独立 Area；历史父子来源可继续读取，新显式 growth 不强制父子树。相向扩张只保留给 legacy/debug intent，不得进入正式户外编译。
 
 `rules[]` 每项的字段必须完整且无未知字段；`ruleRef` 在同一 profile 内唯一。`semanticTerms[]` 按最长包含词匹配 D4 / D6 语义；`surfacePolicy` 只允许 `PRESERVE|PAVE|CULTIVATE|WATER_ADAPTIVE`，`vegetationPolicy` 只允许 `PRESERVE|SELECTIVE_CLEAR|CLEAR`，`boundaryPolicy` 只允许 `OPEN|FENCE|HEDGE|LOW_WALL|SHORELINE`。profile 内容参与 `ruleProfileHash`，配置发生变化后旧 completion 的 hash 校验必须拒绝激活，要求重跑 `city_plan_land_use`。
 
@@ -230,7 +232,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
-| `areaId` | string | 稳定逻辑区域 ID。正式城市 Foundation 只有一个连续 Area；每个景观 Parcel 都有独立 Area，禁止同类型相邻合并。 |
+| `areaId` | string | 稳定逻辑区域 ID。正式城市 Foundation 使用一个 owner，可包含多个组件；每个景观 Parcel 都有独立 Area，禁止同类型相邻合并。 |
 | `ruleRef` / `landUseType` | string | 规则引用和用途。 |
 | `sourceGroupIds[]` / `sourceAnchorIds[]` | string[] | 可追溯来源。 |
 | `seedPoints[]` | BlockPoint[] | Foundation 记录建筑影响域的稳定来源；景观记录 Parcel 自身 seed。正式路径禁止入口、组内最小连接树和跨组关系线充当 seed。 |
@@ -259,23 +261,23 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 相同 Blueprint、D6、terrain field 和 catalog 必须输出相同规范 JSON 与 hash。任一来源漂移都不得复用旧 completion。
 
-围栏农田、花田、牧场和林场都通过显式 Landscape 进入。AI 提交目标 `instanceCount` 和 `parcelCount`；显式 growth 按 AI 起点、目标 cell 数和允许地形形成范围，旧蓝图仍按 owner 种子与地形选择容量。ATTACHED required 有 owner anchor 时复核其身份与 footprint；无配套建筑的显式 growth 允许仅保留设计起点，所有实际非零 Parcel 只能在对应容量域内生成；FREE_STANDING optional 同样保留每个实际非零 Parcel。当前整合包不再配置独立 `common_green` Landscape，建筑周边绿化继续由 building greenery policy 生成。
+围栏农田、花田、牧场和林场都通过显式 Landscape 进入。AI 提交目标 `instanceCount` 和 `parcelCount`；显式 growth 按 AI 起点、目标 cell 数和允许地形形成范围，旧蓝图仍按 owner 种子与地形选择容量。ATTACHED required 有 owner anchor 时复核其身份与 footprint；无配套建筑的显式 growth 允许仅保留设计起点，所有实际非零 Parcel 只能在对应容量域内生成；FREE_STANDING optional 同样保留每个实际非零 Parcel。当前整合包不再配置独立 `common_green` Landscape，建筑装饰由结构素材负责，正式编译不再从 building greenery policy 生成附属绿化。
 
 ## CityUrbanSpacePlan
 
-`city_urban_space_plan.v0.1` 只保留给 legacy/debug LandUse。正式 Blueprint v0.12 分层规划返回 disabled plan，覆盖由 Foundation 近距簇完整建设域承担；trace 的 resolved close radius/最小颈宽为旧诊断兼容字段，不再代表一次实际闭合搜索。它不进入 worldgen recipe parser。
+正式户外编译启用 `city_urban_space_plan`，记录城区包络与保留的自然空间。城区归纳一次产生 construction、envelope、natural 三类范围；LandUse 消费冻结 construction，不再在 service 中从 footprint 二次重算。一个 Foundation owner 可包含多个互不强连的建设面组件。
 
-城市基础域由纳入主体的 D6 structure footprint、LINEAR `platformBounds` 和 Foundation Profile 支撑，不读取 D5 corridor/gate。2026-09-07 用户确认：先按 `maxJoinDistanceBlocks` 分近距连通簇，再填满每簇结构外扩后的凸包建设域，不再因细桥验收拆回逐栋铺装；超距簇不强连。`closeRadiusBlocks` 暂保留输入兼容，不再控制拆簇。几何范围受 planning bounds 和 footprint 距离约束，D3 的 `water/slope/localRelief` 不参与几何通行判定。Landscape 后写覆盖 Foundation，并可按 membership 向主体外缘扩展。
+输入为明确纳入城区的建筑组、D6 locked footprint、D4 道路及显式 Landscape 容量域。组内只补短间隙，组间只补局部窄缝；水体、断崖与景观容量不被自动铺满。道路只在建筑群附近参与建设面归纳，不沿长道路把城外全部纳入城区。城区外包络与 D5 墙线使用同一粗粒度正交外轮廓工具；D5 根据 D4 预留尺寸加退让冻结墙线，D6 依据真实占地细化建设面。包络里的大院落与自然地面不等于施工区域。
 
-正式路径 `residualRegions[]` 必须为空。Foundation domain 内除 Landscape 覆盖外必须全部归属同一 Foundation Area；任何按 SpatialGround 分配 residual、原群系洞或道路 corridor 空洞都是旧产物或规划失败。自然与绿地必须是 Blueprint 显式 landscape。
+`residualRegions[]` 按自然余地连通分量记录，使用 `NATURAL_RESERVE`，分别标记外缘相连与内部围合。不得把所有 residual 自动吸收为铺地；墙内也不要求统一材料或统一标高。
 
-`coverageSummary` 必填：`envelopeBlocks`、`landUseBlocks`、`structureBlocks`、`corridorBlocks`、`absorbedResidualBlocks`、`explicitResidualBlocks`、`unknownResidualBlocks`。这些计数按优先级去重、两两互斥，并必须满足恒等式；正式规划成功同时要求 `explicitResidualBlocks=0` 与 `unknownResidualBlocks=0`。
+`coverageSummary` 包含 `envelopeBlocks/landUseBlocks/structureBlocks/corridorBlocks/absorbedResidualBlocks/explicitResidualBlocks/unknownResidualBlocks`。计数去重并满足覆盖恒等式；允许明确的自然余地，`unknownResidualBlocks=0`。规划包络不直接下发为方块铺装范围，owner chunk 仍只执行已冻结的 AreaPlan/SurfacePrintPlan。
 
 ## CityLandUseSurfacePrintPlan
 
-`city_land_use_surface_print_plan.v0.7` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`、`featureCells[]`；hash 必须由严格 codec 的规范 JSON 计算。Area recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`；正式道路、建筑自带绿化和住宅外溢边界以精确 feature cells 表达，执行期不重新读取 Blueprint、目录或 D4 几何。
+`city_land_use_surface_print_plan.v0.7` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`、`featureCells[]`；hash 必须由严格 codec 的规范 JSON 计算。Area recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`；正式道路和住宅外溢边界以精确 feature cells 表达；建筑装饰归 NBT 素材负责，执行期不重新读取 Blueprint、目录或 D4 几何。
 
-`featureCells[]` 每项严格为 `{sourceId,x,z,blockId,surfaceOffset,kind,facing}`，同一 `{x,z,surfaceOffset}` 唯一。`kind` 只允许 `ROAD_SLAB|ROAD_STAIR|BRIDGE_DECK|BRIDGE_RAIL|GREEN_GROUND|GREEN_PATH|GREEN_PLANT|OVERFLOW_BOUNDARY`；只有 `ROAD_STAIR` 的 `facing` 可为 `NORTH|EAST|SOUTH|WEST`，其余固定 `NONE`。主路使用深色 deepslate tile，普通街使用 polished andesite，COMPACT 巷使用 mud brick；它们都与 Foundation/广场铺装分离。陆地道路 `widthBlocks` 范围冻结为 bottom slab，轴线两侧外加一格 bottom stair 路缘；桥段冻结 spruce bottom slab 桥面与 spruce fence 护栏，执行层沿护栏按稳定 7 格节奏向水底写 stone-brick 成对桥墩。建筑绿化只消费 D4 `buildingParcelPlan.resolvedBounds`，并把 D6 locked collision 作为硬排除；不得再用偏置 collision rectangle 充当花坛地块。FREEFORM 按密度稳定散布，FIELD_GRID 先冻结十字路，再按城市 style profile 的加权植物 palette 稳定选择 plant block；两种花纹都从 transformed entrance 留到地块外缘的连续引路。住宅外溢边界沿冻结矩形写 `boundaryBlockId`，所有关联 street bounds 从边界中扣除形成门洞。道路优先于绿化与边界，冲突植物上层必须删除。
+`featureCells[]` 每项严格为 `{sourceId,x,z,blockId,surfaceOffset,kind,facing}`，同一 `{x,z,surfaceOffset}` 唯一。`kind` 只允许 `ROAD_SLAB|ROAD_STAIR|BRIDGE_DECK|BRIDGE_RAIL|GREEN_GROUND|GREEN_PATH|GREEN_PLANT|OVERFLOW_BOUNDARY`；只有 `ROAD_STAIR` 的 `facing` 可为 `NORTH|EAST|SOUTH|WEST`，其余固定 `NONE`。主路使用深色 deepslate tile，普通街使用 polished andesite，COMPACT 巷使用 mud brick；它们都与 Foundation/广场铺装分离。陆地道路 `widthBlocks` 范围冻结为 bottom slab，轴线两侧外加一格 bottom stair 路缘；桥段冻结 spruce bottom slab 桥面与 spruce fence 护栏，执行层沿护栏按稳定 7 格节奏向水底写 stone-brick 成对桥墩。正式编译不再生成 GREEN_GROUND/GREEN_PATH/GREEN_PLANT；旧 codec 能读取这些 feature 不代表会继续自动生成建筑附属绿化。住宅外溢边界沿冻结矩形写 `boundaryBlockId`，所有关联 street bounds 从边界中扣除形成门洞。道路优先于绿化与边界，冲突植物上层必须删除。
 
 `sharedBoundarySpans[]` 在 AreaPlan 的单侧 owner 基础上再冻结最终 `boundaryBlockId`。双方均 `OPEN` 时允许空材料；否则 owner chunk 只裁切这些全局 spans 并写一次，不得按 chunk 邻接或执行顺序重算归属。
 
