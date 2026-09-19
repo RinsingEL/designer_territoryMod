@@ -31,7 +31,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_d4_mark` | 同上 | 总览确认主体与外围独立区标记。 |
 | `city_d4_integrate` | 同上 | 调整当前区阵列/嵌套或向外扩张，遵循保护名单并保留其他区功能。 |
 | `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
-| `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 正常完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
+| `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 表示自动等待并续跑，`completed` 表示含城墙施工已完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
 | `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；不再通过已取消的重开工具要求 AI 重做有效初版。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
@@ -80,8 +80,8 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 
 - `city_d4_finalize` 成功、`designInProgress` 非 true 且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
-- 队列只处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，终点固定为 `waiting_for_generation`，不主动执行 D7 区块生成。
-- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running；可修订设计冲突的队列下一动作指向 needs_agent + city_d4_overview；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
+- 队列处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，继续 D7 生成观察及既有有界回填队列；D5 激活后先按独立预留墙带规划、放置城墙并保存世界，随后继续 D7；城墙不依赖 D7 成败。自动请求启用 planWalls/executeWalls，不在激活后提前停止。等待生成时每 15 秒续跑，同城保持单任务，复用未变的冻结产物；所有独立阶段结束后标记 completed；局部地表区块失败保留失败记录并继续后续区块，最终为 completed_with_errors，不全局阻塞。
+- 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running/waiting_for_generation（包括旧版仅激活未砌墙的城市）；completed/completed_with_errors 不重复执行；可修订设计冲突的队列下一动作指向 needs_agent + city_d4_overview；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。
 - blocked_by_program 在仅修复程序/环境、冻结资料不变时使用 city_post_d4_auto_compile_retry。作者目录实际改变时，允许当前城市通过 city_prepare_d4_blueprint_context 正式重建 Context：仍须作者审批、NBT 预检和有效 D3 review，拒绝在途/完成任务、其他城市及预算耗尽；资料未变返回 CITY_BLUEPRINT_AUTHOR_SOURCES_UNCHANGED。成功后旧 Context、snapshot、accepted Blueprint/trace/报告及预算保存到 steps/blueprint/context_history，旧失败任务保存到 automation/post_d4/history；旧 accepted 文件不删除但不再匹配新 Context。原 failureCount/failures 原样迁移，不清零；后半段任务改为 needs_agent + city_submit_d4_blueprint，重启不再被旧阻塞覆盖，也不直接启动编译。GLM 收到旧方案作为参考，必须按新 Context 完整提交；不能使用旧哈希补丁。底层编译的历史修订记录使用同一 contextId 完整输入或哈希绑定局部补丁，上层队列不跳过当前城。
 
 ### D4 Blueprint 失败预算契约
@@ -97,7 +97,7 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 - 默认 `orderingMode=realm_grouped`：队列内先按各国首都到 `0,0` 的距离分组，再按城市到世界 `0,0` 的距离排序，稳定 tie-break 为 `realmId + citySeedId`。`global_radial` 保留为显式兼容配置。自动 T4 finalize 固定使用 `realm_grouped`；Provider 在国度尚未建立城市前使用 RealmSeed 核心距原点决定下一国。
 - 整合包默认值写在 `config/geomantia/city_design_queue.json`，schema 为 `geomantia_city_design_queue_config.v0.1`，字段为 `enabled` 和 `orderingMode`。T4/refresh 请求可为单个 run 覆盖 ordering mode，不改全局配置。
 - 队列一次只暴露一个 `currentCity`。正式 D2、D3、D3 review、D4 Context 和 D4 submit 请求若不是当前城市，返回 `CITY_DESIGN_QUEUE_OUT_OF_ORDER`；没有 Registry 的旧调试 run 不受该门禁影响。
-- 当前状态为 `waiting_for_agent` 时 Agent 从 `currentCity` 开始完成 D3/D4；D4 接受后转 `post_d4_running`。后半段进入 `waiting_for_generation` 后，上层队列自动把下一项变为当前城市。
+- 当前状态为 `waiting_for_agent` 时 Agent 从 `currentCity` 开始完成 D3/D4；D4 接受后转 `post_d4_running`。后半段进入 `waiting_for_generation` 后，上层设计队列自动把下一项变为当前城市，原城仍由程序继续生成与砌墙。后半段 completed 同样视为已离开设计阶段，保留 CITY_GENERATION_COMPLETED 原因。上层设计完成不等于全部实体施工完成，应查询各城后半段任务。
 - 后半段失败时当前城市保持 `needs_agent`，后续城市全部保持 `pending`，不得跳过失败城市继续推进。当前已登记城市全部进入 `waiting_for_generation` 后队列状态为 `completed`；仍有国度未完成 T4 时不代表全世界规划完成，宿主继续安排下一国。
 
 ### city_plan_d3 固定采样契约
