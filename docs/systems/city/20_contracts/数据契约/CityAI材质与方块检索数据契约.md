@@ -4,20 +4,19 @@
 
 ## 蓝图材质
 
-`cityBlueprint.surfaceMaterials` 为可选字段。省略时保留现有生成材料与流程，不改变原有蓝图的规范化输出。它与提交层的建筑选材 `materialSelections` 是不同能力。
+`cityBlueprint.surfaceMaterials` 为可选字段。省略时使用施工默认材料；外观不改变道路路由或台面范围。新蓝图的规范化输出使用分组材质，旧的平铺 slot 输入仍可读取。它与提交层的建筑选材 `materialSelections` 是不同能力。
 
 ```json
 {
   "surfaceMaterials": {
     "defaults": {
-      "ground": "minecraft:stone_bricks",
-      "roadSurface": "minecraft:stone_brick_slab",
-      "roadStair": "minecraft:stone_brick_stairs",
-      "retainingWall": "minecraft:cobblestone"
+      "groundAndRoad": {"preset": "stone"},
+      "terrace": {"preset": "timber_stone", "materials": {"wallColumn": "minecraft:birch_log"}},
+      "bridge": {"preset": "timber"}
     },
-    "groups": { "administration": { "ground": "minecraft:polished_andesite" } },
-    "roads": { "CITY_MAIN_ROAD": { "roadCurb": "minecraft:deepslate_tile_stairs" } },
-    "landscapes": { "north_fields": { "cropBlockId": "minecraft:carrots" } }
+    "groups": {"administration": {"terrace": {"materials": {"wallCap": "minecraft:stone_bricks"}}}},
+    "roads": {"CITY_BRIDGE": {"bridge": {"preset": "stone"}}},
+    "landscapes": {"north_fields": {"cropBlockId": "minecraft:carrots"}}
   }
 }
 ```
@@ -27,7 +26,18 @@
 - `roads`：以实际道路类型为键；同部位的道路类型覆盖优先于功能区覆盖，再继承城市默认。可用类型见 `designGuide.surfaceMaterials.roadKinds`。
 - `landscapes`：以本蓝图 landscapeId 为键的景观实例覆盖，不继承城市道路用材。
 
-城市部位：`ground`、`roadSurface`、`roadStair`、`roadCurb`、`roadBase`、`retainingWall`、`deck`、`fill`、`pier`、`railing`、`lowWall`、`hedge`、`accessSurface`、`accessStair`、`bridgeSurface`、`bridgeRail`。道路类型只可覆盖其中道路与桥梁相关部位。
+外观组定义与完整预设集中于 `src/main/resources/geomantia/city_surface_appearances.json`，由同一个目录驱动解析器和 Agent guide：
+
+| 组 | 部位 | 预设 |
+| --- | --- | --- |
+| groundAndRoad | ground、roadSurface、roadStair、roadCurb、roadBase、accessSurface、accessStair | stone、sandstone |
+| terrace | retainingWall、wallColumn、wallCap、wallBand、deck、fill、pier、railing、lowWall、hedge | stone、timber_stone、sandstone |
+| bridge | bridgeSurface、bridgeRail、bridgeBeam、bridgePost、bridgePier | timber、stone、sandstone |
+
+每组只接受 `preset` 和可选 `materials`。先展开预设，再覆盖本组 materials；未选择的部位沿用原继承规则。道路作用域接受 groundAndRoad 的道路部位和 bridge，不接受 terrace。新输入不需要重复填整组所有部位。预设名称、越组字段、几何参数和重复 slot 均严格校验；同一 slot 不得同时用旧平铺和新分组形式指定。景观字段保持原结构。
+
+规范化蓝图按组保存展开后的 materials；施工冻结字段保存具体 slot 到方块的映射，因此预设数据以后变化也不会改写已冻结选材。工作流局部修订指定新 preset 时替换这一整组，避免旧组的材料覆盖导致换预设无效；只给 materials 则按字段合并。桥梁部位可使用 CITY_BRIDGE 的覆盖作为普通道路跨水转换后的桥梁默认，显式原道路类型覆盖仍优先。
+
 
 景观候选字段为 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、`boundaryBlockId`；每种景观只开放其现有启用配方中非空的部位，见 `landscapeSupportedSlotsAndDefaults`。不能通过选材新增作物层、树木生成器、布局或改变数量。
 
@@ -55,7 +65,7 @@
 
 ## 默认候选配置
 
-内置数据为 `geomantia/city_material_candidates.json`，可用游戏配置目录下的 `geomantia/city_material_candidates.json` 替换。格式为 `{部位: [方块id...]}`；每个部位对模型最多显示 4 个默认项，其余方块仍可按需搜索。无需对整个整合包手工分类。
+内置数据为 `geomantia/city_material_candidates.json`，可用游戏配置目录下的 `geomantia/city_material_candidates.json` 按部位覆盖，未提供的部位继承内置候选，升级时新增部位不会被旧配置整表遮蔽。格式为 `{部位: [方块id...]}`；每个部位对模型最多显示 4 个默认项，其余方块仍可按需搜索。无需对整个整合包手工分类。
 
 ## 冻结与执行
 
@@ -66,3 +76,11 @@ ChunkFragment 携带该字段；实际执行用它选择铺面、道路底座、
 ## 落地失败反馈
 
 材料预检或写入失败时，执行结果和 owner failure 的可选 `materialFailure` 提供 `sourceId`、`placementPhase`、`blockId`、`x/y/z`、`reason`。原 reasonCode 与回滚逻辑保留；批量连接收尾等无法归因到单块的失败不虚构具体方块。
+
+## 立面与桥梁施工
+
+新生成的台面外露侧面按墙面、立柱、压顶、腰线分类；柱距使用跨区块稳定的世界坐标节奏，转角优先立柱，低墙仅收边，高墙增加横带。同高相邻台面不因 owner 不同产生内墙。全部立面操作保留在原有台面边界列，不自动扩出步道或码头。
+
+道路在规划水域采样中连续跨水时转换为桥面与桥栏，冻结整个水段及邻接桥头的同一高程；仍受地形采样精度限制。桥梁形成有厚度的桥面与侧梁，桥栏立柱与桥墩使用同一选点；桥墩只在选中的边缘列向下延伸，最多检查 64 格并在现有实体处停止。桥面半砖按 DOUBLE 放置以对齐道路和上方立柱，桥下保留通水空间，不能调用普通台面填土把河封实。道路接入口不给桥栏封口，自动台面扶手和非道路台面楼梯均避让桥面。
+
+本次不做已落地存档热更新。模拟写入与离线规划验证不等同于游戏内观感验收；尚未实现石拱曲线、额外拓宽栈道、灯饰及藤蔓自动布置。
