@@ -32,7 +32,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_d4_integrate` | 同上 | 调整当前区阵列/嵌套或向外扩张，遵循保护名单并保留其他区功能。 |
 | `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
 | `city_post_d4_auto_compile_status` | `/realm/city/post_d4_auto_compile_status` | 查询 D4 后队列持久化状态；`waiting_for_generation` 表示自动等待并续跑，`completed` 表示含城墙施工已完成，`needs_agent` 返回 `failureCount/retryAllowed/nextAction` 和允许 Agent 使用的恢复 artifacts。 |
-| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | 仅在 Blueprint 不变且程序或环境原因已修复时重跑后半段；不再通过已取消的重开工具要求 AI 重做有效初版。 |
+| `city_post_d4_auto_compile_retry` | `/realm/city/post_d4_auto_compile_retry` | Blueprint 不变且程序或环境原因已修复时重跑后半段；也用于用户授权后将仅保存的已定稿设计首次入队，不重做有效初版。 |
 | `city_compile_d4_blueprint` | `/realm/city/compile_d4_blueprint` | 编译当前 accepted Blueprint；仅设计归属失败计入预算，程序/明确 frontage 元数据缺口阻塞并保留方案。有结构化 anchor 结果就渲染总览及功能区图，失败证据保留；验收依据 compilationAcceptance 和最终质量报告。 |
 | `city_plan_d5` | `/realm/city/plan_d5` | 生成结构 reservation、mask 和可选 wall reservation 预案。 |
 | `city_plan_d6` | `/realm/city/plan_d6` | 从当前世界 NBT 锁定模板 identity、geometry 和 owner chunks。 |
@@ -79,6 +79,8 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 ### D4 后自动编译队列契约
 
 - `city_d4_finalize` 成功、`designInProgress` 非 true 且 `autoAdvanceAfterD4` 未显式设为 `false` 时，将该城市加入单线程持久化队列；提交响应的 `postD4AutoCompile` 返回初始状态。
+- 显式 `autoAdvanceAfterD4=false` 只保存设计，不创建施工任务。总队列从 COMPLETE 工作流及同 contextId 的 accepted 提交记录、已保存蓝图识别 `design_saved`，地图显示“设计已保存，等待继续”。重启后状态查询和重试门禁都会重新核对保存证据，不要求先查询、不自动启动。用户授权继续后通过 `city_post_d4_auto_compile_retry` 首次入队；未完成设计、非当前城市、已在途或已交付城市仍拒绝该恢复操作。COMPLETE 的设计流程下一动作查询 `city_post_d4_auto_compile_status`，不再提示重复定稿；未入队且当前设计已保存时，状态响应给出继续入口。
+- 外部统一会话通过 `planning_resume(retry=true)` 明确继续已保存设计，由宿主直接调用上述编译入口，不创建 D4 设计任务。普通 resume、状态查询及内置自动发现维持等待。发现阶段与队列共享定稿证据读取，即使磁盘总队列还是旧 waiting_for_agent，也不得重新准备 D4 Context；已有编译任务时先刷新总队列，以任务状态为准。
 - 自动队列调用 `city_run_workflow` 时不得提交已删除的 `d4CandidateMode`；正式工作流始终且只走 CityBlueprint。显式提交旧字段必须在开始 D3 前返回 `D4_WORKFLOW_MODE_REMOVED`。
 - 队列处理已接受 D4 后的程序阶段：编译 D4、D5、D6、Blueprint outdoor/LandUse 规划与 D5 激活，继续 D7 生成观察及既有有界回填队列；D5 激活后先按独立预留墙带规划、放置城墙并保存世界，随后继续 D7；城墙不依赖 D7 成败。自动请求启用 planWalls/executeWalls，不在激活后提前停止。等待生成时每 15 秒续跑，同城保持单任务，复用未变的冻结产物；所有独立阶段结束后标记 completed；局部地表区块失败保留失败记录并继续后续区块，最终为 completed_with_errors，不全局阻塞。
 - 状态写入 `<runId>/automation/post_d4/<citySeedId>.json`。重启恢复 queued/running/waiting_for_generation（包括旧版仅激活未砌墙的城市）；completed/completed_with_errors 不重复执行；可修订设计冲突的队列下一动作指向 needs_agent + city_d4_overview；程序失败写 blocked_by_program，保留 Blueprint 与错误，不唤醒模型也不自动重复失败任务。预算耗尽保留 stop_for_human_review。

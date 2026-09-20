@@ -61,6 +61,7 @@ D4 当前流程以 2026-09-17 确认为准：有效初版自动推进，只有�
 - `20_contracts/数据契约/City模板建筑主路径数据契约.md`
 - `20_contracts/数据契约/City模板内容包配置数据契约.md`
 - [城墙独立模块配置](20_contracts/数据契约/City城墙配置数据契约.md)
+- [受控同国城际道路](20_contracts/数据契约/City城际道路数据契约.md)
 - `20_contracts/数据契约/CityLandUseAreaPlan数据契约.md`
 - `20_contracts/数据契约/CityWorldgenBlockObservation数据契约.md`
 - `20_contracts/接口契约/City调试MCP接口.md`

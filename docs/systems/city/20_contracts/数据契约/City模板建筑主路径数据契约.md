@@ -258,6 +258,10 @@ D5 可以写入 City 自己的 server-root active registry，作为 worldgen 交
 
 ledger 幂等键为 `dimensionId + cityId + planId + anchorId + chunk`。重复 worldgen hook 不得重复放置或追加重复 entry；写 ledger 失败不得提前把 entry 标成 `placed`。D7 只汇总该 ledger，不反查 StructureStart，不调用 Jigsaw，不做 late paste。
 
+D7 缺少整体完成记录时，按锁定 footprint 的所有 owner 检查区块状态与精确模板片段证据，不能只看 anchor chunk。已记录的 owner 允许其区块进入 FEATURES 之后，继续等待剩余 owner；pending 授权本身不算完成证据。已生成 owner 缺少匹配片段仍返回 `STRUCTURE_CHUNK_ALREADY_GENERATED`，消息列出具体区块。读取状态与世界生成并发时，报错前再次核对片段，整体完成账本在下次观察时汇总，不提前伪造完成。
+
+纯等待为 `ok=true/status=waiting_for_worldgen/reasonCode=WAITING_FOR_WORLDGEN`，自动队列继续轮询。真实失败与等待同时存在时为 `ok=false/status=failed`，保留实际失败原因；waitingSummary 仅作进度信息，不能覆盖错误码。
+
 ## 错误码
 
 ### 模板目录与几何
