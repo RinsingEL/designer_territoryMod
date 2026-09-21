@@ -599,3 +599,11 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 原本会拒绝的水格、超过 policy 两倍坡度/局部起伏的格，以及整体高差超过 policy 两倍高差阈值时偏离面积加权高程中位数超过一倍高差阈值的格，合并计为异常，不重复累计。缺失或未采样、无 terrainPolicy、水深未知或超过一倍高差阈值、坡度/起伏/相对中位数高差超过四倍对应阈值仍为硬拒绝。异常八邻接连通分量接触 footprint 的两条相对边时仍拒绝，防止低面积占比掩盖贯穿沟壑。原浅封闭水坑豁免保持不变，不计入新增异常预算。
 
 其余异常比例不超过 10% 时允许进入基础适配，记录 CITY_STRUCTURE_LOCAL_TERRAIN_ANOMALY_TOLERATED / foundation_support_required；准入不等于真实 worldgen 已验收。超过比例仍返回原地形拒绝原因。trace 新增 anomalyAreaBlocks、footprintAreaBlocks、anomalyAreaRatio、maximumAnomalyAreaRatio、anomalyCellCount、referenceElevation、hardTerrainFailure、crossingAnomaly。通过时 rejectedCellCount 为 0，failureSamples 保留原始异常诊断，terrainAdaptations 标明适配要求。缺省 policy 的旧调用仍严格拒绝异常，不放宽采样与碰撞约束。此节细化上述单成员水体/陡地形拒绝口径，不改变景观容量门禁。
+
+## 聚落组合与贴地地面增量（2026-09-21）
+
+- 角色继续来自 StructureProfile：`planning_role.key/anchor` 为明确主体，`planning_role.fill` 为重复候选，`planning_role.structure` 为明确选用结构，`planning_role.self_contained` 表示已核对的完整组合。核心、明确选用和完整组合不会因旧填充池残留而再次随机填充；未知角色保持旧目录兼容。完整组合标记必须有素材证据，不能只凭名称推断。
+- `designReview.groups[]` 增加 `core/retainedCompositionCount/selfContainedComposition/isolatedCore`；顶层 `isolatedCoreGroupIds` 记录未形成组合的核心。检查实际保留的同组及嵌套成员，不将计划数量当成落位结果。已标记的完整组合可单独成立。
+- 总览存在孤立核心时禁止 FINAL；`REPAIR_CORE` 只修复当前有此缺口的功能区，允许调整 `requiredStructureRefs/fillPools` 与阵列参数，不能更改用途、选址或删除主体。独立外围区也可修复自身组合。其余视觉主次仍由 AI 看图判断，不能用随意增加一个配件冒充设计成立。
+- `designReviewWorkflow.coreReworkCount` 对触发返工的不同草稿去重；单纯看图和评价不计数。五次返工仍未解决时 `coreReworkExhausted=true` 并停止请求人工检查；不放宽组合要求。
+- `foundationGroupIds` 仅选择共同台地，不再承担公共地表范围。普通村庄可全部为空，结构继续使用地形兼容落地；公共间隙仍进行地表处理。

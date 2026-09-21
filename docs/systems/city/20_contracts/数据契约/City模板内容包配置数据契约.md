@@ -40,3 +40,17 @@ config/structureTemplate/terrasense/<bundle>/
 D4 Context 创建前必须对目录中每个唯一 `templateRef` 从当前世界运行时实读，并校验 `contentHash` 与 `rawSize`。任一模板缺失、hash 漂移或尺寸漂移时返回 `CITY_TEMPLATE_CONTENT_PREFLIGHT_FAILED`，不得创建 Context、消耗 Agent 调用或把失败延迟到 D6。
 
 离线清洗和外部模组转换仍遵循《City模板建筑主路径数据契约》的独栋确认、Jigsaw 与 processor 规则。内容包安装器只分发已审核成品，不推断模板是否适合作为建筑。
+
+## 聚落素材角色与公共绿化（2026-09-21）
+
+`tools/city_templates/curate_planning_roles.py` 对已有 bundle 做保守角色整理，使用已确认功能与实际尺寸初筛重复适用性，不宣称完成全素材视觉审查。报告在 `asset_catalogs/planning_roles/`；显式 override 绑定 `contentHash`，内容漂移即拒绝。源 NBT、模板目录及内容包哈希不改动。打包与增量合并脚本也保留角色并只将可重复结构入池，避免重建后恢复全量填充。
+
+当前包471项：220项重复候选、95项功能主体、156项明确选用结构；其中1项花园经NBT与投影核对为完整组合。`pool:public_small_support`（占地不超过144格）与 `pool:public_medium_support`（不超过400格）提供既有小店铺/摊位等配套，每种结构每组最多2份；按原有风格分池（无后缀为中世纪，其余如 `_desert`、`_japanese`），避免跨风格随机混排。它们不是场景专用算法。实际大小搭配仍由AI负责。查询候选在同bundle可解析时附带 `displayName/rawSize/footprintAreaBlocks`。
+
+自动公共绿化默认共享已经整理的道路树。可用 `config/geomantia/city_public_greenery_structures.json` 替换独立候选清单，例如：
+
+```json
+[{"templateRef":"geomantia:roadside/small_oak","usage":"SMALL_INDEPENDENT","groundMode":"SURFACE_ROOT","size":[10,11,8],"root":[5,0,4]}]
+```
+
+只接收小型独立结构的显式清单，`root.y=0`、根点在实际尺寸内；运行时检查模板可读性与尺寸一致。作者需核对连带装饰、地基和高差，完整花园/喷泉庭院不能加入此清单，而应作为D4结构。该清单不自动安装NBT，模板仍需由原内容包或资源包提供。

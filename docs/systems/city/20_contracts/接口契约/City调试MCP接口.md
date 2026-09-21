@@ -210,3 +210,9 @@ D5 的 `boundarySource=district_coarse_exterior`，只保留粗粒度正交外�
 墙计划冻结 `moduleSet=guard_tower`、墙段、塔楼、门位和 `wallPlacementProfile`。后者保存规划时地表列与墙顶共同基准，重复执行不从已造好的墙顶重新取高度。模块源为用户指定的 `ac3 城墙守卫塔.litematic`，NBT 与来源 hash 随 artifact 输出。墙面高度固定 10，步道地板在模块局部 Y9，塔楼保留原屋顶与内部楼梯并提供四向两格净空开口。
 
 执行在写入前统一检查建筑、实际道路、门洞净空、地表覆盖、世界高度及方块实体。未提供出城道路、无法接合的高差或水体边界返回明确 reason；不回退矩形、不截断塔楼、不静默留墙洞。当前高差由共同墙顶与基础消化，超出阈值返回 `WALL_TERRAIN_REQUIRES_REDESIGN`，尚未自动生成跨大高差的楼梯节点或绕河重规划。离线测试不代表素材在游戏中的通行与外观已验收。
+
+## 聚落组合审查增量（2026-09-21）
+
+`city_d4_integrate.expansionMode` 新增 `REPAIR_CORE`：仅当前总览存在孤立核心的功能区可用，允许修订该区 `requiredStructureRefs/fillPools` 及阵列参数。沿用当前 `baseDraftHash`、总览查看与保护其他区的规则。它不是重开或任意换选址接口。
+
+`designReviewWorkflow` 提供 `isolatedCoreGroupIds/coreReworkCount/coreReworkExhausted`；看图和评价不累计返工。五次不同草稿的核心返工后仍孤立则停止。FINAL必须满足实际组合审查，`functionsPreserved` 同时确认核心和配套效果，不能只有核心成功落位。

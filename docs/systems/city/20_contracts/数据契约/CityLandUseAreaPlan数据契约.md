@@ -383,3 +383,13 @@ Foundation 来源仅为 URBAN spatialGround 成员的实际建筑及局部间隙
 SurfacePrint Area 可冻结 `terrainReferenceCells[{minX,minZ,step,surfaceY,maxDelta}]`，来自已有 D3/D4 粗地形，不在最终编译提前加载地形。空列表保留旧产物读取行为；新景观必须通过 planner 写入参考。非零 D4 reservation 直接形成 LandUse claim，不重新搜索形状。
 
 worldgen 按 owner chunk 查统一轮廓，每列最多检查 3×3 已可访问的地表，缓存重复查询。相对参考高差超过 terrainPolicy 原有阈值、实际陡崖、水体、未知邻域或非自然占用局部跳过；不撤销整城。首版只修四面闭合、深度不超过 3 格的单列浅坑，不对整片农田铺平台。水源需要底部及四侧封闭，失败以既有渠岸材质封口。跳过数量记入 owner 执行结果 naturalSurfaceSkippedCount，边界跳过记录 occupiedBoundarySkippedCount。
+
+## 公共地面与非台地道路增量（2026-09-21）
+
+城区包络采用全部建筑 footprint，建设台面只采用 `foundationGroupIds`。非台地建筑 footprint 不得被邻近台面的扩张覆盖。公共地表独立于 Foundation：可无 Foundation，同时保留显式 Landscape 的容量与必需/可选处理。
+
+- 城区可用残余扣除所有建筑、道路及边界、已声明景观、水域、峭壁和未采样区域，生成 `sourceId=public_greenery::<cityId>` 的 `GREEN_GROUND/GREEN_PLANT`。它们不产生台地高程，不逐栋补绿化圈。实际处理区域在 UrbanSpacePlan 中标为 `COMMON_GREEN`，保护区域保持自然保留。
+- `qualityReport.publicGreenGroundBlocks/publicGreenPlantBlocks` 为计划格数；不等同于世界执行成功数。执行按真实地面更换地表、清除原有可识别植被，跳过非自然地面；所有写入沿用预检查与回滚。公共地面同时进入生物群系生成避让 mask。
+- 预设读 `config/geomantia/city_public_greenery.json`，未提供时使用 bundled `data/geomantia/city/public_greenery.json`。字段 `ground`、非空 `plants[]`、`density`（0..1）、`edgeClearance`（0..8）；默认草地、花草/低矮叶丛，密度0.16、边缘留白1格。预设冻结为 SurfacePrint features 并参与哈希。
+- 普通非台地道路不冻结 D3 粗采样高度，执行时在逐列实际地表上替换；台地或桥梁衔接道路继续冻结规划高程。非台地样本不再取整到4格。水域沿用桥梁判定，不把零碎水面统一填高。
+- `placementRole=public_greenery` 与道路树共享可选装饰 StructureStart、实际尺寸/根点、入口/道路/墙体/景观避让与地形检查。它不作为台地来源，锁定 footprint 保护自带装饰。D6 保存 `publicGreeneryReport`，缺失或冲突的可选素材只跳过。
