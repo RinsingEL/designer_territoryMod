@@ -43,9 +43,9 @@ D4 Context 创建前必须对目录中每个唯一 `templateRef` 从当前世界
 
 ## 聚落素材角色与公共绿化（2026-09-21）
 
-`tools/city_templates/curate_planning_roles.py` 对已有 bundle 做保守角色整理，使用已确认功能与实际尺寸初筛重复适用性，不宣称完成全素材视觉审查。报告在 `asset_catalogs/planning_roles/`；显式 override 绑定 `contentHash`，内容漂移即拒绝。源 NBT、模板目录及内容包哈希不改动。打包与增量合并脚本也保留角色并只将可重复结构入池，避免重建后恢复全量填充。
+`tools/city_templates/curate_planning_roles.py` 对已有 bundle 做保守角色整理，按现有名字与已确认功能初筛角色，实际尺寸独立分组，不宣称完成全素材视觉审查。报告在 `asset_catalogs/planning_roles/`；显式 override 绑定 `contentHash`，内容漂移即拒绝。源 NBT、模板目录及内容包哈希不改动。打包与增量合并脚本也保留角色并只将可重复结构入池，避免重建后恢复全量填充。
 
-当前包471项：220项重复候选、95项功能主体、156项明确选用结构；其中1项花园经NBT与投影核对为完整组合。`pool:public_small_support`（占地不超过144格）与 `pool:public_medium_support`（不超过400格）提供既有小店铺/摊位等配套，每种结构每组最多2份；按原有风格分池（无后缀为中世纪，其余如 `_desert`、`_japanese`），避免跨风格随机混排。它们不是场景专用算法。实际大小搭配仍由AI负责。查询候选在同bundle可解析时附带 `displayName/rawSize/footprintAreaBlocks`。
+当前包471项：239项重复候选、97项功能主体、135项明确选用结构；其中1项花园经NBT与投影核对为完整组合。`pool:public_small_support`（占地不超过144格）与 `pool:public_medium_support`（不超过400格）提供高度不超过24格的既有小店铺/摊位等配套，每种结构每组最多2份；按原有风格分池（无后缀为中世纪，其余如 `_desert`、`_japanese`），避免跨风格随机混排。它们不是场景专用算法。实际大小搭配仍由AI负责。查询候选在同bundle可解析时附带 `displayName/rawSize/footprintAreaBlocks`。
 
 自动公共绿化默认共享已经整理的道路树。可用 `config/geomantia/city_public_greenery_structures.json` 替换独立候选清单，例如：
 
@@ -54,3 +54,8 @@ D4 Context 创建前必须对目录中每个唯一 `templateRef` 从当前世界
 ```
 
 只接收小型独立结构的显式清单，`root.y=0`、根点在实际尺寸内；运行时检查模板可读性与尺寸一致。作者需核对连带装饰、地基和高差，完整花园/喷泉庭院不能加入此清单，而应作为D4结构。该清单不自动安装NBT，模板仍需由原内容包或资源包提供。
+
+
+大型住宅/别墅可标记 planning_role.fill，尺寸不是核心身份或重复资格的判据。asset_names.json 保留 originalDisplayName，displayName 加入占地档、宽×深和高度；查询仍返回 rawSize 与 footprintAreaBlocks。按用途、风格、占地档、高度档生成 pool:scaled_*，避免大住宅或高耸房屋混入小型配套。占地档 small≤144且边长≤16、medium≤400且边长≤24、large≤900且边长≤36、其余extra_large；高度档low≤12、medium≤24、tall≤40、very_tall>40。尺寸是模板包围盒，含留白与装饰。
+
+旧自动角色仅在审计报告匹配时迁移；报告外显式修改保留，哈希绑定override优先。人读分组清单与JSON报告同目录同名。
