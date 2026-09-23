@@ -611,3 +611,24 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 - `foundationGroupIds` 选择显式共同台地，不承担全部公共地表范围。GENERATE 模式下，已落位的 STRUCTURE 组若算法为 GRID / COURTYARD / CENTER_SYMMETRIC、密度非 SPARSE、地形策略非 CONFORM 且 landscapeShare=0，也整理共同台面。此补地不放宽 D4 落位条件。
 - 共同台面包含组内短间隙与邻近城市道路的路肩；已接受建筑周边的粗采样 cliff 标签不再挖出台面空洞，水域、未采样区域与已预留景观仍受保护。不同高度通过台地衔接，不整平城墙内全部土地。
 - Compact 村落未显式选择共同台地时保留簇间自然地面，只有靠近城区台面的道路局部接坡。接坡使用不可变地形采样和邻近冻结高程，不依赖区块施工顺序；入口已接入同层冻结道路时复用该道路，不重复要求台阶。
+
+## 村庄道路外观配置（2026-09-24）
+
+复用 `COMPACT_ALLEY` 作为村庄道路；同村庄组的入口短巷、入口接近段和延伸段使用相同外观。默认取消道路两侧连续砖阶，以泥土径、砂土、缠根泥土按6:3:1确定性混铺，接坡台阶独立保留。城区主路与桥梁保持原样。
+
+配置文件为 `config/geomantia/city_land_use/village_roads.json`，服务器启动时只补缺失文件，不覆盖用户配置；下一次地表编译读取配置。内置默认位于实现仓 `src/main/resources/geomantia/default_config/city_land_use/village_roads.json`。
+
+| 字段 | 作用 |
+| --- | --- |
+| enabled / roadKinds / seed | 外观开关、应用的道路类型（默认 COMPACT_ALLEY）、固定随机种子。 |
+| surfacePalette[].blockId / weight | 混铺方块及正整数相对权重；按城市ID、坐标与seed固定选择。 |
+| stairBlockId / baseBlockId | 坡道台阶与路基材质。 |
+| decorationsEnabled / spacingBlocks / chance | 装饰开关、每侧候选间隔、候选放置概率；默认12格与0.55，两侧错开，并保持装饰间距。 |
+| structureTreesEnabled | 村路沿线是否额外摆放原有大树结构，默认false，避免与小装饰叠加。 |
+| edgeOffsetBlocks / endClearanceBlocks | 装饰离路面边界距离、路段端部留白；默认2格与2格。 |
+| variants[].id / weight / blocks[] | 栅栏灯笼、杜鹃树叶、浆果丛等组合的ID、相对权重与方块列表。 |
+| blocks[].along / outward / height / blockId | 沿道路、向路外、离实际地面高度的偏移与方块；上层方块要求同列下方有支撑。 |
+
+宽度、走向仍由已有阵列道路几何参数确定，外观配置不移动道路。村路混铺配置优先于城市通用材质覆盖，最终方块、装饰和坡道材质冻结进 SurfacePrint 及其 hash；执行时不重新随机，也不读取新配置改写旧计划。关闭外观则使用原道路材质流程。
+
+装饰避开建筑、其他道路、台面/景观和D5预留区；可用位置不足时减少，不强行挤入。执行时仅落在自然地表，可选装饰遇水体、占用或不适合植物存活的地面时跳过该列；栅栏与其上灯笼作为同列一起检查。叶块保持 persistent，浆果丛按原版生长。城区道路树及自然地形中的树木保留，村路自动大树由上述开关控制。
