@@ -300,7 +300,7 @@ Relation 必填 `fromGroupId`、`toGroupId`、`relationKind`、`strength`、`dis
 
 `outdoorPlan` 根字段严格为 `mode`、`envelopeProfile`、`foundationProfileRef`、`foundationGroupIds[]` 和 `landscapes[]`，未知字段拒绝。旧 spatialGrounds 及其空间类型、主次声明已删除，不翻译旧输入。
 
-- `mode=GENERATE`：foundationProfileRef 命中冻结目录；foundationGroupIds 只列需要台地/铺地的建筑组 ID，引用存在且不重复，不要求全覆盖。列表用于地形工程适应判定和基础台地 footprint 选择。
+- `mode=GENERATE`：foundationProfileRef 命中冻结目录；foundationGroupIds 声明显式共同台地，引用存在且不重复，不要求全覆盖。列表用于落位时的地形工程适应判定；落位后的台面范围另包含满足下文条件的城区阵列。
 - `mode=PRESERVE`：foundationProfileRef 为空，foundationGroupIds 和 landscapes 为空。
 - `envelopeProfile=COMPACT|BALANCED|LOOSE`：保留总体紧凑度语义，正式几何参数仍由 Foundation Profile 决定。
 - 台地凹坑处理、自然地形保护和选材能力保留；不新增替代主次枚举。
@@ -608,4 +608,6 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 - `designReview.groups[]` 增加 `core/retainedCompositionCount/selfContainedComposition/isolatedCore`；顶层 `isolatedCoreGroupIds` 记录未形成组合的核心。检查实际保留的同组及嵌套成员，不将计划数量当成落位结果。已标记的完整组合可单独成立。
 - 总览存在孤立核心时禁止 FINAL；`REPAIR_CORE` 只修复当前有此缺口的功能区，允许调整 `requiredStructureRefs/fillPools` 与阵列参数，不能更改用途、选址或删除主体。独立外围区也可修复自身组合。其余视觉主次仍由 AI 看图判断，不能用随意增加一个配件冒充设计成立。
 - `designReviewWorkflow.coreReworkCount` 对触发返工的不同草稿去重；单纯看图和评价不计数。五次返工仍未解决时 `coreReworkExhausted=true` 并停止请求人工检查；不放宽组合要求。
-- `foundationGroupIds` 仅选择共同台地，不再承担公共地表范围。普通村庄可全部为空，结构继续使用地形兼容落地；公共间隙仍进行地表处理。
+- `foundationGroupIds` 选择显式共同台地，不承担全部公共地表范围。GENERATE 模式下，已落位的 STRUCTURE 组若算法为 GRID / COURTYARD / CENTER_SYMMETRIC、密度非 SPARSE、地形策略非 CONFORM 且 landscapeShare=0，也整理共同台面。此补地不放宽 D4 落位条件。
+- 共同台面包含组内短间隙与邻近城市道路的路肩；已接受建筑周边的粗采样 cliff 标签不再挖出台面空洞，水域、未采样区域与已预留景观仍受保护。不同高度通过台地衔接，不整平城墙内全部土地。
+- Compact 村落未显式选择共同台地时保留簇间自然地面，只有靠近城区台面的道路局部接坡。接坡使用不可变地形采样和邻近冻结高程，不依赖区块施工顺序；入口已接入同层冻结道路时复用该道路，不重复要求台阶。
