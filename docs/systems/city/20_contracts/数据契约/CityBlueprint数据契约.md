@@ -34,7 +34,7 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 
 ### 意图、计划阵列与逐栋结果（2026-09-13）
 
-- `city_submit_d4_blueprint` 可先提交工具根级 `designIntent={groups:[{groupId,role,intent,preferredPatchRefs}]}`；该对象不是蓝图内部的城市主题 designIntent。再批量提交 `materialSelections=[{groupId,query?,structureRefs?,fillPoolRefs?}]` 搜索作者元数据或确认素材。两阶段与 cityBlueprint/blueprintPatch 分开调用，返回 `designInProgress=true`，不推进生成。会话按 contextId 保存，prepare 与后续草稿返回已确认意图和估算。
+- 正式流程由 `city_d4_overview` 建立功能区意图，再用 `city_d4_materials` 提交 `materialSelections=[{groupId,query?,filters?,limit?,offset?,structureRefs?,fillPoolRefs?}]` 查询或确认素材。DISTRICTS 阶段只能查询当前功能区。内部兼容入口仍接受工具根级 `designIntent={groups:[{groupId,role,intent,preferredPatchRefs}]}`；它不是蓝图内部的城市主题 designIntent。选材与 cityBlueprint/blueprintPatch 分开调用，返回 `designInProgress=true`，不推进生成。会话按 contextId 保存，prepare 与后续草稿返回已确认意图和估算。分层查询规则见下方“建筑分层选材”。
 - Group 可填 `structureCount`：1–1024 的整数且不少于 required 引用数；省略采用已有规模、extent 和算法建议值。CENTER_SYMMETRIC 总数为奇数（一中心与若干同素材成对计划成员）。数量是计划输入，地形筛选不另设保留数量门槛。
 - 同一 DRAFT 可提交一个完整嵌套组团及之前的设计。部分草稿暂不执行整城规模嵌套门槛，FINAL 执行既有 CITY 核心参与组合、LARGE_CITY 至少两个有效组合规则；没有新增面积或主体比例硬门槛。
 - 编译先确定阵列位置、模板和完整矩形占地，再逐栋筛选。正常水域、山体、边界或碰撞导致成员跳过，不换模板、搜索替补槽位或搬动其余建筑。全空组保留记录。作者入口/不支持的地形能力及格式错误仍明确拒绝。
@@ -632,3 +632,33 @@ cell 边长使用当前 terrain field.cellStepBlocks，不能假定等于 MC 区
 宽度、走向仍由已有阵列道路几何参数确定，外观配置不移动道路。村路混铺配置优先于城市通用材质覆盖，最终方块、装饰和坡道材质冻结进 SurfacePrint 及其 hash；执行时不重新随机，也不读取新配置改写旧计划。关闭外观则使用原道路材质流程。
 
 装饰避开建筑、其他道路、台面/景观和D5预留区；可用位置不足时减少，不强行挤入。执行时仅落在自然地表，可选装饰遇水体、占用或不适合植物存活的地面时跳过该列；栅栏与其上灯笼作为同列一起检查。叶块保持 persistent，浆果丛按原版生长。城区道路树及自然地形中的树木保留，村路自动大树由上述开关控制。
+
+## 建筑分层选材（2026-09-24）
+
+共享分类源为实现仓 `src/main/resources/geomantia/catalog/structure_functions.json`。Studio 和主 Mod 共用功能节点、原始术语映射与精确资产规则；它是浏览投影，不改写作者标签、素材审查或编译能力。只向父级扩展，不由名称、房间、种族或建筑外观猜测子用途。旧目录的“商业”“住宅”等只归入可确认的宽泛层级，“教育文化”等歧义用途保留原始标签，不推导教学。
+
+初始 `CityBlueprintContext.materialCatalog` 和 Provider 精简上下文包含完整可选目录的分类统计与查询说明。该浏览投影不参与冻结地形／素材的 contextId 计算，不重置已保存设计。
+
+`materialSelections[].filters` 所有字段均可省略，空数组表示不限：
+
+| 字段 | 语义 |
+| --- | --- |
+| roles | 任一角色匹配：core（key/anchor）、fill、structure、self_contained、unknown。旧资料混合角色优先 core → self_contained → structure → fill，避免受保护素材误入填充筛选。 |
+| functionIds | 共享功能树节点 ID，从返回的 facets.functions 选择；细用途可以匹配祖先。 |
+| functionMode | all（默认）或 any，只改变 functionIds 内部的组合方式。 |
+| styles | 任一原始风格标签精确匹配；不绑定使用种族。 |
+| rawFunctionTerms | 所有原始功能标签精确匹配；未映射用途仍可查。 |
+
+各维度和 query 始终取交集。query 对作者元数据、引用 ID 与已确认的分类路径作 NFKC／忽略大小写的多词搜索，各词都须命中。未知功能 ID、角色、字段或错误类型拒绝；没有匹配的风格／原始标签返回零候选。
+
+浏览默认 limit=20，允许 0..100；limit=0 只取统计。offset 为 0 起的整数，按 structureRef 稳定排序。每个 materialResults 返回 totalCount、matchedCount、returnedCount、offset、limit、hasMore，尚有后页且 limit>0 时提供 nextOffset。改变筛选后从 offset=0 开始。
+
+facets 基于应用全部条件后的完整匹配集，先计数再分页；不是忽略自身维度的候选预测。同一 structureRef 在同一节点只计一次，多个子功能汇总到父级也去重，因此不能将子类数量直接相加。只返回非零条目：functions 为 id/label/parent/count/directCount；directCount 是原始标签直接映射到该层的数量。roles 为 id/label/count，styles 为 term/count，rawFunctionTerms 另附 mapped。unclassifiedCount 是无已知功能路径的素材数，不等于无功能。切换条件需移除旧条件；空子功能只能说明标签证据不足，不能补造能力。
+
+候选保留 authoredMetadata，另附 classification.role/functionIds/functionPaths/unmappedFunctionTerms 与实际模板 dimensions（width/height/depth/clearance）。素材尺寸和原始 terrainModes 保留；分类、城市设定和推荐情境不授予落地可行性，地形与碰撞仍由现有程序校验。
+
+浏览返回 selectionConfirmed=false，不覆盖先前确认的选材。确认时单独提交 structureRefs/fillPoolRefs，返回 selectionConfirmed=true 与既有容量估算；不接受同时携带 filters/limit/offset，避免只展示一页却误确认整批。明确引用仍完整返回，不分页；旧请求同时传 query 时沿用明确引用优先的兼容行为。
+
+示例：先 `{groupId:"market",filters:{roles:["core"]},limit:0}` 看联动数量，再用返回的 functionIds 与 styles 联合缩小范围；对有细标签的目录可查 `{groupId:"market",filters:{roles:["fill"],functionIds:["retail.food","production.food.baking"],functionMode:"all",styles:["中世纪"]},limit:20}`。每次返回的分类数量反映当前全部条件，不承诺示例组合必有现成素材。
+
+本能力接在正式 city_d4_materials；旧的独立 structure_catalog_query 平面术语 HTTP 检索契约不因此变化。运行时只消费当前冻结导入目录，不从 Studio 工作区旁路读取模型或自动更新审查证据。

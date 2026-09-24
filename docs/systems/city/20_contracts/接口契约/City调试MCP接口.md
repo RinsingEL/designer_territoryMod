@@ -216,3 +216,5 @@ D5 的 `boundarySource=district_coarse_exterior`，只保留粗粒度正交外�
 `city_d4_integrate.expansionMode` 新增 `REPAIR_CORE`：仅当前总览存在孤立核心的功能区可用，允许修订该区 `requiredStructureRefs/fillPools` 及阵列参数。沿用当前 `baseDraftHash`、总览查看与保护其他区的规则。它不是重开或任意换选址接口。
 
 `designReviewWorkflow` 提供 `isolatedCoreGroupIds/coreReworkCount/coreReworkExhausted`；看图和评价不累计返工。五次不同草稿的核心返工后仍孤立则停止。FINAL必须满足实际组合审查，`functionsPreserved` 同时确认核心和配套效果，不能只有核心成功落位。
+
+建筑选材 `city_d4_materials` 的 `materialSelections` 支持 `filters={roles?,functionIds?,functionMode?,styles?,rawFunctionTerms?}`、`query`、`limit`（0..100，默认20）、`offset`。返回完整匹配集的联动统计与分页候选；查询不改变已确认选材。确认引用时单独提交 `structureRefs/fillPoolRefs`。Provider 与 MCP 使用同一服务和字段，详见[CityBlueprint 数据契约](../数据契约/CityBlueprint数据契约.md#建筑分层选材2026-09-24)。
