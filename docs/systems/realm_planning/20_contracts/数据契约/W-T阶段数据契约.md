@@ -52,6 +52,8 @@ v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegis
 
 记录一次世界粗扫的配置和坐标上下文。
 
+W 范围由 `config/geomantia/world_survey.json` 的 `planningRadiusBlocks` 配置。2026-09-24 用户确认默认半径改为 **12288 格**，中心仍为 `(0,0)`，即 X/Z 范围 `[-12288,12287]`。相对旧半径 8192，边长增加 50%，固定采样密度下扫描面积为 2.25 倍。已有显式配置保持原值，需单独修改；旧 sealed 扫描不会因默认值改变而自动扩展。下方 8192 示例仅说明数据格式。
+
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |
 | `schemaVersion` | string | 是 | 结构版本。 |
