@@ -4,5 +4,5 @@
 
 | 职责链 | 当前案 | 职责身份 | 说明 |
 | --- | --- | --- | --- |
-| 内置 Provider 配置与连接 | [`玩家多模态Provider服务-v0.1`](./玩家多模态Provider服务-v0.1/README.md) | **实现当前案** | 游戏内可选 Provider 的 GUI、模型连接与密钥边界；总调度和外部大厅由国度规划总调度当前案负责。 |
+| 内置 Provider 配置与连接 | [`玩家多模态Provider服务-v0.1`](./玩家多模态Provider服务-v0.1/README.md) | **实现当前案** | 游戏内可选 Provider 的 GUI、模型连接与密钥边界；Harness 承载于可选附属 Mod，模块边界由主模组与可选模块拆分案负责；总调度和外部大厅由国度规划总调度当前案负责。 |
 | 外部模组关系 | [`外部模组集成边界-v0.1`](./外部模组集成边界-v0.1/README.md) | **设计中案** | Road Weaver、WorldEdit、roadprovider 与 RTF 的正式路径边界。 |
