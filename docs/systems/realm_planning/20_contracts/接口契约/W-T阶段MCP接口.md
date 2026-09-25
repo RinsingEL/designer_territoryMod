@@ -13,6 +13,17 @@
 
 ## 工具总览
 
+### T1 核心建筑视觉上下文（2026-09-25）
+
+共享任务准备层 `PreparedPlanningTurn` 在 T1 世界预览后附加当前托管素材包的核心建筑图册，内置 Harness 与外部 MCP 共用。用户确认只需核心建筑外观，重点认识风格与功能；住宅变体及配套详细选材留在 City。
+
+- 素材包可携带 `realm_core_atlas.json`（schema=`realm_core_atlas.v1`）与 `core_atlas/page-*.png`。Studio 导出脚本按当前目录中作者 `planning_role.key/anchor` 选择核心，每页最多四项；不是固定风格或固定14项名单。
+- `sources` 绑定 `template_catalog.json`、`asset_names.json`、`StructureProfile.jsonl` 的 SHA-256；`cores` 包含 templateRef、displayName、functionTerms、styleTerms、rawSize、siteConditions、page、slot；`pages` 包含顺序页号、相对文件路径、SHA-256、按阅读顺序的 templateRefs。`supportSummary` 给出素材总量及功能/风格计数。
+- Studio 截图记录必须与测试包导出来源 NBT 哈希一致；不将截图重新标为审美验收。运行时校验目录版本、核心覆盖、页图哈希、图片格式和路径边界后，复制至当前 run 的哈希目录，作为实际图片传输。图册没有统一缩尺，体量看 rawSize。
+- 有图册时 T1 的 `authoringBrief` 使用核心图文资料与配套能力摘要，替代全量单体标签。旧包没有图册仍保留作者文字资料并显式返回 `visualEvidenceAvailable=false`；已声明但损坏/过期的图册拒绝加载。
+- 可编辑提示 `config/geomantia/prompts/realm/t1.md` 在 T1 注入为 `creativeGuidance`。要求结合地形、外观、真实功能主动构思，不按风格数量分国，不强制使用所有核心，不从外观推断传送等机制。
+- 构想写入既有 RealmProfile.theme，无新增提交字段或阶段。City 与附属任务读取自己国度的已保存 profile 为 `realmDesignIntent`，继承主题并落实本城差异。已完成 T1 的存档不自动重写既有国度。
+
 | 工具 | 阶段 | 作用 |
 | --- | --- | --- |
 | `realm_status` | 通用 | 读取国度规划系统状态、最近 run 和产物目录。 |
