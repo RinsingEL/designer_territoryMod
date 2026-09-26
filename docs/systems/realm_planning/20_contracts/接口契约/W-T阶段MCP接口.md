@@ -190,6 +190,14 @@ W 对请求配置的规划范围执行一次完整扫描。tile 结果写入既�
 - 参考图包必须包含 grid 坐标说明、允许 patch、`mapRole`、`scopeBasis`、`profileDifferentiated=false` 和主选择流；AI 不得因为图包名称仍含 candidate 就跳过 Patch Explorer。
 - 即使 W 由上一次客户端 / 服务进程生成，只要磁盘 survey 已 sealed，T1 也必须按 `runId` 懒恢复后继续，不要求重新调用 W。
 
+- T1 默认选洲与候选生成共用 T2 的出生探索区、生成缓冲及附属预留排除；显式指定的大陆没有合法核心候选时，在修改已有方案前拒绝。候选图包的 `blockedCells` 同时约束 Patch Explorer。
+
+## realm_t2_retarget
+
+将当前未完成核心选址的国度改派到可用大陆。请求包含 `runId`、`realmId`，可选 `targetContinentId`；省略目标时选择有合法核心候选的最大大陆。保留国度设计、其他国度和已完成核心，已有核心的国度拒绝改派；随旧大陆归一化的组名同步更新。
+
+旧 T1 checkpoint 即使指向出生大陆也允许恢复，以便调用本入口修复。内外 AI 的 T2 当前任务均提供此工具，宿主锁定当前国度；成功后结束本轮并准备新大陆的 Patch Explorer 候选，不复用旧会话。
+
 ## realm_t2_select_coordinate
 
 提交坐标选择并生成种子。
