@@ -102,7 +102,7 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `schema` | string | 固定 `city_blueprint_context`。 |
-| `contextId` | string | 对除 `preparedAt` 外的冻结上下文做 SHA-256。 |
+| `contextId` | string | 对冻结上下文做 SHA-256；排除身份自身、`preparedAt`、`materialCatalog`、可编辑 `designGuide.behaviorHandbook`、`environmentStyleGuidance` 与复核交接投影 `siteReviewDecision`。这些展示信息刷新不重置分区进度。 |
 | `runId` / `cityId` | string | 当前 run 与城市。 |
 | `sourceD3Ref` | ArtifactRef | 当前 D3 review package。 |
 | `catalogSnapshotRef` | ArtifactRef | 本次完整目录快照。 |
@@ -113,8 +113,12 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 | `d3ReviewPackage` | object | D3 地形、patch、member cells、指标、邻接与 preview 引用。 |
 | `catalogSnapshot` | object | `city_blueprint_catalog_snapshot`；包含 `city_semantic_profile_catalog` 结构画像、固定模板目录、`city_blueprint_reference_catalog` 及 D3 terrain field 引用。引用目录同时冻结 LandUse rule、Foundation Profile、Surface Recipe、Landscape Profile、ParcelStyle、Landscape Fill Profile、建筑可选绿化标记与城市植物 palette，D6 后不得重新解释为另一份配置。 |
 | `preparedAt` | instant | 追踪字段，不进入 `contextId`。 |
+| `environmentStyleGuidance` | string | 当前 `realm/environment_style.md` 的环境与风格决策指导；使用实际 biome 证据与作者素材，不引入固定群系白名单或新的审美编译门槛。 |
+| `siteReviewDecision` | object? | AI 候选首都已接受的 D3 复核结果，保留 `decisionReason` 中的本城风格调整。每次准备先验证 D3/CitySeed identity；未要求复核的城市不伪造结果。属于给设计模型的交接信息，不改几何输入。 |
 
 D3 `status=partial`、未知 schema、城市 ID 不一致，以及 AI 候选首都未接受/审查 identity 过期时，不得准备上下文。
+
+2026-09-27 环境风格衔接：统一准备层给 T1、T2/T4、D3 提供同一 `environmentStyleGuidance`，D4 通过本 Context 读取，内外模型一致。旧 AI theme 的主体建筑表达需随实际城址复核；作者明确设定与标签保持权威。D3 可在接受可用城址时通过既有 decisionReason 指明协调的作者风格，D4 在总览阶段落实到既有 styleProfile、designAnswers.styles、designIntent。此变更不增加调用阶段、重试或素材/阵列改造，也不把审美判断声称为程序保证。
 
 ## Structure Terrain Modes
 

@@ -50,7 +50,7 @@ HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。请求携�
 
 | 工具 | 职责及输入 |
 | --- | --- |
-| city_d4_overview | overview={citySettings,districts,districtDisposition?}；outdoorPlan 仅全城基础设置。预标记可选。 |
+| city_d4_overview | overview={citySettings,districts,districtDisposition?}；outdoorPlan 仅全城基础设置。预标记可选。首个有效分区保存前，DISTRICTS 仍允许以当前 workflowRevision 重交总览纠正全城默认配置，无需草稿或 baseDraftHash；成功后从首区继续，省略的旧预标记清除。已有有效分区后禁止重交总览。 |
 | city_d4_district | 当前区 districtDesign：groups、arrayCompositions、relations、foundationGroupIds、landscapes、局部 surfaceMaterials。有效落位后自动推进，只有本区建筑与景观全空返回 initialDistrictEmpty=true 并允许重做。 |
 | city_d4_mark | 看初版总览后以 baseDraftHash、assessment、districtDisposition 确认全城标记；每个 districtId 恰好一次，independent 为布尔值。独立区还需 peripheralRole（BORDER_OUTPOST / PERIPHERAL_RESOURCE / SUBURBAN_INDUSTRY / OTHER_PERIPHERAL）与 reason，仅限职责本身适合独立的外围区。 |
 | city_d4_integrate | baseDraftHash、assessment、targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes。只扩大一个非独立区。ADJUST_ARRAY 调整阵列参数/嵌套；OUTWARD_ARRAY 追加以 BETWEEN_GROUPS 指向本区及目标区的完整阵列。切换处理区须 previousExpansionComplete=true，说明上一处整体性已成立。 |

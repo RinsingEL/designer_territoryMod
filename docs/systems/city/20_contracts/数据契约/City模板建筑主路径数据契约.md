@@ -144,6 +144,15 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 
 目录 loader 必须从 NBT 重新确认 `rawSize` 和 `templateHash`。配置不能覆盖 NBT 尺寸，不能把 `nbtFile`、`structureId` 或 TerraSense 静态 footprint 当作 `templateRef` 的兼容别名。
 
+可选作者字段 `groundPlaneY`：
+
+- 模板局部外部地表上边界（脚底）的整数 Y，严格满足 `0 <= groundPlaneY < rawSize.height`。与室内地坪、入口台阶、门槛高度分别记录，不从道路入口推断。
+- 新放置统一以 `templateOriginY = surfaceFirstFreeY - groundPlaneY` 计算原点。显式 `0` 有效并覆盖旧推断；字段缺失时兼容已有 NBT 边界土层推断，不能把缺失默认序列化为 0。
+- 非整数、字符串、布尔值、显式 null 及越界值返回 `CITY_TEMPLATE_GROUND_PLANE_INVALID`。旋转、镜像只改变 XZ，不改变该字段。
+- 此字段属于作者目录元数据，随 D4 候选、阵列 placement plan、D6 `plannedWorldgenStructures` / `structureTemplate`、active registry 和 ledger 保存。D7 同时检查字段存在性和值；不能以相同 NBT hash 忽略地面声明漂移。
+- 世界已经持久化的 `templateDatumY` 是放置原点，所有后续分片继续复用，不重新扣除 groundPlaneY，也不因新目录元数据移动已有 StructureStart。
+- 不写入原版 StructureTemplate NBT 的未知根字段；目录变更须重新计算内容包 catalogSha256 并正式生成新 Context，不手改旧冻结产物。
+
 可选作者字段 `frontagePolicy`：
 
 - `FIXED_FRONT`（省略时默认）：保持原规则，显式 `frontageEntranceId` 优先，其次唯一命名为 `front` 的入口，再其次唯一入口；其余多入口素材需要明确正面，不自动猜测。

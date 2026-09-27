@@ -4,6 +4,8 @@
 
 `city_worldgen_block_observation.v0.1` 是 City 世界写入的调试证据，不是新的落地完成 ledger。
 
+2026-09-27：按用户要求，代码开关 `DEBUG_BLOCK_OBSERVATIONS_ENABLED=false` 固定关闭正常运行时的采集及自动写盘，LandUse 不再为观测额外读取邻居方块。建筑生成、回滚及正式生成 ledger 不受影响；历史 JSONL 仍可通过只读接口查询，不自动删除。下述格式用于历史证据和调试实现，不表示游戏运行时会持续产出。重新启用前必须补齐限定范围/时长、队列和磁盘总量上限、低空间保护及失败退避。
+
 - 方块观测证明 Minecraft 在后续生命周期回调中实际返回了什么 `BlockState`。
 - 两者必须分开解释；禁止再把 `appliedOperationCount`、`appliedPrefabPlacementCount` 或“已落地 N 个”直接当成现场方块存在证明。
 
@@ -18,7 +20,7 @@
 
 `post_features` 或 `post_retry_tick` 之后，同一目标 chunk 的待保存检查集按坐标合并，后一次写入覆盖同坐标的旧期望但不得丢掉其他坐标；`chunk_save` 捕获后移除。服务器重启时不恢复该临时检查集，已有 JSONL 历史仍可查询。
 
-回调只读取 touched positions 并把不可变状态快照送入内存队列，不在 worldgen/save 回调里构造大 JSON 或做文件 IO。server tick END 每 tick 最多刷出 2 条；停服前刷完。查询必须同时读取 JSONL 与尚未刷盘的队列并按 `observationId` 去重，因此不得因为延迟刷盘短暂返回假 `NOT_OBSERVED`。
+调试采集启用时，回调只读取 touched positions 并把不可变状态快照送入内存队列，不在 worldgen/save 回调里构造大 JSON 或做文件 IO；后台单 writer 构造和写入，停服等待写入。当前关闭状态下不创建采集批次，不调度 writer。查询读取历史 JSONL 与尚未刷盘的队列并按 `observationId` 去重，因此不得因为延迟刷盘短暂返回假 `NOT_OBSERVED`。
 
 ## 存储
 
