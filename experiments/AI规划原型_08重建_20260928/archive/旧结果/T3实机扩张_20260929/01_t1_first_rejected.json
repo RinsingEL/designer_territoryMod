@@ -1,0 +1,4 @@
+{
+  "ok": false,
+  "error": "REALM_COUNT_CONFIG: expected 5 realm profiles, received 11; add or remove realm profiles to match the configured total."
+}

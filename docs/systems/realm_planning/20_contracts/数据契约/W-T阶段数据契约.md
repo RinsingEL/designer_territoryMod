@@ -48,11 +48,22 @@
 
 v1.2 不废弃 v1.1 的 `WorldPatchMap`、`RealmTerritoryMap` 和 `CitySeedRegistry`。实现可先保持 v1.1 字段兼容，同时新增 clean id、feature stats、repair log、单国度城市候选图包和 `score_manifest.json`。正式消费层应优先读取 v1.2 clean / score 字段；缺失时只能按 v1.1 smoke 口径验收，不能宣称 strict 质量通过。
 
+## W 原生气候补充图层（2026-09-28）
+
+RTF 支持时，W 在独立 sidecar 保存原生气候，不从 Minecraft 群系标签反推。新扫描自动生成；旧 sealed 扫描在重新进入世界时补采。补采必须核对世界种子、维度及既有 W 的 provider/preset 指纹，不修改地貌、国度和城市的已完成产物。非 RTF 或字段不支持时不伪造数据。
+
+- `world_climate_grid.json`：schema `geomantia_world_climate.v1`，保存 W 对齐范围、原点、格数、步长、configHash、sourceFingerprint、columns 与 cells。
+- 按每个 W 粗格中心单点采样（默认步长 128，偏移 64）；不冒充高度图的每格 16 点微采样平均。
+- 每行依次为 `gridX, gridZ, blockX, blockZ, regionTemperature, regionMoisture, temperature, moisture, water`。四项气候值都是 RTF Cell 原生字段。
+- `world_temperature_preview.png` 使用 `regionTemperature`，`world_moisture_preview.png` 使用 `regionMoisture`，与 RTF 0.0.5a 温湿度预览所取字段相同；输出配色独立。水域在图上遮盖为蓝色，JSON 仍保留其气候值。
+- 数值是生成器无量纲参数，不是摄氏度、实际湿度、降雨量或季节；最终 `temperature/moisture` 与区域 `region*` 分开保存，不混用。
+- `world_climate_manifest.json` 最后发布，记录 sealed、来源、采样数、耗时、原始范围和三份产物 SHA-256。再次进入时校验后复用；缺失、损坏或不匹配的 sidecar 需重采。中断不发布半成品完成标记。
+
 ## WorldSurveyContext
 
 记录一次世界粗扫的配置和坐标上下文。
 
-W 范围由 `config/geomantia/world_survey.json` 的 `planningRadiusBlocks` 配置。2026-09-24 用户确认默认半径改为 **12288 格**，中心仍为 `(0,0)`，即 X/Z 范围 `[-12288,12287]`。相对旧半径 8192，边长增加 50%，固定采样密度下扫描面积为 2.25 倍。已有显式配置保持原值，需单独修改；旧 sealed 扫描不会因默认值改变而自动扩展。下方 8192 示例仅说明数据格式。
+W 范围由 `config/geomantia/world_survey.json` 的 `planningRadiusBlocks` 配置。2026-09-28 用户要求扩大到 RTF 预览尺度，默认配置半径由 12288 改为 **19200 格**，中心仍为 `(0,0)`。对应已安装 RTF 0.0.5a 最大预览（Zoom=1）的 256×150=38400 格边长；RTF 预览中心可能随出生模式偏移，本项只对齐覆盖尺度。W 按 512 格分块向外对齐，实际 X/Z 范围为 `[-19456,19455]`，边长 38912；128 格粗采样为 304×304，共 92416 格，固定采样密度下约为旧 12288 半径扫描面积的 2.5069 倍。已有显式配置保持原值，需单独修改；本次已同步用户当前 PCL 实例配置，其他实例不自动迁移。旧 sealed 扫描不会因配置或默认值改变而自动扩展。下方 8192 示例仅说明数据格式。
 
 | 字段 | 类型 | 必填 | 说明 |
 | --- | --- | --- | --- |

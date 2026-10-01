@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_merisa",
+    "gridX": 59,
+    "gridZ": 138,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。可见北部陆地，保留向两侧岸地扩展的余地，不依赖扫描外南部土地。"
+  },
+  "time": "2026-09-29T12:21:48.805009"
+}

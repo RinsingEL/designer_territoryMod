@@ -1,0 +1,41 @@
+{
+  "version": 6,
+  "world": "geometia_beta2_08 (1)",
+  "runId": "provider_ffffffff825a07bd_r19200",
+  "configHash": "88590224cc97f7276c0b331e85c77b2cb0046dc66a9738842b337bc0d08e8275",
+  "nativeClimateVerified": true,
+  "climateSamples": 92416,
+  "climateDurationMs": 743,
+  "climateRanges": {
+    "regionTemperature": {
+      "min": 0.0,
+      "max": 1.0,
+      "uniqueValues": 37811
+    },
+    "regionMoisture": {
+      "min": 0.0,
+      "max": 1.0,
+      "uniqueValues": 6800
+    },
+    "temperature": {
+      "min": -0.7250000238418579,
+      "max": 0.7749999761581421,
+      "uniqueValues": 5
+    },
+    "moisture": {
+      "min": -0.675000011920929,
+      "max": 0.6499999761581421,
+      "uniqueValues": 5
+    }
+  },
+  "mapsVisuallyChecked": [
+    "W07",
+    "W08"
+  ],
+  "oldWorldMixed": false,
+  "gameplayValidated": false,
+  "legacyWorldBackfillFingerprintIssue": "Unresolved; this new world exported matching W and climate in the same session.",
+  "promptRevision": "v11 city-design-oriented tables without examples",
+  "promptCharacters": 941,
+  "materialsRevision": "v9 Studio-inspired semantic tags, no per-structure fixtures"
+}

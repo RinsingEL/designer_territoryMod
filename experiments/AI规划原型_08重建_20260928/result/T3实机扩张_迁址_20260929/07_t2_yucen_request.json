@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_yucen",
+    "gridX": -52,
+    "gridZ": 96,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。中南部温和过渡地，连接南伸陆地，适合庭园村落与生活组团分布。"
+  },
+  "time": "2026-09-29T12:21:37.723844"
+}

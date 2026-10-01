@@ -1,0 +1,200 @@
+[
+  {
+    "citySeedId": "city_realm_savira_capital",
+    "realmId": "realm_savira",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_savira",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_aoren_capital",
+    "realmId": "realm_aoren",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_aoren",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_skaien_capital",
+    "realmId": "realm_skaien",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_skaien",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_harvi_capital",
+    "realmId": "realm_harvi",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_harvi",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_nashir_capital",
+    "realmId": "realm_nashir",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_nashir",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_yucen_capital",
+    "realmId": "realm_yucen",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_yucen",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_belesa_capital",
+    "realmId": "realm_belesa",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_belesa",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_tashilan_capital",
+    "realmId": "realm_tashilan",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_tashilan",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_weilen_capital",
+    "realmId": "realm_weilen",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_weilen",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_qinglan_capital",
+    "realmId": "realm_qinglan",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_qinglan",
+    "sourceMode": "t2_realm_core_intent"
+  },
+  {
+    "citySeedId": "city_realm_merisa_capital",
+    "realmId": "realm_merisa",
+    "cityRole": "capital",
+    "theoreticalScale": "large_city",
+    "mustExist": true,
+    "requiredConditions": [
+      "land",
+      "inside_realm"
+    ],
+    "coreFunctions": [
+      "administration",
+      "market",
+      "defense"
+    ],
+    "realmCoreSelectionId": "selection_realm_merisa",
+    "sourceMode": "t2_realm_core_intent"
+  }
+]

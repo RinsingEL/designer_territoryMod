@@ -1,0 +1,13 @@
+"""Export only the task brief; reference materials stay in separate attachments."""
+from pathlib import Path
+
+def build_t1_packet(root=None):
+    root = Path(root) if root else Path(__file__).resolve().parents[1]
+    task = (root / 'data/题目/01_T1国度设定.md').read_text(encoding='utf-8')
+    output = root / 'exports/现在发给模型_T1.txt'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(task, encoding='utf-8')
+    return output
+
+if __name__ == '__main__':
+    print(build_t1_packet())

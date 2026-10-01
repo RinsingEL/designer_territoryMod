@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_skaien",
+    "gridX": -76,
+    "gridZ": -77,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C20 北部冷带内陆；保留长厅与远行补给，哈尔维向中南部及岸地发展。"
+  },
+  "time": "2026-09-29T12:21:31.027690"
+}

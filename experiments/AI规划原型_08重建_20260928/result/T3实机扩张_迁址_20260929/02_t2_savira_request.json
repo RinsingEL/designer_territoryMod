@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_savira",
+    "gridX": 48,
+    "gridZ": 16,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C56 西侧温和湿润岸地后方；保留海岸修船、食肆和通风廊院，北侧贝莱萨与南部塔希兰共同分配大陆。"
+  },
+  "time": "2026-09-29T12:21:26.547854"
+}

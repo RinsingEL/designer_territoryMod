@@ -1,0 +1,343 @@
+[
+  {
+    "realmId": "realm_savira",
+    "selectionId": "selection_realm_savira",
+    "seedGrid": {
+      "x": 48,
+      "z": 16
+    },
+    "seedBlock": {
+      "x": 6144,
+      "z": 2048
+    },
+    "continentId": "continent_56",
+    "patchId": "minecraft:overworld:step.128:r.12.4:p.1",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.23,
+      "minAreaRatio": 0.15,
+      "maxAreaRatio": 0.276,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_aoren",
+    "selectionId": "selection_realm_aoren",
+    "seedGrid": {
+      "x": -49,
+      "z": 20
+    },
+    "seedBlock": {
+      "x": -6272,
+      "z": 2560
+    },
+    "continentId": "continent_82",
+    "patchId": "minecraft:overworld:step.128:r.-13.5:p.4",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.22,
+      "minAreaRatio": 0.143,
+      "maxAreaRatio": 0.264,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_skaien",
+    "selectionId": "selection_realm_skaien",
+    "seedGrid": {
+      "x": -76,
+      "z": -77
+    },
+    "seedBlock": {
+      "x": -9728,
+      "z": -9856
+    },
+    "continentId": "continent_20",
+    "patchId": "minecraft:overworld:step.128:r.-19.-20:p.2",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.35,
+      "minAreaRatio": 0.227,
+      "maxAreaRatio": 0.42,
+      "normalizationGroup": "continent_20"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_harvi",
+    "selectionId": "selection_realm_harvi",
+    "seedGrid": {
+      "x": -122,
+      "z": -12
+    },
+    "seedBlock": {
+      "x": -15616,
+      "z": -1536
+    },
+    "continentId": "continent_20",
+    "patchId": "minecraft:overworld:step.128:r.-31.-3:p.2",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.4,
+      "minAreaRatio": 0.26,
+      "maxAreaRatio": 0.48,
+      "normalizationGroup": "continent_20"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_nashir",
+    "selectionId": "selection_realm_nashir",
+    "seedGrid": {
+      "x": -74,
+      "z": 47
+    },
+    "seedBlock": {
+      "x": -9472,
+      "z": 6016
+    },
+    "continentId": "continent_82",
+    "patchId": "minecraft:overworld:step.128:r.-19.11:p.5",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_yucen",
+    "selectionId": "selection_realm_yucen",
+    "seedGrid": {
+      "x": -52,
+      "z": 96
+    },
+    "seedBlock": {
+      "x": -6656,
+      "z": 12288
+    },
+    "continentId": "continent_82",
+    "patchId": "minecraft:overworld:step.128:r.-13.24:p.1",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.55,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_belesa",
+    "selectionId": "selection_realm_belesa",
+    "seedGrid": {
+      "x": 47,
+      "z": -8
+    },
+    "seedBlock": {
+      "x": 6016,
+      "z": -1024
+    },
+    "continentId": "continent_56",
+    "patchId": "minecraft:overworld:step.128:r.11.-2:p.3",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.27,
+      "minAreaRatio": 0.176,
+      "maxAreaRatio": 0.324,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_tashilan",
+    "selectionId": "selection_realm_tashilan",
+    "seedGrid": {
+      "x": 52,
+      "z": 30
+    },
+    "seedBlock": {
+      "x": 6656,
+      "z": 3840
+    },
+    "continentId": "continent_56",
+    "patchId": "minecraft:overworld:step.128:r.13.7:p.1",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_weilen",
+    "selectionId": "selection_realm_weilen",
+    "seedGrid": {
+      "x": 135,
+      "z": -101
+    },
+    "seedBlock": {
+      "x": 17280,
+      "z": -12928
+    },
+    "continentId": "continent_9",
+    "patchId": "minecraft:overworld:step.128:r.33.-26:p.5",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_9"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_qinglan",
+    "selectionId": "selection_realm_qinglan",
+    "seedGrid": {
+      "x": 133,
+      "z": 22
+    },
+    "seedBlock": {
+      "x": 17024,
+      "z": 2816
+    },
+    "continentId": "continent_76",
+    "patchId": "minecraft:overworld:step.128:r.33.5:p.3",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_76"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.55,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_merisa",
+    "selectionId": "selection_realm_merisa",
+    "seedGrid": {
+      "x": 59,
+      "z": 138
+    },
+    "seedBlock": {
+      "x": 7552,
+      "z": 17664
+    },
+    "continentId": "continent_129",
+    "patchId": "minecraft:overworld:step.128:r.14.34:p.1",
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_129"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  }
+]

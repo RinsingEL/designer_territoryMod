@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_aoren",
+    "gridX": -49,
+    "gridZ": 20,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C82 北缘温和过渡内陆；保留分台地工场、师徒加工与维修，南面的热带留给纳希尔。"
+  },
+  "time": "2026-09-29T12:21:28.818233"
+}

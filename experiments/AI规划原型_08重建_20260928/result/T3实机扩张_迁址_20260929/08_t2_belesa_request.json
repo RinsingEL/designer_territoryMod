@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_belesa",
+    "gridX": 47,
+    "gridZ": -8,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。北半部偏西湿润地带，向西岸展开接待与船具服务，向内陆连接庭园和学习空间。"
+  },
+  "time": "2026-09-29T12:21:39.889375"
+}

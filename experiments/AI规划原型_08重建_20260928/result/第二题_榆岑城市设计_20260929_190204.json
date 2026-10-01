@@ -1,0 +1,109 @@
+{
+  "realmId": "realm_yucen",
+  "realmName": "榆岑",
+  "territoryFile": "../data/第二题_榆岑城市设计/榆岑领土数据.json",
+  "cities": [
+    {
+      "id": "city_01",
+      "name": "榆原",
+      "capital": true,
+      "scale": "大城",
+      "role": "全国公共事务、综合交易与庭园技艺交流",
+      "bounds": {
+        "minX": -5888,
+        "maxX": -5120,
+        "minZ": 9984,
+        "maxZ": 10752
+      },
+      "plannedLongEdgeBlocks": [
+        512,
+        640
+      ]
+    },
+    {
+      "id": "city_02",
+      "name": "槐晴",
+      "capital": false,
+      "scale": "小城",
+      "role": "北部法术学习、知识记录与旅行准备",
+      "bounds": {
+        "minX": -4864,
+        "maxX": -4352,
+        "minZ": 8192,
+        "maxZ": 8704
+      },
+      "plannedLongEdgeBlocks": [
+        256,
+        320
+      ]
+    },
+    {
+      "id": "city_03",
+      "name": "柳岑",
+      "capital": false,
+      "scale": "中城",
+      "role": "东部日用品、园艺材料加工与维修",
+      "bounds": {
+        "minX": -3840,
+        "maxX": -3200,
+        "minZ": 11008,
+        "maxZ": 11648
+      },
+      "plannedLongEdgeBlocks": [
+        384,
+        512
+      ]
+    },
+    {
+      "id": "city_04",
+      "name": "棠岚",
+      "capital": false,
+      "scale": "中城",
+      "role": "西南农食加工、储备与区域交易",
+      "bounds": {
+        "minX": -8704,
+        "maxX": -8064,
+        "minZ": 13440,
+        "maxZ": 14080
+      },
+      "plannedLongEdgeBlocks": [
+        384,
+        512
+      ]
+    },
+    {
+      "id": "city_05",
+      "name": "杉霁",
+      "capital": false,
+      "scale": "小城",
+      "role": "西南端旅宿、补给与日常修补",
+      "bounds": {
+        "minX": -8832,
+        "maxX": -8448,
+        "minZ": 15616,
+        "maxZ": 16000
+      },
+      "plannedLongEdgeBlocks": [
+        192,
+        256
+      ]
+    },
+    {
+      "id": "city_06",
+      "name": "楠汀",
+      "capital": false,
+      "scale": "小城",
+      "role": "东南居民服务、旅居与小型魔法实践",
+      "bounds": {
+        "minX": -3072,
+        "maxX": -2688,
+        "minZ": 14464,
+        "maxZ": 14848
+      },
+      "plannedLongEdgeBlocks": [
+        192,
+        256
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "manifestId": "gis_muldhurk_167a354e_preview",
+  "worldId": "runtime-prior",
+  "dimensionId": "minecraft:overworld",
+  "centerBlockX": 8448,
+  "centerBlockZ": -9984,
+  "radiusChunks": 32,
+  "cellStepBlocks": 4,
+  "metricRadiiCells": {
+    "localRelief": 2,
+    "dependencyMargin": 12,
+    "tpiLarge": 12,
+    "roughness": 2,
+    "slope": 1,
+    "maxWaterDistance": 64,
+    "tpiSmall": 3
+  },
+  "metricRadiiBlocks": {
+    "localRelief": 8,
+    "dependencyMargin": 48,
+    "tpiLarge": 48,
+    "roughness": 8,
+    "slope": 4,
+    "maxWaterDistance": 256,
+    "tpiSmall": 12
+  },
+  "sampleMode": "prior",
+  "sourceCounts": {
+    "prior": 16384
+  },
+  "atlasVersion": 1,
+  "configId": "gis-baseline-20260609",
+  "generatedAt": 1790607582252,
+  "layers": [
+    {
+      "name": "elevation",
+      "file": "elevation.png",
+      "minValue": 68.0,
+      "maxValue": 154.0,
+      "palette": "grayscale"
+    },
+    {
+      "name": "water",
+      "file": "water.png",
+      "minValue": 0.0,
+      "maxValue": 1.0,
+      "palette": "water-shore"
+    },
+    {
+      "name": "slope",
+      "file": "slope.png",
+      "minValue": 0.0,
+      "maxValue": 22.0,
+      "palette": "heat"
+    },
+    {
+      "name": "tpiSmall",
+      "file": "tpiSmall.png",
+      "minValue": -21.57142857142857,
+      "maxValue": 5.705882352941188,
+      "palette": "diverging"
+    },
+    {
+      "name": "tpiLarge",
+      "file": "tpiLarge.png",
+      "minValue": -21.759090909090915,
+      "maxValue": 14.235294117647072,
+      "palette": "diverging"
+    },
+    {
+      "name": "landform",
+      "file": "landform.png",
+      "minValue": 0.0,
+      "maxValue": 0.0,
+      "palette": "landform"
+    },
+    {
+      "name": "patch",
+      "file": "patch.png",
+      "minValue": 0.0,
+      "maxValue": 286.0,
+      "palette": "patch-cell-boundaries"
+    }
+  ],
+  "legend": "legend.png",
+  "hasEdgeDirty": true,
+  "unknownCellCount": 143,
+  "notes": "GIS current debug preview; JSON is not the production atlas cache."
+}

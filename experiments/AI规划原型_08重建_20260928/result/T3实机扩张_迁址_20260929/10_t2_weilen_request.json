@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_weilen",
+    "gridX": 135,
+    "gridZ": -101,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。已扫描西侧腹地的温和至冷带过渡，避开最东侧截断边界，作为工匠组团的起点。"
+  },
+  "time": "2026-09-29T12:21:44.371850"
+}

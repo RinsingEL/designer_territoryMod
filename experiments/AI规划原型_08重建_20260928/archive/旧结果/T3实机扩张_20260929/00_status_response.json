@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "stage": "status",
+  "runId": "",
+  "warnings": [],
+  "errors": [],
+  "serviceReady": true,
+  "debugRoot": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug",
+  "availableStages": [
+    "W",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "acceptance"
+  ],
+  "gisReady": true,
+  "knownRuns": [],
+  "presentation": "planning_decision_view.v0.1"
+}

@@ -1,0 +1,9 @@
+{
+  "centerBlockX": 8448,
+  "dimensionId": "minecraft:overworld",
+  "sampleMode": "prior",
+  "radiusChunks": 32,
+  "centerBlockZ": -9984,
+  "cellStepBlocks": 4,
+  "playerName": "Remiuo"
+}

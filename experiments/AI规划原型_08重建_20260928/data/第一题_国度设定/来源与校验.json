@@ -1,0 +1,61 @@
+{
+  "sourceWorld": "geometia_beta2_08 (1)",
+  "sourceRun": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200",
+  "configHash": "88590224cc97f7276c0b331e85c77b2cb0046dc66a9738842b337bc0d08e8275",
+  "bounds": {
+    "centerBlockX": 0,
+    "centerBlockZ": 0,
+    "planningRadiusBlocks": 19200,
+    "minBlockX": -19456,
+    "minBlockZ": -19456,
+    "maxBlockX": 19455,
+    "maxBlockZ": 19455,
+    "diameterBlocksX": 38912,
+    "diameterBlocksZ": 38912
+  },
+  "cellCount": 92416,
+  "microSampleCount": 1478656,
+  "scanDurationMs": 23289,
+  "failedTiles": 0,
+  "majorContinentCount": 9,
+  "sources": [
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_survey_manifest.json",
+      "sha256": "d455b0f0a8a9555a9bfeec194ba4e169f1df0c006f94a52d85c86387135504bc"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_survey_context.json",
+      "sha256": "790f1e1e5b6351b7450ecc1035b5c165ad71dd54311ea32c0bcac7aafb9f3c02"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_feature_grid.json",
+      "sha256": "9646ea9c650e3f427348be5c8044e7785072a363297272453ce6ae9168343c1f"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_patch_map.json",
+      "sha256": "f0366439d7631a59641c5a724379a1cd41bee8c1d04131e8d731c7127fbef5b2"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\w_manifest.json",
+      "sha256": "c73eeb78bf46c80989fab34b57fb63681b9c19887a961b508472f6114a60f1b5"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_patch_preview.png",
+      "sha256": "11378e43a3179c2e867ca7d8daf5742f7f089b45682e583c66a8279477813e25"
+    },
+    {
+      "path": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200\\world_biome_preview.png",
+      "sha256": "785465fdd5250de42aa0d04197d90bed814ee32fde16e6a8dccf7788df494bd8"
+    }
+  ],
+  "nativeClimate": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "sourceFingerprint": "sha256:514f563d2b6c53a913426b73e2cf2368dee361bf80a38765dd809840c316c61d",
+    "sampleCount": 92416,
+    "artifactSha256": {
+      "world_climate_grid.json": "51c82ba18cdcf96383f5c5e4ddd687a1d3122f5bb48da7b05657e5a46ac2bcbf",
+      "world_temperature_preview.png": "b209e0ac133ce062bc6a30af3003c22b78410890a1a92df0f00db1e5d754a9fb",
+      "world_moisture_preview.png": "bedb4497139cb1ecf03986583b9f873b6359d9ffb909a31246f946de3c63909d"
+    }
+  }
+}

@@ -1,0 +1,918 @@
+{
+  "territoryMapId": "territory_provider_ffffffff825a07bd_r19200",
+  "normalizationGroup": "all_target_continents",
+  "expansionModel": "action_budget",
+  "realmStats": [
+    {
+      "realmId": "realm_savira",
+      "areaCells": 942,
+      "targetAreaCells": 855,
+      "areaDeltaCells": 87,
+      "targetAreaRatio": 0.23008611410118407,
+      "actualAreaRatio": 0.2534983853606028,
+      "scaleMinAreaRatio": 0.15,
+      "scaleMaxAreaRatio": 0.276,
+      "coastalRatio": 0.0435244161358811,
+      "primaryLandforms": [
+        "cliff",
+        "shore",
+        "slope",
+        "ridge"
+      ],
+      "neighbors": [
+        "realm_belesa",
+        "realm_tashilan"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 942,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.47368421052631576,
+      "budgetUsedRatio": 0.2206499094095577,
+      "averageClaimCost": 131.850903746098,
+      "maxClaimCost": 438.72837500000014,
+      "terrainCostBreakdown": {
+        "lowland": 30124.47187500002,
+        "valley": 46180.26537500002,
+        "upland": 18945.89287500001,
+        "shore": 5668.263125,
+        "ridge": 25789.82525
+      },
+      "stopReasonSummary": {
+        "competition_failed": 1837,
+        "competition_contested": 14,
+        "stale_frontier_parent": 73,
+        "edge_blocked": 72
+      }
+    },
+    {
+      "realmId": "realm_qinglan",
+      "areaCells": 2561,
+      "targetAreaCells": 2135,
+      "areaDeltaCells": 426,
+      "targetAreaRatio": 0.6501218026796589,
+      "actualAreaRatio": 0.7798416565164433,
+      "scaleMinAreaRatio": 0.423,
+      "scaleMaxAreaRatio": 0.78,
+      "coastalRatio": 0.025771183131589222,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "neighbors": [],
+      "componentCount": 1,
+      "largestComponentCells": 2561,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 1.0,
+      "budgetUsedRatio": 0.07019857400510231,
+      "averageClaimCost": 96.43821349082411,
+      "maxClaimCost": 210.18524999999997,
+      "terrainCostBreakdown": {
+        "lowland": 60497.41624999993,
+        "upland": 30514.560374999983,
+        "ridge": 51255.28437500001,
+        "valley": 98073.80087499991,
+        "shore": 6637.202875000001
+      },
+      "stopReasonSummary": {
+        "competition_failed": 5262,
+        "edge_blocked": 31,
+        "maximum_area_reached": 71
+      }
+    },
+    {
+      "realmId": "realm_aoren",
+      "areaCells": 2113,
+      "targetAreaCells": 1778,
+      "areaDeltaCells": 335,
+      "targetAreaRatio": 0.22007674217106077,
+      "actualAreaRatio": 0.26154227008293107,
+      "scaleMinAreaRatio": 0.143,
+      "scaleMaxAreaRatio": 0.264,
+      "coastalRatio": 0.03644107903454804,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "neighbors": [
+        "realm_nashir"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 2113,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.48148148148148145,
+      "budgetUsedRatio": 0.1391419978190609,
+      "averageClaimCost": 120.90376260553481,
+      "maxClaimCost": 380.1886250000001,
+      "terrainCostBreakdown": {
+        "valley": 100017.36525000002,
+        "lowland": 67169.241,
+        "upland": 31238.97575000001,
+        "ridge": 51445.02212500003,
+        "shore": 7896.217749999999
+      },
+      "stopReasonSummary": {
+        "competition_failed": 4297,
+        "competition_contested": 30,
+        "edge_blocked": 28,
+        "stale_frontier_parent": 73,
+        "maximum_area_reached": 19
+      }
+    },
+    {
+      "realmId": "realm_yucen",
+      "areaCells": 2889,
+      "targetAreaCells": 2423,
+      "areaDeltaCells": 466,
+      "targetAreaRatio": 0.2999133556133185,
+      "actualAreaRatio": 0.35759376160415896,
+      "scaleMinAreaRatio": 0.195,
+      "scaleMaxAreaRatio": 0.36,
+      "coastalRatio": 0.015922464520595363,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "neighbors": [
+        "realm_nashir"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 2889,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.08571428571428572,
+      "budgetUsedRatio": 0.05264770986642244,
+      "averageClaimCost": 79.8382349123109,
+      "maxClaimCost": 167.93112500000004,
+      "terrainCostBreakdown": {
+        "valley": 90868.00049999994,
+        "lowland": 61799.566624999934,
+        "upland": 27953.593375,
+        "ridge": 47712.08150000003,
+        "shore": 3836.345125
+      },
+      "stopReasonSummary": {
+        "competition_failed": 6001,
+        "edge_blocked": 93,
+        "competition_contested": 20,
+        "stale_frontier_parent": 76,
+        "maximum_area_reached": 56
+      }
+    },
+    {
+      "realmId": "realm_tashilan",
+      "areaCells": 1330,
+      "targetAreaCells": 1114,
+      "areaDeltaCells": 216,
+      "targetAreaRatio": 0.2997847147470398,
+      "actualAreaRatio": 0.3579117330462863,
+      "scaleMinAreaRatio": 0.195,
+      "scaleMaxAreaRatio": 0.36,
+      "coastalRatio": 0.02481203007518797,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "neighbors": [
+        "realm_savira"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 1330,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.625,
+      "budgetUsedRatio": 0.04268135581193628,
+      "averageClaimCost": 53.776930067314915,
+      "maxClaimCost": 92.3115,
+      "terrainCostBreakdown": {
+        "valley": 28615.776875000018,
+        "upland": 9998.7955,
+        "lowland": 16588.396875000006,
+        "shore": 1598.93725,
+        "ridge": 15097.849000000004
+      },
+      "stopReasonSummary": {
+        "competition_failed": 2653,
+        "edge_blocked": 37,
+        "stale_frontier_parent": 25,
+        "competition_contested": 20,
+        "maximum_area_reached": 85
+      }
+    },
+    {
+      "realmId": "realm_belesa",
+      "areaCells": 1197,
+      "targetAreaCells": 1004,
+      "areaDeltaCells": 193,
+      "targetAreaRatio": 0.27018299246501615,
+      "actualAreaRatio": 0.3221205597416577,
+      "scaleMinAreaRatio": 0.176,
+      "scaleMaxAreaRatio": 0.324,
+      "coastalRatio": 0.029239766081871343,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "plain"
+      ],
+      "neighbors": [
+        "realm_savira"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 1197,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.3968253968253968,
+      "budgetUsedRatio": 0.07412148363524722,
+      "averageClaimCost": 77.76557761845395,
+      "maxClaimCost": 159.70550000000003,
+      "terrainCostBreakdown": {
+        "lowland": 20522.981000000003,
+        "valley": 36580.51850000002,
+        "upland": 11640.513,
+        "ridge": 22642.052,
+        "shore": 2165.9253750000003
+      },
+      "stopReasonSummary": {
+        "competition_failed": 2347,
+        "edge_blocked": 23,
+        "competition_contested": 3,
+        "stale_frontier_parent": 24,
+        "maximum_area_reached": 51
+      }
+    },
+    {
+      "realmId": "realm_merisa",
+      "areaCells": 1326,
+      "targetAreaCells": 1105,
+      "areaDeltaCells": 221,
+      "targetAreaRatio": 0.65,
+      "actualAreaRatio": 0.78,
+      "scaleMinAreaRatio": 0.423,
+      "scaleMaxAreaRatio": 0.78,
+      "coastalRatio": 0.05128205128205128,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "neighbors": [],
+      "componentCount": 1,
+      "largestComponentCells": 1326,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 1.0,
+      "budgetUsedRatio": 0.029053278736209543,
+      "averageClaimCost": 37.26801470588228,
+      "maxClaimCost": 65.67275,
+      "terrainCostBreakdown": {
+        "valley": 18074.43300000002,
+        "lowland": 12231.317375000004,
+        "upland": 6072.145625,
+        "shore": 2777.0727500000003,
+        "ridge": 10262.41875
+      },
+      "stopReasonSummary": {
+        "competition_failed": 2486,
+        "edge_blocked": 18,
+        "maximum_area_reached": 82
+      }
+    },
+    {
+      "realmId": "realm_harvi",
+      "areaCells": 2216,
+      "targetAreaCells": 1847,
+      "areaDeltaCells": 369,
+      "targetAreaRatio": 0.40004331817197314,
+      "actualAreaRatio": 0.4799653454624215,
+      "scaleMinAreaRatio": 0.26,
+      "scaleMaxAreaRatio": 0.48,
+      "coastalRatio": 0.03203971119133574,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "neighbors": [
+        "realm_skaien"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 2216,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.17391304347826086,
+      "budgetUsedRatio": 0.06363557121199709,
+      "averageClaimCost": 75.55397895983758,
+      "maxClaimCost": 185.96974999999998,
+      "terrainCostBreakdown": {
+        "valley": 64648.969250000024,
+        "lowland": 40781.82900000002,
+        "upland": 22832.039375000004,
+        "ridge": 32092.125375000014,
+        "shore": 7072.654375000002
+      },
+      "stopReasonSummary": {
+        "competition_failed": 4363,
+        "edge_blocked": 94,
+        "maximum_area_reached": 40
+      }
+    },
+    {
+      "realmId": "realm_weilen",
+      "areaCells": 1822,
+      "targetAreaCells": 1518,
+      "areaDeltaCells": 304,
+      "targetAreaRatio": 0.6498287671232876,
+      "actualAreaRatio": 0.7799657534246576,
+      "scaleMinAreaRatio": 0.423,
+      "scaleMaxAreaRatio": 0.78,
+      "coastalRatio": 0.030735455543358946,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "neighbors": [],
+      "componentCount": 1,
+      "largestComponentCells": 1822,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 1.0,
+      "budgetUsedRatio": 0.0734424487678533,
+      "averageClaimCost": 76.24536244511515,
+      "maxClaimCost": 185.420625,
+      "terrainCostBreakdown": {
+        "valley": 57595.877124999985,
+        "lowland": 33862.462,
+        "shore": 2761.9321249999994,
+        "upland": 18331.690499999993,
+        "ridge": 26367.088624999997
+      },
+      "stopReasonSummary": {
+        "competition_failed": 3689,
+        "edge_blocked": 13,
+        "maximum_area_reached": 49
+      }
+    },
+    {
+      "realmId": "realm_skaien",
+      "areaCells": 1939,
+      "targetAreaCells": 1616,
+      "areaDeltaCells": 323,
+      "targetAreaRatio": 0.3500108295429933,
+      "actualAreaRatio": 0.4199696772796188,
+      "scaleMinAreaRatio": 0.227,
+      "scaleMaxAreaRatio": 0.42,
+      "coastalRatio": 0.04332129963898917,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "neighbors": [
+        "realm_harvi"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 1939,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.17391304347826086,
+      "budgetUsedRatio": 0.04291476971987883,
+      "averageClaimCost": 52.40243534038162,
+      "maxClaimCost": 111.78987500000002,
+      "terrainCostBreakdown": {
+        "valley": 38109.21612499997,
+        "shore": 4375.024125,
+        "lowland": 27358.691874999993,
+        "upland": 11855.183250000002,
+        "ridge": 19910.20675000001
+      },
+      "stopReasonSummary": {
+        "competition_failed": 3706,
+        "edge_blocked": 58,
+        "maximum_area_reached": 63
+      }
+    },
+    {
+      "realmId": "realm_nashir",
+      "areaCells": 2869,
+      "targetAreaCells": 2424,
+      "areaDeltaCells": 445,
+      "targetAreaRatio": 0.3000371333085778,
+      "actualAreaRatio": 0.3551182076989726,
+      "scaleMinAreaRatio": 0.195,
+      "scaleMaxAreaRatio": 0.36,
+      "coastalRatio": 0.02474729871035204,
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "neighbors": [
+        "realm_aoren",
+        "realm_yucen"
+      ],
+      "componentCount": 1,
+      "largestComponentCells": 2869,
+      "largestComponentRatio": 1.0,
+      "detachedAreaRatio": 0.0,
+      "holeAreaRatio": 0.0,
+      "naturalBoundaryFit": 0.25806451612903225,
+      "budgetUsedRatio": 0.18922307993110413,
+      "averageClaimCost": 164.4088901841017,
+      "maxClaimCost": 603.6920000000001,
+      "terrainCostBreakdown": {
+        "valley": 185390.98124999987,
+        "shore": 12129.719874999999,
+        "lowland": 119505.22887499996,
+        "ridge": 95693.34312499994,
+        "upland": 65052.96175000003
+      },
+      "stopReasonSummary": {
+        "competition_failed": 6017,
+        "edge_blocked": 54,
+        "stale_frontier_parent": 141,
+        "competition_contested": 39
+      }
+    }
+  ],
+  "normalizedScales": {
+    "realm_savira": {
+      "priority": "normal",
+      "targetAreaRatio": 0.23,
+      "minAreaRatio": 0.15,
+      "maxAreaRatio": 0.276,
+      "normalizationGroup": "continent_56",
+      "normalizedTargetAreaRatio": 0.23
+    },
+    "realm_qinglan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_76",
+      "normalizedTargetAreaRatio": 0.65
+    },
+    "realm_aoren": {
+      "priority": "normal",
+      "targetAreaRatio": 0.22,
+      "minAreaRatio": 0.143,
+      "maxAreaRatio": 0.264,
+      "normalizationGroup": "continent_82",
+      "normalizedTargetAreaRatio": 0.22
+    },
+    "realm_yucen": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82",
+      "normalizedTargetAreaRatio": 0.3
+    },
+    "realm_tashilan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_56",
+      "normalizedTargetAreaRatio": 0.3
+    },
+    "realm_belesa": {
+      "priority": "normal",
+      "targetAreaRatio": 0.27,
+      "minAreaRatio": 0.176,
+      "maxAreaRatio": 0.324,
+      "normalizationGroup": "continent_56",
+      "normalizedTargetAreaRatio": 0.27
+    },
+    "realm_merisa": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_129",
+      "normalizedTargetAreaRatio": 0.65
+    },
+    "realm_harvi": {
+      "priority": "normal",
+      "targetAreaRatio": 0.4,
+      "minAreaRatio": 0.26,
+      "maxAreaRatio": 0.48,
+      "normalizationGroup": "continent_20",
+      "normalizedTargetAreaRatio": 0.4
+    },
+    "realm_weilen": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_9",
+      "normalizedTargetAreaRatio": 0.65
+    },
+    "realm_skaien": {
+      "priority": "normal",
+      "targetAreaRatio": 0.35,
+      "minAreaRatio": 0.227,
+      "maxAreaRatio": 0.42,
+      "normalizationGroup": "continent_20",
+      "normalizedTargetAreaRatio": 0.35
+    },
+    "realm_nashir": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82",
+      "normalizedTargetAreaRatio": 0.3
+    }
+  },
+  "expansionBudgets": {
+    "realm_savira": {
+      "baseActionBudget": 1871.384514203321,
+      "budgetMultiplier": 1.0625,
+      "effectiveActionBudget": 1988.3460463410286,
+      "softStopThreshold": 1431.6091533655406,
+      "hardStopThreshold": 1988.3460463410286,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.234
+    },
+    "realm_qinglan": {
+      "baseActionBudget": 2957.187853349868,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 2994.152701516741,
+      "softStopThreshold": 2155.7899450920536,
+      "hardStopThreshold": 2994.152701516741,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.274
+    },
+    "realm_aoren": {
+      "baseActionBudget": 2698.6455862154257,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 2732.3786560431186,
+      "softStopThreshold": 1967.3126323510453,
+      "hardStopThreshold": 2732.3786560431186,
+      "maxClaimCost": 42.5,
+      "wildlandTolerance": 0.274
+    },
+    "realm_yucen": {
+      "baseActionBudget": 3150.334585405176,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 3189.7137677227406,
+      "softStopThreshold": 2296.5939127603733,
+      "hardStopThreshold": 3189.7137677227406,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.274
+    },
+    "realm_tashilan": {
+      "baseActionBudget": 2136.1048663396655,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 2162.8061771689113,
+      "softStopThreshold": 1557.220447561616,
+      "hardStopThreshold": 2162.8061771689113,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.274
+    },
+    "realm_belesa": {
+      "baseActionBudget": 2027.901378272622,
+      "budgetMultiplier": 1.0625,
+      "effectiveActionBudget": 2154.645214414661,
+      "softStopThreshold": 1551.3445543785558,
+      "hardStopThreshold": 2154.645214414661,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.234
+    },
+    "realm_merisa": {
+      "baseActionBudget": 2127.4585777401167,
+      "budgetMultiplier": 1.0625,
+      "effectiveActionBudget": 2260.424738848874,
+      "softStopThreshold": 1627.5058119711891,
+      "hardStopThreshold": 2260.424738848874,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.234
+    },
+    "realm_harvi": {
+      "baseActionBudget": 2750.51122520887,
+      "budgetMultiplier": 1.0625,
+      "effectiveActionBudget": 2922.4181767844248,
+      "softStopThreshold": 2104.141087284786,
+      "hardStopThreshold": 2922.4181767844248,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.234
+    },
+    "realm_weilen": {
+      "baseActionBudget": 2493.537246563604,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 2524.7064621456493,
+      "softStopThreshold": 1817.7886527448675,
+      "hardStopThreshold": 2524.7064621456493,
+      "maxClaimCost": 42.5,
+      "wildlandTolerance": 0.274
+    },
+    "realm_skaien": {
+      "baseActionBudget": 2572.768159006948,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 2604.9277609945348,
+      "softStopThreshold": 1875.547987916065,
+      "hardStopThreshold": 2604.9277609945348,
+      "maxClaimCost": 42.5,
+      "wildlandTolerance": 0.274
+    },
+    "realm_nashir": {
+      "baseActionBudget": 3150.9846080233397,
+      "budgetMultiplier": 1.0125,
+      "effectiveActionBudget": 3190.371915623631,
+      "softStopThreshold": 2297.067779249014,
+      "hardStopThreshold": 3190.371915623631,
+      "maxClaimCost": 42.0,
+      "wildlandTolerance": 0.274
+    }
+  },
+  "terrainCostProfiles": {
+    "realm_savira": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 0.6824999999999999,
+        "lowland": 1.05,
+        "valley": 0.93,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.144,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.2975,
+        "water_edge": -0.096,
+        "seacoast": -0.2975,
+        "riverbank": -0.2
+      }
+    },
+    "realm_qinglan": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.05,
+        "valley": 0.9825,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.081,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_aoren": {
+      "baseCosts": {
+        "plateau": 1.225,
+        "ridge": 2.155,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.0,
+        "valley": 0.9825,
+        "upland": 1.405,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.034999999999999996,
+        "lakeshore": -0.081,
+        "steep": 2.1,
+        "cliff": 4.8,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_yucen": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.05,
+        "valley": 0.9825,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.081,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_tashilan": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.05,
+        "valley": 0.9825,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.081,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_belesa": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 0.6824999999999999,
+        "lowland": 1.05,
+        "valley": 0.93,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.144,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.2975,
+        "water_edge": -0.096,
+        "seacoast": -0.2975,
+        "riverbank": -0.2
+      }
+    },
+    "realm_merisa": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 0.6824999999999999,
+        "lowland": 1.05,
+        "valley": 0.93,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.144,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.2975,
+        "water_edge": -0.096,
+        "seacoast": -0.2975,
+        "riverbank": -0.2
+      }
+    },
+    "realm_harvi": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 0.6824999999999999,
+        "lowland": 1.05,
+        "valley": 0.93,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.144,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.2975,
+        "water_edge": -0.096,
+        "seacoast": -0.2975,
+        "riverbank": -0.2
+      }
+    },
+    "realm_weilen": {
+      "baseCosts": {
+        "plateau": 1.225,
+        "ridge": 2.155,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.0,
+        "valley": 0.9825,
+        "upland": 1.405,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.034999999999999996,
+        "lakeshore": -0.081,
+        "steep": 2.1,
+        "cliff": 4.8,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_skaien": {
+      "baseCosts": {
+        "plateau": 1.225,
+        "ridge": 2.155,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.0,
+        "valley": 0.9825,
+        "upland": 1.405,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.034999999999999996,
+        "lakeshore": -0.081,
+        "steep": 2.1,
+        "cliff": 4.8,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    },
+    "realm_nashir": {
+      "baseCosts": {
+        "plateau": 1.25,
+        "ridge": 2.25,
+        "unknown": "blocked",
+        "shore": 1.0399999999999998,
+        "lowland": 1.05,
+        "valley": 0.9825,
+        "upland": 1.45,
+        "water": "blocked"
+      },
+      "tagCosts": {
+        "mountain_front": -0.0,
+        "lakeshore": -0.081,
+        "steep": 2.2,
+        "cliff": 5.0,
+        "coastal": -0.06999999999999999,
+        "water_edge": -0.054,
+        "seacoast": -0.06999999999999999,
+        "riverbank": -0.1125
+      }
+    }
+  },
+  "warnings": [],
+  "repairs": [],
+  "territoryStatusSummary": {
+    "ownedCells": 21204,
+    "ownedRatio": 0.8934771616382943,
+    "wildCells": 2137,
+    "wildRatio": 0.0900471936625653,
+    "contestedCells": 107,
+    "contestedRatio": 0.00450868026293612,
+    "blockedCells": 284,
+    "blockedRatio": 0.011966964436204281,
+    "unreachableCells": 0,
+    "unreachableRatio": 0.0
+  },
+  "ownedAreaRatio": 0.8934771616382943,
+  "wildlandRatio": 0.0900471936625653,
+  "contestedRatio": 0.00450868026293612,
+  "blockedRatio": 0.011966964436204281,
+  "unreachableRatio": 0.0
+}

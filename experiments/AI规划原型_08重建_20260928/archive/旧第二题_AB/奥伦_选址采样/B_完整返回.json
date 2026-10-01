@@ -1,0 +1,64 @@
+{
+  "ok": true,
+  "runId": "gis_muldhurk_167a354e",
+  "status": "completed",
+  "sampleMode": "prior",
+  "cellStepBlocks": 4,
+  "dimensionId": "minecraft:overworld",
+  "centerBlockX": 8448,
+  "centerBlockZ": -9984,
+  "radiusChunks": 32,
+  "completedCells": 16384,
+  "totalCells": 16384,
+  "currentRing": 16,
+  "startedAt": 1790607537920,
+  "finishedAt": 1790607582219,
+  "errorMessage": "",
+  "runDirectory": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\gis_debug\\gis_muldhurk_167a354e",
+  "dirtyRegions": [
+    "minecraft:overworld:step.4:r.16.-20"
+  ],
+  "region": {
+    "regionId": "minecraft:overworld:step.4:r.16.-20",
+    "dimensionId": "minecraft:overworld",
+    "regionX": 16,
+    "regionZ": -20,
+    "blockMinX": 8192,
+    "blockMinZ": -10240,
+    "sizeChunks": 32,
+    "cellStepBlocks": 4,
+    "cellsPerSide": 128,
+    "status": "ready"
+  },
+  "cellCounts": {
+    "pending": 0,
+    "sampled": 0,
+    "metricsSmall": 0,
+    "metricsLarge": 0,
+    "classified": 0,
+    "patched": 16384,
+    "edgeDirty": 5568,
+    "failed": 0
+  },
+  "landformCounts": {
+    "water": 0,
+    "shore": 0,
+    "plain": 8090,
+    "terrace": 364,
+    "slope": 7489,
+    "cliff": 24,
+    "ridge": 131,
+    "valley": 143,
+    "basin": 0,
+    "unknown": 143
+  },
+  "patchCounts": {
+    "total": 286,
+    "maxPatchCells": 6547
+  },
+  "artifacts": {
+    "progress": "progress.png",
+    "progressManifest": "progress_manifest.json",
+    "previewManifest": "preview/preview_manifest.json"
+  }
+}

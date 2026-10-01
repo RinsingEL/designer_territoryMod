@@ -1,0 +1,299 @@
+[
+  {
+    "selectionId": "selection_realm_savira",
+    "realmId": "realm_savira",
+    "packageId": "candidate_realm_savira",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 48,
+      "z": 16
+    },
+    "finalGrid": {
+      "x": 48,
+      "z": 16
+    },
+    "primaryBlock": {
+      "x": 6144,
+      "z": 2048
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C56 西侧温和湿润岸地后方；保留海岸修船、食肆和通风廊院，北侧贝莱萨与南部塔希兰共同分配大陆。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_56",
+      "patchId": "minecraft:overworld:step.128:r.12.4:p.1",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_aoren",
+    "realmId": "realm_aoren",
+    "packageId": "candidate_realm_aoren",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": -49,
+      "z": 20
+    },
+    "finalGrid": {
+      "x": -49,
+      "z": 20
+    },
+    "primaryBlock": {
+      "x": -6272,
+      "z": 2560
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C82 北缘温和过渡内陆；保留分台地工场、师徒加工与维修，南面的热带留给纳希尔。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_82",
+      "patchId": "minecraft:overworld:step.128:r.-13.5:p.4",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_skaien",
+    "realmId": "realm_skaien",
+    "packageId": "candidate_realm_skaien",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": -76,
+      "z": -77
+    },
+    "finalGrid": {
+      "x": -76,
+      "z": -77
+    },
+    "primaryBlock": {
+      "x": -9728,
+      "z": -9856
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。改至 C20 北部冷带内陆；保留长厅与远行补给，哈尔维向中南部及岸地发展。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_20",
+      "patchId": "minecraft:overworld:step.128:r.-19.-20:p.2",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_harvi",
+    "realmId": "realm_harvi",
+    "packageId": "candidate_realm_harvi",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": -122,
+      "z": -12
+    },
+    "finalGrid": {
+      "x": -122,
+      "z": -12
+    },
+    "primaryBlock": {
+      "x": -15616,
+      "z": -1536
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。调整至 C20 中南部温和过渡区，保留沿岸修船与长厅，北部冷带交给斯凯恩。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_20",
+      "patchId": "minecraft:overworld:step.128:r.-31.-3:p.2",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_nashir",
+    "realmId": "realm_nashir",
+    "packageId": "candidate_realm_nashir",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": -74,
+      "z": 47
+    },
+    "finalGrid": {
+      "x": -74,
+      "z": 47
+    },
+    "primaryBlock": {
+      "x": -9472,
+      "z": 6016
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。北部偏热且偏干的内陆，符合围院、遮棚、织物与畜群照护需求。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_82",
+      "patchId": "minecraft:overworld:step.128:r.-19.11:p.5",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_yucen",
+    "realmId": "realm_yucen",
+    "packageId": "candidate_realm_yucen",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": -52,
+      "z": 96
+    },
+    "finalGrid": {
+      "x": -52,
+      "z": 96
+    },
+    "primaryBlock": {
+      "x": -6656,
+      "z": 12288
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。中南部温和过渡地，连接南伸陆地，适合庭园村落与生活组团分布。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_82",
+      "patchId": "minecraft:overworld:step.128:r.-13.24:p.1",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_belesa",
+    "realmId": "realm_belesa",
+    "packageId": "candidate_realm_belesa",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 47,
+      "z": -8
+    },
+    "finalGrid": {
+      "x": 47,
+      "z": -8
+    },
+    "primaryBlock": {
+      "x": 6016,
+      "z": -1024
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。北半部偏西湿润地带，向西岸展开接待与船具服务，向内陆连接庭园和学习空间。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_56",
+      "patchId": "minecraft:overworld:step.128:r.11.-2:p.3",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_tashilan",
+    "realmId": "realm_tashilan",
+    "packageId": "candidate_realm_tashilan",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 52,
+      "z": 30
+    },
+    "finalGrid": {
+      "x": 52,
+      "z": 30
+    },
+    "primaryBlock": {
+      "x": 6656,
+      "z": 3840
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。南半部热区内陆，向较干一侧发展围院聚落，同时保留与北部往来的陆地联系。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_56",
+      "patchId": "minecraft:overworld:step.128:r.13.7:p.1",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_weilen",
+    "realmId": "realm_weilen",
+    "packageId": "candidate_realm_weilen",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 135,
+      "z": -101
+    },
+    "finalGrid": {
+      "x": 135,
+      "z": -101
+    },
+    "primaryBlock": {
+      "x": 17280,
+      "z": -12928
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。已扫描西侧腹地的温和至冷带过渡，避开最东侧截断边界，作为工匠组团的起点。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_9",
+      "patchId": "minecraft:overworld:step.128:r.33.-26:p.5",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_qinglan",
+    "realmId": "realm_qinglan",
+    "packageId": "candidate_realm_qinglan",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 133,
+      "z": 22
+    },
+    "finalGrid": {
+      "x": 133,
+      "z": 22
+    },
+    "primaryBlock": {
+      "x": 17024,
+      "z": 2816
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。北部温和内陆，后续可向西侧湿润岸地展开，避开南部热区成为唯一中心。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_76",
+      "patchId": "minecraft:overworld:step.128:r.33.5:p.3",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  },
+  {
+    "selectionId": "selection_realm_merisa",
+    "realmId": "realm_merisa",
+    "packageId": "candidate_realm_merisa",
+    "selectedBy": "debug",
+    "primaryGrid": {
+      "x": 59,
+      "z": 138
+    },
+    "finalGrid": {
+      "x": 59,
+      "z": 138
+    },
+    "primaryBlock": {
+      "x": 7552,
+      "z": 17664
+    },
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。可见北部陆地，保留向两侧岸地扩展的余地，不依赖扫描外南部土地。",
+    "validation": {
+      "status": "accepted",
+      "continentId": "continent_129",
+      "patchId": "minecraft:overworld:step.128:r.14.34:p.1",
+      "snapApplied": false,
+      "warnings": [],
+      "errors": []
+    }
+  }
+]

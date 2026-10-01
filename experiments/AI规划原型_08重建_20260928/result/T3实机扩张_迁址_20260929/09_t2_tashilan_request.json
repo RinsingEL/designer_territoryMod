@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_tashilan",
+    "gridX": 52,
+    "gridZ": 30,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。南半部热区内陆，向较干一侧发展围院聚落，同时保留与北部往来的陆地联系。"
+  },
+  "time": "2026-09-29T12:21:42.132140"
+}

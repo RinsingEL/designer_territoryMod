@@ -1,0 +1,52 @@
+"""Create portable input-only packages, without local filesystem delivery demands."""
+from pathlib import Path
+import zipfile
+ROOT=Path(__file__).resolve().parents[1]
+OUT=ROOT/'exports/Arena'
+OUT.mkdir(parents=True,exist_ok=True)
+
+def prompt(name):
+    text=(ROOT/'data/题目'/name).read_text(encoding='utf-8').split('## 交付文件')[0].rstrip()
+    return text+'\n\n## 答案交付\n\n请直接在回复中给出完整的 Markdown 答案，保留表格。\n'
+
+first={'题目.txt':prompt('01_T1国度设定.md').encode('utf-8')}
+source=ROOT/'data/第一题_国度设定'
+for name in ['地图说明.md','03_功能与空间标签.md','05_真实模组玩法与文化素材.md','06_风格与空间素材.md']:
+    first['附件/'+Path(name).with_suffix('.txt').name]=(source/name).read_bytes()
+for prefix in ['W11_','W02_','W03_','W04_','W07_','W08_']:
+    file=next((source/'01_世界GIS').glob(prefix+'*.png'))
+    first['附件/'+file.name]=file.read_bytes()
+file=source/'01_世界GIS/W05_主要陆块事实.json'
+first['可选数据/'+file.name]=file.read_bytes()
+second={'题目.txt':prompt('02_奥伦选址判断.md').encode('utf-8')}
+source=ROOT/'data/第二题_领土内城市选址'
+for file in source.iterdir():
+    if not file.is_file() or file.name=='题目.md':continue
+    folder='可选数据' if file.suffix=='.json' else '附件'
+    portable=file.with_suffix('.txt').name if file.suffix=='.md' else file.name
+    second[folder+'/'+portable]=file.read_bytes()
+guide='''# 两道独立题目
+
+解压后，复制对应题目.txt，再上传同题“附件”目录里的文件。第二题已经带有奥伦的背景和真实领土，不需要先让同一个模型回答第一题。
+
+第一题：国度与文化圈设计，4份文字资料＋6张图。W11已标注C6初始大陆排除；可选数据内有陆块统计。
+第二题：奥伦多座城市的设计与布局，5份文字资料＋5张图。可选数据内有精确国土粗格及来源。
+
+题目将本地保存路径要求改为直接回复Markdown；文字附件采用TXT，原内容保持不变。包内没有此前模型的答卷、评价、工具脚本或运行日志。
+
+如果界面不能读取ZIP，请解压后上传文件；如有限额，可分批添加。比较模型时请使用相同附件组合，记录是否附上可选JSON。
+'''
+for title,items in [('第一题_国度设定',first),('第二题_城市设计',second)]:
+    items['使用说明.txt']=guide.encode('utf-8')
+    with zipfile.ZipFile(OUT/(title+'.zip'),'w',zipfile.ZIP_DEFLATED) as z:
+        for name,data in items.items():z.writestr(name,data)
+    (OUT/(title+'_题目.txt')).write_text(items['题目.txt'].decode('utf-8'),encoding='utf-8')
+with zipfile.ZipFile(OUT/'第一题和第二题_总包.zip','w',zipfile.ZIP_DEFLATED) as z:
+    z.writestr('先看这里.txt',guide)
+    for title,items in [('第一题_国度设定',first),('第二题_城市设计',second)]:
+        for name,data in items.items():z.writestr(title+'/'+name,data)
+for p in OUT.glob('*.zip'):
+    with zipfile.ZipFile(p) as z:
+        assert z.testzip() is None
+        assert not any('答卷' in n or 'response.json' in n for n in z.namelist())
+        print(p.name,len(z.namelist()),p.stat().st_size)

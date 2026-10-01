@@ -1,0 +1,91 @@
+{
+  "realmId": "realm_yucen",
+  "realmName": "榆岑",
+  "territoryFile": "../data/第二题_榆岑城市设计/榆岑领土数据.json",
+  "cities": [
+    {
+      "id": "yucen_yulan",
+      "name": "榆岚",
+      "capital": true,
+      "theoreticalScale": "town",
+      "seedRole": "national_center",
+      "role": "全国议事与技艺交流中心，兼营庭园工程和日常商贸",
+      "anchorBlock": {
+        "x": -5184,
+        "z": 10816
+      }
+    },
+    {
+      "id": "yucen_chunyuan",
+      "name": "椿原",
+      "capital": false,
+      "theoreticalScale": "village",
+      "seedRole": "local_center",
+      "role": "北部种苗、家庭园艺和小农补给中心",
+      "anchorBlock": {
+        "x": -4544,
+        "z": 9152
+      }
+    },
+    {
+      "id": "yucen_songji",
+      "name": "松霁",
+      "capital": false,
+      "theoreticalScale": "village",
+      "seedRole": "local_center",
+      "role": "西北木作修补与旅居交流的地方聚落",
+      "anchorBlock": {
+        "x": -7744,
+        "z": 9664
+      }
+    },
+    {
+      "id": "yucen_liqin",
+      "name": "栎岑",
+      "capital": false,
+      "theoreticalScale": "town",
+      "seedRole": "regional_center",
+      "role": "西部农食集散、料理与日用品供应中心",
+      "anchorBlock": {
+        "x": -9280,
+        "z": 12736
+      }
+    },
+    {
+      "id": "yucen_tonggu",
+      "name": "桐谷",
+      "capital": false,
+      "theoreticalScale": "town",
+      "seedRole": "regional_center",
+      "role": "东南腹地综合服务与实用法术学习中心",
+      "anchorBlock": {
+        "x": -3904,
+        "z": 12992
+      }
+    },
+    {
+      "id": "yucen_shanlin",
+      "name": "杉霖",
+      "capital": false,
+      "theoreticalScale": "village",
+      "seedRole": "local_center",
+      "role": "西南远端居民的暖食、织补与探索补给聚落",
+      "anchorBlock": {
+        "x": -8512,
+        "z": 15680
+      }
+    },
+    {
+      "id": "yucen_liuting",
+      "name": "柳汀",
+      "capital": false,
+      "theoreticalScale": "village",
+      "seedRole": "local_center",
+      "role": "东南远端的种植、园艺材料与旅行补给聚落",
+      "anchorBlock": {
+        "x": -3648,
+        "z": 15808
+      }
+    }
+  ]
+}

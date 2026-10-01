@@ -1,0 +1,21 @@
+"""Package current inputs only; no game calls or historical answers."""
+from pathlib import Path
+import zipfile
+ROOT=Path(__file__).resolve().parents[1]
+EXPORT=ROOT/'exports'
+EXPORT.mkdir(exist_ok=True)
+tasks=[('01_T1国度设定.md','现在发给模型_T1.txt'),('02_奥伦选址判断.md','现在发给模型_第二题.txt')]
+for source,target in tasks:
+    text=(ROOT/'data/题目'/source).read_text(encoding='utf-8')
+    (EXPORT/target).write_text(text,encoding='utf-8')
+    if source.startswith('02_'):
+        (ROOT/'data/第二题_领土内城市选址/题目.md').write_text(text,encoding='utf-8')
+with zipfile.ZipFile(EXPORT/'第二题_独立题目与数据.zip','w',zipfile.ZIP_DEFLATED) as z:
+    for p in sorted((ROOT/'data/第二题_领土内城市选址').iterdir()):
+        if p.is_file():z.write(p,p.name)
+with zipfile.ZipFile(EXPORT/'当前题目与资料.zip','w',zipfile.ZIP_DEFLATED) as z:
+    for p in sorted((ROOT/'data').rglob('*')):
+        if p.is_file():z.write(p,p.relative_to(ROOT))
+    for _,target in tasks:z.write(EXPORT/target,target)
+    z.writestr('使用说明.txt','题目文本可直接粘贴；附件位于data内对应题目目录。第一题使用W11标明C6初始大陆排除；第二题为独立城市选址资料。')
+print('Updated exports: two briefs and two current-input ZIP files.')

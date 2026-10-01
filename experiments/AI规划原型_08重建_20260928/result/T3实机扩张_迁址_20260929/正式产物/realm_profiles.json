@@ -1,0 +1,486 @@
+[
+  {
+    "realmId": "realm_savira",
+    "name": "萨维拉",
+    "targetContinentId": "continent_56",
+    "theme": "| **萨维拉**／萨莱海岸 | 改至 C56 西侧温和湿润岸地后方；保留海岸修船、食肆和通风廊院，北侧贝莱萨与南部塔希兰共同分配大陆。 起点气候参数：温度 0.74、湿度 1.00。 | 浅墙、陶瓦与通风拱廊为主；湿润海侧抬高储物地面、加深屋檐，内陆住家缩小开口并围出工作院。 | 沿岸修船、制作帆具、经营食肆，内陆村落以菜圃和小型加工补充生计；数个岸上聚落共同承担接待与补给。 | 顺谷分布生活组团，台阶连接岸线与上层住区→卸货、晾晒与仓储相邻，旅客步行廊避开货物搬运，食品准备避开船舶维修。 | **Small Ships＋Aquaculture 2＋Farmer's Delight**：玩家准备船只、逐岸垂钓并制作出航食物；需要木料、钓具、鱼饵、食材和靠岸整理空间，修船与食物收购服务为拟议接入。 |",
+    "cultureTags": [
+      "萨莱海岸"
+    ],
+    "industryTags": [
+      "渔事",
+      "修船",
+      "食品"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "shore",
+      "valley",
+      "lowland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.23,
+      "minAreaRatio": 0.15,
+      "maxAreaRatio": 0.276,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_aoren",
+    "name": "奥伦",
+    "targetContinentId": "continent_82",
+    "theme": "| **奥伦**／维伦工匠 | 改至 C82 北缘温和过渡内陆；保留分台地工场、师徒加工与维修，南面的热带留给纳希尔。 起点气候参数：温度 0.57、湿度 0.47。 | 砖石工场与低层围院相接，铜饰集中在设备和公共入口；干燥地方加遮棚，谷地住区以木构和菜园软化工业外观。 | 工匠家庭承接机械、工具和日用品制作，学徒在不同工坊轮学；周边村落提供食物并使用维修服务。 | 分台地布置加工组团，减少大面积削平→加工、备料、仓储形成短距离联系，跨高差货运与居民步行分开，预留设备检修和后续扩建空地。 | **Create＋Immersive Engineering＋Chipped**：搭建传动与电气工场，制作地方建材；需求为安山合金、金属、电气部件和原版基材，玩家自建生产装置，建筑外壳不自动提供供电或加工。 |",
+    "cultureTags": [
+      "维伦工匠"
+    ],
+    "industryTags": [
+      "机械",
+      "工具",
+      "维修"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.22,
+      "minAreaRatio": 0.143,
+      "maxAreaRatio": 0.264,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_skaien",
+    "name": "斯凯恩",
+    "targetContinentId": "continent_20",
+    "theme": "| **斯凯恩**／哈尔长厅，兼受维伦影响 | 改至 C20 北部冷带内陆；保留长厅与远行补给，哈尔维向中南部及岸地发展。 起点气候参数：温度 0.18、湿度 0.85。 | 石基长厅、封闭门廊与短街巷；冷带中央厚墙紧院，较湿边侧增加遮雨连廊，南部过渡村落可采用开敞院落。 | 小片耕作、衣具修补、住宿和远行补给；归来者在公共厅堂分享见闻，居民日常仍以家务、工艺和交易为主。 | 防寒围合与分散储备→室内市场、集体备餐、干衣和工具整理空间连成短途步行网络；试法与装备训练置于住区外缘，归来休息先于陈列战利品。 | **Iron's Spells 'n Spellbooks＋Farmer's Delight＋Artifacts**：备餐、整备法术后外出探索，归来交流收藏；需求为食物、常规装备及成长阶段合适的墨水与奥术精华，稀有法术和饰品保留探索获得的价值。 |",
+    "cultureTags": [
+      "哈尔长厅"
+    ],
+    "industryTags": [
+      "补给",
+      "修补",
+      "小农"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.35,
+      "minAreaRatio": 0.227,
+      "maxAreaRatio": 0.42,
+      "normalizationGroup": "continent_20"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_harvi",
+    "name": "哈尔维",
+    "targetContinentId": "continent_20",
+    "theme": "| **哈尔维**／哈尔长厅，沿岸融入萨莱传统 | 调整至 C20 中南部温和过渡区，保留沿岸修船与长厅，北部冷带交给斯凯恩。 起点气候参数：温度 0.47、湿度 0.08。 | 木构长厅与深檐住宅沿岸或谷地分组；较湿聚落加石基和通风储物层，南部住区加入浅墙与露天交易廊。 | 沿岸居民制作钓具、修船和加工食物，内陆兼营种植、木作与旅客接待；家族聚会与外来旅客共享用餐场所。 | 跨高差以分段道路连接多个聚落，不把沿岸全铺成一个港区→小规模靠岸整理点、维修作业面与室内集市互补，湿货和干燥衣粮分库存放。 | **Aquaculture 2＋Small Ships＋Chipped**：沿不同水域旅行、收集鱼获并装修长厅式住家；需求为鱼饵、钓具、船材和装饰基材，各地可提供不同样品与食谱交流，具体鱼种不预先指定。 |",
+    "cultureTags": [
+      "哈尔长厅"
+    ],
+    "industryTags": [
+      "修船",
+      "钓具",
+      "木作"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "shore",
+      "valley",
+      "lowland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.4,
+      "minAreaRatio": 0.26,
+      "maxAreaRatio": 0.48,
+      "normalizationGroup": "continent_20"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_nashir",
+    "name": "纳希尔",
+    "targetContinentId": "continent_82",
+    "theme": "| **纳希尔**／纳哈尔围院 | C82 北部内陆偏热带；西中部及北缘内陆有偏干片区，东侧夹较湿地段，温度边界与湿度边界不重合；丘岭之间有谷地穿插。 | 赭墙围院、布棚与深门楼；较干片区院落紧凑，较湿东侧增加瓦檐、抬高织物储物面，避免全国都使用同一种“沙漠城”外观。 | 织毡、陶作、畜群照护与小片农作并行，陆路商旅带来换装和修补需求；定居家庭与阶段性驻留的牧户共用交易场。 | 遮阴与集中存水，耕作围绕核验后的供水点展开→饮用、洗涤、畜群饮水分区，饲草与织物保持干燥，短住营地紧邻补给而不堵住家宅入口。 | **Farmer's Delight＋Create＋Chipped**：玩家经营厨房、搭建小型加工并制作院墙与铺地；需求为食材、机械部件和陶石基材，村落可作为采买与作品交换场所，灌溉和公共供水另行落实。 |",
+    "cultureTags": [
+      "纳哈尔围院"
+    ],
+    "industryTags": [
+      "织毡",
+      "陶作",
+      "畜群照护"
+    ],
+    "materialTags": [
+      "陶土",
+      "石造",
+      "织物"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_yucen",
+    "name": "榆岑",
+    "targetContinentId": "continent_82",
+    "theme": "| **榆岑**／岑岚庭园 | C82 中南部至两条南伸陆地，避开北部最热带；温度多居中等区间，南部湿润片区与较干斑块相间，W04 以森林、平原类推断为主。 | 木梁灰墙、连续瓦檐与生产庭园；较湿区域以架高步道连接院落，较干地段减小园圃并增加遮棚，山坡宅院分级落台。 | 家庭经营菜园、花木与料理，兼做木器和魔法材料加工；共餐庭院同时承担邻里交换与学徒展示。 | 保留植被间隙，将生产庭园嵌入生活组团→厨房靠近食材整理区，魔法试验与儿童活动分院，种苗养护、材料存放和花园检修有独立通路。 | **Botania＋Ars Nouveau＋Farmer's Delight**：布置工作花园、自编法术、种植和做饭；需求为功能花、活木、活石、魔源宝石与食材，两套魔法系统各自运行，不默认 Mana 与魔源互通。 |",
+    "cultureTags": [
+      "岑岚庭园"
+    ],
+    "industryTags": [
+      "园艺",
+      "料理",
+      "魔法"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_82"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.55,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_belesa",
+    "name": "贝莱萨",
+    "targetContinentId": "continent_56",
+    "theme": "| **贝莱萨**／萨莱海岸，兼受岑岚影响 | C56 北半部及西侧海岸；温度多为中等，东北端相对偏冷，西侧湿度较高、东北较干，内部有明显丘岭高差。 | 浅墙拱廊与木构庭园相接；西侧加深檐和通风底层，东北住区增加封闭门廊，岸上平台按坡地分层。 | 船具维修、鱼食加工、园艺和书籍抄录共存；居民既接待过海旅客，也服务内陆村落，讲学不独占整座城市。 | 上层生活与学习空间连接下层靠岸作业面→旅客接待、材料交流、阅览和试验庭院彼此靠近，货物不经过安静阅览区，开放展示与实际试法分开。 | **Small Ships＋Ars Nouveau＋Chipped**：乘船访学、试验法术并收集地方装饰样式；需求为航行补给、魔源宝石、制作材料和建材样品，NPC 教学不替代原生符文解锁流程。 |",
+    "cultureTags": [
+      "萨莱海岸"
+    ],
+    "industryTags": [
+      "船具",
+      "园艺",
+      "访学"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "shore",
+      "valley",
+      "lowland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.27,
+      "minAreaRatio": 0.176,
+      "maxAreaRatio": 0.324,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_tashilan",
+    "name": "塔希兰",
+    "targetContinentId": "continent_56",
+    "theme": "| **塔希兰**／纳哈尔围院，海边受萨莱影响 | C56 南半部偏热区；内陆东侧较干、西侧较湿，南北两部分之间可见较窄的陆地联系，具体通路尚未验证。 | 厚墙围院与窄阴廊为底，西侧加屋檐和可通风的木构上层；沿海陶色墙体与浅色拱廊混用，仪式纹样只在专用庭院集中出现。 | 织物、陶作、食物准备与旅客换乘维持日常；少数家族从事仪式材料整理及灵体协作实践，普通居民不必人人成为召唤者。 | 以遮棚串联日常活动，优先保留跨聚落通道→客居与补给相邻，畜群等候、物资转交不占主通道；仪式院保留连续空地，与家庭厨房分开。 | **Occultism＋Farmer's Delight＋Chipped**：准备白垩、Demon's Dream 种子及灵体辞典，完成原生仪式并布置家庭工场；仪式材料、食物与装饰基材形成需求，公共见证是创作习惯，非现成契约系统。 |",
+    "cultureTags": [
+      "纳哈尔围院"
+    ],
+    "industryTags": [
+      "织物",
+      "陶作",
+      "仪式"
+    ],
+    "materialTags": [
+      "陶土",
+      "石造",
+      "织物"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.3,
+      "minAreaRatio": 0.195,
+      "maxAreaRatio": 0.36,
+      "normalizationGroup": "continent_56"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_weilen",
+    "name": "维伦",
+    "targetContinentId": "continent_9",
+    "theme": "| **维伦**／维伦工匠，冷带融入哈尔传统 | C9 扫描范围内西侧与腹地；北部温度中等，中南部横穿冷带，湿度呈多段变化；陆块向东超出扫描窗口。 | 石基与砖构高厅延续工匠风格；北部采用工作围院，冷带用较短的封闭接廊串联住宅和接件空间，彩窗用于公共纪念与陈列而非全城宗教化。 | 工具维修、批量日用品加工、材料记账与装订并行；工匠协会共同维护样品和规格档案，居民仍有食品街市与普通住宅。 | 加工组团随谷地分散，避免用巨型平台覆盖高差→收件核对区连接仓储与加工，公共接待止于受控设备区前，居住与重载运输之间留步行缓冲。 | **Create＋AE2＋Chipped**：先建立可见加工流程，再组织库存和自动合成；需求为机械部件、赛特斯石英、压印模板与存储组件，公共库存权限、NPC 下单和跨聚落配送均另行接入。 |",
+    "cultureTags": [
+      "维伦工匠"
+    ],
+    "industryTags": [
+      "加工",
+      "库存",
+      "工具"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_9"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": 0.1,
+      "forestAffinity": 0.1,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_qinglan",
+    "name": "青岚",
+    "targetContinentId": "continent_76",
+    "theme": "| **青岚**／岑岚庭园，西南岸受萨莱影响 | C76 北部中等温度区及西侧过渡海岸；北部内陆也有偏干斑块，南部转热，西侧狭长伸出部分较湿；东侧陆地被扫描边缘截断。 | 灰瓦木院与高挑通风厅并置；偏干内陆采用小庭院，较湿岸地用深檐和架高连接，向热区过渡时增加连片遮棚。 | 园艺、料理、织物修补与观察旅行接待共存；村落之间交换种苗和野外见闻，保留较大荒野地带供居民生产与玩家探索。 | 聚落外围保留植被连续带，把远行服务放在道路进入住区的位置→装备整理、休息和样品记录相邻，试养与观察活动不挤进集市，生产园圃保留日常进出通道。 | **Alex's Mobs＋Botania＋Farmer's Delight**：观察不同生物、按其原生机制互动，返回经营工作花园和厨房；需求为适用工具、食物、花卉与材料，不保证当地生成特定物种或一律可驯服。 |",
+    "cultureTags": [
+      "岑岚庭园"
+    ],
+    "industryTags": [
+      "园艺",
+      "料理",
+      "观察旅行"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "valley",
+      "lowland",
+      "upland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_76"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.45,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.55,
+      "compactness": 0.65,
+      "coastalBias": 0.2,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  },
+  {
+    "realmId": "realm_merisa",
+    "name": "梅里萨",
+    "targetContinentId": "continent_129",
+    "theme": "| **梅里萨**／萨莱海岸，兼受哈尔长厅影响 | C129 扫描可见的北部和两侧岸地；温度多为中等至偏低，西中部较干、东侧较湿，南部陆地延伸出图。 | 浅墙、石基和低侧翼围成紧凑院落；东侧使用深檐连廊与木构长厅，西侧院落增加遮棚，船舶意象用于梁架与栏杆。 | 岸上住家经营修补、备餐、短住和材料整理，周围村落兼做种植与日用品制作；公共厅堂保留归来者记录和私人收藏的展示位置。 | 分散聚落兼作远行后方，受高差限制的岸段不强行连续开发→出发补给与归来休息相邻，样品整理、装备保管和家庭起居分开，公共展示只占可管理的小片空间。 | **Small Ships＋Alex's Caves＋Artifacts**：航行寻找新的陆上探索起点，依据实际发现的石板和线索准备地下远征，归来整理收藏；需求为船材、食物、工具及阶段性装备，海岸本身不保证有洞穴入口或战利品。 |",
+    "cultureTags": [
+      "萨莱海岸"
+    ],
+    "industryTags": [
+      "修补",
+      "备餐",
+      "远征补给"
+    ],
+    "materialTags": [
+      "木造",
+      "石造",
+      "陶瓦"
+    ],
+    "landformPreferences": [
+      "shore",
+      "valley",
+      "lowland"
+    ],
+    "avoidLandforms": [
+      "cliff"
+    ],
+    "scalePlan": {
+      "priority": "normal",
+      "targetAreaRatio": 0.65,
+      "minAreaRatio": 0.423,
+      "maxAreaRatio": 0.78,
+      "normalizationGroup": "continent_129"
+    },
+    "expansionStyle": {
+      "waterAffinity": 0.8,
+      "mountainAffinity": -0.2,
+      "forestAffinity": 0.1,
+      "compactness": 0.45,
+      "coastalBias": 0.85,
+      "resourceSeeking": 0.5,
+      "borderPressure": 0.3,
+      "seaCrossingPolicy": "none"
+    }
+  }
+]

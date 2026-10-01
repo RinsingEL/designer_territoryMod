@@ -1,0 +1,79 @@
+{
+  "realmId": "realm_yucen",
+  "realmName": "榆岑",
+  "territoryFile": "../data/第二题_榆岑城市设计/榆岑领土数据.json",
+  "cities": [
+    {
+      "id": "city_01",
+      "name": "榆原",
+      "capital": true,
+      "role": "全国公共事务、综合交易与庭园技艺交流",
+      "anchorBlock": {
+        "x": -5504,
+        "z": 10368
+      },
+      "theoreticalScale": "capital",
+      "seedRole": "capital"
+    },
+    {
+      "id": "city_02",
+      "name": "槐晴",
+      "capital": false,
+      "role": "北部法术学习、知识记录与旅行准备",
+      "anchorBlock": {
+        "x": -4608,
+        "z": 8448
+      },
+      "theoreticalScale": "village",
+      "seedRole": "settlement"
+    },
+    {
+      "id": "city_03",
+      "name": "柳岑",
+      "capital": false,
+      "role": "东部日用品、园艺材料加工与维修",
+      "anchorBlock": {
+        "x": -3520,
+        "z": 11328
+      },
+      "theoreticalScale": "town",
+      "seedRole": "settlement"
+    },
+    {
+      "id": "city_04",
+      "name": "棠岚",
+      "capital": false,
+      "role": "西南农食加工、储备与区域交易",
+      "anchorBlock": {
+        "x": -8384,
+        "z": 13760
+      },
+      "theoreticalScale": "town",
+      "seedRole": "settlement"
+    },
+    {
+      "id": "city_05",
+      "name": "杉霁",
+      "capital": false,
+      "role": "西南端旅宿、补给与日常修补",
+      "anchorBlock": {
+        "x": -8640,
+        "z": 15808
+      },
+      "theoreticalScale": "village",
+      "seedRole": "settlement"
+    },
+    {
+      "id": "city_06",
+      "name": "楠汀",
+      "capital": false,
+      "role": "东南居民服务、旅居与小型魔法实践",
+      "anchorBlock": {
+        "x": -2880,
+        "z": 14656
+      },
+      "theoreticalScale": "village",
+      "seedRole": "settlement"
+    }
+  ]
+}

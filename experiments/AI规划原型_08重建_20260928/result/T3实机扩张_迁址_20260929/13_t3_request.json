@@ -1,0 +1,10 @@
+{
+  "path": "/realm/t3/expand",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "allowUnclaimedLand": true,
+    "qualityMode": "strict",
+    "expansionModel": "action_budget"
+  },
+  "time": "2026-09-29T12:21:51.026269"
+}

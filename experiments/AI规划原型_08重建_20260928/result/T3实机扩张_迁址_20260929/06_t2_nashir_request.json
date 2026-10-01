@@ -1,0 +1,13 @@
+{
+  "path": "/realm/t2/select_coordinate",
+  "body": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "realmId": "realm_nashir",
+    "gridX": -74,
+    "gridZ": 47,
+    "selectedBy": "debug",
+    "allowSnap": false,
+    "reason": "用户确认的 W 粗格起点简化路线实验；不经过 Top Patch。北部偏热且偏干的内陆，符合围院、遮棚、织物与畜群照护需求。"
+  },
+  "time": "2026-09-29T12:21:35.490333"
+}

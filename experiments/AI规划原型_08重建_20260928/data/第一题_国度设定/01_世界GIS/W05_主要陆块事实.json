@@ -1,0 +1,2254 @@
+{
+  "sourceWorld": "geometia_beta2_08 (1)",
+  "note": "标注面积至少 300 粗格的陆块；不是国家数量、国家边界或选择限制。面积仅为扫描窗口内。",
+  "continents": [
+    {
+      "continentId": "continent_6",
+      "areaCells": 10756,
+      "centerBlock": {
+        "x": 4596,
+        "z": -10105
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "nonWaterCellsCounted": 10756,
+      "baseLandformCellCounts": {
+        "lowland": 2446,
+        "valley": 4316,
+        "shore": 240,
+        "ridge": 2251,
+        "upland": 1384,
+        "water": 119
+      },
+      "touchesScanBoundary": false,
+      "mapLabelAnchorBlock": {
+        "x": 4608,
+        "z": -10112
+      },
+      "nonWaterBounds": {
+        "minX": -3328,
+        "minZ": -18048,
+        "maxXExclusive": 13696,
+        "maxZExclusive": -1408
+      }
+    },
+    {
+      "continentId": "continent_9",
+      "areaCells": 2336,
+      "centerBlock": {
+        "x": 17719,
+        "z": -10208
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "nonWaterCellsCounted": 2336,
+      "baseLandformCellCounts": {
+        "lowland": 568,
+        "upland": 287,
+        "valley": 937,
+        "ridge": 465,
+        "shore": 62,
+        "water": 17
+      },
+      "touchesScanBoundary": true,
+      "mapLabelAnchorBlock": {
+        "x": 17664,
+        "z": -10240
+      },
+      "nonWaterBounds": {
+        "minX": 15232,
+        "minZ": -17280,
+        "maxXExclusive": 19456,
+        "maxZExclusive": -3584
+      }
+    },
+    {
+      "continentId": "continent_20",
+      "areaCells": 4617,
+      "centerBlock": {
+        "x": -12051,
+        "z": -5702
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "nonWaterCellsCounted": 4617,
+      "baseLandformCellCounts": {
+        "valley": 1757,
+        "shore": 174,
+        "lowland": 1152,
+        "upland": 570,
+        "ridge": 859,
+        "water": 105
+      },
+      "touchesScanBoundary": false,
+      "mapLabelAnchorBlock": {
+        "x": -12032,
+        "z": -5760
+      },
+      "nonWaterBounds": {
+        "minX": -19200,
+        "minZ": -13568,
+        "maxXExclusive": -6528,
+        "maxZExclusive": 2560
+      }
+    },
+    {
+      "continentId": "continent_56",
+      "areaCells": 3716,
+      "centerBlock": {
+        "x": 8482,
+        "z": 1998
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "nonWaterCellsCounted": 3716,
+      "baseLandformCellCounts": {
+        "upland": 470,
+        "lowland": 848,
+        "water": 90,
+        "shore": 110,
+        "valley": 1445,
+        "ridge": 753
+      },
+      "touchesScanBoundary": false,
+      "mapLabelAnchorBlock": {
+        "x": 8448,
+        "z": 2048
+      },
+      "nonWaterBounds": {
+        "minX": 3584,
+        "minZ": -3712,
+        "maxXExclusive": 14464,
+        "maxZExclusive": 7936
+      }
+    },
+    {
+      "continentId": "continent_76",
+      "areaCells": 3284,
+      "centerBlock": {
+        "x": 16614,
+        "z": 6335
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "nonWaterCellsCounted": 3284,
+      "baseLandformCellCounts": {
+        "lowland": 836,
+        "valley": 1263,
+        "ridge": 661,
+        "upland": 406,
+        "water": 26,
+        "shore": 92
+      },
+      "touchesScanBoundary": true,
+      "mapLabelAnchorBlock": {
+        "x": 16640,
+        "z": 6272
+      },
+      "nonWaterBounds": {
+        "minX": 10624,
+        "minZ": 256,
+        "maxXExclusive": 19456,
+        "maxZExclusive": 13568
+      }
+    },
+    {
+      "continentId": "continent_82",
+      "areaCells": 8079,
+      "centerBlock": {
+        "x": -5497,
+        "z": 8447
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ],
+      "nonWaterCellsCounted": 8079,
+      "baseLandformCellCounts": {
+        "lowland": 1979,
+        "valley": 3158,
+        "upland": 1022,
+        "shore": 195,
+        "ridge": 1611,
+        "water": 114
+      },
+      "touchesScanBoundary": false,
+      "mapLabelAnchorBlock": {
+        "x": -5504,
+        "z": 8448
+      },
+      "nonWaterBounds": {
+        "minX": -12416,
+        "minZ": 1280,
+        "maxXExclusive": 3072,
+        "maxZExclusive": 16640
+      }
+    },
+    {
+      "continentId": "continent_129",
+      "areaCells": 1700,
+      "centerBlock": {
+        "x": 7670,
+        "z": 17204
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "nonWaterCellsCounted": 1700,
+      "baseLandformCellCounts": {
+        "lowland": 463,
+        "shore": 94,
+        "valley": 602,
+        "upland": 208,
+        "water": 25,
+        "ridge": 308
+      },
+      "touchesScanBoundary": true,
+      "mapLabelAnchorBlock": {
+        "x": 7680,
+        "z": 17152
+      },
+      "nonWaterBounds": {
+        "minX": 3328,
+        "minZ": 14208,
+        "maxXExclusive": 12160,
+        "maxZExclusive": 19456
+      }
+    },
+    {
+      "continentId": "continent_134",
+      "areaCells": 1021,
+      "centerBlock": {
+        "x": -16118,
+        "z": 17543
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "nonWaterCellsCounted": 1021,
+      "baseLandformCellCounts": {
+        "valley": 399,
+        "lowland": 255,
+        "upland": 139,
+        "ridge": 194,
+        "water": 17,
+        "shore": 17
+      },
+      "touchesScanBoundary": true,
+      "mapLabelAnchorBlock": {
+        "x": -16128,
+        "z": 17536
+      },
+      "nonWaterBounds": {
+        "minX": -19456,
+        "minZ": 14976,
+        "maxXExclusive": -13056,
+        "maxZExclusive": 19456
+      }
+    },
+    {
+      "continentId": "continent_157",
+      "areaCells": 307,
+      "centerBlock": {
+        "x": -5489,
+        "z": 18760
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ],
+      "nonWaterCellsCounted": 307,
+      "baseLandformCellCounts": {
+        "lowland": 85,
+        "upland": 37,
+        "ridge": 66,
+        "water": 2,
+        "valley": 108,
+        "shore": 9
+      },
+      "touchesScanBoundary": true,
+      "mapLabelAnchorBlock": {
+        "x": -5504,
+        "z": 18816
+      },
+      "nonWaterBounds": {
+        "minX": -8320,
+        "minZ": 17536,
+        "maxXExclusive": -2816,
+        "maxZExclusive": 19456
+      }
+    }
+  ],
+  "allContinentSummaries": [
+    {
+      "continentId": "continent_0",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5504,
+        "z": -19456
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_5",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 6016,
+        "z": -19072
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_1",
+      "areaCells": 77,
+      "centerBlock": {
+        "x": 8234,
+        "z": -19348
+      },
+      "primaryLandforms": [
+        "cliff",
+        "ridge",
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_2",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 10624,
+        "z": -19456
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_3",
+      "areaCells": 24,
+      "centerBlock": {
+        "x": 11237,
+        "z": -19291
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_4",
+      "areaCells": 15,
+      "centerBlock": {
+        "x": 12655,
+        "z": -19413
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_6",
+      "areaCells": 10756,
+      "centerBlock": {
+        "x": 4596,
+        "z": -10105
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ]
+    },
+    {
+      "continentId": "continent_7",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -2304,
+        "z": -18048
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_8",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -2048,
+        "z": -18048
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_9",
+      "areaCells": 2336,
+      "centerBlock": {
+        "x": 17719,
+        "z": -10208
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ]
+    },
+    {
+      "continentId": "continent_10",
+      "areaCells": 9,
+      "centerBlock": {
+        "x": 7196,
+        "z": -16484
+      },
+      "primaryLandforms": [
+        "shore",
+        "ridge",
+        "cliff",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_11",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 13312,
+        "z": -16512
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_12",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5888,
+        "z": -16000
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_13",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -7104,
+        "z": -15744
+      },
+      "primaryLandforms": [
+        "slope",
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_14",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -1984,
+        "z": -15232
+      },
+      "primaryLandforms": [
+        "slope",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_15",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 16512,
+        "z": -15104
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_17",
+      "areaCells": 3,
+      "centerBlock": {
+        "x": -7296,
+        "z": -14336
+      },
+      "primaryLandforms": [
+        "ridge",
+        "slope",
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_16",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -7168,
+        "z": -14720
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_18",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -8192,
+        "z": -13760
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_20",
+      "areaCells": 4617,
+      "centerBlock": {
+        "x": -12051,
+        "z": -5702
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_19",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -7296,
+        "z": -13696
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_21",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -7168,
+        "z": -13568
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_22",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -8320,
+        "z": -13056
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_23",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 6912,
+        "z": -12928
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_25",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 640,
+        "z": -12160
+      },
+      "primaryLandforms": [
+        "valley"
+      ]
+    },
+    {
+      "continentId": "continent_24",
+      "areaCells": 3,
+      "centerBlock": {
+        "x": 11520,
+        "z": -12288
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_27",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -12416,
+        "z": -10880
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_26",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -1408,
+        "z": -11136
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_28",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -12672,
+        "z": -10368
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_29",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -12800,
+        "z": -10240
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_31",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -7936,
+        "z": -9856
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_30",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11520,
+        "z": -9984
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_32",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5376,
+        "z": -9472
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_33",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -14336,
+        "z": -8704
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_34",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -2176,
+        "z": -8576
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_36",
+      "areaCells": 6,
+      "centerBlock": {
+        "x": -14976,
+        "z": -7573
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_35",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -6784,
+        "z": -8192
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_37",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -14720,
+        "z": -7552
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_39",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13184,
+        "z": -7424
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_38",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -2048,
+        "z": -7488
+      },
+      "primaryLandforms": [
+        "slope",
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_40",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 12416,
+        "z": -7296
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_42",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11136,
+        "z": -6912
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_41",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11264,
+        "z": -7040
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_43",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11264,
+        "z": -6784
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_44",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -14464,
+        "z": -6528
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_45",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -14272,
+        "z": -6400
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_46",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -14208,
+        "z": -6144
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_48",
+      "areaCells": 146,
+      "centerBlock": {
+        "x": -18569,
+        "z": -4027
+      },
+      "primaryLandforms": [
+        "cliff",
+        "shore",
+        "slope",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_47",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5248,
+        "z": -5504
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_49",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 3200,
+        "z": -4928
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_50",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 8704,
+        "z": -4992
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_52",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -19200,
+        "z": -4224
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_53",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -16064,
+        "z": -4224
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_51",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 7552,
+        "z": -4480
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_54",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 14208,
+        "z": -4096
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_55",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 14080,
+        "z": -3968
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_56",
+      "areaCells": 3716,
+      "centerBlock": {
+        "x": 8482,
+        "z": 1998
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_57",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -19456,
+        "z": -3264
+      },
+      "primaryLandforms": [
+        "slope",
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_58",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 3968,
+        "z": -3072
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_59",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -10240,
+        "z": -2432
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_61",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -12800,
+        "z": -1920
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_60",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -11008,
+        "z": -2048
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_62",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 5824,
+        "z": -1664
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_63",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 384,
+        "z": -1536
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_64",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 6016,
+        "z": -1536
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_65",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 1280,
+        "z": -640
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_67",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -17152,
+        "z": -384
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_68",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": -13440,
+        "z": -352
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_71",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13824,
+        "z": -128
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_69",
+      "areaCells": 14,
+      "centerBlock": {
+        "x": -13120,
+        "z": 73
+      },
+      "primaryLandforms": [
+        "cliff",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_66",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 4992,
+        "z": -512
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_70",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 15616,
+        "z": -256
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_72",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 15744,
+        "z": -128
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_73",
+      "areaCells": 9,
+      "centerBlock": {
+        "x": -17280,
+        "z": 270
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_74",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13568,
+        "z": 0
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_77",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13312,
+        "z": 384
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_76",
+      "areaCells": 3284,
+      "centerBlock": {
+        "x": 16614,
+        "z": 6335
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ]
+    },
+    {
+      "continentId": "continent_75",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 15872,
+        "z": 0
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_78",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 17024,
+        "z": 384
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_79",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13568,
+        "z": 512
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_81",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -13696,
+        "z": 768
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_80",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -3072,
+        "z": 640
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_82",
+      "areaCells": 8079,
+      "centerBlock": {
+        "x": -5497,
+        "z": 8447
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "valley"
+      ]
+    },
+    {
+      "continentId": "continent_83",
+      "areaCells": 11,
+      "centerBlock": {
+        "x": -3421,
+        "z": 1559
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_85",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -3328,
+        "z": 1792
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_86",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5888,
+        "z": 1792
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_84",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 6144,
+        "z": 1664
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_87",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -2112,
+        "z": 2048
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_88",
+      "areaCells": 12,
+      "centerBlock": {
+        "x": -1291,
+        "z": 2400
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_89",
+      "areaCells": 3,
+      "centerBlock": {
+        "x": 7211,
+        "z": 2773
+      },
+      "primaryLandforms": [
+        "slope",
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_90",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 19072,
+        "z": 2688
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_91",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": -7296,
+        "z": 3392
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_92",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 14592,
+        "z": 3584
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_93",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -9472,
+        "z": 4736
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_94",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -9344,
+        "z": 4864
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_95",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -9728,
+        "z": 5376
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_96",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -768,
+        "z": 7296
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_97",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -12416,
+        "z": 7680
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_98",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5376,
+        "z": 7936
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_101",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": 2848,
+        "z": 8608
+      },
+      "primaryLandforms": [
+        "shore",
+        "ridge",
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_99",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5248,
+        "z": 8192
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_100",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 12928,
+        "z": 8448
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_102",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -6528,
+        "z": 9088
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_104",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -7168,
+        "z": 10432
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_103",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 15104,
+        "z": 10240
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_105",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 14976,
+        "z": 10368
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_109",
+      "areaCells": 3,
+      "centerBlock": {
+        "x": -11136,
+        "z": 11136
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_106",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 14976,
+        "z": 10752
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_107",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 15872,
+        "z": 11008
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_110",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 18688,
+        "z": 11136
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_108",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": 19264,
+        "z": 11072
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_111",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -512,
+        "z": 11328
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_114",
+      "areaCells": 5,
+      "centerBlock": {
+        "x": -3226,
+        "z": 11955
+      },
+      "primaryLandforms": [
+        "cliff",
+        "ridge",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_112",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -640,
+        "z": 11776
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_113",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -384,
+        "z": 11776
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_116",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 18304,
+        "z": 12224
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_115",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 18560,
+        "z": 11904
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_117",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -6400,
+        "z": 12416
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_118",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -2560,
+        "z": 12672
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_119",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -1920,
+        "z": 12672
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_121",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -2048,
+        "z": 13184
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_120",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 9600,
+        "z": 12928
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_122",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": -5888,
+        "z": 13632
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_123",
+      "areaCells": 11,
+      "centerBlock": {
+        "x": 7959,
+        "z": 13824
+      },
+      "primaryLandforms": [
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_125",
+      "areaCells": 5,
+      "centerBlock": {
+        "x": 9498,
+        "z": 13747
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_124",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 19328,
+        "z": 13568
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_128",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -7808,
+        "z": 14208
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_129",
+      "areaCells": 1700,
+      "centerBlock": {
+        "x": 7670,
+        "z": 17204
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_126",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 7616,
+        "z": 13952
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_127",
+      "areaCells": 7,
+      "centerBlock": {
+        "x": 10057,
+        "z": 14117
+      },
+      "primaryLandforms": [
+        "shore",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_132",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 8064,
+        "z": 14528
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_130",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 8192,
+        "z": 14336
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_133",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 8320,
+        "z": 14464
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_131",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 10624,
+        "z": 14400
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_134",
+      "areaCells": 1021,
+      "centerBlock": {
+        "x": -16118,
+        "z": 17543
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_137",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5632,
+        "z": 15232
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_138",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 5952,
+        "z": 15232
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_135",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 6144,
+        "z": 15104
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_136",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 9984,
+        "z": 15104
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_139",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5504,
+        "z": 15360
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_140",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 5376,
+        "z": 15744
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_141",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11776,
+        "z": 15744
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_142",
+      "areaCells": 12,
+      "centerBlock": {
+        "x": 4864,
+        "z": 16107
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_143",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 10880,
+        "z": 15872
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_144",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11648,
+        "z": 15872
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_145",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11904,
+        "z": 15872
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_147",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11776,
+        "z": 16128
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_146",
+      "areaCells": 22,
+      "centerBlock": {
+        "x": 12957,
+        "z": 16099
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_151",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -17920,
+        "z": 16768
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_148",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -8960,
+        "z": 16384
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_152",
+      "areaCells": 5,
+      "centerBlock": {
+        "x": 12365,
+        "z": 16922
+      },
+      "primaryLandforms": [
+        "shore",
+        "ridge",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_149",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 13696,
+        "z": 16640
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_150",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": 13952,
+        "z": 16704
+      },
+      "primaryLandforms": [
+        "ridge",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_153",
+      "areaCells": 5,
+      "centerBlock": {
+        "x": 14541,
+        "z": 16947
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_154",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -18176,
+        "z": 17408
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_157",
+      "areaCells": 307,
+      "centerBlock": {
+        "x": -5489,
+        "z": 18760
+      },
+      "primaryLandforms": [
+        "cliff",
+        "slope",
+        "shore",
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_155",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 3584,
+        "z": 17408
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_158",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 3712,
+        "z": 17536
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_156",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11904,
+        "z": 17408
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_159",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11008,
+        "z": 18048
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_161",
+      "areaCells": 2,
+      "centerBlock": {
+        "x": -14016,
+        "z": 18560
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_163",
+      "areaCells": 22,
+      "centerBlock": {
+        "x": -8937,
+        "z": 19136
+      },
+      "primaryLandforms": [
+        "cliff",
+        "shore",
+        "ridge",
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_164",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -8576,
+        "z": 18816
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_160",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11008,
+        "z": 18432
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_162",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11136,
+        "z": 18560
+      },
+      "primaryLandforms": [
+        "shore"
+      ]
+    },
+    {
+      "continentId": "continent_165",
+      "areaCells": 4,
+      "centerBlock": {
+        "x": 11744,
+        "z": 18912
+      },
+      "primaryLandforms": [
+        "ridge",
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_168",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": -19456,
+        "z": 19328
+      },
+      "primaryLandforms": [
+        "ridge"
+      ]
+    },
+    {
+      "continentId": "continent_166",
+      "areaCells": 3,
+      "centerBlock": {
+        "x": -14421,
+        "z": 19157
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    },
+    {
+      "continentId": "continent_167",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 9728,
+        "z": 19072
+      },
+      "primaryLandforms": [
+        "slope"
+      ]
+    },
+    {
+      "continentId": "continent_169",
+      "areaCells": 1,
+      "centerBlock": {
+        "x": 11520,
+        "z": 19328
+      },
+      "primaryLandforms": [
+        "cliff"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "starter": {
+    "schema": "geomantia_starter_realm.v2",
+    "realmId": "geomantia_starter",
+    "name": "新手村国度",
+    "centerBlockX": -512,
+    "centerBlockZ": -3072,
+    "radiusBlocks": 0,
+    "shape": "continent_and_near_sea",
+    "cellStepBlocks": 128,
+    "geographicRegionId": "continent_11",
+    "unlocked": true,
+    "generateCities": false,
+    "selection": "continent_v2",
+    "sourceRunId": "provider_ffffffff825a07bd_r19200",
+    "sourceConfigHash": "88590224cc97f7276c0b331e85c77b2cb0046dc66a9738842b337bc0d08e8275",
+    "spawnX": -513,
+    "spawnY": 70,
+    "spawnZ": -3071
+  },
+  "c6LandCells": 10756,
+  "c6CoveredByStarter": 10755,
+  "seedOverlaps": {
+    "萨维拉": true,
+    "奥伦": true,
+    "斯凯恩": true,
+    "哈尔维": false,
+    "纳希尔": false,
+    "榆岑": false,
+    "贝莱萨": false,
+    "塔希兰": false,
+    "维伦": false,
+    "青岚": false,
+    "梅里萨": false
+  },
+  "result": "T1 blocked; no T2 or T3 executed"
+}

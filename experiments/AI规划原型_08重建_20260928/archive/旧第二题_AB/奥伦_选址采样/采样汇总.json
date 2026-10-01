@@ -1,0 +1,91 @@
+{
+  "world": "geometia_beta2_08 (1)",
+  "country": "奥伦",
+  "sampleMode": "prior",
+  "sites": [
+    {
+      "label": "A",
+      "bounds": {
+        "minX": 6144,
+        "maxXExclusive": 6656,
+        "minZ": -12288,
+        "maxZExclusive": -11776
+      },
+      "runDirectory": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\gis_debug\\gis_muldgxdz_900dac92",
+      "sampleCount": 16384,
+      "edgeDirty": 5568,
+      "landforms": {
+        "water": 1358,
+        "shore": 936,
+        "plain": 11386,
+        "terrace": 82,
+        "slope": 2535,
+        "cliff": 5,
+        "ridge": 39,
+        "valley": 4,
+        "basin": 0,
+        "unknown": 39
+      },
+      "elevation": {
+        "name": "elevation",
+        "file": "elevation.png",
+        "minValue": 63.0,
+        "maxValue": 117.0,
+        "palette": "grayscale"
+      },
+      "artifactSha256": {
+        "elevation.png": "eda66b221a9a5866ca9777eeb33f413ac597bbcbbf59ed7bd8663ca2a1e85a6b",
+        "landform.png": "4538cce778f60b646bee2630b5900d2135b38550fcc81018e23dadae45f6b59d",
+        "legend.png": "4893587cfbd04fbdd06c49ab597578cb4ec9a487e50b1bb95fa40aa98370c02c",
+        "patch.png": "8b5cccbc329506d013dfed9d549e21d96b78a852f5f9ed56c201a1195fb83136",
+        "preview_manifest.json": "a5483b64d0b11e0e977587ef9e56632b60ffdd766d766aeb909f0e4322a88f93",
+        "slope.png": "f046c0ac78531cabe429a82a213a9ab18269e943afbeeeeb7f3cdc67784180c9",
+        "tpiLarge.png": "a6f842b1f9caf248bbd6d922cfc41fde9327f078d25289b95f55513f26c942ef",
+        "tpiSmall.png": "98c478b50b465930da922f5e225ad5e19af05404cffc9c5280d961c4e04918e3",
+        "water.png": "bcea24eee49530311878c2e989b41d2425831097e841d63e45171c9e30ddf921"
+      }
+    },
+    {
+      "label": "B",
+      "bounds": {
+        "minX": 8192,
+        "maxXExclusive": 8704,
+        "minZ": -10240,
+        "maxZExclusive": -9728
+      },
+      "runDirectory": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\gis_debug\\gis_muldhurk_167a354e",
+      "sampleCount": 16384,
+      "edgeDirty": 5568,
+      "landforms": {
+        "water": 0,
+        "shore": 0,
+        "plain": 8090,
+        "terrace": 364,
+        "slope": 7489,
+        "cliff": 24,
+        "ridge": 131,
+        "valley": 143,
+        "basin": 0,
+        "unknown": 143
+      },
+      "elevation": {
+        "name": "elevation",
+        "file": "elevation.png",
+        "minValue": 68.0,
+        "maxValue": 154.0,
+        "palette": "grayscale"
+      },
+      "artifactSha256": {
+        "elevation.png": "80a555c4d2e66409b304c041d3bdf24d1271c22062e97bcd8f0deda0a3865f88",
+        "landform.png": "9786e21dc1a1ab9d6aca637113ed888156ba37ae4697e17babddb63e742b70bb",
+        "legend.png": "4893587cfbd04fbdd06c49ab597578cb4ec9a487e50b1bb95fa40aa98370c02c",
+        "patch.png": "3fa63bbe51539b58e44cc0fb54548468299f02737c74ac0d6dc0f9df4d7ca8b3",
+        "preview_manifest.json": "2277a7ebb18ec238902ee8afc7823f89d666032717695deb501a8e82553b3ff4",
+        "slope.png": "d1ed43ed65da28c22d0b8c5d239c222cfae15b13a614afb7f969c6ea49556cf8",
+        "tpiLarge.png": "660e35683458c69c8b25412b4669df58d72e449b8659d99af13a984c70a93e10",
+        "tpiSmall.png": "caa9d5dcc6957e988025e2b1dcf93b0aeb93e6f28e555c819f1ad22e4e68c5c1",
+        "water.png": "25bfbfca92f1fef60ce0d542488784c0de2855d7f0ffda05bb103c013068199c"
+      }
+    }
+  ]
+}
