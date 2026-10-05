@@ -1,0 +1,102 @@
+{
+  "source": "local author.json, not runtime query",
+  "query": {
+    "style": "精灵",
+    "functions": [
+      "木器制作",
+      "工具维修",
+      "编织",
+      "餐饮",
+      "种子销售"
+    ]
+  },
+  "matchedCount": 5,
+  "returnedCount": 5,
+  "candidates": [
+    {
+      "id": "FS-F01-v01",
+      "name": "松麦食铺",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        32,
+        25,
+        29
+      ],
+      "functions": [
+        "零售",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-F01-v03",
+      "name": "藤织小店",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        25,
+        31
+      ],
+      "functions": [
+        "零售",
+        "编织"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-F01-v04",
+      "name": "林具修理铺",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        42,
+        26,
+        34
+      ],
+      "functions": [
+        "零售",
+        "工具维修"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-F01-v05",
+      "name": "种荚杂货铺",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        38,
+        25,
+        30
+      ],
+      "functions": [
+        "零售",
+        "种子销售"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v05/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-F01-v06",
+      "name": "木器作坊铺",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        37,
+        25,
+        37
+      ],
+      "functions": [
+        "零售",
+        "木器制作"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v06/author.json",
+      "nbtExists": true
+    }
+  ]
+}

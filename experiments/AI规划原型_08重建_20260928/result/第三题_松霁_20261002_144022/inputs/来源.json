@@ -1,0 +1,27 @@
+{
+  "sourceWorld": "geometia_beta2_08 (1)",
+  "sourceRun": "D:\\PCL2-2.8.12\\.minecraft\\versions\\1.20.1-Forge_47.4.23\\saves\\geometia_beta2_08 (1)\\realm_debug\\provider_ffffffff825a07bd_r19200",
+  "realmId": "realm_yucen",
+  "formalT3": true,
+  "sampling": "sealed W, 128-block cells; not new T4 fine scan",
+  "climateStats": {
+    "temperature": {
+      "min": 0.28671687841415405,
+      "median": 0.5498007535934448,
+      "max": 0.7120511531829834
+    },
+    "moisture": {
+      "min": 0.014622882008552551,
+      "median": 0.5746781826019287,
+      "max": 1.0
+    }
+  },
+  "neighbors": [
+    "realm_nashir"
+  ],
+  "hashes": {
+    "realm_territory_map.json": "eb7f72f129c1d7d5ac81dc50a9031c449fbb8327a74c2882cbf55f5cd622b66a",
+    "world_feature_grid.json": "9646ea9c650e3f427348be5c8044e7785072a363297272453ce6ae9168343c1f",
+    "world_climate_grid.json": "51c82ba18cdcf96383f5c5e4ddd687a1d3122f5bb48da7b05657e5a46ac2bcbf"
+  }
+}

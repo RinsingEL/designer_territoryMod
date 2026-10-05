@@ -1,0 +1,122 @@
+[
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/README_先看这里.md",
+    "saved": "inputs/README_先看这里.md",
+    "bytes": 3228,
+    "characters": 1480,
+    "sha256": "006bbda709a910edc4255d2831a56cd43c3fafc51747d07e1b30a3f712dbd309",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/题目/03_单城结构与阵列设计.md",
+    "saved": "inputs/03_单城结构与阵列设计.md",
+    "bytes": 8650,
+    "characters": 3174,
+    "sha256": "7df20efb90f3606b97efdd7997efb2e75b833b2e9ce2e5ee4ec8788ee89d316d",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/题目/03_04_出题材料准备.md",
+    "saved": "inputs/03_04_出题材料准备.md",
+    "bytes": 4838,
+    "characters": 1732,
+    "sha256": "e4a0b000e963491b3520b140d3df359c3288df791dd5658b4d1f503a75449bd9",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/result/第二题_榆岑城市设计_20260929_223645.md",
+    "saved": "inputs/第二题_榆岑城市设计_20260929_223645.md",
+    "bytes": 11202,
+    "characters": 4652,
+    "sha256": "8a3e622f8dfe9277ffd2f65ab528f442d121926ff8e104078d5ae284c4a63e88",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/result/第二题_榆岑城市设计_20260929_223645.json",
+    "saved": "inputs/第二题_榆岑城市设计_20260929_223645.json",
+    "bytes": 2272,
+    "characters": 1956,
+    "sha256": "ea8c58f531dedc3c7e40aab6d166c82f5ead7305922e714bf7168d529f7d1f8d",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/result/第二题_榆岑城市设计_20260929_223645.validation.json",
+    "saved": "inputs/第二题_榆岑城市设计_20260929_223645.validation.json",
+    "bytes": 1217,
+    "characters": 1189,
+    "sha256": "33ef418ff4e86a2ba5ce08bca17185600f2e065bda8594525861a2de46aaafb8",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/来源.json",
+    "saved": "inputs/来源.json",
+    "bytes": 936,
+    "characters": 936,
+    "sha256": "49ee40b21697d76bcf7a520ee353e30c928dc7e7fd179f621c859b6de38caedb",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/榆岑_最新国度设定.md",
+    "saved": "inputs/榆岑_最新国度设定.md",
+    "bytes": 2518,
+    "characters": 978,
+    "sha256": "369b2cc6ef3a93a5c3a9e1d8a6226608bc2ab4ed6f6278d3a281c15d3142428e",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/设计任务与读图说明.md",
+    "saved": "inputs/设计任务与读图说明.md",
+    "bytes": 1527,
+    "characters": 575,
+    "sha256": "a31a261211eb8950b4ef041222c41982befb0b8571b44a15cb0349fe237cfeb6",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/03_功能与空间标签.md",
+    "saved": "inputs/03_功能与空间标签.md",
+    "bytes": 3479,
+    "characters": 1407,
+    "sha256": "578c81705e6851cfc659dfa88ee737619a4e544860f0b80241cf2174735878ab",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/07_城市尺度与预览.md",
+    "saved": "inputs/07_城市尺度与预览.md",
+    "bytes": 1674,
+    "characters": 926,
+    "sha256": "a14f5d3966c14910afccf0a7fc955fd5ed27eeef352d111c137418ebcf57e73c",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/题目.md",
+    "saved": "inputs/题目.md",
+    "bytes": 4811,
+    "characters": 1887,
+    "sha256": "3eb818fb2bc7dd3259d9087ea19b89bc77f5ed8f33314d2aead456ed94a90f7b",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/04_共有生活与城市职能.md",
+    "saved": "inputs/04_共有生活与城市职能.md",
+    "bytes": 2945,
+    "characters": 1075,
+    "sha256": "f69430e22acc2ad8ae8934bc9934ff9cb7efc0631607c358b4b8acdc137a7535",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/05_榆岑相关模组玩法.md",
+    "saved": "inputs/05_榆岑相关模组玩法.md",
+    "bytes": 2806,
+    "characters": 1262,
+    "sha256": "3ab016e3cde84cfc7e7f08073a680d6a6893e29efec710f6190963ec39faff7d",
+    "kind": "workspace_snapshot_not_committed_version"
+  },
+  {
+    "source": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/data/第二题_榆岑城市设计/06_榆岑相关风格.md",
+    "saved": "inputs/06_榆岑相关风格.md",
+    "bytes": 894,
+    "characters": 330,
+    "sha256": "a1626ff2f6b6e4cda34ff726a0f02ace8f0577cc9857006e7dca5d9918720216",
+    "kind": "workspace_snapshot_not_committed_version"
+  }
+]

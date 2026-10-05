@@ -1,0 +1,55 @@
+{
+  "cities": [
+    {
+      "name": "榆岚",
+      "radiusBlocks": 512,
+      "sideBlocks": 1025,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 81
+    },
+    {
+      "name": "椿原",
+      "radiusBlocks": 256,
+      "sideBlocks": 513,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 25
+    },
+    {
+      "name": "松霁",
+      "radiusBlocks": 256,
+      "sideBlocks": 513,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 25
+    },
+    {
+      "name": "栎岑",
+      "radiusBlocks": 512,
+      "sideBlocks": 1025,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 81
+    },
+    {
+      "name": "桐谷",
+      "radiusBlocks": 512,
+      "sideBlocks": 1025,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 81
+    },
+    {
+      "name": "杉霖",
+      "radiusBlocks": 256,
+      "sideBlocks": 513,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 25
+    },
+    {
+      "name": "柳汀",
+      "radiusBlocks": 256,
+      "sideBlocks": 513,
+      "outsideOwnedCoarseCells": 0,
+      "totalCoarseCells": 25
+    }
+  ],
+  "protectionOverlaps": [],
+  "note": "Owned coverage is a coarse diagnostic, not a terrain/buildability verdict."
+}

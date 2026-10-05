@@ -1,0 +1,214 @@
+{
+  "source": "local author.json, not runtime query",
+  "query": {
+    "style": "精灵",
+    "functions": [
+      "家庭居住"
+    ],
+    "maxWidth": 49,
+    "maxDepth": 49
+  },
+  "revisionReason": "35x35 无匹配，放宽至49x49并优先低层独立住宅",
+  "matchedCount": 12,
+  "returnedCount": 12,
+  "candidates": [
+    {
+      "id": "FS-01-v01",
+      "name": "根旁单户 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        37,
+        28,
+        31
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-01-v02",
+      "name": "长叶宅 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        28,
+        36
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-01-v03",
+      "name": "双生根院 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        47,
+        28,
+        38
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-01-v04",
+      "name": "回叶院居 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        28,
+        44
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-01-v05",
+      "name": "枝下高台宅 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        32,
+        38
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v05/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-01-v06",
+      "name": "分台根居 · 树根住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        47,
+        29,
+        42
+      ],
+      "functions": [
+        "家庭居住"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v06/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v01",
+      "name": "根旁单户 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        37,
+        28,
+        31
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v02",
+      "name": "长叶宅 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        28,
+        36
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v03",
+      "name": "双生根院 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        47,
+        28,
+        38
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v04",
+      "name": "回叶院居 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        28,
+        44
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v05",
+      "name": "枝下高台宅 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        32,
+        38
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v05/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "FS-06-v06",
+      "name": "分台根居 · 林务住宅",
+      "civilization": "精灵",
+      "role": "planning_role.fill",
+      "size": [
+        47,
+        29,
+        42
+      ],
+      "functions": [
+        "家庭居住",
+        "林务管理"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-06-v06/author.json",
+      "nbtExists": true
+    }
+  ]
+}

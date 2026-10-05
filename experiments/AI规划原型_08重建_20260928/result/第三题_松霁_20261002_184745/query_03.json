@@ -1,0 +1,495 @@
+{
+  "source": "local author.json, not runtime query",
+  "query": {
+    "style": null,
+    "functions": [
+      "旅客住宿",
+      "商旅住宿"
+    ]
+  },
+  "matchedCount": 29,
+  "returnedCount": 29,
+  "candidates": [
+    {
+      "id": "WT-08-v01",
+      "name": "廊院双客房小旅舍",
+      "civilization": "地中海",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        31,
+        43
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/02_waterway_trade/models/WT-08-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "WT-08-v02",
+      "name": "街角双层旅店",
+      "civilization": "地中海",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        31,
+        43
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/02_waterway_trade/models/WT-08-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "WT-08-v03",
+      "name": "围院多人旅店",
+      "civilization": "地中海",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        31,
+        43
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/02_waterway_trade/models/WT-08-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "WT-08-v04",
+      "name": "坡台层叠旅店",
+      "civilization": "地中海",
+      "role": "planning_role.fill",
+      "size": [
+        45,
+        31,
+        43
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/02_waterway_trade/models/WT-08-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "DS-01-v01",
+      "name": "月井商队大驿站",
+      "civilization": "沙漠",
+      "role": "planning_role.key",
+      "size": [
+        53,
+        23,
+        51
+      ],
+      "functions": [
+        "商旅住宿",
+        "商队补给"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/03_desert_stars/models/DS-01-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "DS-08-v01",
+      "name": "路边露廊小客栈",
+      "civilization": "沙漠",
+      "role": "planning_role.fill",
+      "size": [
+        33,
+        24,
+        35
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/03_desert_stars/models/DS-08-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "DS-08-v02",
+      "name": "双层围院旅舍",
+      "civilization": "沙漠",
+      "role": "planning_role.fill",
+      "size": [
+        41,
+        25,
+        39
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/03_desert_stars/models/DS-08-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "DS-08-v03",
+      "name": "窄街楼廊客栈",
+      "civilization": "沙漠",
+      "role": "planning_role.fill",
+      "size": [
+        24,
+        24,
+        35
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/03_desert_stars/models/DS-08-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "DS-08-v04",
+      "name": "阶庭错台旅栈",
+      "civilization": "沙漠",
+      "role": "planning_role.fill",
+      "size": [
+        39,
+        26,
+        40
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/03_desert_stars/models/DS-08-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "MF-08-v01",
+      "name": "两床炉边小食堂",
+      "civilization": "矮人",
+      "role": "planning_role.fill",
+      "size": [
+        27,
+        26,
+        29
+      ],
+      "functions": [
+        "餐饮",
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/04_mountain_forge/models/MF-08-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "MF-08-v02",
+      "name": "转角酒馆客舍",
+      "civilization": "矮人",
+      "role": "planning_role.fill",
+      "size": [
+        33,
+        26,
+        31
+      ],
+      "functions": [
+        "餐饮",
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/04_mountain_forge/models/MF-08-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "MF-08-v03",
+      "name": "楼上四床客栈",
+      "civilization": "矮人",
+      "role": "planning_role.fill",
+      "size": [
+        25,
+        26,
+        29
+      ],
+      "functions": [
+        "餐饮",
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/04_mountain_forge/models/MF-08-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "MF-08-v04",
+      "name": "坡院换班食宿所",
+      "civilization": "矮人",
+      "role": "planning_role.fill",
+      "size": [
+        31,
+        26,
+        31
+      ],
+      "functions": [
+        "餐饮",
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/04_mountain_forge/models/MF-08-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "CN-04-v01",
+      "name": "四门围庭栈 · 悬崖旅舍",
+      "civilization": "空艇幻想",
+      "role": "planning_role.fill",
+      "size": [
+        49,
+        34,
+        49
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/06_cloud_navigation/models/CN-04-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "CN-04-v02",
+      "name": "长廊望谷栈 · 悬崖旅舍",
+      "civilization": "空艇幻想",
+      "role": "planning_role.fill",
+      "size": [
+        57,
+        34,
+        39
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/06_cloud_navigation/models/CN-04-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "CN-04-v03",
+      "name": "分台双院栈 · 悬崖旅舍",
+      "civilization": "空艇幻想",
+      "role": "planning_role.fill",
+      "size": [
+        53,
+        38,
+        49
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/06_cloud_navigation/models/CN-04-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "CN-04-v04",
+      "name": "叠阁悬崖栈 · 悬崖旅舍",
+      "civilization": "空艇幻想",
+      "role": "planning_role.fill",
+      "size": [
+        43,
+        40,
+        45
+      ],
+      "functions": [
+        "旅客住宿",
+        "餐饮"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/06_cloud_navigation/models/CN-04-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "SC-09-v01",
+      "name": "双独立旅人小帐",
+      "civilization": "游牧",
+      "role": "planning_role.fill",
+      "size": [
+        47,
+        19,
+        35
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/08_steppe_caravans/models/SC-09-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "SC-09-v02",
+      "name": "中央通廊六床长旅帐",
+      "civilization": "游牧",
+      "role": "planning_role.fill",
+      "size": [
+        31,
+        19,
+        47
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/08_steppe_caravans/models/SC-09-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "SC-09-v03",
+      "name": "独立客帐与公共餐帐",
+      "civilization": "游牧",
+      "role": "planning_role.fill",
+      "size": [
+        61,
+        19,
+        53
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/08_steppe_caravans/models/SC-09-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "SC-09-v04",
+      "name": "客宿长帐与接待小帐",
+      "civilization": "游牧",
+      "role": "planning_role.fill",
+      "size": [
+        55,
+        19,
+        48
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/08_steppe_caravans/models/SC-09-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "TC-07-v01",
+      "name": "连体双客房潜旅舍",
+      "civilization": "海洋幻想",
+      "role": "planning_role.fill",
+      "size": [
+        51,
+        36,
+        59
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/10_tidal_coral/models/TC-07-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "TC-07-v02",
+      "name": "通廊四客房潜旅舍",
+      "civilization": "海洋幻想",
+      "role": "planning_role.fill",
+      "size": [
+        83,
+        36,
+        53
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/10_tidal_coral/models/TC-07-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "TC-07-v03",
+      "name": "装备院潜旅舍",
+      "civilization": "海洋幻想",
+      "role": "planning_role.fill",
+      "size": [
+        63,
+        36,
+        55
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/10_tidal_coral/models/TC-07-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "TC-07-v04",
+      "name": "放射三翼潜旅舍",
+      "civilization": "海洋幻想",
+      "role": "planning_role.fill",
+      "size": [
+        67,
+        36,
+        57
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/10_tidal_coral/models/TC-07-v04/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "ML-08-v01",
+      "name": "侧廊双客房小旅店",
+      "civilization": "哥特",
+      "role": "planning_role.fill",
+      "size": [
+        27,
+        29,
+        40
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/11_memorial_lanterns/models/ML-08-v01/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "ML-08-v02",
+      "name": "三翼庭院朝圣客栈",
+      "civilization": "哥特",
+      "role": "planning_role.fill",
+      "size": [
+        40,
+        29,
+        40
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/11_memorial_lanterns/models/ML-08-v02/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "ML-08-v03",
+      "name": "下餐厅上客房街角旅店",
+      "civilization": "哥特",
+      "role": "planning_role.fill",
+      "size": [
+        29,
+        36,
+        36
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/11_memorial_lanterns/models/ML-08-v03/author.json",
+      "nbtExists": true
+    },
+    {
+      "id": "ML-08-v04",
+      "name": "横厅与纵寝翼多人旅舍",
+      "civilization": "哥特",
+      "role": "planning_role.fill",
+      "size": [
+        39,
+        29,
+        41
+      ],
+      "functions": [
+        "旅客住宿"
+      ],
+      "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/11_memorial_lanterns/models/ML-08-v04/author.json",
+      "nbtExists": true
+    }
+  ]
+}

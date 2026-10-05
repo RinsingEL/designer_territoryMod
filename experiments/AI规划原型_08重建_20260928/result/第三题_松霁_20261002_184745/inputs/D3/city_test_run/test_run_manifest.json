@@ -1,0 +1,76 @@
+{
+  "schema": "city_test_run_manifest",
+  "testRunId": "experiment_q2_songji_20261002::yucen_songji",
+  "runId": "experiment_q2_songji_20261002",
+  "citySeedId": "yucen_songji",
+  "workflowMode": "city_structure_landing_fast_loop",
+  "createdAt": "2026-10-02T08:03:42.348734Z",
+  "attempts": [],
+  "worldIdentity": {
+    "runId": "provider_ffffffff825a07bd_r19200",
+    "dimensionId": "minecraft:overworld",
+    "worldSeed": "-2108028995",
+    "worldBorderSizeBlocks": 5.9999968E7,
+    "centerBlockX": 0,
+    "centerBlockZ": 0,
+    "planningRadiusBlocks": 19200,
+    "cellStepBlocks": 128,
+    "microSampleStrideBlocks": 32,
+    "localSlopeRadiusBlocks": 8,
+    "microSamplingImplemented": true,
+    "microSampleBudgetPerCell": 16,
+    "adaptiveSampling": false,
+    "sampleMode": "prior",
+    "resumePolicy": "use_cache",
+    "preferGeneratorNativeTerrain": true,
+    "terrainProvider": {
+      "generatorNativeRequested": true,
+      "providerId": "rtf_heightmap_preview_inferred_climate",
+      "sourceKind": "generator_native",
+      "fastPath": true,
+      "fallbackReason": "",
+      "sourceFingerprint": "sha256:514f563d2b6c53a913426b73e2cf2368dee361bf80a38765dd809840c316c61d",
+      "samplingSemantics": "estimated_coarse_heightmap"
+    },
+    "worldSurveyManifest": "experiment_q2_songji_20261002/world_survey_manifest.json"
+  },
+  "citySeedSnapshot": {
+    "citySeedId": "yucen_songji",
+    "realmId": "realm_yucen",
+    "role": "local_center",
+    "theoreticalScale": "village",
+    "anchorBlock": {
+      "x": -7744,
+      "z": 9664
+    },
+    "planningRadiusCells": 1,
+    "designBounds": {
+      "minX": -8000,
+      "minZ": 9408,
+      "maxX": -7488,
+      "maxZ": 9920
+    },
+    "source": {
+      "sourceMode": "second_question_experiment",
+      "answerSha256": "ea8c58f531dedc3c7e40aab6d166c82f5ead7305922e714bf7168d529f7d1f8d"
+    }
+  },
+  "latestRequest": {
+    "toolName": "city_plan_d3",
+    "runId": "experiment_q2_songji_20261002",
+    "citySeedId": "yucen_songji",
+    "cellStepBlocks": 16,
+    "preferGeneratorNativeTerrain": true
+  },
+  "updatedAt": "2026-10-02T08:03:42.355975Z",
+  "status": "waiting_for_patch_review",
+  "nextAction": "patch_explorer_open",
+  "artifacts": {
+    "landformReviewMap": "experiment_q2_songji_20261002/city_test_runs/yucen_songji/steps/d3/landform_review_map.png",
+    "biomeOverview": "experiment_q2_songji_20261002/city_test_runs/yucen_songji/steps/d3/biome_overview.png",
+    "cityLandformReviewPackage": "experiment_q2_songji_20261002/city_test_runs/yucen_songji/steps/d3/city_landform_review_package.json",
+    "landUseTerrainField": "experiment_q2_songji_20261002/city_test_runs/yucen_songji/steps/land_use/land_use_terrain_field.json",
+    "testRunManifest": "experiment_q2_songji_20261002/city_test_runs/yucen_songji/test_run_manifest.json",
+    "testRunPackage": "experiment_q2_songji_20261002/city_test_runs/yucen_songji"
+  }
+}

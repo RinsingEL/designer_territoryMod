@@ -1,0 +1,12 @@
+{
+  "referenceRoot": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder",
+  "referenceHead": "192d4379724099827507bb756c4523864ba7ec37",
+  "referenceBranch": "codex/offline-structure-studio",
+  "worktreeHead": "d7cd2b3f0610623872909b1b107caac69038bb16",
+  "referenceTrackedDiff": "",
+  "runningClientBuildIdentity": "not independently verified; source HEAD is not proof of running bytecode version",
+  "startupCheck": "powershell/pwsh absent; not executed, no DUE observed",
+  "generationSeed": null,
+  "generationSeedReason": "No context or compilation was produced; no fabricated seed",
+  "sourceMode": "second_question_experiment; not formal T4 approval"
+}

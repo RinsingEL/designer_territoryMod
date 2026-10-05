@@ -1,0 +1,89 @@
+{
+  "manifestId": "gis_muqof8a5_94d56264_preview",
+  "worldId": "runtime-prior",
+  "dimensionId": "minecraft:overworld",
+  "centerBlockX": -7936,
+  "centerBlockZ": 9984,
+  "radiusChunks": 32,
+  "cellStepBlocks": 16,
+  "metricRadiiCells": {
+    "tpiSmall": 3,
+    "maxWaterDistance": 64,
+    "slope": 1,
+    "roughness": 2,
+    "tpiLarge": 12,
+    "dependencyMargin": 12,
+    "localRelief": 2
+  },
+  "metricRadiiBlocks": {
+    "tpiSmall": 48,
+    "maxWaterDistance": 1024,
+    "slope": 16,
+    "roughness": 32,
+    "tpiLarge": 192,
+    "dependencyMargin": 192,
+    "localRelief": 32
+  },
+  "sampleMode": "prior",
+  "sourceCounts": {
+    "prior": 1024
+  },
+  "atlasVersion": 1,
+  "configId": "gis-baseline-20260609",
+  "generatedAt": 1790928222152,
+  "layers": [
+    {
+      "name": "elevation",
+      "file": "elevation.png",
+      "minValue": 70.0,
+      "maxValue": 107.0,
+      "palette": "grayscale"
+    },
+    {
+      "name": "water",
+      "file": "water.png",
+      "minValue": 0.0,
+      "maxValue": 1.0,
+      "palette": "water-shore"
+    },
+    {
+      "name": "slope",
+      "file": "slope.png",
+      "minValue": 0.0,
+      "maxValue": 17.0,
+      "palette": "heat"
+    },
+    {
+      "name": "tpiSmall",
+      "file": "tpiSmall.png",
+      "minValue": -9.0,
+      "maxValue": 10.235294117647058,
+      "palette": "diverging"
+    },
+    {
+      "name": "tpiLarge",
+      "file": "tpiLarge.png",
+      "minValue": -11.5,
+      "maxValue": 21.462025316455694,
+      "palette": "diverging"
+    },
+    {
+      "name": "landform",
+      "file": "landform.png",
+      "minValue": 0.0,
+      "maxValue": 0.0,
+      "palette": "landform"
+    },
+    {
+      "name": "patch",
+      "file": "patch.png",
+      "minValue": 0.0,
+      "maxValue": 44.0,
+      "palette": "patch-cell-boundaries"
+    }
+  ],
+  "legend": "legend.png",
+  "hasEdgeDirty": true,
+  "unknownCellCount": 45,
+  "notes": "GIS current debug preview; JSON is not the production atlas cache."
+}

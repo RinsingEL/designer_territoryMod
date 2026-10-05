@@ -1,0 +1,120 @@
+{
+  "status": "blocked_before_submission",
+  "isRuntimeSubmission": false,
+  "runId": "experiment_q2_songji_20261002",
+  "citySeedId": "yucen_songji",
+  "anchorBlock": {
+    "x": -7744,
+    "z": 9664
+  },
+  "theoreticalScale": "village",
+  "planningRadiusBlocks": 256,
+  "sourceMode": "second_question_experiment",
+  "groups": [
+    {
+      "groupId": "songji_craft",
+      "role": "木器制作、工具维修、织物修补",
+      "priority": "CORE",
+      "structureCount": 3,
+      "authorAssetIds": [
+        "FS-F01-v06",
+        "FS-F01-v04",
+        "FS-F01-v03"
+      ],
+      "searchBoundsHalfOpen": [
+        -7984,
+        9696,
+        -7872,
+        9792
+      ],
+      "arrangementIntent": "木作为功能中心，修理与织品围成短院，保留大件搬运线",
+      "issues": [
+        "三者作者角色为fill，功能中心不等于已核准的核心引用",
+        "编织不直接证明织物修补能力"
+      ],
+      "preferredPatchRefs": [
+        "minecraft:overworld:step.16:city.yucen_songji:p.3"
+      ],
+      "preferredPatchZone": "WEST",
+      "terrainPolicy": "CONFORM",
+      "densityClass": "BALANCED",
+      "extentClass": "SMALL",
+      "rotationIntent": "初稿保留作者north入口；待运行时旋转元数据及编译决定朝院调整",
+      "retainedAfterCompilation": null
+    },
+    {
+      "groupId": "songji_guest",
+      "role": "旅居接待与餐食",
+      "priority": "STANDARD",
+      "structureCount": 2,
+      "authorAssetIds": [
+        "FS-04-v01",
+        "FS-F01-v01"
+      ],
+      "searchBoundsHalfOpen": [
+        -7872,
+        9744,
+        -7808,
+        9840
+      ],
+      "arrangementIntent": "接待与餐饮相邻，避开卸料后场",
+      "issues": [
+        "兽驿是条件候选，住宿用途和动物通路尚待核对",
+        "MF-08-v03 功能匹配，但看图后因深色石构偏离主题而未采用"
+      ],
+      "preferredPatchRefs": [
+        "minecraft:overworld:step.16:city.yucen_songji:p.3"
+      ],
+      "preferredPatchZone": "WEST",
+      "terrainPolicy": "CONFORM",
+      "densityClass": "BALANCED",
+      "extentClass": "SMALL",
+      "rotationIntent": "初稿保留作者north入口；待运行时旋转元数据及编译决定朝院调整",
+      "retainedAfterCompilation": null
+    },
+    {
+      "groupId": "songji_home",
+      "role": "匠人家庭生活",
+      "priority": "STANDARD",
+      "structureCount": 3,
+      "authorAssetIds": [
+        "FS-01-v01",
+        "FS-01-v01",
+        "FS-01-v02"
+      ],
+      "searchBoundsHalfOpen": [
+        -7984,
+        9792,
+        -7872,
+        9888
+      ],
+      "arrangementIntent": "两座单户与一座长屋为短列，朝向公共步道",
+      "issues": [
+        "局部高差9格，搜索框不是已通过落点",
+        "重复成员仍需运行时白名单或限定池表达"
+      ],
+      "preferredPatchRefs": [
+        "minecraft:overworld:step.16:city.yucen_songji:p.3"
+      ],
+      "preferredPatchZone": "WEST",
+      "terrainPolicy": "CONFORM",
+      "densityClass": "BALANCED",
+      "extentClass": "SMALL",
+      "rotationIntent": "初稿保留作者north入口；待运行时旋转元数据及编译决定朝院调整",
+      "retainedAfterCompilation": null
+    }
+  ],
+  "parentArrangementIntent": "作坊居中，接待与住宅为邻接子组；不强制镜像，不增加连接建筑",
+  "fillPoolMembers": null,
+  "generationSeed": null,
+  "pendingBindings": [
+    "contextId",
+    "workflowRevision",
+    "运行时structureRefs",
+    "完整fillPool成员",
+    "algorithmProfileRef",
+    "compositionProfileRef",
+    "style/road/surface/foundation profiles"
+  ],
+  "note": "未提交的设计准备记录，不是CityBlueprint。作者ID不是runtimeRef；搜索框不属于正式提交字段。没有执行或复制阵列算法。"
+}

@@ -1,0 +1,2 @@
+109: [0210月2026 15:49:28.039] [Server thread/ERROR] [com.rinsing.geomantia.GeomantiaMod/]: Failed to install the managed City template content pack into ./saves/geometia_beta2_08_D3_20261002/..
+110: java.io.IOException: PROVIDER_MANAGED_CITY_SOURCE_INVALID: TerraSenseStructureProfileSource.official.json

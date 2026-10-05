@@ -1,0 +1,32 @@
+{
+  "runId": "gis_muqof8aw_d00f07b9",
+  "center": {
+    "blockZ": 9472,
+    "blockX": -7424
+  },
+  "radiusChunks": 32,
+  "cellStepBlocks": 16,
+  "metricRadiiBlocks": {
+    "tpiSmall": 48,
+    "maxWaterDistance": 1024,
+    "slope": 16,
+    "roughness": 32,
+    "tpiLarge": 192,
+    "dependencyMargin": 192,
+    "localRelief": 32
+  },
+  "totalCells": 1024,
+  "counts": {
+    "pending": 0,
+    "sampled": 0,
+    "metricsSmall": 0,
+    "metricsLarge": 0,
+    "classified": 0,
+    "patched": 1024,
+    "edgeDirty": 960,
+    "failed": 0
+  },
+  "currentRing": 16,
+  "status": "completed",
+  "updatedAt": 1790928222169
+}

@@ -1,0 +1,89 @@
+{
+  "manifestId": "gis_muqof8aw_d00f07b9_preview",
+  "worldId": "runtime-prior",
+  "dimensionId": "minecraft:overworld",
+  "centerBlockX": -7424,
+  "centerBlockZ": 9472,
+  "radiusChunks": 32,
+  "cellStepBlocks": 16,
+  "metricRadiiCells": {
+    "tpiSmall": 3,
+    "maxWaterDistance": 64,
+    "slope": 1,
+    "roughness": 2,
+    "tpiLarge": 12,
+    "dependencyMargin": 12,
+    "localRelief": 2
+  },
+  "metricRadiiBlocks": {
+    "tpiSmall": 48,
+    "maxWaterDistance": 1024,
+    "slope": 16,
+    "roughness": 32,
+    "tpiLarge": 192,
+    "dependencyMargin": 192,
+    "localRelief": 32
+  },
+  "sampleMode": "prior",
+  "sourceCounts": {
+    "prior": 1024
+  },
+  "atlasVersion": 1,
+  "configId": "gis-baseline-20260609",
+  "generatedAt": 1790928222180,
+  "layers": [
+    {
+      "name": "elevation",
+      "file": "elevation.png",
+      "minValue": 63.0,
+      "maxValue": 100.0,
+      "palette": "grayscale"
+    },
+    {
+      "name": "water",
+      "file": "water.png",
+      "minValue": 0.0,
+      "maxValue": 1.0,
+      "palette": "water-shore"
+    },
+    {
+      "name": "slope",
+      "file": "slope.png",
+      "minValue": 0.0,
+      "maxValue": 10.0,
+      "palette": "heat"
+    },
+    {
+      "name": "tpiSmall",
+      "file": "tpiSmall.png",
+      "minValue": -4.764705882352942,
+      "maxValue": 6.2222222222222285,
+      "palette": "diverging"
+    },
+    {
+      "name": "tpiLarge",
+      "file": "tpiLarge.png",
+      "minValue": -7.2492401215805415,
+      "maxValue": 16.16666666666667,
+      "palette": "diverging"
+    },
+    {
+      "name": "landform",
+      "file": "landform.png",
+      "minValue": 0.0,
+      "maxValue": 0.0,
+      "palette": "landform"
+    },
+    {
+      "name": "patch",
+      "file": "patch.png",
+      "minValue": 0.0,
+      "maxValue": 23.0,
+      "palette": "patch-cell-boundaries"
+    }
+  ],
+  "legend": "legend.png",
+  "hasEdgeDirty": true,
+  "unknownCellCount": 1,
+  "notes": "GIS current debug preview; JSON is not the production atlas cache."
+}

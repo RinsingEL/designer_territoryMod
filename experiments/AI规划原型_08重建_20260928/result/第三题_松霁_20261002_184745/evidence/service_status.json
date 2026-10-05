@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "stage": "status",
+  "runId": "provider_ffffffff825a07bd_r19200",
+  "warnings": [],
+  "errors": [],
+  "serviceReady": true,
+  "debugRoot": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug",
+  "availableStages": [
+    "W",
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "acceptance"
+  ],
+  "gisReady": true,
+  "knownRuns": [
+    {
+      "runId": "provider_ffffffff825a07bd_r19200",
+      "runDirectory": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200",
+      "artifacts": {
+        "runDirectory": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200",
+        "worldSurveyContext": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_survey_context.json",
+        "worldPatchMap": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_patch_map.json",
+        "worldPatchPreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_patch_preview.png",
+        "gridOverlayPreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/grid_overlay_preview.png",
+        "worldBiomePreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_biome_preview.png",
+        "worldClimateGrid": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_climate_grid.json",
+        "worldTemperaturePreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_temperature_preview.png",
+        "worldMoisturePreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_moisture_preview.png",
+        "worldClimateManifest": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_climate_manifest.json",
+        "wManifest": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/w_manifest.json",
+        "worldFeatureGrid": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_feature_grid.json",
+        "worldSurveyManifest": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/world_survey_manifest.json",
+        "realmProfiles": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/realm_profiles.json",
+        "candidateMapPackages": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/candidate_map_packages.json",
+        "t1Manifest": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/t1_manifest.json",
+        "realmCoordinateSelections": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/realm_coordinate_selections.json",
+        "realmSeeds": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/realm_seeds.json",
+        "capitalCityIntents": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/capital_city_intents.json",
+        "t2Report": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/t2_report.json",
+        "realmTerritoryMap": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/realm_territory_map.json",
+        "territoryPreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/territory_preview.png",
+        "t3Report": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/t3_report.json",
+        "territoryRepairLog": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/territory_repair_log.json",
+        "citySeedRegistry": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/city_seed_registry.json",
+        "citySeedPreview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/city_seed_preview.png",
+        "t4Report": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/t4_report.json",
+        "realmCityCandidatePackages": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/realm_city_candidate_packages.json",
+        "scoreManifest": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200/score_manifest.json"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "mcpCalls": [
+    {
+      "requestFile": "calls/01_prepare.request.json",
+      "requestFileUtf8Bytes": 150,
+      "requestFileCharacters": 150,
+      "responseFile": "calls/01_prepare.response.json",
+      "responseFileUtf8Bytes": 439,
+      "responseFileCharacters": 439
+    },
+    {
+      "requestFile": "calls/02_compile.request.json",
+      "requestFileUtf8Bytes": 142,
+      "requestFileCharacters": 142,
+      "responseFile": "calls/02_compile.response.json",
+      "responseFileUtf8Bytes": 379,
+      "responseFileCharacters": 379
+    }
+  ],
+  "tokenCount": null,
+  "note": "记录文件字节和字符数，不冒充token或wire大小；完整会话输入量未测量",
+  "queryCandidateCounts": [
+    5,
+    0,
+    29,
+    0,
+    12
+  ],
+  "imagesActuallyViewed": 7,
+  "compiledImages": 0
+}

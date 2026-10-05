@@ -1,0 +1,14 @@
+{
+  "source": "local author.json, not runtime query",
+  "query": {
+    "style": "精灵",
+    "functions": [
+      "家庭居住"
+    ],
+    "maxWidth": 35,
+    "maxDepth": 35
+  },
+  "matchedCount": 0,
+  "returnedCount": 0,
+  "candidates": []
+}

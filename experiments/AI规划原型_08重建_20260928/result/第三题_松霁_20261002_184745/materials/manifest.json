@@ -1,0 +1,248 @@
+[
+  {
+    "id": "FS-F01-v06",
+    "name": "木器作坊铺",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      37,
+      25,
+      37
+    ],
+    "functions": [
+      "零售",
+      "木器制作"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v06/author.json",
+    "nbtExists": true,
+    "nbtSha256": "7c62dae33941e46025dee936b251769c6a249dd5f10b8e41de6cd29cccb7af98",
+    "authorSha256": "509b9624865739074bbd5edded7b8efe624cc42432c71f86756cd9854067b500",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      37,
+      25,
+      37
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-F01-v04",
+    "name": "林具修理铺",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      42,
+      26,
+      34
+    ],
+    "functions": [
+      "零售",
+      "工具维修"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v04/author.json",
+    "nbtExists": true,
+    "nbtSha256": "15c5b699100fb67626f96898903a2bf440376eaa226235da2232584e36972476",
+    "authorSha256": "a2875743cd70e0fe86bbb567033233b6d784a3552f41d68d5d9daf81cffb3e3a",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      42,
+      26,
+      34
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-F01-v03",
+    "name": "藤织小店",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      43,
+      25,
+      31
+    ],
+    "functions": [
+      "零售",
+      "编织"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v03/author.json",
+    "nbtExists": true,
+    "nbtSha256": "88530f78c27cf220892821517ea02462d5ca431964c3cc0c134a9ab546a3f470",
+    "authorSha256": "52ed6e516ef31e15957e11e419a427fe53aedff31375b61af80e1c5562f5a330",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      43,
+      25,
+      31
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-F01-v01",
+    "name": "松麦食铺",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      32,
+      25,
+      29
+    ],
+    "functions": [
+      "零售",
+      "餐饮"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-F01-v01/author.json",
+    "nbtExists": true,
+    "nbtSha256": "e4e036dd59a35c6218995d68a14921e1714ee56ce5e9e2847151a7564caf6ade",
+    "authorSha256": "d380c8733db849e38a1e831232d7ffafe797fe7caae61c3990437e4faae11eaa",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      32,
+      25,
+      29
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-01-v01",
+    "name": "根旁单户 · 树根住宅",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      37,
+      28,
+      31
+    ],
+    "functions": [
+      "家庭居住"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v01/author.json",
+    "nbtExists": true,
+    "nbtSha256": "927cc7443db7ef347f0b1b17f471a7d07fd55f85c21066da48338de4b6825837",
+    "authorSha256": "e8d23c8684333ba9250a13b2e7c9b94e384c20439e7885a5fb7734f990ffd728",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      37,
+      28,
+      31
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-01-v02",
+    "name": "长叶宅 · 树根住宅",
+    "civilization": "精灵",
+    "role": "planning_role.fill",
+    "size": [
+      43,
+      28,
+      36
+    ],
+    "functions": [
+      "家庭居住"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-01-v02/author.json",
+    "nbtExists": true,
+    "nbtSha256": "57a2c43875eb7c11147249b67d887cca05a35cc34473fbd3b0e226ed488926c1",
+    "authorSha256": "8c94f34d094d42909845f3a83172723679fb8515aebe651d26d8bd19995245d8",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      43,
+      28,
+      36
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "FS-04-v01",
+    "name": "蹄铃驿 · 林间兽驿",
+    "civilization": "精灵",
+    "role": "planning_role.key",
+    "size": [
+      43,
+      24,
+      35
+    ],
+    "functions": [
+      "商旅补给",
+      "畜群照护"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/05_forest_symbiosis/models/FS-04-v01/author.json",
+    "nbtExists": true,
+    "nbtSha256": "0831bcfedaa49d7a498a89962a35df140fc5185fa95bbcd86c257d49b68fc4a5",
+    "authorSha256": "b1c0c27878e7ae500c23c06361a927585339d983b33c5575b83cf02144192d35",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      43,
+      24,
+      35
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  },
+  {
+    "id": "MF-08-v03",
+    "name": "楼上四床客栈",
+    "civilization": "矮人",
+    "role": "planning_role.fill",
+    "size": [
+      25,
+      26,
+      29
+    ],
+    "functions": [
+      "餐饮",
+      "旅客住宿"
+    ],
+    "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/asset_catalogs/original_civilizations/04_mountain_forge/models/MF-08-v03/author.json",
+    "nbtExists": true,
+    "nbtSha256": "485eff6ddcd7075f2e3be918b96910ad2e4b2193d96d588b188f25fe778b7a1a",
+    "authorSha256": "95269e2da2f11b48e5aa0bd7be32aa4c83d58fb8d3c662e6ca03ad10c433b4ec",
+    "nbtMatchesValidation": true,
+    "nbtMatchesPreviewCapture": true,
+    "authorMatchesReview": false,
+    "authorMatchesPreviewCapture": false,
+    "validationSize": [
+      25,
+      26,
+      29
+    ],
+    "runtimeRef": null,
+    "runtimeAvailability": "unbound",
+    "reviewStatus": "accepted"
+  }
+]

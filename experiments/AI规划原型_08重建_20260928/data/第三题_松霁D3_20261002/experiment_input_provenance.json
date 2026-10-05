@@ -1,0 +1,21 @@
+{
+  "mode": "second_question_d3_only",
+  "sourceRun": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/StructureBinder/run/saves/geometia_beta2_08_D3_20261002/realm_debug/provider_ffffffff825a07bd_r19200",
+  "answer": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/AI规划原型_08重建_20260928/result/第二题_榆岑城市设计_20260929_223645.json",
+  "answerSha256": "ea8c58f531dedc3c7e40aab6d166c82f5ead7305922e714bf7168d529f7d1f8d",
+  "validationSha256": "33ef418ff4e86a2ba5ce08bca17185600f2e065bda8594525861a2de46aaafb8",
+  "sourceCity": {
+    "id": "yucen_songji",
+    "name": "松霁",
+    "capital": false,
+    "theoreticalScale": "village",
+    "seedRole": "local_center",
+    "role": "西北木作修补与旅居交流的地方聚落",
+    "anchorBlock": {
+      "x": -7744,
+      "z": 9664
+    }
+  },
+  "siteReviewStatus": "not_reviewed",
+  "note": "Explicit experiment input, not a T4 selection or approval. Upstream files are unchanged copies; their IDs retain source-run provenance."
+}

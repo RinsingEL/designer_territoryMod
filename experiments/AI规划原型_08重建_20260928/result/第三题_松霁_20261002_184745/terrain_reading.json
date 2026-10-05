@@ -1,0 +1,84 @@
+{
+  "cellCount": 1024,
+  "landforms": {
+    "plain": 371,
+    "slope": 535,
+    "cliff": 25,
+    "unknown": 9,
+    "ridge": 79,
+    "valley": 5
+  },
+  "biomes": {
+    "minecraft:forest": 880,
+    "minecraft:old_growth_birch_forest": 143,
+    "minecraft:birch_forest": 1
+  },
+  "waterCells": 0,
+  "elevationRange": [
+    71.0,
+    107.0
+  ],
+  "zones": [
+    {
+      "name": "workshop_search",
+      "boundsHalfOpen": [
+        -7984,
+        9696,
+        -7872,
+        9792
+      ],
+      "sampleCount": 42,
+      "elevationRange": [
+        77.0,
+        81.0
+      ],
+      "maxSlope": 3.0,
+      "landforms": {
+        "plain": 35,
+        "slope": 7
+      },
+      "note": "Only aggregates of provided cells, not building placement or feasibility checks"
+    },
+    {
+      "name": "housing_search",
+      "boundsHalfOpen": [
+        -7984,
+        9792,
+        -7872,
+        9888
+      ],
+      "sampleCount": 42,
+      "elevationRange": [
+        71.0,
+        80.0
+      ],
+      "maxSlope": 4.0,
+      "landforms": {
+        "slope": 18,
+        "plain": 23,
+        "valley": 1
+      },
+      "note": "Only aggregates of provided cells, not building placement or feasibility checks"
+    },
+    {
+      "name": "guest_search",
+      "boundsHalfOpen": [
+        -7872,
+        9744,
+        -7808,
+        9840
+      ],
+      "sampleCount": 24,
+      "elevationRange": [
+        76.0,
+        80.0
+      ],
+      "maxSlope": 3.0,
+      "landforms": {
+        "plain": 22,
+        "slope": 2
+      },
+      "note": "Only aggregates of provided cells, not building placement or feasibility checks"
+    }
+  ]
+}

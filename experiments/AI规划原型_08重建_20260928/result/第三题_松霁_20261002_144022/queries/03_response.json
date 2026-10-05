@@ -1,0 +1,194 @@
+{
+  "totalMatched": 5,
+  "returned": 5,
+  "styleCoverage": null,
+  "matchingSeriesCoverage": {},
+  "classificationBasis": "folder_and_filename_only",
+  "assets": [
+    {
+      "assetId": "asset_ff24c5c4ab12fe4f",
+      "name": "小作坊",
+      "relativePath": "城市,房屋/中世纪小镇构建/店铺/小作坊.litematic",
+      "sourcePath": "D:\\BaiduNetdiskDownload\\2026.9.5投影文件完整版(9010文件)\\g构建包\\城市,房屋\\中世纪小镇构建\\店铺\\小作坊.litematic",
+      "classificationStatus": "name_based_candidate",
+      "runtimeReady": false,
+      "styles": [
+        "中世纪"
+      ],
+      "styleEvidence": [
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪小镇构建",
+          "matched": "中世纪"
+        }
+      ],
+      "themes": [],
+      "themeEvidence": [],
+      "functions": [
+        "工坊生产"
+      ],
+      "functionEvidence": [
+        {
+          "tag": "工坊生产",
+          "source": "filename",
+          "matched": "作坊"
+        }
+      ],
+      "sourceSeries": "中世纪小镇构建",
+      "sourceFolder": "城市,房屋/中世纪小镇构建/店铺",
+      "assetKind": "建筑与城市配套",
+      "bundleHint": false,
+      "secondaryStyles": []
+    },
+    {
+      "assetId": "asset_f00c28eb38645c64",
+      "name": "ae5 铁匠铺",
+      "relativePath": "城市,房屋/中世纪建筑包/ae5 铁匠铺.litematic",
+      "sourcePath": "D:\\BaiduNetdiskDownload\\2026.9.5投影文件完整版(9010文件)\\g构建包\\城市,房屋\\中世纪建筑包\\ae5 铁匠铺.litematic",
+      "classificationStatus": "name_based_candidate",
+      "runtimeReady": false,
+      "styles": [
+        "中世纪"
+      ],
+      "styleEvidence": [
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪建筑包",
+          "matched": "中世纪"
+        }
+      ],
+      "themes": [],
+      "themeEvidence": [],
+      "functions": [
+        "工坊生产"
+      ],
+      "functionEvidence": [
+        {
+          "tag": "工坊生产",
+          "source": "filename",
+          "matched": "铁匠"
+        }
+      ],
+      "sourceSeries": "中世纪建筑包",
+      "sourceFolder": "城市,房屋/中世纪建筑包",
+      "assetKind": "建筑与城市配套",
+      "bundleHint": false,
+      "secondaryStyles": []
+    },
+    {
+      "assetId": "asset_1902fb49802ca2ca",
+      "name": "中世纪小屋3 冶矿小屋",
+      "relativePath": "城市,房屋/中世纪房屋素材 构建/中世纪构建包1/中世纪小屋3 冶矿小屋.litematic",
+      "sourcePath": "D:\\BaiduNetdiskDownload\\2026.9.5投影文件完整版(9010文件)\\g构建包\\城市,房屋\\中世纪房屋素材 构建\\中世纪构建包1\\中世纪小屋3 冶矿小屋.litematic",
+      "classificationStatus": "name_based_candidate",
+      "runtimeReady": false,
+      "styles": [
+        "中世纪"
+      ],
+      "styleEvidence": [
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪房屋素材 构建",
+          "matched": "中世纪"
+        },
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪构建包1",
+          "matched": "中世纪"
+        },
+        {
+          "tag": "中世纪",
+          "source": "filename",
+          "matched": "中世纪"
+        }
+      ],
+      "themes": [],
+      "themeEvidence": [],
+      "functions": [
+        "工坊生产"
+      ],
+      "functionEvidence": [
+        {
+          "tag": "工坊生产",
+          "source": "filename",
+          "matched": "冶矿"
+        }
+      ],
+      "sourceSeries": "中世纪房屋素材 构建/中世纪构建包1",
+      "sourceFolder": "城市,房屋/中世纪房屋素材 构建/中世纪构建包1",
+      "assetKind": "建筑与城市配套",
+      "bundleHint": false,
+      "secondaryStyles": []
+    },
+    {
+      "assetId": "asset_e762eebb362864ca",
+      "name": "冶炼场地",
+      "relativePath": "城市,房屋/各式风格建筑构建包/中世纪/冶炼场地.litematic",
+      "sourcePath": "D:\\BaiduNetdiskDownload\\2026.9.5投影文件完整版(9010文件)\\g构建包\\城市,房屋\\各式风格建筑构建包\\中世纪\\冶炼场地.litematic",
+      "classificationStatus": "name_based_candidate",
+      "runtimeReady": false,
+      "styles": [
+        "中世纪"
+      ],
+      "styleEvidence": [
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪",
+          "matched": "中世纪"
+        }
+      ],
+      "themes": [],
+      "themeEvidence": [],
+      "functions": [
+        "工坊生产"
+      ],
+      "functionEvidence": [
+        {
+          "tag": "工坊生产",
+          "source": "filename",
+          "matched": "冶炼"
+        }
+      ],
+      "sourceSeries": "各式风格建筑构建包/中世纪",
+      "sourceFolder": "城市,房屋/各式风格建筑构建包/中世纪",
+      "assetKind": "建筑与城市配套",
+      "bundleHint": false,
+      "secondaryStyles": []
+    },
+    {
+      "assetId": "asset_0303c9c3d5b595e4",
+      "name": "铁匠铺",
+      "relativePath": "城市,房屋/各式风格建筑构建包/中世纪/铁匠铺.litematic",
+      "sourcePath": "D:\\BaiduNetdiskDownload\\2026.9.5投影文件完整版(9010文件)\\g构建包\\城市,房屋\\各式风格建筑构建包\\中世纪\\铁匠铺.litematic",
+      "classificationStatus": "name_based_candidate",
+      "runtimeReady": false,
+      "styles": [
+        "中世纪"
+      ],
+      "styleEvidence": [
+        {
+          "tag": "中世纪",
+          "source": "folder:中世纪",
+          "matched": "中世纪"
+        }
+      ],
+      "themes": [],
+      "themeEvidence": [],
+      "functions": [
+        "工坊生产"
+      ],
+      "functionEvidence": [
+        {
+          "tag": "工坊生产",
+          "source": "filename",
+          "matched": "铁匠"
+        }
+      ],
+      "sourceSeries": "各式风格建筑构建包/中世纪",
+      "sourceFolder": "城市,房屋/各式风格建筑构建包/中世纪",
+      "assetKind": "建筑与城市配套",
+      "bundleHint": false,
+      "secondaryStyles": []
+    }
+  ]
+}

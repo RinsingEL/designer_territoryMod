@@ -1,0 +1,26 @@
+{
+  "registryId": "experiment_experiment_q2_songji_20261002",
+  "citySeeds": [
+    {
+      "citySeedId": "yucen_songji",
+      "realmId": "realm_yucen",
+      "role": "local_center",
+      "theoreticalScale": "village",
+      "anchorBlock": {
+        "x": -7744,
+        "z": 9664
+      },
+      "planningRadiusCells": 1,
+      "designBounds": {
+        "minX": -8000,
+        "minZ": 9408,
+        "maxX": -7488,
+        "maxZ": 9920
+      },
+      "source": {
+        "sourceMode": "second_question_experiment",
+        "answerSha256": "ea8c58f531dedc3c7e40aab6d166c82f5ead7305922e714bf7168d529f7d1f8d"
+      }
+    }
+  ]
+}

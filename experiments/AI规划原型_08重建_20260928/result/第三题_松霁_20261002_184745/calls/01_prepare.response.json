@@ -1,0 +1,18 @@
+{
+  "start": "2026-10-02T10:48:38.060Z",
+  "end": "2026-10-02T10:48:38.118Z",
+  "name": "city_prepare_d4_blueprint_context",
+  "arguments": {
+    "runId": "experiment_q2_songji_20261002",
+    "citySeedId": "yucen_songji"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Error: PROVIDER_MANAGED_CITY_SOURCE_INVALID: TerraSenseStructureProfileSource.official.json"
+      }
+    ],
+    "isError": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "args": [
+    "python3",
+    "tools/city_templates/query_construction_assets.py",
+    "--style",
+    "中式",
+    "--kind",
+    "建筑与城市配套",
+    "--limit",
+    "8"
+  ],
+  "returncode": 0,
+  "stderr": ""
+}

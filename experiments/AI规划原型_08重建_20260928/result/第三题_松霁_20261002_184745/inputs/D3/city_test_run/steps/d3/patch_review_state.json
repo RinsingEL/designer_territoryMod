@@ -1,0 +1,19 @@
+{
+  "schema": "city_d4_patch_review",
+  "runId": "experiment_q2_songji_20261002",
+  "citySeedId": "yucen_songji",
+  "status": "waiting_for_patch_review",
+  "reasonCode": "D4_REQUIRES_TOP_PATCH_REVIEW",
+  "sessionId": "pex_00389ea1b4584f92b1d00f51be66e2fe",
+  "sourceIdentity": "sha256:82d62a47e9bba7d9ae2912db8de15ce9895fbe5dfa3d5be9609d9e55ae13f02f",
+  "d3PackageHash": "sha256:b3f2de2f7c40bbc55990d7833d55bee1772e63e4416f86f699a14e349b9c4e2e",
+  "interestTypes": [],
+  "openedAt": "2026-10-02T08:03:42.472226Z",
+  "updatedAt": "2026-10-02T08:03:42.472249Z",
+  "overviewArtifacts": {
+    "explorationSession": "experiment_q2_songji_20261002/patch_explorer_pex_00389ea1b4584f92b1d00f51be66e2fe/patch_explorer_session.json",
+    "terrainOverview": "experiment_q2_songji_20261002/patch_explorer_pex_00389ea1b4584f92b1d00f51be66e2fe/terrain_overview.png",
+    "allPatchesOverview": "experiment_q2_songji_20261002/patch_explorer_pex_00389ea1b4584f92b1d00f51be66e2fe/all_patches_overview.png",
+    "biomeOverview": "experiment_q2_songji_20261002/patch_explorer_pex_00389ea1b4584f92b1d00f51be66e2fe/biome_overview.png"
+  }
+}
