@@ -2,6 +2,10 @@
 
 City 承接 T4 `CitySeedRegistry` 和候选选址，在 D3-D7 生成可审查、可冻结、由 worldgen 落地的城市。当前唯一正式建筑路径是固定 NBT；configured structure、外部 Jigsaw、FunctionZone 先行和 late materialization 均不属于 active path。
 
+## 下一轮设计讨论
+
+[城市设计与完整落地](../../10_product/城市设计与完整落地/README.md)是 **设计中案总览**：按功能区选材、分项风格与换皮、主建筑台地及完整生成。正文按职责放置，入口见下方产品案索引；本轮未授权代码接管。
+
 ## 当前主链
 
 城市设计主线与景观规划分别由[意图驱动规模与嵌套设计](10_product/案子/具体流程的案子/00_跨阶段主线/City意图驱动规模与嵌套设计-v0.1/README.md)和[景观独立空间与代价生长](10_product/案子/具体流程的案子/00_跨阶段主线/City景观独立空间与代价生长-v0.1/README.md)保存，其中规模与嵌套案已于 2026-09-13 接管实现，景观案于 2026-09-14 接管实现：AI 组织城市主体、取消面积补量外扩，景观独立需求并按代价生长。
@@ -21,7 +25,7 @@ T4 CitySeed
 -> D6 后按邻域主高程编译城区分级平台、真实目的地道路、Landscape Parcel、住宅外溢边界与 LandUse
 -> execute_d5 激活结构与 LandUse
 -> worldgen createStructures / FEATURES 分片落地
--> D7 ledger、现场观测、道路和城墙后处理
+-> D7 ledger、现场观测与城墙衔接
 ```
 
 正式 D4 冻结完整 CityBlueprint revision，输入允许完整设计或带 baseBlueprintHash 的局部替换补丁；宿主补齐省略的身份字段，并在显式相对权重模式下换算占比，再执行原有完整校验。同一 Context 的设计编译失败最多 5 次；提交校验拒绝、明确的程序搜索/安全上限及锚点终审故障不消耗设计预算。程序故障进入 blocked_by_program，保留方案，不要求 AI 重写。具体输入和恢复规则以 CityBlueprint 数据契约为准。
@@ -37,7 +41,7 @@ D4 当前流程以 2026-09-17 确认为准：有效初版自动推进，只有�
 - D4 Context `v0.10`、Reference Catalog `v0.9`、snapshot `v0.10`、Blueprint `v0.12` 必须严格匹配。
 - D2/D4 建筑读取 `city_template_catalog.v0.1` 和当前世界 NBT；D6 另读取内置道路树素材。普通建筑冻结为 `structure_start_beard_thin`，道路树为无地形适配的 `structure_start_decoration`。
 - 托管规划配置中的版本化模板内容包在世界启动时自动安装到该世界 `generated`；manifest 必须完整覆盖当前 template catalog，D4 Context 前对全部模板执行当前世界 hash/尺寸预检。
-- D6 后生成一个 Foundation owner：城区建设面按邻域主高程形成分级平台，台基只处理剩余局部高差；Landscape Parcel 保留自然地形。普通 GRID 在建筑落位时预留街巷净空，全部建筑落位后冻结服务真实入口的最小路网；功能景观含 `GROUND_PATH + CORRIDOR` 的农业/林场组改由大小不一的景观 Parcel 与一格间隔承担内部流线，不生成城市式 GRID 街网。COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街同样只冻结服务实际建筑入口的区内街巷。城市主路必须连接真实目的地且沿途具有实际交通用途；功能区关系、相向扩张和距离不得自动生成道路或桥梁。SurfacePrint 逐 block 执行 City 自有的分级材质道路、建筑绿化与住宅外溢边界。
+- D6 后生成一个 Foundation owner：城区建设面按邻域主高程形成分级平台，台基只处理剩余局部高差；Landscape Parcel 保留自然地形。普通 GRID 在建筑落位时预留街巷净空，全部建筑落位后冻结服务真实入口的最小路网；功能景观含 `GROUND_PATH + CORRIDOR` 的农业/林场组改由大小不一的景观 Parcel 与一格间隔承担内部流线，不生成城市式 GRID 街网。COURTYARD/LINEAR/COMPACT 与可选 CENTER 轴街同样只冻结服务实际建筑入口的区内街巷。城市主路必须连接真实目的地且沿途具有实际交通用途；功能区关系、相向扩张和距离不得自动生成道路或桥梁。SurfacePrint 逐 block 执行 City 自有的分级材质道路、公共地表与绿化、住宅外溢边界。
 - worldgen 只创建 City 自有单-piece template start；运行时 bbox 不回写规划几何。
 - `key_then_array`、array loop、sequential session 和 cluster groups 只保留为实现层 legacy HTTP/测试代码，不再暴露为 Agent Loop MCP 工具，也不是正式 workflow 的失败保底。
 - 城墙使用唯一的城区外轮廓、守卫塔与配套长墙段实现，旧并行算法已删除。门位来自穿越墙线的道路；无出城道路或无法承接的水体/高差会明确拒绝施工。大高差自动节点与绕河重规划尚未实现，游戏内素材衔接待验收；需求依据见《城市边界与城墙》。
