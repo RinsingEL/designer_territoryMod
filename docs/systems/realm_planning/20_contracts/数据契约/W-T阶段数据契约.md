@@ -723,7 +723,7 @@ T4 输出，登记城市名册和生成条件。
 | `name` | string? | 建议 | 城市名称（如“霜峰王城”、“深铁哨镇”）。 |
 | `role` | enum/string | 是 | `capital`、`port`、`border_fort`、`mining_town` 等。 |
 | `theoreticalScale` | enum | 是 | 理论规模（`hamlet` / `village` / `town` / `city` / `large_city`）。首都与规模解耦，可独立选择中小型规模。 |
-| `serviceHierarchy` | enum/string? | 建议 | 全国服务层级（`national_center` / `regional_center` / `local_town` / `specialized_outpost`），与物理规模独立决定。 |
+| `serviceHierarchy` | string? | 建议 | 自由描述城市在全国体系中的服务范围与分工，如双中心之一、宗教中心、季节性矿业据点，与物理规模独立决定。旧值 `national_center` / `regional_center` / `local_town` / `specialized_outpost` 仍可使用，但不限定这四种。字段只承载设计说明，物理承载面积与半径仍由 `theoreticalScale` 处理。 |
 | `positioning` | string? | 建议 | 城市定位与叙事特征（如“高山峡谷要冲，兼顾议事与防御”）。 |
 | `functionalFocus[]` | string[]? | 建议 | 规划功能重点列表（如 `administration`、`defense`、`mining` 等）。 |
 | `gameplayRequirements[]` | string[]? | 建议 | 玩法需求列表（如 `create_council`、`armory_crafting` 等机制与设施需求）。 |

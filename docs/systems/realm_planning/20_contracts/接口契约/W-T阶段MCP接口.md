@@ -496,6 +496,8 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 
 ## T4 草案图与复核
 
+`select_capital` / `add_city` 的 `serviceHierarchy` 接受自由字符串，用于说明全国服务范围与分工，不限制四种层级标签。原标签继续兼容，缺省值沿用原行为。规模字段 `theoreticalScale` 仍使用既有档位并参与面积与半径计算。全国图对过长说明作省略显示，`cityLegend`、种子名册与下游交接保留完整说明。
+
 `realm_t4_patch_planning_preview` 请求 `runId`、`planningSessionId`，返回 `cityDistributionPreview.imagePath`、`proposalHash` 和 `cityLegend`。创建、选首都、增删城市的响应也包含当前图；图展示完整设计范围与保护范围，使用实际城市名册，不发布正式名册。
 
 `realm_t4_patch_planning_review` 请求 `runId`、`planningSessionId`、`proposalHash`、`decision`（`accept` / `revise`）和非空 `assessment`。复核保存到会话 `proposalReview`。草案变更后复核失效；旧 hash 返回 `T4_CITY_PROPOSAL_REVIEW_STALE`。finalize 除既有数量、首都、领土与保护范围检查外，还要求当前草案已 `accept`，否则返回 `T4_CITY_PROPOSAL_REVIEW_REQUIRED`。已有未封存会话可通过 preview 补图和新复核；已封存会话不重新打开。
