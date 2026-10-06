@@ -405,6 +405,9 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
 | `resourceSeeking` | `0..1` | 追资源 patch 的倾向。 |
 | `borderPressure` | `0..1` | 扩张竞争性，越高越愿意贴近边境。 |
 | `seaCrossingPolicy` | `none`、`limited`、`allowed` | 跨海扩张策略；T3 可进一步限制。 |
+| `terrainCosts` | `map<string, number>?` | 自定义地形成本映射，覆盖默认地貌消耗（例如 `{"mountain": 0.6, "water": 4.5}`）。数值范围 `0.05..50.0`；高消耗代表扩张阻力大，与硬阻断（如 `seaCrossingPolicy=none`）解耦。 |
+
+正式 `action_budget` 扩张将水格作为消耗行动力的通行面，水格不计入国土陆地面积、面积 quota 或城市 owned territory。仍只取得目标大陆的可分配陆地，并避开初始保护区和附属模组预留区。连通统计可沿本国实际取得的水域通行链连接两岸陆地；`limited` / `allowed` 允许有限成本通行，`none` 禁止。
 
 示例：
 
@@ -429,7 +432,11 @@ W 正式 tag 与 Tag Audit reference 使用同一套语义，但 W 在高 step �
     "coastalBias": 0.9,
     "resourceSeeking": 0.55,
     "borderPressure": 0.35,
-    "seaCrossingPolicy": "limited"
+    "seaCrossingPolicy": "limited",
+    "terrainCosts": {
+      "water": 4.5,
+      "mountain": 0.6
+    }
   }
 }
 ```
@@ -713,9 +720,14 @@ T4 输出，登记城市名册和生成条件。
 | --- | --- | --- | --- |
 | `citySeedId` | string | 是 | 稳定城市种子 ID。 |
 | `realmId` | string | 是 | 所属国度。 |
-| `name` | string? | v1.2 建议 | AI / 人类给出的城市名。 |
+| `name` | string? | 建议 | 城市名称（如“霜峰王城”、“深铁哨镇”）。 |
 | `role` | enum/string | 是 | `capital`、`port`、`border_fort`、`mining_town` 等。 |
-| `theoreticalScale` | enum | 是 | 理论规模。 |
+| `theoreticalScale` | enum | 是 | 理论规模（`hamlet` / `village` / `town` / `city` / `large_city`）。首都与规模解耦，可独立选择中小型规模。 |
+| `serviceHierarchy` | enum/string? | 建议 | 全国服务层级（`national_center` / `regional_center` / `local_town` / `specialized_outpost`），与物理规模独立决定。 |
+| `positioning` | string? | 建议 | 城市定位与叙事特征（如“高山峡谷要冲，兼顾议事与防御”）。 |
+| `functionalFocus[]` | string[]? | 建议 | 规划功能重点列表（如 `administration`、`defense`、`mining` 等）。 |
+| `gameplayRequirements[]` | string[]? | 建议 | 玩法需求列表（如 `create_council`、`armory_crafting` 等机制与设施需求）。 |
+| `styleDirection` | map<string,string>? | 建议 | 分项风格标签映射（如 `architecture`、`vegetation`、`bridge`、`road`、`material`），MCP 与内置 Provider 允许相同字符串映射，完整透传给 D3/D4。 |
 | `anchorGrid.x` / `anchorGrid.z` | int | 是 | 粗锚点。 |
 | `anchorBlock.x` / `anchorBlock.z` | int | 是 | block 锚点。 |
 | `candidateRangeCells` | int | 是 | 后续 C 阶段可搜索半径，单位 cell。 |

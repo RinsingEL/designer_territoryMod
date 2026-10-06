@@ -36,8 +36,11 @@
 | `patch_explorer_show_candidates` | T2 / T4 / City D4 | 按 AI 选择的兴趣类型分页返回每类候选、同框 Top Patch 总览和候选间稀疏几何关系。 |
 | `patch_explorer_select_candidate` | T2 / T4 / City D4 | 选中已展示候选，返回确认染色图与稳定 `patchSelectionRef`。 |
 | `realm_t4_patch_planning_create` | T4 | 为单个国度创建空城市规划会话，只载入无坐标首都意图。 |
-| `realm_t4_patch_planning_select_capital` | T4 | 消费 `realm_t4` 选择凭证，建立该国唯一首都。 |
-| `realm_t4_patch_planning_add_city` | T4 | 消费 `realm_t4` 选择凭证并添加一座城市种子。 |
+| `realm_t4_patch_planning_select_capital` | T4 | 消费 `realm_t4` 选择凭证，建立该国唯一首都。支持独立指定 theoreticalScale、serviceHierarchy、定位与风格。 |
+| `realm_t4_patch_planning_add_city` | T4 | 消费 `realm_t4` 选择凭证并添加一座城市种子。支持全量保存名称、层级、定位、功能与分项风格。 |
+| `realm_t4_patch_planning_remove_city` | T4 | 移除已选入的城市种子，释放候选凭证回可用池，支持全国方案复核与调整。 |
+| `realm_t4_patch_planning_preview` | T4 | 返回当前全国城市草案分布图、完整设计/保护范围、城市图例与 `proposalHash`。 |
+| `realm_t4_patch_planning_review` | T4 | 看图后按当前 `proposalHash` 提交全国分工、规模和位置的复核意见；成立后才可封存。 |
 | `realm_t4_patch_planning_finalize` | T4 | 完成单国规划并按国度合并写回全局城市名册。 |
 | `realm_run_acceptance` | 验收 | 用固定配置跑完整 W -> T4 调试链，并输出验收报告。 |
 | `realm_tag_audit` | W 调试 | 对已有 sealed W run 单独执行 Tag Audit 抽样局部精扫，不重跑 W/T 主链。 |
@@ -473,6 +476,30 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 }
 ```
 
+## realm_t4_patch_planning_remove_city
+
+移除当前 T4 城市规划会话中已选入的某座城市种子，用于 AI / 人类复核全国方案时进行调整和重组。
+
+请求：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `runId` | string | 是 | run ID。 |
+| `planningSessionId` | string | 是 | 当前 T4 规划会话 ID。 |
+| `citySeedId` | string | 是 | 要移除的城市种子 ID。 |
+
+行为：
+- 从当前会话的 `citySeeds` 列表中移除对应城市。
+- 若被移除城市来源带有 `patchSelectionRef`，自动将其从 `usedPatchSelectionRefs` 中移除并释放回可用地块池，允许后续重新选择该地块。
+- 若移除的是首都，会话的 `capitalSelectionStatus` 自动回退为 `awaiting_selection`，必须重新选择首都才能 finalize。
+- 会话持久化落盘，返回操作结果及被移除的城市种子镜像。
+
+## T4 草案图与复核
+
+`realm_t4_patch_planning_preview` 请求 `runId`、`planningSessionId`，返回 `cityDistributionPreview.imagePath`、`proposalHash` 和 `cityLegend`。创建、选首都、增删城市的响应也包含当前图；图展示完整设计范围与保护范围，使用实际城市名册，不发布正式名册。
+
+`realm_t4_patch_planning_review` 请求 `runId`、`planningSessionId`、`proposalHash`、`decision`（`accept` / `revise`）和非空 `assessment`。复核保存到会话 `proposalReview`。草案变更后复核失效；旧 hash 返回 `T4_CITY_PROPOSAL_REVIEW_STALE`。finalize 除既有数量、首都、领土与保护范围检查外，还要求当前草案已 `accept`，否则返回 `T4_CITY_PROPOSAL_REVIEW_REQUIRED`。已有未封存会话可通过 preview 补图和新复核；已封存会话不重新打开。
+
 ## 建议 HTTP 对应路径
 
 | MCP 工具 | HTTP 路径 |
@@ -482,6 +509,13 @@ HTTP 路径分别为 `/realm/patch_explorer/open`、`/realm/patch_explorer/show_
 | `realm_t1_prepare` | `POST /realm/t1/prepare` |
 | `realm_t2_select_coordinate` | `POST /realm/t2/select_coordinate` |
 | `realm_t3_expand` | `POST /realm/t3/expand` |
+| `realm_t4_patch_planning_create` | `POST /realm/t4/patch_planning/create` |
+| `realm_t4_patch_planning_select_capital` | `POST /realm/t4/patch_planning/select_capital` |
+| `realm_t4_patch_planning_add_city` | `POST /realm/t4/patch_planning/add_city` |
+| `realm_t4_patch_planning_remove_city` | `POST /realm/t4/patch_planning/remove_city` |
+| `realm_t4_patch_planning_preview` | `POST /realm/t4/patch_planning/preview` |
+| `realm_t4_patch_planning_review` | `POST /realm/t4/patch_planning/review` |
+| `realm_t4_patch_planning_finalize` | `POST /realm/t4/patch_planning/finalize` |
 | `realm_t4_build_registry` | `POST /realm/t4/build_registry` |
 | `realm_run_acceptance` | `POST /realm/acceptance/run` |
 | `realm_tag_audit` | `POST /realm/tag_audit` |
