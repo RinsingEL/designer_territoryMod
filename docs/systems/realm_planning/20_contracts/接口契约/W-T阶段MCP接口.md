@@ -583,3 +583,10 @@ MCP 在 Mod common setup 后异步启动，主菜单即可连接；进入世界�
 服务使用 Mod 打包的 Node 运行环境和 MCP bundle，无需系统安装 Node；与内置 Harness 共用运行环境安装锁，但不会因启动 MCP 而请求模型或启用内置自动规划。MCP 随游戏进程退出，退出/切换存档时保持监听。Java 托管子进程，stdin 关闭与父进程监测用于避免游戏退出后残留服务。启动健康检查仅说明 MCP 监听已就绪，不代表存档、模型或城市设计已经可用。
 
 实现入口：`McpServerService`、`McpServerConfig`、`McpSettingsScreen`、`country_designer_mcp/src/server.ts` 和 `http-server.ts`。验证入口：`McpServerServiceTest`（实际内置运行环境启动、MCP initialize、端口变更与停用）、`country_designer_mcp/test/mcp-http.test.mjs`（标准客户端、独立会话、大厅、图片、拒绝跨来源和端口冲突）。
+
+
+## 固定领土输入补充（2026-10-07）
+
+`realm_t1_prepare.realmProfiles[]` 可带 `territoryPolicy: {mode: "fixed", nearshoreRadiusCells: 2}`；使用既有 `targetContinentId` 选择完整目标陆块。缺失 policy 保持扩张模式。Java 正式任务 schema 与外置 MCP schema 同步支持该对象，未知字段、非整数宽度及模式不符的宽度拒绝。
+
+固定国度仍通过 T2/T3 交接；T3 为固定范围核验与保存，不是面积竞争。`FIXED_TERRITORY_CONFLICT`、`FIXED_TERRITORY_RESERVED`、`FIXED_TERRITORY_OUTSIDE_SURVEY`、`FIXED_TERRITORY_EMPTY` 分别说明重叠、保护区、未完整扫描与无可归属陆地。调用方须调整声明，不能将错误当作部分领土成功。
