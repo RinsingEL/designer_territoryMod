@@ -218,3 +218,24 @@ D5 的 `boundarySource=district_coarse_exterior`，只保留粗粒度正交外�
 `designReviewWorkflow` 提供 `isolatedCoreGroupIds/coreReworkCount/coreReworkExhausted`；看图和评价不累计返工。五次不同草稿的核心返工后仍孤立则停止。FINAL必须满足实际组合审查，`functionsPreserved` 同时确认核心和配套效果，不能只有核心成功落位。
 
 建筑选材 `city_d4_materials` 的 `materialSelections` 支持 `filters={roles?,functionIds?,functionMode?,styles?,rawFunctionTerms?}`、`query`、`limit`（0..100，默认20）、`offset`。返回完整匹配集的联动统计与分页候选；查询不改变已确认选材。确认引用时单独提交 `structureRefs/fillPoolRefs`。Provider 与 MCP 使用同一服务和字段，详见[CityBlueprint 数据契约](../数据契约/CityBlueprint数据契约.md#建筑分层选材2026-09-24)。
+
+## 2026-10-07：功能区循环与素材角色分离
+
+D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；旧状态保留 bodies，不按旧 planning_role 猜核心。旧区缺 core 时需定向显式修订补齐，最终提交必须覆盖全部功能区。
+
+- `city_d4_district.districtDesign.core={groupId,structureRef}` 必填，一个对象代表本区唯一核心。该 ref 必须在本区该组 `requiredStructureRefs`；其他 required refs 表示必需配套，fillPools 表示可选填充。全城唯一 `priority=CORE` 仍仅为既有编译调度优先级，不是本区核心角色。
+- 初次设计按 overview.districts 主次顺序；修订已保存区提供 `targetDistrictId`、当前有效预览 `baseDraftHash`、`assessment` 和新的完整 districtDesign/designAnswers。宿主替换该区 body，冻结其他区 anchors、skippedMembers 与 landscapes。失败不保存新 body，继续依据最后有效预览修正。
+- 每轮正式编译返回当前全城与本区各组局部 `requestedPreviews`（对象，键为 overview/groupId）。workflowRevision 防并发，baseDraftHash 防跨版本图审。最终 finalize 绑定当前预览，mark/integrate 不再是必经步骤。
+- `CityBlueprint.districtDesigns[]` 持久化 `{districtId,coreGroupId,coreStructureRef,groupIds}`，唯一分区 ID、互斥组归属、完整覆盖；核心必须为该组 required ref。完整 canonical、草稿 hash 与最终保存包含该字段，供后续地形与完整性处理。没有该字段的历史蓝图保留旧解析规则。
+- 新设计填充池按显式目录成员选择，不按 planning_role.key/structure/self_contained 排除；当前组的 required refs 不作为可选填充重复。保留显式重复数量上限与算法约束。
+- 新设计普通高差或已采样浅水的平面落位可保留并在 terrainGateTrace 标注 `D4_LAYOUT_WITH_DEFERRED_REALIZATION`、generationReady=false；未采样、越界、碰撞、深水、极端地形和未支持的作者 topology 仍硬拒绝。不得将这些预览当作已施工证据；台地、支撑、跨水施工需后续解决。
+
+素材输入：`StructureProfile.category` 为 specialty/common；`assetTags` 为 infrastructure/landscape 无重复数组，缺失保持未标注，不按名称、外观或旧角色推断。Studio 导出以 catalog.json 的完整结构族规则和作者 asset_tags 为准。导出池依据作者风格/功能建候选，是否使用与重要程度由本区设计决定。
+
+`city_d4_materials.filters.categories` 任一类别匹配；`assetTags` 全部匹配；与 styles、functionIds、rawFunctionTerms 取交集。返回 authoredMetadata、classification 与分页前 facets 的类别/标签计数。通用市政厅可作为行政区核心；roles 是旧标注浏览维度，不能用作本次角色资格。
+
+### 当前版本的生成交接
+
+编译预览返回 `generationHandoff`，最终保存同一内容为 `city_d4_generation_handoff.json`：包含 contextId/baseDraftHash、districtDesigns、requiredStructures（CORE/REQUIRED_SUPPORT 与 retainedInLayout）、missingRequiredStructures、terrainRequirements 与 skippedMembers。最终提交拒绝缺失核心或必需配套，不允许 functionsPreserved 覆盖机器检测。terrainRequirements 是已保留布局的待适配证据，并非已施工证明。后续生成需要显式解决这些需求，当前精确台地、支撑与跨水施工仍未由本批实现。
+
+新 protocolVersion=3 的定向修订与可选 integrate 都保护其他区布局；跨区关系可表达交通意图，arrayCompositions 不得将其他功能区纳入共同阵列。

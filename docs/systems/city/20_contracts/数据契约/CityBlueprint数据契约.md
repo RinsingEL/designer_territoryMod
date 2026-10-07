@@ -666,3 +666,18 @@ facets 基于应用全部条件后的完整匹配集，先计数再分页；不�
 示例：先 `{groupId:"market",filters:{roles:["core"]},limit:0}` 看联动数量，再用返回的 functionIds 与 styles 联合缩小范围；对有细标签的目录可查 `{groupId:"market",filters:{roles:["fill"],functionIds:["retail.food","production.food.baking"],functionMode:"all",styles:["中世纪"]},limit:20}`。每次返回的分类数量反映当前全部条件，不承诺示例组合必有现成素材。
 
 本能力接在正式 city_d4_materials；旧的独立 structure_catalog_query 平面术语 HTTP 检索契约不因此变化。运行时只消费当前冻结导入目录，不从 Studio 工作区旁路读取模型或自动更新审查证据。
+
+## 2026-10-07：功能区循环与素材角色分离
+
+D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；旧状态保留 bodies，不按旧 planning_role 猜核心。旧区缺 core 时需定向显式修订补齐，最终提交必须覆盖全部功能区。
+
+- `city_d4_district.districtDesign.core={groupId,structureRef}` 必填，一个对象代表本区唯一核心。该 ref 必须在本区该组 `requiredStructureRefs`；其他 required refs 表示必需配套，fillPools 表示可选填充。全城唯一 `priority=CORE` 仍仅为既有编译调度优先级，不是本区核心角色。
+- 初次设计按 overview.districts 主次顺序；修订已保存区提供 `targetDistrictId`、当前有效预览 `baseDraftHash`、`assessment` 和新的完整 districtDesign/designAnswers。宿主替换该区 body，冻结其他区 anchors、skippedMembers 与 landscapes。失败不保存新 body，继续依据最后有效预览修正。
+- 每轮正式编译返回当前全城与本区各组局部 `requestedPreviews`（对象，键为 overview/groupId）。workflowRevision 防并发，baseDraftHash 防跨版本图审。最终 finalize 绑定当前预览，mark/integrate 不再是必经步骤。
+- `CityBlueprint.districtDesigns[]` 持久化 `{districtId,coreGroupId,coreStructureRef,groupIds}`，唯一分区 ID、互斥组归属、完整覆盖；核心必须为该组 required ref。完整 canonical、草稿 hash 与最终保存包含该字段，供后续地形与完整性处理。没有该字段的历史蓝图保留旧解析规则。
+- 新设计填充池按显式目录成员选择，不按 planning_role.key/structure/self_contained 排除；当前组的 required refs 不作为可选填充重复。保留显式重复数量上限与算法约束。
+- 新设计普通高差或已采样浅水的平面落位可保留并在 terrainGateTrace 标注 `D4_LAYOUT_WITH_DEFERRED_REALIZATION`、generationReady=false；未采样、越界、碰撞、深水、极端地形和未支持的作者 topology 仍硬拒绝。不得将这些预览当作已施工证据；台地、支撑、跨水施工需后续解决。
+
+素材输入：`StructureProfile.category` 为 specialty/common；`assetTags` 为 infrastructure/landscape 无重复数组，缺失保持未标注，不按名称、外观或旧角色推断。Studio 导出以 catalog.json 的完整结构族规则和作者 asset_tags 为准。导出池依据作者风格/功能建候选，是否使用与重要程度由本区设计决定。
+
+`city_d4_materials.filters.categories` 任一类别匹配；`assetTags` 全部匹配；与 styles、functionIds、rawFunctionTerms 取交集。返回 authoredMetadata、classification 与分页前 facets 的类别/标签计数。通用市政厅可作为行政区核心；roles 是旧标注浏览维度，不能用作本次角色资格。
