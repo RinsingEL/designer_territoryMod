@@ -1,0 +1,521 @@
+{
+  "tools": [
+    {
+      "name": "array_preview",
+      "description": "Use production Java geometry for one array at explicit world coordinates. Core is pinned to anchorBlock; courtyard anchor is its composition reference. Density controls production spacing; direction and template rotation are separate. Mock assets use proposed footprints. Returns overview/local images and D3 diagnostics, never world construction.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "array": {
+            "type": "object",
+            "properties": {
+              "arrayId": {
+                "type": "string"
+              },
+              "function": {
+                "type": "string"
+              },
+              "anchorBlock": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "integer"
+                  },
+                  "z": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "x",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "algorithm": {
+                "type": "string",
+                "enum": [
+                  "GRID",
+                  "LINEAR",
+                  "COURTYARD",
+                  "COMPACT",
+                  "ORGANIC_COMPACT",
+                  "CENTER_SYMMETRIC",
+                  "CONTIGUOUS"
+                ]
+              },
+              "directionDegrees": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  90,
+                  180,
+                  270
+                ]
+              },
+              "rotation": {
+                "type": "integer",
+                "enum": [
+                  0,
+                  90,
+                  180,
+                  270
+                ]
+              },
+              "densityClass": {
+                "type": "string",
+                "enum": [
+                  "SPARSE",
+                  "BALANCED",
+                  "DENSE"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1024
+              },
+              "coreAssetId": {
+                "type": "string"
+              },
+              "requiredAssetIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fill": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "assetId": {
+                      "type": "string"
+                    },
+                    "weight": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "assetId",
+                    "weight"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "arrayId",
+              "anchorBlock",
+              "algorithm",
+              "count"
+            ],
+            "additionalProperties": false
+          },
+          "seed": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "array"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "layout_preview",
+      "description": "Combine complete arrays and nested compositions, run production Java geometry and scene-wide collisions. Saves an independent experiment revision. No roads are automatically built; D3 water and relief are diagnostic, not game acceptance.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "arrays": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "properties": {
+                "arrayId": {
+                  "type": "string"
+                },
+                "function": {
+                  "type": "string"
+                },
+                "anchorBlock": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer"
+                    },
+                    "z": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "algorithm": {
+                  "type": "string",
+                  "enum": [
+                    "GRID",
+                    "LINEAR",
+                    "COURTYARD",
+                    "COMPACT",
+                    "ORGANIC_COMPACT",
+                    "CENTER_SYMMETRIC",
+                    "CONTIGUOUS"
+                  ]
+                },
+                "directionDegrees": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "rotation": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "densityClass": {
+                  "type": "string",
+                  "enum": [
+                    "SPARSE",
+                    "BALANCED",
+                    "DENSE"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1024
+                },
+                "coreAssetId": {
+                  "type": "string"
+                },
+                "requiredAssetIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fill": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "assetId": {
+                        "type": "string"
+                      },
+                      "weight": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "assetId",
+                      "weight"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "arrayId",
+                "anchorBlock",
+                "algorithm",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "compositions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "compositionId": {
+                  "type": "string"
+                },
+                "anchorBlock": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer"
+                    },
+                    "z": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "algorithm": {
+                  "type": "string",
+                  "enum": [
+                    "GRID",
+                    "LINEAR",
+                    "COURTYARD",
+                    "COMPACT",
+                    "ORGANIC_COMPACT",
+                    "CENTER_SYMMETRIC"
+                  ]
+                },
+                "directionDegrees": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "densityClass": {
+                  "type": "string",
+                  "enum": [
+                    "SPARSE",
+                    "BALANCED",
+                    "DENSE"
+                  ]
+                },
+                "memberIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "compositionId",
+                "anchorBlock",
+                "algorithm",
+                "memberIds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "seed": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "arrays"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "layout_update",
+      "description": "Replace/add full arrays or compositions by stable ID, or explicitly remove IDs. Requires current baseRevision. Returns new geometry, images, changed members and the actually used missing-assets list. Unmodified uncomposed arrays keep deterministic coordinates.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "baseRevision": {
+            "type": "integer"
+          },
+          "arrays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "arrayId": {
+                  "type": "string"
+                },
+                "function": {
+                  "type": "string"
+                },
+                "anchorBlock": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer"
+                    },
+                    "z": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "algorithm": {
+                  "type": "string",
+                  "enum": [
+                    "GRID",
+                    "LINEAR",
+                    "COURTYARD",
+                    "COMPACT",
+                    "ORGANIC_COMPACT",
+                    "CENTER_SYMMETRIC",
+                    "CONTIGUOUS"
+                  ]
+                },
+                "directionDegrees": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "rotation": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "densityClass": {
+                  "type": "string",
+                  "enum": [
+                    "SPARSE",
+                    "BALANCED",
+                    "DENSE"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1024
+                },
+                "coreAssetId": {
+                  "type": "string"
+                },
+                "requiredAssetIds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "fill": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "assetId": {
+                        "type": "string"
+                      },
+                      "weight": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    },
+                    "required": [
+                      "assetId",
+                      "weight"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "arrayId",
+                "anchorBlock",
+                "algorithm",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "compositions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "compositionId": {
+                  "type": "string"
+                },
+                "anchorBlock": {
+                  "type": "object",
+                  "properties": {
+                    "x": {
+                      "type": "integer"
+                    },
+                    "z": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "x",
+                    "z"
+                  ],
+                  "additionalProperties": false
+                },
+                "algorithm": {
+                  "type": "string",
+                  "enum": [
+                    "GRID",
+                    "LINEAR",
+                    "COURTYARD",
+                    "COMPACT",
+                    "ORGANIC_COMPACT",
+                    "CENTER_SYMMETRIC"
+                  ]
+                },
+                "directionDegrees": {
+                  "type": "integer",
+                  "enum": [
+                    0,
+                    90,
+                    180,
+                    270
+                  ]
+                },
+                "densityClass": {
+                  "type": "string",
+                  "enum": [
+                    "SPARSE",
+                    "BALANCED",
+                    "DENSE"
+                  ]
+                },
+                "memberIds": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "compositionId",
+                "anchorBlock",
+                "algorithm",
+                "memberIds"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "removeIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "baseRevision"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

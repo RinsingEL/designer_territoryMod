@@ -1,0 +1,1683 @@
+{
+  "ok": true,
+  "tool": "layout_update",
+  "revision": 2,
+  "executionMode": "offline_real_java_geometry_d3_diagnostics",
+  "generationReady": false,
+  "previews": {
+    "overview": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/overview.png",
+    "focus": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/layout-focus.png",
+    "arrays": [
+      {
+        "arrayId": "teaching-core",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-001.png"
+      },
+      {
+        "arrayId": "classrooms",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-002.png"
+      },
+      {
+        "arrayId": "living",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-003.png"
+      },
+      {
+        "arrayId": "planting",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-004.png"
+      },
+      {
+        "arrayId": "planting-support",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-005.png"
+      },
+      {
+        "arrayId": "reception",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-006.png"
+      },
+      {
+        "arrayId": "dock",
+        "path": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update/array-007.png"
+      }
+    ]
+  },
+  "members": [
+    {
+      "memberId": "teaching-core:1",
+      "arrayId": "teaching-core",
+      "assetId": "studio:mg-01-v01",
+      "name": "星穹礼堂 · 飞扶壁与肋拱中殿",
+      "placeholder": false,
+      "function": "教学",
+      "designRole": "CORE",
+      "originBlock": {
+        "x": -2960,
+        "z": 5232
+      },
+      "width": 71,
+      "depth": 83,
+      "height": 72,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 0,
+        "spacingBlocks": 91,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 20,
+          "landUseHandoffGapBlocks": 24,
+          "jitterBlocks": 4,
+          "streetBandWidthBlocks": 5,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2869,
+          "z": 5232
+        },
+        "frontageTarget": {
+          "x": -2914,
+          "z": 5232
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "FORWARD",
+        "compactDirectionIndex": 0,
+        "compactLaneTarget": {
+          "x": -2914,
+          "z": 5232
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2869,
+            "z": 5232
+          },
+          {
+            "x": -2869,
+            "z": 5242
+          },
+          {
+            "x": -2869,
+            "z": 5222
+          },
+          {
+            "x": -2869,
+            "z": 5252
+          },
+          {
+            "x": -2869,
+            "z": 5212
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 5893,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 69.0,
+        "maximumLocalRelief": 6.0,
+        "maximumSlope": 3.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "classrooms:1",
+      "arrayId": "classrooms",
+      "assetId": "mock:seminar_small",
+      "name": "（研讨室）",
+      "placeholder": true,
+      "function": "教学",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2816,
+        "z": 5267
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 11,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COURTYARD",
+        "placementMode": "CORE_ANCHORED",
+        "slotIndex": 0,
+        "spacingBlocks": 29,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CORE_ANCHORED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 16,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 1,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2816,
+          "z": 5267
+        },
+        "frontageTarget": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardRing": 1,
+        "courtyardRow": -1,
+        "courtyardColumn": 0,
+        "courtyardCenter": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardGateSide": "SOUTH",
+        "worldAxisLocked": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 64.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "classrooms:2",
+      "arrayId": "classrooms",
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "placeholder": true,
+      "function": "教学",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2787,
+        "z": 5296
+      },
+      "width": 21,
+      "depth": 17,
+      "height": 13,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COURTYARD",
+        "placementMode": "CORE_ANCHORED",
+        "slotIndex": 1,
+        "spacingBlocks": 29,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CORE_ANCHORED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 16,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 1,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2787,
+          "z": 5296
+        },
+        "frontageTarget": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardRing": 1,
+        "courtyardRow": 0,
+        "courtyardColumn": 1,
+        "courtyardCenter": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardGateSide": "SOUTH",
+        "worldAxisLocked": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 357,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "classrooms:3",
+      "arrayId": "classrooms",
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "placeholder": true,
+      "function": "教学",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2787,
+        "z": 5325
+      },
+      "width": 21,
+      "depth": 17,
+      "height": 13,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COURTYARD",
+        "placementMode": "CORE_ANCHORED",
+        "slotIndex": 2,
+        "spacingBlocks": 29,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CORE_ANCHORED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 16,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 1,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2787,
+          "z": 5325
+        },
+        "frontageTarget": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardRing": 1,
+        "courtyardRow": 1,
+        "courtyardColumn": 1,
+        "courtyardCenter": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardGateSide": "SOUTH",
+        "worldAxisLocked": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 357,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "classrooms:4",
+      "arrayId": "classrooms",
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "placeholder": true,
+      "function": "教学",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2845,
+        "z": 5296
+      },
+      "width": 21,
+      "depth": 17,
+      "height": 13,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COURTYARD",
+        "placementMode": "CORE_ANCHORED",
+        "slotIndex": 3,
+        "spacingBlocks": 29,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CORE_ANCHORED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 16,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 1,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2845,
+          "z": 5296
+        },
+        "frontageTarget": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardRing": 1,
+        "courtyardRow": 0,
+        "courtyardColumn": -1,
+        "courtyardCenter": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardGateSide": "SOUTH",
+        "worldAxisLocked": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 357,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 66.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "classrooms:5",
+      "arrayId": "classrooms",
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "placeholder": true,
+      "function": "教学",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2845,
+        "z": 5325
+      },
+      "width": 21,
+      "depth": 17,
+      "height": 13,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COURTYARD",
+        "placementMode": "CORE_ANCHORED",
+        "slotIndex": 4,
+        "spacingBlocks": 29,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CORE_ANCHORED",
+          "targetEdgeGapBlocks": 8,
+          "maximumEdgeGapBlocks": 16,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 1,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2845,
+          "z": 5325
+        },
+        "frontageTarget": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardRing": 1,
+        "courtyardRow": 1,
+        "courtyardColumn": -1,
+        "courtyardCenter": {
+          "x": -2816,
+          "z": 5296
+        },
+        "courtyardGateSide": "SOUTH",
+        "worldAxisLocked": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 357,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "living:1",
+      "arrayId": "living",
+      "assetId": "mock:dorm_small",
+      "name": "（小宿舍）",
+      "placeholder": true,
+      "function": "生活",
+      "designRole": "CORE",
+      "originBlock": {
+        "x": -2880,
+        "z": 5380
+      },
+      "width": 19,
+      "depth": 23,
+      "height": 14,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 0,
+        "spacingBlocks": 30,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2850,
+          "z": 5380
+        },
+        "frontageTarget": {
+          "x": -2865,
+          "z": 5380
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "FORWARD",
+        "compactDirectionIndex": 0,
+        "compactLaneTarget": {
+          "x": -2865,
+          "z": 5380
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2850,
+            "z": 5380
+          },
+          {
+            "x": -2850,
+            "z": 5386
+          },
+          {
+            "x": -2850,
+            "z": 5374
+          },
+          {
+            "x": -2850,
+            "z": 5390
+          },
+          {
+            "x": -2850,
+            "z": 5370
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 437,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 64.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "living:2",
+      "arrayId": "living",
+      "assetId": "mock:dining_small",
+      "name": "（小食堂）",
+      "placeholder": true,
+      "function": "生活",
+      "designRole": "REQUIRED",
+      "originBlock": {
+        "x": -2850,
+        "z": 5410
+      },
+      "width": 23,
+      "depth": 25,
+      "height": 13,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 1,
+        "spacingBlocks": 30,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2850,
+          "z": 5410
+        },
+        "frontageTarget": {
+          "x": -2865,
+          "z": 5410
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "FORWARD_RIGHT",
+        "compactDirectionIndex": 1,
+        "compactLaneTarget": {
+          "x": -2865,
+          "z": 5410
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2850,
+            "z": 5410
+          },
+          {
+            "x": -2850,
+            "z": 5404
+          },
+          {
+            "x": -2850,
+            "z": 5400
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 575,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "living:3",
+      "arrayId": "living",
+      "assetId": "mock:research_home",
+      "name": "（研究者住宅）",
+      "placeholder": true,
+      "function": "生活",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2880,
+        "z": 5410
+      },
+      "width": 17,
+      "depth": 19,
+      "height": 12,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 2,
+        "spacingBlocks": 30,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2880,
+          "z": 5410
+        },
+        "frontageTarget": {
+          "x": -2880,
+          "z": 5395
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "RIGHT",
+        "compactDirectionIndex": 2,
+        "compactLaneTarget": {
+          "x": -2880,
+          "z": 5395
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2880,
+            "z": 5410
+          },
+          {
+            "x": -2874,
+            "z": 5410
+          },
+          {
+            "x": -2886,
+            "z": 5410
+          },
+          {
+            "x": -2870,
+            "z": 5410
+          },
+          {
+            "x": -2890,
+            "z": 5410
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 323,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 64.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "living:4",
+      "arrayId": "living",
+      "assetId": "mock:research_home",
+      "name": "（研究者住宅）",
+      "placeholder": true,
+      "function": "生活",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2910,
+        "z": 5410
+      },
+      "width": 17,
+      "depth": 19,
+      "height": 12,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 3,
+        "spacingBlocks": 30,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2910,
+          "z": 5410
+        },
+        "frontageTarget": {
+          "x": -2895,
+          "z": 5410
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "BACK_RIGHT",
+        "compactDirectionIndex": 3,
+        "compactLaneTarget": {
+          "x": -2895,
+          "z": 5410
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2910,
+            "z": 5410
+          },
+          {
+            "x": -2910,
+            "z": 5404
+          },
+          {
+            "x": -2910,
+            "z": 5400
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 323,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 64.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "living:5",
+      "arrayId": "living",
+      "assetId": "mock:research_home",
+      "name": "（研究者住宅）",
+      "placeholder": true,
+      "function": "生活",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2910,
+        "z": 5380
+      },
+      "width": 17,
+      "depth": 19,
+      "height": 12,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 4,
+        "spacingBlocks": 30,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2910,
+          "z": 5380
+        },
+        "frontageTarget": {
+          "x": -2895,
+          "z": 5380
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "BACK",
+        "compactDirectionIndex": 4,
+        "compactLaneTarget": {
+          "x": -2895,
+          "z": 5380
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2910,
+            "z": 5380
+          },
+          {
+            "x": -2910,
+            "z": 5386
+          },
+          {
+            "x": -2910,
+            "z": 5374
+          },
+          {
+            "x": -2910,
+            "z": 5390
+          },
+          {
+            "x": -2910,
+            "z": 5370
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 323,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 64.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:1",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3010,
+        "z": 5350
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:2",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3010,
+        "z": 5333
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:3",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3027,
+        "z": 5350
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 64.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:4",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3027,
+        "z": 5333
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 63.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:5",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -2993,
+        "z": 5333
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 3.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting:6",
+      "arrayId": "planting",
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3044,
+        "z": 5333
+      },
+      "width": 17,
+      "depth": 17,
+      "height": 2,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 289,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 62.0,
+        "maximumElevation": 63.0,
+        "maximumLocalRelief": 5.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting-support:1",
+      "arrayId": "planting-support",
+      "assetId": "mock:greenhouse_small",
+      "name": "（小温室）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "REQUIRED",
+      "originBlock": {
+        "x": -2970,
+        "z": 5410
+      },
+      "width": 17,
+      "depth": 25,
+      "height": 10,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "LINEAR",
+        "placementMode": "AXIS_ANCHORED",
+        "slotIndex": 0,
+        "spacingBlocks": 34,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "AXIS_ANCHORED",
+          "targetEdgeGapBlocks": 9,
+          "maximumEdgeGapBlocks": 22,
+          "landUseHandoffGapBlocks": 24,
+          "jitterBlocks": 3,
+          "streetBandWidthBlocks": 5,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2970,
+          "z": 5410
+        },
+        "streetBandReserved": true,
+        "streetBandWidthBlocks": 5,
+        "primaryAxisEndpoint": true
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 425,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 63.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "planting-support:2",
+      "arrayId": "planting-support",
+      "assetId": "mock:garden_shed",
+      "name": "（园艺工具棚）",
+      "placeholder": true,
+      "function": "种植",
+      "designRole": "REQUIRED",
+      "originBlock": {
+        "x": -2936,
+        "z": 5394
+      },
+      "width": 9,
+      "depth": 13,
+      "height": 7,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "LINEAR",
+        "placementMode": "AXIS_ANCHORED",
+        "slotIndex": 1,
+        "spacingBlocks": 34,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "AXIS_ANCHORED",
+          "targetEdgeGapBlocks": 9,
+          "maximumEdgeGapBlocks": 22,
+          "landUseHandoffGapBlocks": 24,
+          "jitterBlocks": 3,
+          "streetBandWidthBlocks": 5,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2936,
+          "z": 5394
+        },
+        "streetBandReserved": true,
+        "streetBandWidthBlocks": 5,
+        "primaryAxisEndpoint": false,
+        "streetBandRank": 1,
+        "streetBandSide": "LEFT"
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 117,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 65.0,
+        "maximumLocalRelief": 2.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "reception:1",
+      "arrayId": "reception",
+      "assetId": "mock:reception_small",
+      "name": "（小接待厅）",
+      "placeholder": true,
+      "function": "迎宾",
+      "designRole": "CORE",
+      "originBlock": {
+        "x": -3010,
+        "z": 5240
+      },
+      "width": 19,
+      "depth": 23,
+      "height": 14,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 0,
+        "spacingBlocks": 32,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2978,
+          "z": 5240
+        },
+        "frontageTarget": {
+          "x": -2994,
+          "z": 5240
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "FORWARD",
+        "compactDirectionIndex": 0,
+        "compactLaneTarget": {
+          "x": -2994,
+          "z": 5240
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2978,
+            "z": 5240
+          },
+          {
+            "x": -2978,
+            "z": 5246
+          },
+          {
+            "x": -2978,
+            "z": 5234
+          },
+          {
+            "x": -2978,
+            "z": 5250
+          },
+          {
+            "x": -2978,
+            "z": 5230
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 437,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 68.0,
+        "maximumLocalRelief": 8.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "reception:2",
+      "arrayId": "reception",
+      "assetId": "mock:gatehouse_small",
+      "name": "（迎宾门房）",
+      "placeholder": true,
+      "function": "迎宾",
+      "designRole": "REQUIRED",
+      "originBlock": {
+        "x": -2978,
+        "z": 5272
+      },
+      "width": 13,
+      "depth": 17,
+      "height": 10,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 1,
+        "spacingBlocks": 32,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -2978,
+          "z": 5272
+        },
+        "frontageTarget": {
+          "x": -2994,
+          "z": 5272
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "FORWARD_RIGHT",
+        "compactDirectionIndex": 1,
+        "compactLaneTarget": {
+          "x": -2994,
+          "z": 5272
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -2978,
+            "z": 5272
+          },
+          {
+            "x": -2978,
+            "z": 5266
+          },
+          {
+            "x": -2978,
+            "z": 5262
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 221,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 66.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 3.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "reception:3",
+      "arrayId": "reception",
+      "assetId": "mock:guest_lodge",
+      "name": "（访客旅舍）",
+      "placeholder": true,
+      "function": "迎宾",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3010,
+        "z": 5272
+      },
+      "width": 23,
+      "depth": 27,
+      "height": 16,
+      "rotation": 0,
+      "geometryEngine": "CityBlueprintGroupLayoutPlanner.propose",
+      "proposalTrace": {
+        "algorithm": "COMPACT",
+        "placementMode": "CLUSTER_BOUNDED",
+        "slotIndex": 2,
+        "spacingBlocks": 32,
+        "outwardGuided": false,
+        "densityParameters": {
+          "placementMode": "CLUSTER_BOUNDED",
+          "targetEdgeGapBlocks": 5,
+          "maximumEdgeGapBlocks": 12,
+          "landUseHandoffGapBlocks": 16,
+          "jitterBlocks": 2,
+          "streetBandWidthBlocks": 3,
+          "claimAreaMultiplier": 1.0
+        },
+        "theoreticalAnchor": {
+          "x": -3010,
+          "z": 5272
+        },
+        "frontageTarget": {
+          "x": -3010,
+          "z": 5256
+        },
+        "compactLaneRank": 1,
+        "compactLaneSide": "RIGHT",
+        "compactDirectionIndex": 2,
+        "compactLaneTarget": {
+          "x": -3010,
+          "z": 5256
+        },
+        "compactMicroAdjustmentEnabled": true,
+        "compactCandidateGuides": [
+          {
+            "x": -3010,
+            "z": 5272
+          },
+          {
+            "x": -3004,
+            "z": 5272
+          },
+          {
+            "x": -3016,
+            "z": 5272
+          },
+          {
+            "x": -3000,
+            "z": 5272
+          },
+          {
+            "x": -3020,
+            "z": 5272
+          }
+        ]
+      },
+      "terrainEvidence": {
+        "waterAreaBlocks": 0,
+        "sampledAreaBlocks": 621,
+        "waterAreaRatio": 0.0,
+        "minimumElevation": 65.0,
+        "maximumElevation": 66.0,
+        "maximumLocalRelief": 5.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "planned"
+    },
+    {
+      "memberId": "dock:1",
+      "arrayId": "dock",
+      "assetId": "mock:pier_segment",
+      "name": "（小栈桥段）",
+      "placeholder": true,
+      "function": "码头",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3085,
+        "z": 5320
+      },
+      "width": 9,
+      "depth": 21,
+      "height": 4,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 189,
+        "sampledAreaBlocks": 189,
+        "waterAreaRatio": 1.0,
+        "minimumElevation": 61.0,
+        "maximumElevation": 61.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 1.0
+      },
+      "engineeringNeeds": [
+        "WATER_INTERFACE_REVIEW"
+      ],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "engineering_review"
+    },
+    {
+      "memberId": "dock:2",
+      "arrayId": "dock",
+      "assetId": "mock:pier_segment",
+      "name": "（小栈桥段）",
+      "placeholder": true,
+      "function": "码头",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3094,
+        "z": 5320
+      },
+      "width": 9,
+      "depth": 21,
+      "height": 4,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 111,
+        "sampledAreaBlocks": 189,
+        "waterAreaRatio": 0.5873015873015873,
+        "minimumElevation": 61.0,
+        "maximumElevation": 62.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [
+        "WATER_INTERFACE_REVIEW"
+      ],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "engineering_review"
+    },
+    {
+      "memberId": "dock:3",
+      "arrayId": "dock",
+      "assetId": "mock:pier_segment",
+      "name": "（小栈桥段）",
+      "placeholder": true,
+      "function": "码头",
+      "designRole": "FILL",
+      "originBlock": {
+        "x": -3085,
+        "z": 5299
+      },
+      "width": 9,
+      "depth": 21,
+      "height": 4,
+      "rotation": 0,
+      "geometryEngine": "CityContiguousLayoutPlanner.plan",
+      "terrainEvidence": {
+        "waterAreaBlocks": 189,
+        "sampledAreaBlocks": 189,
+        "waterAreaRatio": 1.0,
+        "minimumElevation": 61.0,
+        "maximumElevation": 61.0,
+        "maximumLocalRelief": 4.0,
+        "maximumSlope": 2.0
+      },
+      "engineeringNeeds": [
+        "WATER_INTERFACE_REVIEW"
+      ],
+      "issues": [],
+      "collisionsWith": [],
+      "status": "engineering_review"
+    }
+  ],
+  "missingAssets": [
+    {
+      "assetId": "mock:seminar_small",
+      "name": "（研讨室）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "教学"
+      ],
+      "size": {
+        "width": 17,
+        "height": 11,
+        "depth": 17
+      }
+    },
+    {
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "plannedCount": 4,
+      "conflictCount": 0,
+      "functions": [
+        "教学"
+      ],
+      "size": {
+        "width": 21,
+        "height": 13,
+        "depth": 17
+      }
+    },
+    {
+      "assetId": "mock:dorm_small",
+      "name": "（小宿舍）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "生活"
+      ],
+      "size": {
+        "width": 19,
+        "height": 14,
+        "depth": 23
+      }
+    },
+    {
+      "assetId": "mock:dining_small",
+      "name": "（小食堂）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "生活"
+      ],
+      "size": {
+        "width": 23,
+        "height": 13,
+        "depth": 25
+      }
+    },
+    {
+      "assetId": "mock:research_home",
+      "name": "（研究者住宅）",
+      "plannedCount": 3,
+      "conflictCount": 0,
+      "functions": [
+        "生活"
+      ],
+      "size": {
+        "width": 17,
+        "height": 12,
+        "depth": 19
+      }
+    },
+    {
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "plannedCount": 6,
+      "conflictCount": 0,
+      "functions": [
+        "种植"
+      ],
+      "size": {
+        "width": 17,
+        "height": 2,
+        "depth": 17
+      }
+    },
+    {
+      "assetId": "mock:greenhouse_small",
+      "name": "（小温室）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "种植"
+      ],
+      "size": {
+        "width": 17,
+        "height": 10,
+        "depth": 25
+      }
+    },
+    {
+      "assetId": "mock:garden_shed",
+      "name": "（园艺工具棚）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "种植"
+      ],
+      "size": {
+        "width": 9,
+        "height": 7,
+        "depth": 13
+      }
+    },
+    {
+      "assetId": "mock:reception_small",
+      "name": "（小接待厅）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "迎宾"
+      ],
+      "size": {
+        "width": 19,
+        "height": 14,
+        "depth": 23
+      }
+    },
+    {
+      "assetId": "mock:gatehouse_small",
+      "name": "（迎宾门房）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "迎宾"
+      ],
+      "size": {
+        "width": 13,
+        "height": 10,
+        "depth": 17
+      }
+    },
+    {
+      "assetId": "mock:guest_lodge",
+      "name": "（访客旅舍）",
+      "plannedCount": 1,
+      "conflictCount": 0,
+      "functions": [
+        "迎宾"
+      ],
+      "size": {
+        "width": 23,
+        "height": 16,
+        "depth": 27
+      }
+    },
+    {
+      "assetId": "mock:pier_segment",
+      "name": "（小栈桥段）",
+      "plannedCount": 3,
+      "conflictCount": 0,
+      "functions": [
+        "码头"
+      ],
+      "size": {
+        "width": 9,
+        "height": 4,
+        "depth": 21
+      }
+    }
+  ],
+  "changedMemberIds": [
+    "planting:2",
+    "planting:5",
+    "reception:1",
+    "reception:2",
+    "reception:3"
+  ],
+  "removedMemberIds": [],
+  "evidenceDirectory": "/Users/rinsing/Documents/文稿 - Rinsing的MacBook Air/project/designer_territoryMod/experiments/第三题_学院岛坐标布局_20261008/result/array-tools/call-0002-layout_update",
+  "summary": {
+    "planned": 25,
+    "conflicts": 0,
+    "engineeringReview": 3
+  }
+}

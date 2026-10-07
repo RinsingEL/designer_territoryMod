@@ -1,0 +1,8 @@
+test_nested_rotation_and_outside (__main__.ArrayIntegration.test_nested_rotation_and_outside) ... ok
+test_preview_update_and_guards (__main__.ArrayIntegration.test_preview_update_and_guards) ... ok
+test_stdio_transport (__main__.ArrayIntegration.test_stdio_transport) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 31.684s
+
+OK

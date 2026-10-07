@@ -1,0 +1,106 @@
+{
+  "preparedDate": "2026-10-08",
+  "sourceD3Ref": {
+    "path": "provider_3d25631f_r19200/city_test_runs/city_jingchao_capital/steps/d3/city_landform_review_package.json",
+    "schema": "city_landform_review",
+    "contentHash": "sha256:96ef0c3cb1394d8f595ed6d1742c093640ba99ee7d69f32ef8dd57797f81c6ba"
+  },
+  "sourceTerrainRef": {
+    "path": "provider_3d25631f_r19200/city_test_runs/city_jingchao_capital/steps/land_use/land_use_terrain_field.json",
+    "schema": "city_land_use_terrain_field",
+    "contentHash": "sha256:d63b7e2e90c5f9d5040ea4669615b31a915685eea5ebd885526c59211665e093"
+  },
+  "sourceRunId": "provider_3d25631f_r19200",
+  "sourceCityId": "city_jingchao_capital",
+  "cellCount": 4096,
+  "gridStep": 16,
+  "studioModelCount": 24,
+  "runtimeMatchingModelCount": 0,
+  "files": [
+    {
+      "path": "data/D3_biome_坐标图.png",
+      "bytes": 58646,
+      "sha256": "f49365ecb71a8ddcc863526a64a7b5e8c74b8f460ddaeda8f428db4ec40fa789"
+    },
+    {
+      "path": "data/D3_elevation_坐标图.png",
+      "bytes": 50538,
+      "sha256": "f8ef4e37559b9b87345f6b3bf077450dd81b7529b794f25d8e8e95c8c6e008f9"
+    },
+    {
+      "path": "data/D3_landform_坐标图.png",
+      "bytes": 55734,
+      "sha256": "5e8b81c8d1d9ed15016e807dd6d436c28e3a4be249e8ba6a0f1b9bbc220574ee"
+    },
+    {
+      "path": "data/D3_relief_坐标图.png",
+      "bytes": 53785,
+      "sha256": "1f7f31df56125adeaf2c84399990156e933798988007b0903e42d7df8995ee62"
+    },
+    {
+      "path": "data/D3原始地貌图.png",
+      "bytes": 221130,
+      "sha256": "a9f81ff74f00120df4c775de3cbd7c3310994683b7d10b80cac99ff34b9e187a"
+    },
+    {
+      "path": "data/D3原始群系图.png",
+      "bytes": 38011,
+      "sha256": "abe34447450417ac5bdc86c6b83d1e2a4158bb1116c4a77b16a50134215d4fd6"
+    },
+    {
+      "path": "data/D3地形原始数据.json",
+      "bytes": 2033448,
+      "sha256": "d63b7e2e90c5f9d5040ea4669615b31a915685eea5ebd885526c59211665e093"
+    },
+    {
+      "path": "data/D3地貌原始数据.json",
+      "bytes": 983064,
+      "sha256": "96ef0c3cb1394d8f595ed6d1742c093640ba99ee7d69f32ef8dd57797f81c6ba"
+    },
+    {
+      "path": "data/D3坐标地形.csv",
+      "bytes": 489316,
+      "sha256": "732f3ee4cfffa15a2b8cf0a4d45352669ca64d216065b8d1d87e6652aa9051a5"
+    },
+    {
+      "path": "data/假结构目录.json",
+      "bytes": 8133,
+      "sha256": "50c572f7500c47fdaee9b2271af93449fe5eb9c5c96dffde735ecb0ce42e0f15"
+    },
+    {
+      "path": "data/假结构目录.md",
+      "bytes": 2411,
+      "sha256": "9d32ef86c26fef8a4e8d5f137793567fa58897b6fa6f6a59257c78c2d791721e"
+    },
+    {
+      "path": "data/学院素材目录.json",
+      "bytes": 12855,
+      "sha256": "d6e48eb009dc636d367c6db13f9fcb04ac604bee341ae94b4c7ccca7b61046ca"
+    },
+    {
+      "path": "data/学院素材目录.md",
+      "bytes": 2766,
+      "sha256": "129835cf884b05fc1347c4ca5bd68a6f17a44e14683e689a3fbb35530319ab0d"
+    }
+  ],
+  "status": "offline_java_array_tools_implemented_and_smoke_verified",
+  "placeholderModelCount": 18,
+  "removedInputs": [
+    "data/学院建筑风格参考.png",
+    "data/用户认可的空间意向.png"
+  ],
+  "tools": {
+    "entry": "StructureBinder/tools/city_experiments/array_tools.py",
+    "transport": [
+      "cli",
+      "mcp_stdio"
+    ],
+    "clientMcpRegistered": false,
+    "geometryEngines": [
+      "CityBlueprintGroupLayoutPlanner.propose",
+      "CityContiguousLayoutPlanner.plan"
+    ],
+    "generationReady": false,
+    "latestExampleRevision": 2
+  }
+}

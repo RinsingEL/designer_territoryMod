@@ -1,0 +1,170 @@
+[
+  {
+    "assetId": "mock:seminar_small",
+    "name": "（研讨室）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "教学"
+    ],
+    "size": {
+      "width": 17,
+      "height": 11,
+      "depth": 17
+    }
+  },
+  {
+    "assetId": "mock:classroom_small",
+    "name": "（小课堂）",
+    "plannedCount": 4,
+    "conflictCount": 0,
+    "functions": [
+      "教学"
+    ],
+    "size": {
+      "width": 21,
+      "height": 13,
+      "depth": 17
+    }
+  },
+  {
+    "assetId": "mock:dorm_small",
+    "name": "（小宿舍）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "生活"
+    ],
+    "size": {
+      "width": 19,
+      "height": 14,
+      "depth": 23
+    }
+  },
+  {
+    "assetId": "mock:dining_small",
+    "name": "（小食堂）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "生活"
+    ],
+    "size": {
+      "width": 23,
+      "height": 13,
+      "depth": 25
+    }
+  },
+  {
+    "assetId": "mock:research_home",
+    "name": "（研究者住宅）",
+    "plannedCount": 3,
+    "conflictCount": 0,
+    "functions": [
+      "生活"
+    ],
+    "size": {
+      "width": 17,
+      "height": 12,
+      "depth": 19
+    }
+  },
+  {
+    "assetId": "mock:vegetable_plot",
+    "name": "（菜圃田块）",
+    "plannedCount": 6,
+    "conflictCount": 0,
+    "functions": [
+      "种植"
+    ],
+    "size": {
+      "width": 17,
+      "height": 2,
+      "depth": 17
+    }
+  },
+  {
+    "assetId": "mock:greenhouse_small",
+    "name": "（小温室）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "种植"
+    ],
+    "size": {
+      "width": 17,
+      "height": 10,
+      "depth": 25
+    }
+  },
+  {
+    "assetId": "mock:garden_shed",
+    "name": "（园艺工具棚）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "种植"
+    ],
+    "size": {
+      "width": 9,
+      "height": 7,
+      "depth": 13
+    }
+  },
+  {
+    "assetId": "mock:reception_small",
+    "name": "（小接待厅）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "迎宾"
+    ],
+    "size": {
+      "width": 19,
+      "height": 14,
+      "depth": 23
+    }
+  },
+  {
+    "assetId": "mock:gatehouse_small",
+    "name": "（迎宾门房）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "迎宾"
+    ],
+    "size": {
+      "width": 13,
+      "height": 10,
+      "depth": 17
+    }
+  },
+  {
+    "assetId": "mock:guest_lodge",
+    "name": "（访客旅舍）",
+    "plannedCount": 1,
+    "conflictCount": 0,
+    "functions": [
+      "迎宾"
+    ],
+    "size": {
+      "width": 23,
+      "height": 16,
+      "depth": 27
+    }
+  },
+  {
+    "assetId": "mock:pier_segment",
+    "name": "（小栈桥段）",
+    "plannedCount": 3,
+    "conflictCount": 0,
+    "functions": [
+      "码头"
+    ],
+    "size": {
+      "width": 9,
+      "height": 4,
+      "depth": 21
+    }
+  }
+]

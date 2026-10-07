@@ -46,7 +46,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 
 ### D4 一次初版与整体性扩张协议（2026-09-17）
 
-HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档主阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。不公开局部修饰、重开、逐区评价和完成工具。
+HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档主阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。不公开旧局部修饰、逐区评价和完成工具；2026-10-07 起通过下述版本工具支持施工流程启动前的重开。
 
 | 工具 | 职责及输入 |
 | --- | --- |
@@ -239,3 +239,21 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 编译预览返回 `generationHandoff`，最终保存同一内容为 `city_d4_generation_handoff.json`：包含 contextId/baseDraftHash、districtDesigns、requiredStructures（CORE/REQUIRED_SUPPORT 与 retainedInLayout）、missingRequiredStructures、terrainRequirements 与 skippedMembers。最终提交拒绝缺失核心或必需配套，不允许 functionsPreserved 覆盖机器检测。terrainRequirements 是已保留布局的待适配证据，并非已施工证明。后续生成需要显式解决这些需求，当前精确台地、支撑与跨水施工仍未由本批实现。
 
 新 protocolVersion=3 的定向修订与可选 integrate 都保护其他区布局；跨区关系可表达交通意图，arrayCompositions 不得将其他功能区纳入共同阵列。
+
+## 2026-10-07：成功方案版本、重开与恢复
+
+以下工具共用 `/realm/city/submit_d4_blueprint`，携带 `d4Tool`、`runId/citySeedId/contextId/workflowRevision`。队列允许唯一当前城市在 `design_saved` 状态使用版本工具，重开后回到可设计状态；其他城市不可借此绕过顺序。
+
+| 工具 | 输入 | 行为 |
+| --- | --- | --- |
+| `city_d4_history` | 公共身份字段 | 返回同城同 Context 的 `designHistory`，含 versionId、createdAt、workflowRevision、stage、blueprintHash、districtCount；同时给出当前 baseBlueprintHash 或 baseDraftHash，以及 designRevisionAllowed/拒绝原因。查询不入施工队列。 |
+| `city_d4_reopen` | `baseBlueprintHash`、非空 `reason` | 只用于 COMPLETE；匹配当前接受 trace 与文件 hash，将当前定稿重开为草稿。 |
+| `city_d4_restore` | 完整 `versionId`、非空 `reason`、当前 base hash | COMPLETE 使用 baseBlueprintHash，其余草稿阶段使用 baseDraftHash，恰好一个；恢复指定成功版本，重新编译成草稿，不直接接受或施工。 |
+
+成功草稿及定稿的完整工作流、canonical Blueprint 和布局保存在 `steps/blueprint/design_versions/<64位哈希>.json`，schema=`city_d4_design_version.v1`。versionId 覆盖 content（workflow/blueprint/geometry），校验同 Context、同城和文件边界，拒绝损坏、越界引用或跨 Context 恢复；workflowRevision 以当前值递增，不恢复旧 revision。
+
+重开和恢复使用正式 Java 编译器，按所选版本保护既有布局；产生新的局部／全城预览后，按既有区域修订能力继续。未重新定稿前，旧 accepted Blueprint、trace、validation、geometryCommit、generationHandoff 以及派生 D4/D5/D6/D7/walls/workflow 计划退役到 `revision_retirements/`；LandUse 地形输入保留，派生计划退役。旧接受不能被 retry 或下游编译消费。地形、目录 Context 和 failure budget 保持，不以回退规避失败上限。
+
+任意已持久化 post-D4 job（包括失败、已完成）、活动队列或直接世界激活／放置报告均拒绝重开和恢复，返回 `CITY_D4_REVISION_AFTER_EXECUTION_STARTED`。宿主串行处理设计回退与 enqueue/retry 的状态检查，防止重开与启动施工交错。普通默认定稿仍自动入队；需要后续重开时，定稿必须明确 `autoAdvanceAfterD4=false`。本批不提供已生成城市的世界 undo。
+
+过期 workflowRevision、base hash、未知版本、版本损坏或 Context 不符均拒绝，不覆盖既有 accepted 方案；恢复编译不成立时保留原工作流和接受方案，并返回真实失败证据。历史视图的 blueprintHash 是版本内容标识，不是当前 accepted trace hash；重开请使用 history 返回的 baseBlueprintHash。

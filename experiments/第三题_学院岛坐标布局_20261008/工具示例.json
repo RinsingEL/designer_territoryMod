@@ -1,0 +1,129 @@
+{
+  "arrays": [
+    {
+      "arrayId": "teaching-core",
+      "function": "教学",
+      "anchorBlock": {
+        "x": -2960,
+        "z": 5232
+      },
+      "algorithm": "COMPACT",
+      "count": 1,
+      "coreAssetId": "studio:mg-01-v01"
+    },
+    {
+      "arrayId": "classrooms",
+      "function": "教学",
+      "anchorBlock": {
+        "x": -2816,
+        "z": 5296
+      },
+      "algorithm": "COURTYARD",
+      "densityClass": "DENSE",
+      "count": 5,
+      "fill": [
+        {
+          "assetId": "mock:classroom_small",
+          "weight": 2
+        },
+        {
+          "assetId": "mock:seminar_small",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "arrayId": "living",
+      "function": "生活",
+      "anchorBlock": {
+        "x": -2880,
+        "z": 5380
+      },
+      "algorithm": "COMPACT",
+      "densityClass": "DENSE",
+      "count": 5,
+      "coreAssetId": "mock:dorm_small",
+      "requiredAssetIds": [
+        "mock:dining_small"
+      ],
+      "fill": [
+        {
+          "assetId": "mock:research_home",
+          "weight": 2
+        },
+        {
+          "assetId": "mock:kitchen_small",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "arrayId": "planting",
+      "function": "种植",
+      "anchorBlock": {
+        "x": -3010,
+        "z": 5350
+      },
+      "algorithm": "CONTIGUOUS",
+      "count": 6,
+      "fill": [
+        {
+          "assetId": "mock:vegetable_plot",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "arrayId": "planting-support",
+      "function": "种植",
+      "anchorBlock": {
+        "x": -2970,
+        "z": 5410
+      },
+      "algorithm": "LINEAR",
+      "count": 2,
+      "requiredAssetIds": [
+        "mock:greenhouse_small",
+        "mock:garden_shed"
+      ]
+    },
+    {
+      "arrayId": "reception",
+      "function": "迎宾",
+      "anchorBlock": {
+        "x": -3010,
+        "z": 5280
+      },
+      "algorithm": "COMPACT",
+      "densityClass": "DENSE",
+      "count": 3,
+      "coreAssetId": "mock:reception_small",
+      "requiredAssetIds": [
+        "mock:gatehouse_small"
+      ],
+      "fill": [
+        {
+          "assetId": "mock:guest_lodge",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "arrayId": "dock",
+      "function": "码头",
+      "anchorBlock": {
+        "x": -3085,
+        "z": 5320
+      },
+      "algorithm": "CONTIGUOUS",
+      "count": 3,
+      "fill": [
+        {
+          "assetId": "mock:pier_segment",
+          "weight": 1
+        }
+      ]
+    }
+  ],
+  "seed": 20261008
+}

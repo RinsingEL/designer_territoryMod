@@ -1,0 +1,26 @@
+{
+  "baseRevision": 1,
+  "arrays": [
+    {
+      "arrayId": "reception",
+      "function": "迎宾",
+      "anchorBlock": {
+        "x": -3010,
+        "z": 5240
+      },
+      "algorithm": "COMPACT",
+      "densityClass": "DENSE",
+      "count": 3,
+      "coreAssetId": "mock:reception_small",
+      "requiredAssetIds": [
+        "mock:gatehouse_small"
+      ],
+      "fill": [
+        {
+          "assetId": "mock:guest_lodge",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

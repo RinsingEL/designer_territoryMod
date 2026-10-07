@@ -1,0 +1,257 @@
+{
+  "schema": "academy_experiment_placeholder_catalog.v1",
+  "models": [
+    {
+      "assetId": "mock:classroom_small",
+      "name": "（小课堂）",
+      "placeholder": true,
+      "function": "教学",
+      "proposedSize": {
+        "width": 21,
+        "height": 13,
+        "depth": 17
+      },
+      "intent": "单间课堂与入口廊",
+      "existingAlternatives": "MG-01、MG-19、MG-21",
+      "gapReason": "现有教学与抄写设施多为大体量，缺少可围合小院的小课堂和小书铺。"
+    },
+    {
+      "assetId": "mock:seminar_small",
+      "name": "（研讨室）",
+      "placeholder": true,
+      "function": "教学",
+      "proposedSize": {
+        "width": 17,
+        "height": 11,
+        "depth": 17
+      },
+      "intent": "小组讨论与安静门廊",
+      "existingAlternatives": "MG-01、MG-19、MG-21",
+      "gapReason": "现有教学与抄写设施多为大体量，缺少可围合小院的小课堂和小书铺。"
+    },
+    {
+      "assetId": "mock:scribe_shop",
+      "name": "（小抄写铺）",
+      "placeholder": true,
+      "function": "教学",
+      "proposedSize": {
+        "width": 15,
+        "height": 10,
+        "depth": 19
+      },
+      "intent": "书桌、存书与采光面",
+      "existingAlternatives": "MG-01、MG-19、MG-21",
+      "gapReason": "现有教学与抄写设施多为大体量，缺少可围合小院的小课堂和小书铺。"
+    },
+    {
+      "assetId": "mock:dorm_small",
+      "name": "（小宿舍）",
+      "placeholder": true,
+      "function": "生活",
+      "proposedSize": {
+        "width": 19,
+        "height": 14,
+        "depth": 23
+      },
+      "intent": "双层寝室与共享入口",
+      "existingAlternatives": "MG-05、MG-07、MG-17",
+      "gapReason": "已有完整宿舍、食堂及研究住宅，缺少能反复组成小街坊的小型配套。"
+    },
+    {
+      "assetId": "mock:research_home",
+      "name": "（研究者住宅）",
+      "placeholder": true,
+      "function": "生活",
+      "proposedSize": {
+        "width": 17,
+        "height": 12,
+        "depth": 19
+      },
+      "intent": "住居和小书房",
+      "existingAlternatives": "MG-05、MG-07、MG-17",
+      "gapReason": "已有完整宿舍、食堂及研究住宅，缺少能反复组成小街坊的小型配套。"
+    },
+    {
+      "assetId": "mock:kitchen_small",
+      "name": "（公共厨房）",
+      "placeholder": true,
+      "function": "生活",
+      "proposedSize": {
+        "width": 17,
+        "height": 10,
+        "depth": 21
+      },
+      "intent": "备餐和后勤入口",
+      "existingAlternatives": "MG-05、MG-07、MG-17",
+      "gapReason": "已有完整宿舍、食堂及研究住宅，缺少能反复组成小街坊的小型配套。"
+    },
+    {
+      "assetId": "mock:bakery_small",
+      "name": "（面包房）",
+      "placeholder": true,
+      "function": "生活",
+      "proposedSize": {
+        "width": 13,
+        "height": 9,
+        "depth": 17
+      },
+      "intent": "制作与临街供应",
+      "existingAlternatives": "MG-05、MG-07、MG-17",
+      "gapReason": "已有完整宿舍、食堂及研究住宅，缺少能反复组成小街坊的小型配套。"
+    },
+    {
+      "assetId": "mock:vegetable_plot",
+      "name": "（菜圃田块）",
+      "placeholder": true,
+      "function": "种植",
+      "proposedSize": {
+        "width": 17,
+        "height": 2,
+        "depth": 17
+      },
+      "intent": "可重复田块与作业边缘",
+      "existingAlternatives": "MG-12、MG-21",
+      "gapReason": "已有花园和植物教学组合，缺少可连片组织、按规模扩展的田块及小型养护设施。"
+    },
+    {
+      "assetId": "mock:herb_plot",
+      "name": "（教学药草圃）",
+      "placeholder": true,
+      "function": "种植",
+      "proposedSize": {
+        "width": 21,
+        "height": 2,
+        "depth": 17
+      },
+      "intent": "植物教学与养护",
+      "existingAlternatives": "MG-12、MG-21",
+      "gapReason": "已有花园和植物教学组合，缺少可连片组织、按规模扩展的田块及小型养护设施。"
+    },
+    {
+      "assetId": "mock:greenhouse_small",
+      "name": "（小温室）",
+      "placeholder": true,
+      "function": "种植",
+      "proposedSize": {
+        "width": 17,
+        "height": 10,
+        "depth": 25
+      },
+      "intent": "植物栽培与步行入口",
+      "existingAlternatives": "MG-12、MG-21",
+      "gapReason": "已有花园和植物教学组合，缺少可连片组织、按规模扩展的田块及小型养护设施。"
+    },
+    {
+      "assetId": "mock:garden_shed",
+      "name": "（园艺工具棚）",
+      "placeholder": true,
+      "function": "种植",
+      "proposedSize": {
+        "width": 9,
+        "height": 7,
+        "depth": 13
+      },
+      "intent": "工具收纳与作业入口",
+      "existingAlternatives": "MG-12、MG-21",
+      "gapReason": "已有花园和植物教学组合，缺少可连片组织、按规模扩展的田块及小型养护设施。"
+    },
+    {
+      "assetId": "mock:gatehouse_small",
+      "name": "（迎宾门房）",
+      "placeholder": true,
+      "function": "迎宾",
+      "proposedSize": {
+        "width": 13,
+        "height": 10,
+        "depth": 17
+      },
+      "intent": "入口管理与接待",
+      "existingAlternatives": "MG-13、MG-22",
+      "gapReason": "已有公共办事和通行设施，缺少小尺度接待、门房和短住配套。"
+    },
+    {
+      "assetId": "mock:guest_lodge",
+      "name": "（访客旅舍）",
+      "placeholder": true,
+      "function": "迎宾",
+      "proposedSize": {
+        "width": 23,
+        "height": 16,
+        "depth": 27
+      },
+      "intent": "短住与休息庭院",
+      "existingAlternatives": "MG-13、MG-22",
+      "gapReason": "已有公共办事和通行设施，缺少小尺度接待、门房和短住配套。"
+    },
+    {
+      "assetId": "mock:shore_store",
+      "name": "（岸边小仓库）",
+      "placeholder": true,
+      "function": "码头",
+      "proposedSize": {
+        "width": 17,
+        "height": 11,
+        "depth": 21
+      },
+      "intent": "登岸货物与陆路搬运",
+      "existingAlternatives": "MG-23、MG-08、MG-20",
+      "gapReason": "已有完整河埠、桥与仓储，缺少岸线适配的小型接驳段和岸边配套。"
+    },
+    {
+      "assetId": "mock:pier_segment",
+      "name": "（小栈桥段）",
+      "placeholder": true,
+      "function": "码头",
+      "proposedSize": {
+        "width": 9,
+        "height": 4,
+        "depth": 21
+      },
+      "intent": "重复接驳段",
+      "existingAlternatives": "MG-23、MG-08、MG-20",
+      "gapReason": "已有完整河埠、桥与仓储，缺少岸线适配的小型接驳段和岸边配套。"
+    },
+    {
+      "assetId": "mock:cloister_segment",
+      "name": "（连廊段）",
+      "placeholder": true,
+      "function": "公共联系",
+      "proposedSize": {
+        "width": 7,
+        "height": 8,
+        "depth": 15
+      },
+      "intent": "组团间遮雨步行",
+      "existingAlternatives": "MG-08",
+      "gapReason": "已有桥，缺少可重复组织院落之间的小型遮雨连廊。"
+    },
+    {
+      "assetId": "mock:dining_small",
+      "name": "（小食堂）",
+      "placeholder": true,
+      "function": "生活",
+      "proposedSize": {
+        "width": 23,
+        "height": 13,
+        "depth": 25
+      },
+      "intent": "少量师生共享用餐",
+      "existingAlternatives": "MG-05、MG-07、MG-17",
+      "gapReason": "已有完整宿舍、食堂及研究住宅，缺少能反复组成小街坊的小型配套。"
+    },
+    {
+      "assetId": "mock:reception_small",
+      "name": "（小接待厅）",
+      "placeholder": true,
+      "function": "迎宾",
+      "proposedSize": {
+        "width": 19,
+        "height": 14,
+        "depth": 23
+      },
+      "intent": "登岸接待与问询",
+      "existingAlternatives": "MG-13、MG-22",
+      "gapReason": "已有公共办事和通行设施，缺少小尺度接待、门房和短住配套。"
+    }
+  ]
+}

@@ -681,3 +681,10 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 素材输入：`StructureProfile.category` 为 specialty/common；`assetTags` 为 infrastructure/landscape 无重复数组，缺失保持未标注，不按名称、外观或旧角色推断。Studio 导出以 catalog.json 的完整结构族规则和作者 asset_tags 为准。导出池依据作者风格/功能建候选，是否使用与重要程度由本区设计决定。
 
 `city_d4_materials.filters.categories` 任一类别匹配；`assetTags` 全部匹配；与 styles、functionIds、rawFunctionTerms 取交集。返回 authoredMetadata、classification 与分页前 facets 的类别/标签计数。通用市政厅可作为行政区核心；roles 是旧标注浏览维度，不能用作本次角色资格。
+
+
+## 2026-10-07：可恢复的设计版本
+
+`city_d4_design_version.v1` 是同城、同冻结 Context 的成功设计快照，持久化在 blueprint/design_versions。字段为 schema、versionId（content 的 SHA-256 十六进制）、contextId、cityId、createdAt、content={workflow,blueprint,geometry}。geometry 记录 compiledLayout/landscapeLayout 用于正式编译时保持历史布局；历史数据不直接作为新接受或施工输入。
+
+恢复后继续使用当前 workflow revision 并递增，重新编译、复核和定稿；failure budget 与冻结 Context 不恢复至旧值。旧接受与派生计划退役为证据，当前 accepted 文件撤销资格，故下游不能继续使用旧方案。仅尚未进入施工流程的城市允许恢复，成功施工后的世界撤销不属于本协议。
