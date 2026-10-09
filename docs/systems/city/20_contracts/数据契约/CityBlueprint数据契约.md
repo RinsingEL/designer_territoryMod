@@ -4,9 +4,19 @@
 
 本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
-CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。
+CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。
 
 ## 当前 schema
+
+### 目的明确的矩形阵列与公共留空（2026-10-09）
+
+`groups[].layout`、`arrayCompositions[].layout` 为可选对象，仅适用于 GRID / LINEAR / COURTYARD。省略时保留旧算法。严格字段：`gapBlocks`（4–40，默认 8）、`columns`（1–180，默认 2）、`courtWidth/courtDepth`（8–256，默认 36/28）、`faceInward`（默认 false，仅 COURTYARD 允许 true）、`crossAlign`（START/CENTER/END，默认 START）、`purpose`（非空，默认 public-space）。尺寸均为方块，坐标由编译器冻结，不能提交显式摆放坐标。
+
+显式矩形布局按所选完整模板真实边界或完整子阵列边界排布；父阵列移动整棵子树，不把建筑拆为接头。显式 COURTYARD 最多四个成员按北、西、东、南围绕留空排布；叶子组未填 structureCount 时取 required 引用数，避免旧默认值补出第五栋。faceInward 使用作者允许的旋转及镜像，无法面向庭院时拒绝。每个阵列应有独立空间目的：围合公共庭院、组织重复功能建筑或形成街面，避免每栋建筑包装成单成员 GRID。
+
+编译产物 `structureAnchorPlan.publicSpaces[]` 保存 ownerGroupId、purpose 和 minX/minZ/maxX/maxZ；D6 保留该元数据，户外编译在真实成员保留后预留台面。purpose 含 garden 时生成分层花园，其余生成广场。它是程序管理的公共空间，不替代显式 Landscape Parcel。喷泉、雕像等作者模板仍可作为独立成员安排。
+
+`districtDesigns` 的 coreGroupId/coreStructureRef 与 groupIds 接入正式户外编译：保留核心的真实 footprint 作为该区台地取高依据，所有归属配套共享高程。核心未保留时记录 CITY_TERRACE_CORE_NOT_RETAINED，保留旧归纳路径，不伪造核心。
 
 ### D4 一次初版与整体性扩张协议（2026-09-17）
 

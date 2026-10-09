@@ -6,6 +6,18 @@ Landscape source 必须冻结 `landscapeInstanceId/parcelId/parentParcelId/rootS
 
 required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实际冻结的非零容量；主体引用、D6 footprint 或候选身份漂移仍 hard fail。目标实例或 Parcel 因地形缩减、零格时继承 D4 warning，不得在 D6 重新补成固定形状或让整城失败。optional 自由景观逐 Parcel 记录 `admitted` 或 `skipped_insufficient_space`，同实例较早形成的非零 Parcel 不因后继失败被清空。
 
+## 核心台地、相邻小间隙与公共绿化（2026-10-09）
+
+正式户外编译读取 D6 保留的 districtDesigns 核心与 publicSpaces，按核心脚下地形样本冻结本区统一台面；旧无核心设计仍走原路径。道路在整个冻结图上重算台地衔接，核心改变但邻区同高时也重算已有道路，不遗留旧高程。
+
+小间隙默认以两区边界到候选格的最短距离之和不超过 32 格判定，连片至少 60 格；原地形与台面高差最多 6 格。只连接实际道路附近干燥、缓坡的建设余隙，避开水体、岸壁、峡谷、实际建筑、显式景观和预留走廊。沿道路法线同步补齐另一侧，遇保护范围停止；不封河、填峡谷或处理所有城际跨度。新增 TERRACE_GROUND 冻结每格道路台面高程，执行时以实体石质支撑填实并清除原生植被，外缘 TERRACE_RAIL 保留护栏和柱头。相接内部不重复筑边，建筑附属自动围栏只保留真正台地外缘；显式功能地块边界不删除。
+
+公共绿化按边缘、连续绿篱、花带和留空花园的四象限组织，保留交叉通路；广场使用较小角部绿地。GREEN_FIXTURE 表达有朝向的边阶、长椅、灯、可控小树和中央小纪念柱。材料读取 config/geomantia/city_public_space_fixtures.json 或内置同名资源，可按主题换皮；不硬编码魔法学院素材。关闭植物时仍保留道路、支撑、家具和小设施。D6 的 roadside_tree 作者 NBT 树仍按原语义单独放置，程序小树仅属于公共花园。
+
+SurfacePrint 新增 TERRACE_GROUND / TERRACE_RAIL / GREEN_FIXTURE，沿用 targetSurfaceY 冻结高程；原有枚举和缺省字段保持可读。owner chunk 只裁切全城冻结结果，带一格邻区台面上下文判定内部边界；所有冻结 features 纳入原版生成保护。楼梯装饰在执行事务结束后刷新连接形状。quality 新增 coreTerraceCount、designedPublicSpaceCount、sharedTerraceGroundBlocks。
+
+这是实验阶段的 Java 接入，已做编译与离线回归，游戏内生成、原版植被清理和邻区刷新仍待实机验收。实验 MG 边阶 NBT 套件尚未成为正式 Java 默认资源；本阶段使用通用方块材料配置。
+
 ## 定位
 
 D6 `placementRole=roadside_tree` 的结构不作为 Foundation 建筑来源，其 `lockedActualFootprint` 作为自然保留空间从城区建设面扣除，避免铺地和台面覆盖树根。树自身由固定 NBT StructureStart 放置，不由 LandUse 生成树种或按方块拼树。
