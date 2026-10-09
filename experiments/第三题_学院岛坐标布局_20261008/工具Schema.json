@@ -246,6 +246,9 @@
                 "compositionId": {
                   "type": "string"
                 },
+                "coreNodeId": {
+                  "type": "string"
+                },
                 "anchorBlock": {
                   "type": "object",
                   "properties": {
@@ -441,6 +444,9 @@
               "type": "object",
               "properties": {
                 "compositionId": {
+                  "type": "string"
+                },
+                "coreNodeId": {
                   "type": "string"
                 },
                 "anchorBlock": {

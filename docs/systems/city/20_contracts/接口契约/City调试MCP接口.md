@@ -109,6 +109,12 @@ FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现�
 - 响应 `artifacts` 至少包含 `landformReviewMap`、`biomeOverview`、`cityLandformReviewPackage`、`landUseTerrainField`。`biomeOverview` 使用 D3 16-block cell 的最终 Minecraft biome id。
 - D3 采样、Patch 分析、PNG 和 artifact 写入必须在 API worker 执行，不得把完整 handler 包入服务器线程。响应返回 `executionMode=api_worker`、`serverThreadBlocked=false` 与 `durationMs`；workflow 同样只把确实需要世界读写的后续步骤送回服务器线程。
 
+### 逐格生成器 DEM 备用导出
+
+`POST /realm/city/export_terrain_dem` 接收 `runId`、`citySeedId`、可选 `step`（只允许 1），继承本机规划接口所有权过滤。使用该城市冻结 D3 的范围；验证当前维度、世界种子和原 D3 `terrainProvider.sourceFingerprint`，仅允许同源 RTF 生成器高度接口。采样位于 API worker，拒绝服务器线程执行，不生成区块，不重做 D3，也不更新审批、设计队列或 accepted 文件。返回 `demPath`、`columnCount`、step、source、durationMs、executionMode=api_worker、serverThreadBlocked=false、chunkGeneration=false。
+
+独立产物保存于 `city_test_runs/<cityId>/terrain_dem_exports/`。schema 为 `city_terrain_dem.v1`，包含 cityId、d3TerrainHash（原地形文件字节 SHA-256）、闭合 bounds、step=1、order=z_then_x、source、groundY 和 waterSurfaceY 数组；无水格为 null，最多 1048576 格，地面和水面均为整数。source 标注 generator_native_height_field、维度、种子、来源 run 和生成器指纹。它是逐格生成器高度场，不代表最终已生成方块地表。原 City D3 仍固定 step=16；当前学院实验默认继续使用 D3，DEM 可供后续工作台细部预览导入。
+
 ### city_execute_d7 在线队列契约
 
 - `executeStructurePlacement=true` 不得同步遍历城市 owner 或调用阻塞式 `level.getChunk(...)`。缺失 LandUse owner 进入服务器 tick 队列，以异步 FULL chunk future 逐块请求。
