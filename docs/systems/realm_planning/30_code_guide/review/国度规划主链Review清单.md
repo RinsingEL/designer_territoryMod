@@ -5,7 +5,8 @@
 Review 前建议同时打开：
 
 - `../flows/W-T主链实现指南.md`
-- `../../10_product/功能设计/W-T阶段主流程设计.md`
+- `../../10_product/案子/国度与城市设计正式接入/README.md`
+- `../../10_product/案子/W一次完整扫描-v0.1/README.md`
 - `../../20_contracts/数据契约/W-T阶段数据契约.md`
 - `../../20_contracts/接口契约/W-T阶段MCP接口.md`
 - `../../40_tests/测试入口.md`
