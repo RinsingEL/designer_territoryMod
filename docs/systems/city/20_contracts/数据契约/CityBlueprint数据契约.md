@@ -4,7 +4,7 @@
 
 本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
-CityBlueprint 本身不生成建筑结构坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。建筑坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。2026-10-11 用户确认的公共空间配置为例外：`publicRealm` 可表达公共场地相对构图及 AI 决定的外城/港口出口世界坐标，由程序校验后冻结，不改变建筑落位职责。
+2026-10-11 用户最新确认：D4 改用工作台式显式坐标设计，取消 Top Patch 审查和建筑选 Patch 接口。CityBlueprint 允许顶层 groups/arrayCompositions 提交 anchorBlock={x,z}（整数世界方块坐标），程序据此展开逐栋结构坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。逐栋建筑坐标、旋转、模板 identity、collision、逐格 mask 与实际面积由程序编译；顶层阵列坐标由 AI 指定。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。2026-10-11 用户确认的公共空间配置为例外：`publicRealm` 可表达公共场地相对构图及 AI 决定的外城/港口出口世界坐标，由程序校验后冻结，不改变建筑落位职责。
 
 ## 当前 schema
 
@@ -24,7 +24,7 @@ externalAccess 为 `{id,width,waypoints:[{x,z,surfaceY}],landing?,harborReservat
 
 ### 目的明确的矩形阵列与公共留空（2026-10-09）
 
-`groups[].layout`、`arrayCompositions[].layout` 为可选对象，仅适用于 GRID / LINEAR / COURTYARD。省略时保留旧算法。严格字段：`gapBlocks`（4–40，默认 8）、`columns`（1–180，默认 2）、`courtWidth/courtDepth`（8–256，默认 36/28）、`faceInward`（默认 false，仅 COURTYARD 允许 true）、`crossAlign`（START/CENTER/END，默认 START）、`purpose`（非空，默认 public-space）。尺寸均为方块，坐标由编译器冻结，不能提交显式摆放坐标。
+`groups[].layout`、`arrayCompositions[].layout` 为可选对象，仅适用于 GRID / LINEAR / COURTYARD。省略时保留旧算法。严格字段：`gapBlocks`（4–40，默认 8）、`columns`（1–180，默认 2）、`courtWidth/courtDepth`（8–256，默认 36/28）、`faceInward`（默认 false，仅 COURTYARD 允许 true）、`crossAlign`（START/CENTER/END，默认 START）、`purpose`（非空，默认 public-space）。尺寸均为方块。顶层组或其父组合二选一填写 anchorBlock；嵌套成员省略坐标，继承父布局。指定坐标不吸附 Patch、不自动迁移；越界和碰撞保留为明确缺口。旧 preferredPatchRefs/preferredPatchZone 仅用于读取历史方案，不再出现在新 D4 工具建筑 schema 中。
 
 显式矩形布局按所选完整模板真实边界或完整子阵列边界排布；父阵列移动整棵子树，不把建筑拆为接头。显式 COURTYARD 最多四个成员按北、西、东、南围绕留空排布；叶子组未填 structureCount 时取 required 引用数，避免旧默认值补出第五栋。faceInward 使用作者允许的旋转及镜像，无法面向庭院时拒绝。每个阵列应有独立空间目的：围合公共庭院、组织重复功能建筑或形成街面，避免每栋建筑包装成单成员 GRID。
 
