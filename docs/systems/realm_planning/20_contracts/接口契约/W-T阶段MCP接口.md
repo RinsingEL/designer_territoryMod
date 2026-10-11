@@ -11,6 +11,16 @@
 - T2 推荐由 AI 先探索感兴趣的 patch 类型，再提交稳定 `patchSelectionRef`；直接提交候选图 grid 坐标保留为兼容入口。
 - MCP 能支撑端到端验收，而不是只跑单元测试。
 
+## 外部存档大厅：重设计入口（2026-10-11）
+
+外部 Agent 仅需正式 MCP，不依赖仓库 `AGENTS.md` 或历史聊天。初始化说明引导 `geomantia_lobby`；设计规则、可用工具和图片由 `planning_next` 任务包提供。
+
+- 大厅返回 `runId`、`citySeedId`、`cityQueueStatus`、`canRedesign`。仅当前队列中已保存且未进入施工的城市允许重开；已有直接落地记录也会阻止重开。
+- `cityQueueStatus=design_saved` 时，明确区分“使用已保存方案继续施工”和“重新设计当前城市”。前者由用户选择后调用 `planning_resume(retry=true)`；后者调用 `planning_redesign`。
+- `planning_redesign({runId, citySeedId, reason})`：仅高级角色，目标必须匹配最新大厅；Java `/planning/redesign` 使用会话租约并从存档读取 context、revision、accepted hash，调用现有版本重开流程。保存历史、保留 D3，重新编译为可修改草稿，不重置失败预算，不启动施工。
+- 重开异步执行，MCP 私下保存租约，返回 `nextCall=planning_next`；随后领取普通 D4 任务。重开并非清空旧方案，Agent 可按用户要求修订各区。
+- 正在处理、其他执行端占用、目标过期、缺少版本证据或已施工均拒绝。工具失败不可解释为成功；只读大厅不领取任务或修改城市。
+
 ## 工具总览
 
 ### T1 核心建筑视觉上下文（2026-09-25）
