@@ -4,9 +4,23 @@
 
 本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
-CityBlueprint 本身不生成结构或景观坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。
+CityBlueprint 本身不生成建筑结构坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。建筑坐标、旋转、模板 identity、collision、逐格 mask 与实际面积只能出现在程序编译产物中。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。2026-10-11 用户确认的公共空间配置为例外：`publicRealm` 可表达公共场地相对构图及 AI 决定的外城/港口出口世界坐标，由程序校验后冻结，不改变建筑落位职责。
 
 ## 当前 schema
+
+### 可配置公共空间及外围接入（2026-10-11）
+
+`outdoorPlan.publicRealm` 可选，schema=`city_public_realm.v1`，当前 catalog=`academy`。仅 GENERATE 可用；不提供时保留旧逻辑。字段为 schema、catalog、seed、spaces、greenery、fringe、externalAccess。全城默认可在 overview.citySettings.outdoorPlan 提交；分区设计可交 publicRealm，组装时合并不同 ID 的 spaces，全城配置冲突拒绝，不后写覆盖。
+
+`spaces[]` 为 `{id,owner,origin?:{x,z},plan}`。owner 引用户外编译后的公共空间归属；使用 districtDesigns 时归并为 districtId。同归属多个庭院通过 origin 选择。plan 使用场地构图契约：POINT/LINE/GRID/RING、最多六层嵌套、相对坐标、四向旋转、素材池、留白、入口寻路与种植区。必须落在现有平坦公共地面内，不新增核心/功能区台地。`city_d4_example caseId=public_realm` 提供三份可编辑示例及真实模板尺寸、groundPlane、池和哈希。
+
+greenery/fringe 配置 pools、spacing、slotLimits、maxPlacements、layeredPlanting；fringe 另有 width（1–48）。子池按 trees/planters/hedges/shrubs/flowers 指定，保持风格由素材池负责。外围从城市外侧连通地形识别，排除封闭院落、道路及保留区，保留原高程并向外渐疏；低层种植允许树冠下落位但不能穿过树干或低枝。
+
+externalAccess 为 `{id,width,waypoints:[{x,z,surfaceY}],landing?,harborReservation?}`；后两项为 minX/minZ/maxX/maxZ 矩形。AI 选择位置，程序要求入口接已有道路、轴向路线、半格高度、宽 3/5/7、坡度 ≤0.5、土方 ≤8、已采样非水域，避建筑和 D5 保留区。只建设出口通路/接岸平台及港口预留，不包含码头或填海。
+
+生产链路在 D6 后 LandUsePlanningService 编译，冻结为带完整方块状态与 targetSurfaceY 的 AUTHORED_BLOCK；模板 hash 写入来源，实际落位和容量警告保存到 quality_report.publicRealm。D6 旧自动种树在启用 publicRealm 时退出。台地结构层保留，模板后写覆盖，区块施工预检占用和承载，沿用逐所属区块事务。冻结前模板池可抽样，冻结后执行不重新随机。不承诺与 Python 的随机序列相同。
+
+资源和字段完整说明：实现仓 `tools/city_experiments/JAVA_PUBLIC_REALM.md`；NBT 导出一致性检查：`python tools/city_experiments/export_public_realm.py --check`。真实游戏验收仍独立于离线测试。
 
 ### 目的明确的矩形阵列与公共留空（2026-10-09）
 
