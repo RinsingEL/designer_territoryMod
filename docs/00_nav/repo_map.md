@@ -7,6 +7,8 @@
 | 实现仓库 | `E:\Mod_Dev\StructureBinder` | Java、MCP、运行时实现、测试、调试产物和 `dev_docs/`。 |
 | 文档仓库 | `E:\Mod_Dev\designer_territoryMod` | 当前方案、契约、代码导览、测试入口、影响面和全局工作流。 |
 
+国度 NPC / 冒险附属 Realmfolk 自 2026-10-14 起纳入实现仓 `addons/realmfolk/`，独立 Gradle 构建、共用主仓 Git 与远端。旧 `E:\Mod\_Dev\国度冒险附属Mod` 保留为迁移来源，后续实现以新目录为准。
+
 ## 写入边界
 
 - 用户最新确认的原话和示意图是需求最高真值；文档仓库保存同步后的长期需求、字段契约、阶段职责和测试入口。
