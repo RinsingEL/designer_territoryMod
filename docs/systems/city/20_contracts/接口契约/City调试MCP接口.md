@@ -27,7 +27,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_review_d3_site` | `/realm/city/review_d3_site` | 冻结需要人工复核的 D3 选址结论。 |
 | `city_prepare_d4_blueprint_context` | `/realm/city/prepare_d4_blueprint_context` | 在当前 D3 Top Patch 复核完成后输出 Context v0.10、snapshot v0.10、Reference Catalog v0.9 与 5 次程序编译失败预算。 |
 | `city_d4_overview` | `/realm/city/submit_d4_blueprint`（宿主注入 d4Tool） | 只提交总览与功能区意图、全城设置。 |
-| `city_d4_district` | 同上 | 当前区一次初版；部分落位自动推进，仅整区全空可重做。 |
+| `city_d4_district` | 同上 | 初次设计当前区，或绑定当前预览定向修订已保存区；冻结其他区。 |
 | `city_d4_mark` | 同上 | 总览确认主体与外围独立区标记。 |
 | `city_d4_integrate` | 同上 | 调整当前区阵列/嵌套或向外扩张，遵循保护名单并保留其他区功能。 |
 | `city_d4_finalize` | 同上 | 仅确认当前已复核 baseDraftHash；成功后默认自动编译。 |
@@ -44,29 +44,17 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 | `city_execute_city_walls` | `/realm/city/execute_city_walls` | 经确认后放置墙段和塔楼。 |
 | `city_run_workflow` | `/realm/city/run_workflow` | 串联已冻结步骤；可复用既有 artifact，并在需要确认或等待 worldgen 时停止；响应 artifacts 返回统一 `testRunManifest` / `testRunPackage`。 |
 
-### D4 一次初版与整体性扩张协议（2026-09-17）
+### D4 功能区设计协议
 
-HTTP 共用 `/realm/city/submit_d4_blueprint`，路由注入 d4Tool。请求携带 contextId、workflowRevision；公开 MCP 另带 runId、citySeedId，Provider 由宿主绑定。存档主阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。不公开旧局部修饰、逐区评价和完成工具；2026-10-07 起通过下述版本工具支持施工流程启动前的重开。
+当前 protocolVersion=3，字段与行为统一见本文“2026-10-07：功能区循环与素材角色分离”及“成功方案版本、重开与恢复”。初次设计按主次推进，已保存区可依据当前预览定向修订；mark/integrate 可选。
 
-| 工具 | 职责及输入 |
-| --- | --- |
-| city_d4_overview | overview={citySettings,districts,districtDisposition?}；outdoorPlan 仅全城基础设置。预标记可选。首个有效分区保存前，DISTRICTS 仍允许以当前 workflowRevision 重交总览纠正全城默认配置，无需草稿或 baseDraftHash；成功后从首区继续，省略的旧预标记清除。已有有效分区后禁止重交总览。 |
-| city_d4_district | 当前区 districtDesign：groups、arrayCompositions、relations、foundationGroupIds、landscapes、局部 surfaceMaterials。有效落位后自动推进，只有本区建筑与景观全空返回 initialDistrictEmpty=true 并允许重做。 |
-| city_d4_mark | 看初版总览后以 baseDraftHash、assessment、districtDisposition 确认全城标记；每个 districtId 恰好一次，independent 为布尔值。独立区还需 peripheralRole（BORDER_OUTPOST / PERIPHERAL_RESOURCE / SUBURBAN_INDUSTRY / OTHER_PERIPHERAL）与 reason，仅限职责本身适合独立的外围区。 |
-| city_d4_integrate | baseDraftHash、assessment、targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes。只扩大一个非独立区。ADJUST_ARRAY 调整阵列参数/嵌套；OUTWARD_ARRAY 追加以 BETWEEN_GROUPS 指向本区及目标区的完整阵列。切换处理区须 previousExpansionComplete=true，说明上一处整体性已成立。 |
-| city_d4_preview | baseDraftHash + overview=true 或 groupIds（1–3），按需补看图。 |
-| city_d4_finalize | 当前 baseDraftHash、assessment、functionsPreserved=true，可附 autoAdvanceAfterD4；直接确认已预览的实际布局，不夹带新设计，不要求至少一次扩张。 |
-| city_d4_materials / example / blocks / handbook | 按需选材、案例、方块与手册读取。 |
+公共请求共用 `/realm/city/submit_d4_blueprint`，路由注入 `d4Tool`，携带 `contextId/workflowRevision`；公开 MCP 另带 `runId/citySeedId`，Provider 由宿主绑定。存档阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。
 
-设计与扩张返回当前实际总览，后续标记、扩张或提交必须基于已展示的当前版本；不要求逐区评价。整体性由 AI 判断，允许隔河、道路和合理空隙，不设固定距离、边界接触或道路连通门槛。空间独立标记不修改交通连接意图。
-
-changes 按 ID 合并；本轮扩张只接受 groups / arrayCompositions / relations / foundationGroupIds，不接受删除组、重做用途、素材或景观。已有组只能调整阵列参数；新增嵌套成员属于当前区。clearFields 只用于增加嵌套前清除独立 placementRelation。
-
-宿主用上一草稿的真实建筑几何冻结其他区；保护名单禁止覆盖，未保护区允许替换冲突的完整建筑。新建筑通过地形和硬碰撞检查才执行替换，若会清空其他区则跳过该新建筑并记录 DISTRICT_WOULD_BE_EMPTIED。被替换建筑记录于 compiledLayout.displacedBuildings；下一次增量编译继续使用保留结果，不恢复被替换建筑。其他区景观保持既有范围并作为障碍。程序保底不代替 AI 对“功能主体仍成立”的判断。
-
-FINAL 复用同一草稿保存的 host-only compiledResult，接受后交付现有 geometry commit 与后续 D5/D6 链；不重新排布已确认建筑。compiledResult 不进入 revisionEvidence 的模型载荷。D4 提示词位于 `config/geomantia/prompts/city/d4_v2/`，旧 city/ 自定义提示保留但不再用于新协议。
-
-格式、参数、引用错误允许按具体反馈修正。正常地形裁减不触发局部美化重试；程序故障保留方案并归宿主处理。原有 CORE 唯一、作者素材、模板边界与实际安全校验继续有效，空间主次由功能与几何表达。
+- overview 包含 citySettings、districts 及可选 districtDisposition；首个有效区保存前可用当前 workflowRevision 重交总览，省略旧预标记即清除。已有有效区后不重交总览。
+- districtDesign 承载 groups、arrayCompositions、relations、foundationGroupIds、landscapes 和局部 surfaceMaterials；core 与定向修订字段见下方当前版本契约。
+- preview 使用 baseDraftHash 与 overview=true 或 groupIds（1–3）。finalize 使用当前 baseDraftHash、assessment、functionsPreserved=true 和可选 autoAdvanceAfterD4；不夹带新设计，不要求先扩张。
+- 可选 mark 按每区一次记录 districtDisposition；independent 区需 peripheralRole 与 reason。可选 integrate 使用 targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes，并绑定当前 baseDraftHash 与 assessment；当前版本始终保护其他区布局。ADJUST_ARRAY 调整本区阵列，OUTWARD_ARRAY 追加完整阵列；REPAIR_CORE 见组合审查增量。
+- FINAL 复用当前草稿的 host-only compiledResult 交付 geometry commit 和后续阶段，不重排已确认布局；compiledResult 不进入 revisionEvidence 模型载荷。提示词位于 `config/geomantia/prompts/city/d4_v2/`。
 
 ### 作者资料与设计上下文
 
@@ -170,7 +158,7 @@ City artifact 不再按阶段散落在 `<runId>/` 根目录。新测试统一写
 
 ## D4 逐区工作草稿
 
-submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功预览时仍停留 awaiting_city_blueprint，不进入 postD4AutoCompile；FINAL 接受后才按 autoAdvanceAfterD4 推进。Provider 使用上述阶段工具逐区一次初版，再看总览按整体性扩张并最终确认；不直接提交整城 DRAFT/FINAL。
+submit 接受 `submissionMode=DRAFT|FINAL`，默认 FINAL。DRAFT 返回成功预览时仍停留 awaiting_city_blueprint，不进入 postD4AutoCompile；FINAL 接受后才按 autoAdvanceAfterD4 推进。Provider 使用功能区工具逐区设计、看图定向修订并最终确认；mark/integrate 可选，不直接提交整城 DRAFT/FINAL。
 
 格式拒绝返回独立 formatRetryBudget（最多10次），设计编译原5次预算不变。草稿过期响应保留 ok=false、rejectionKind=recovery，同时提供当前 revisionEvidence，恢复不消耗格式额度。每次提交仍只允许 cityBlueprint 或 blueprintPatch 之一。
 
