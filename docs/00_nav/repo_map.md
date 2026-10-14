@@ -9,7 +9,7 @@
 
 国度 NPC / 冒险附属 Realmfolk 自 2026-10-14 起纳入实现仓 `addons/realmfolk/`，独立 Gradle 构建、共用主仓 Git 与远端。旧 `E:\Mod\_Dev\国度冒险附属Mod` 保留为迁移来源，后续实现以新目录为准。
 
-冒险内容分布附属 `geomantia_adventure` 同日从旧冒险工作树迁入 `addons/adventure/`；它沿用主仓独立 source set / JAR 构建，默认不加载。主模组仅公开地理、结构事件与占地预留接口。
+冒险内容分布附属 `geomantia_adventure` 同日从旧冒险工作树迁入 `addons/adventure/`。附属模组的需求案与附属自有契约统一在文档仓 `docs/addons/` 维护，实现仓附属目录只保留代码、运行配置说明和开发记录；它沿用主仓独立 source set / JAR 构建，默认不加载。主模组仅公开地理、结构事件与占地预留接口。
 
 ## 写入边界
 

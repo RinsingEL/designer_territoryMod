@@ -1,5 +1,7 @@
 # TerraSense 结构扫描与策展
 
+**文档类型：系统说明**（描述已有能力与结构，不是需求案，不参与职责链身份判定）。
+
 ## 定位
 
 TerraSense 是独立 Forge/Studio 工具：在 Minecraft 中扫描结构与截图，在 Studio 中进行 AI 初标和人工审核，再导出冻结语义画像。它不参与 StructureBinder 的 runtime 规划或 worldgen。
