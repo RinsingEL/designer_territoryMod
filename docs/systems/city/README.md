@@ -30,7 +30,7 @@ T4 CitySeed
 
 正式 D4 冻结完整 CityBlueprint revision，输入允许完整设计或带 baseBlueprintHash 的局部替换补丁；宿主补齐省略的身份字段，并在显式相对权重模式下换算占比，再执行原有完整校验。同一 Context 的设计编译失败最多 5 次；提交校验拒绝、明确的程序搜索/安全上限及锚点终审故障不消耗设计预算。程序故障进入 blocked_by_program，保留方案，不要求 AI 重写。具体输入和恢复规则以 CityBlueprint 数据契约为准。
 
-`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 共同进入 D4：父阵列按完整 Group 范围编排子阵列，Group 可按 Patch 边界或其他 Group 关系定位；required 建筑以所选 Patch 起步，后续连续阵列可跨 Patch 边界。景观以 owner 为种子按地形生长，preferred Patch 仅为软偏好；数量或面积可被地形减少，零格写警告，不让整城失败。景观在 required owner 确立后、阵列 fill 前规划；后续建筑与道路可占用并裁去景观 spans，D6 后非零 Parcel 按冻结父子来源逐格生成。
+`groups[]`、`arrayCompositions[]` 与显式 `Landscape` 共同进入 D4：父阵列按完整 Group 范围编排子阵列；根组与根组合由设计者用 `anchorBlock` 给出世界坐标，嵌套成员由父布局组织。按 Patch 边界或 Patch 关系定位只为兼容未写坐标的旧蓝图保留，不再用于现行 D4 设计。景观以 owner 为种子按地形生长；数量或面积可被地形减少，零格写警告，不让整城失败。景观在 required owner 确立后、阵列 fill 前规划；后续建筑与道路可占用并裁去景观 spans，D6 后非零 Parcel 按冻结父子来源逐格生成。
 
 D4 当前设计循环由 2026-10-07 用户授权的[按功能区设计城市](10_product/案子/具体流程的案子/30_D4蓝图编译/按功能区设计城市/README.md)接管。继承第二题，逐区明确核心、必需配套与可选填充，使用正式阵列编译和当前版本预览；已保存区可定向修订并冻结其他区。总览标记与受控扩张保留为可选能力；具体协议见 City 调试 MCP 接口。
 
