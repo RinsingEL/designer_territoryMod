@@ -6,7 +6,7 @@
 
 只运行：
 
-`powershell -NoProfile -ExecutionPolicy Bypass -File E:\Mod_Dev\StructureBinder\scripts\check_requirement_cleanup_due.ps1`
+`python scripts/requirement_cleanup.py check`（在实现仓根目录运行；Windows 本机也可继续运行 `scripts/check_requirement_cleanup_due.ps1`，两者读写同一状态文件。状态文件只在本机，云端 Session 会得到 `DUE state_missing`，按同样规则询问用户。）
 
 - 输出 `OK`：结束启动检查，不因启动检查读取清理工作流、案子索引或需求案；当前任务需要的材料按下方路由读取。
 - 输出 `DUE`：先询问用户是否启动清理；用户同意后才通过 `task_router.md` 进入清理工作流，并暂停原任务直至清理完成。
@@ -26,3 +26,5 @@
 | `task_router.md` | 工作流标题、准确路径和触发条件的唯一索引。 |
 | `domain_map.md` | 定位目标系统、工具和跨系统产品主线。 |
 | `repo_map.md` | 判断内容属于实现仓库还是文档仓库。 |
+| `路线图.md` | 唯一的全局进度页：里程碑与各职责链状态。 |
+| `开发流程.md` | 从想法到进入游戏的完整链路、分支与 PR。 |

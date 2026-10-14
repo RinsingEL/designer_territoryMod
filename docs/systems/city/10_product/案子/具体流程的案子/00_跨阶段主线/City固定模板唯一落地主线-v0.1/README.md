@@ -1,5 +1,7 @@
 # City 固定模板唯一落地主线
 
+**案子身份：实现当前案**（模板落地主线）。
+
 ## 状态
 
 当前正式建筑落地方案。City 只消费固定 NBT 模板，不使用 configured structure、运行时 Jigsaw、随机 envelope 或 FEATURES 阶段补贴。

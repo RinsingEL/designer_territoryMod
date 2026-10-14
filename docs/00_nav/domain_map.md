@@ -10,6 +10,12 @@
 | 国度规划 | W/T 阶段、国度扩张、城市种子、候选选址 | `../systems/realm_planning/README.md` |
 | City | D/C 阶段、城市蓝图、建筑群、景观、道路、结构落地 | `../systems/city/README.md` |
 
+## 附属模组
+
+| 领域 | 常见范围 | 当前真值入口 |
+| --- | --- | --- |
+| 附属模组 | Realmfolk 居民与委托、Adventure 冒险分布、Realmsaga 剧情与游记 | `../addons/README.md` |
+
 ## 工具
 
 | 领域 | 常见范围 | 当前真值入口 |
