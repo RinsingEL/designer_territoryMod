@@ -65,7 +65,7 @@ git -C E:\Mod_Dev\designer_territoryMod log --oneline -n 10
 
 ## 分支与 PR
 
-每项工作在功能分支上提交，完成后提 PR 合入主线分支（当前为 `codex/offline-structure-studio`）；流程见[开发流程](../00_nav/开发流程.md)。
+每项工作在功能分支上提交，完成后提 PR 合入主分支（实现仓 `master`、文档仓 `main`）；流程见[开发流程](../00_nav/开发流程.md)。
 
 ## 双仓库提交
 
