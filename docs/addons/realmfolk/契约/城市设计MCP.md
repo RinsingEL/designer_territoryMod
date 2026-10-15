@@ -4,6 +4,14 @@ AI 编辑声明式定义与城市配额，只有少量关键人物逐人创作�
 
 主模组已经提供自动城市接入：城市蓝图就绪后，主 MCP 的 planning_resume 会提供 Realmfolk 专用任务及工具。正常主流程无需另接 5022。下文的独立 MCP 用于人工调整与调试；自动任务和经济字段见[经济与主流程契约](城市经济与主流程契约.md)。
 
+## 0.3 快速居民与商店配置
+
+正式规划扩展新增 `realmfolk_quick_plan`，提交 `baseRevision`、可选 `cityCharacter`、实际 `housingTerms/publicTerms`、少量 `groups`、关键人物及经济选择。每个群体填写 id、基础 profession、可选名称/用途说明、实际工作用途 functions 与最低/最多人数、权重；省略群体时使用文明默认中能匹配实际建筑的职业。居民人数最终由可用床位与岗位决定，不能以这份规划证明建筑已可居住。
+
+程序展开全部功能行与职业定义，进入原有草案、全城审查、preview、publish 流程。快速入口配置居民与商店，不要求完整委托；已有居民快照仍按正式发布规则保护。未知用途、缺失工作地点、其他城市私有职业会拒绝，不悄悄换类型。
+
+独立设计 MCP 提供 `realmfolk_quick_city {cityId, choices}`：对已发现城市执行同样的展开，返回 draftId/cityReview，随后调用 `realmfolk_preview` 与 `realmfolk_publish`。`realmfolk_life_status {}` 只读检查设施、认领与实际活动，详见[生活设施与居民作息](生活设施与居民作息.md)。
+
 ## 启动与连接
 
 双击 `启动城市设计.bat`，或执行 `scripts/launch-playtest.ps1 -World Realmfolk_City_Test -Designer`。进入世界后开放 `http://127.0.0.1:5022/mcp`，正常玩家启动不开启此接口。独立服务器可用 JVM `-Drealmfolk.designer=true`，端口由 `realmfolk.designerPort` 指定。
