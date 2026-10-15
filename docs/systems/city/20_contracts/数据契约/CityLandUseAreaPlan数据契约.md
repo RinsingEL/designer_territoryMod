@@ -405,3 +405,13 @@ worldgen 按 owner chunk 查统一轮廓，每列最多检查 3×3 已可访问�
 - 预设读 `config/geomantia/city_public_greenery.json`，未提供时使用 bundled `data/geomantia/city/public_greenery.json`。字段 `ground`、非空 `plants[]`、`density`（0..1）、`edgeClearance`（0..8）；默认草地、花草/低矮叶丛，密度0.16、边缘留白1格。预设冻结为 SurfacePrint features 并参与哈希。
 - 普通非台地道路不冻结 D3 粗采样高度，执行时在逐列实际地表上替换；台地或桥梁衔接道路继续冻结规划高程。非台地样本不再取整到4格。水域沿用桥梁判定，不把零碎水面统一填高。
 - `placementRole=public_greenery` 与道路树共享可选装饰 StructureStart、实际尺寸/根点、入口/道路/墙体/景观避让与地形检查。它不作为台地来源，锁定 footprint 保护自带装饰。D6 保存 `publicGreeneryReport`，缺失或冲突的可选素材只跳过。
+
+## 可选公共补植的整实例准入
+
+2026-10-15 用户确认：不适合种植的位置拒绝补植，不专门补洞或造台地。该规则针对 `AUTHORED_BLOCK` 中 `public_realm::interior/…@…` 与 `public_realm::fringe/…@…` 的完整实例。显式公共空间组合和出入口仍保持原施工约束。
+
+道路、公共基面及其他非补植内容在原 worldgen FEATURES 时机施工。含可选补植的 owner 完成基础层后在 ledger 保存 `publicRealmPending=true`，此时不计入 D7 完成数。D7 通过已有异步加载流程等待邻区就绪，只执行剩余补植层，不重复铺路或台地。重载后继续保留待处理状态和原阶段计数。
+
+准入一次检查整个实例的占地、承载、体积及地基目标，而非逐区块独立决定。结果按 dimension、city、surface plan hash 和 sourceId 保存于 ledger 的 `publicRealmInstances[]`：`accepted`、`reasonCode`、`x/y/z` 标识结论与检查位置。`PUBLIC_REALM_ADMITTED` 为准入，`PUBLIC_REALM_SUPPORT_MISSING`、`PUBLIC_REALM_VOLUME_OCCUPIED`、`PUBLIC_REALM_TARGET_OCCUPIED` 为整实例拒绝；上下文未就绪时不冻结拒绝结论。所有 owner 复用同一决定，拒绝后不放置局部残片、不换位、不降低占用保护。
+
+`land_use_owner_completion.json` 同时返回 `publicRealmInstances[]`。可选景观拒绝与基础设施施工失败分开报告；完成仍要求所有 owner 完成且没有缺失。保存后 `publicRealmPending` 必须全部消解，已完成基础层的阶段计数保留并与补植写入计数合并。没有该字段的既有完整 owner 按原完成状态读取；本次规则不追改旧版已经生成的景观。

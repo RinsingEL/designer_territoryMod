@@ -20,6 +20,8 @@ externalAccess 为 `{id,width,waypoints:[{x,z,surfaceY}],landing?,harborReservat
 
 生产链路在 D6 后 LandUsePlanningService 编译，冻结为带完整方块状态与 targetSurfaceY 的 AUTHORED_BLOCK；模板 hash 写入来源，实际落位和容量警告保存到 quality_report.publicRealm。D6 旧自动种树在启用 publicRealm 时退出。台地结构层保留，模板后写覆盖，区块施工预检占用和承载，沿用逐所属区块事务。冻结前模板池可抽样，冻结后执行不重新随机。不承诺与 Python 的随机序列相同。
 
+`greenery/fringe` 的独立补植实例在 D7 依据已生成地形、建筑与公共基面作整实例准入；缺承载、液体或空间占用时整份拒绝，不移动冻结坐标，也不为补植填洞或造台地。`spaces` 中显式设计的组合与 `externalAccess` 不属于该可选补植拒绝范围。规划阶段的生成器地面采样只用于筛选候选，不能代替最终实际方块核对。拒绝及跨区块续跑记录见 [LandUse 契约](CityLandUseAreaPlan数据契约.md#可选公共补植的整实例准入)。
+
 资源和字段完整说明：实现仓 `tools/city_experiments/JAVA_PUBLIC_REALM.md`；NBT 导出一致性检查：`python tools/city_experiments/export_public_realm.py --check`。真实游戏验收仍独立于离线测试。
 
 ### 目的明确的矩形阵列与公共留空（2026-10-09）
