@@ -12,6 +12,8 @@ AI 编辑声明式定义与城市配额，只有少量关键人物逐人创作�
 
 独立设计 MCP 提供 `realmfolk_quick_city {cityId, choices}`：对已发现城市执行同样的展开，返回 draftId/cityReview，随后调用 `realmfolk_preview` 与 `realmfolk_publish`。`realmfolk_life_status {}` 只读检查设施、认领与实际活动，详见[生活设施与居民作息](生活设施与居民作息.md)。
 
+独立quick_city发布不完成宿主扩展。快速配置的宿主接续在当前FLASH任务内依次调用realmfolk_quick_plan、realmfolk_planning_preview、realmfolk_planning_publish，携带实际返回的草案、预览及审查凭证；原有功能填写表路径仍可使用。以hostDecisionCommitted=true和taskFinished=true为本扩展完成证据，再通过planning_next交还主流程。2026-10-16实机验证已有32常住居民时created/refreshed均为0，宿主进入T4；不把后续领地规划也计作完成。
+
 ## 启动与连接
 
 双击 `启动城市设计.bat`，或执行 `scripts/launch-playtest.ps1 -World Realmfolk_City_Test -Designer`。进入世界后开放 `http://127.0.0.1:5022/mcp`，正常玩家启动不开启此接口。独立服务器可用 JVM `-Drealmfolk.designer=true`，端口由 `realmfolk.designerPort` 指定。
