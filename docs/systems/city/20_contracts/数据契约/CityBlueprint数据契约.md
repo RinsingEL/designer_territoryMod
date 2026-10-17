@@ -14,7 +14,7 @@
 
 `spaces[]` 为 `{id,owner,origin?:{x,z},plan}`。owner 引用户外编译后的公共空间归属；使用 districtDesigns 时归并为 districtId。同归属多个庭院通过 origin 选择。plan 使用场地构图契约：POINT/LINE/GRID/RING、最多六层嵌套、相对坐标、四向旋转、素材池、留白、入口寻路与种植区。必须落在现有平坦公共地面内，不新增核心/功能区台地。`city_d4_example caseId=public_realm` 提供三份可编辑示例及真实模板尺寸、groundPlane、池和哈希。
 
-greenery/fringe 配置 pools、spacing、slotLimits、maxPlacements、layeredPlanting；fringe 另有 width（1–48）。子池按 trees/planters/hedges/shrubs/flowers 指定，保持风格由素材池负责。外围从城市外侧连通地形识别，排除封闭院落、道路及保留区，保留原高程并向外渐疏；低层种植允许树冠下落位但不能穿过树干或低枝。
+greenery/fringe 配置 pools、spacing、slotLimits、maxPlacements、layeredPlanting；fringe 另有 width（1–48）。子池按 trees/planters/hedges/shrubs/flowers 指定，保持风格由素材池负责。每个启用池应填写独立 slotLimit（0 表示不种）；省略时采用 `ceil(maxPlacements / 启用池数)` 并告警。所有池在种植前按各自上限逐轮分配总预算，先填满低上限池，其余均分剩余额度；不能让先处理的花坛耗尽后续池名额。总预算不足时按 trees、planters、hedges、shrubs、flowers 的稳定顺序处理不足一轮的余数，并告警。空间不足不挪用其他类别的预留名额；`quality_report.publicRealm.plantingBudgets` 按 interior/fringe 和池记录 requested、allocated、placed，告警同时进入顶层 quality.warnings/status。外围从城市外侧连通地形识别，排除封闭院落、道路及保留区，保留原高程并向外渐疏；低层种植允许树冠下落位但不能穿过树干或低枝。
 
 externalAccess 为 `{id,width,waypoints:[{x,z,surfaceY}],landing?,harborReservation?}`；后两项为 minX/minZ/maxX/maxZ 矩形。AI 选择位置，程序要求入口接已有道路、轴向路线、半格高度、宽 3/5/7、坡度 ≤0.5、土方 ≤8、已采样非水域，避建筑和 D5 保留区。只建设出口通路/接岸平台及港口预留，不包含码头或填海。
 
@@ -30,7 +30,7 @@ externalAccess 为 `{id,width,waypoints:[{x,z,surfaceY}],landing?,harborReservat
 
 显式矩形布局按所选完整模板真实边界或完整子阵列边界排布；父阵列移动整棵子树，不把建筑拆为接头。显式 COURTYARD 最多四个成员按北、西、东、南围绕留空排布；叶子组未填 structureCount 时取 required 引用数，避免旧默认值补出第五栋。faceInward 使用作者允许的旋转及镜像，无法面向庭院时拒绝。每个阵列应有独立空间目的：围合公共庭院、组织重复功能建筑或形成街面，避免每栋建筑包装成单成员 GRID。
 
-编译产物 `structureAnchorPlan.publicSpaces[]` 保存 ownerGroupId、purpose 和 minX/minZ/maxX/maxZ；D6 保留该元数据，户外编译在真实成员保留后预留台面。purpose 含 garden 时生成分层花园，其余生成广场。它是程序管理的公共空间，不替代显式 Landscape Parcel。喷泉、雕像等作者模板仍可作为独立成员安排。
+编译产物 `structureAnchorPlan.publicSpaces[]` 保存 ownerGroupId、purpose 和 minX/minZ/maxX/maxZ；D4 转 `structureAnchorMap` 时深复制该数组，D6 在 `sourceStructureAnchorMap.publicSpaces` 保留同一内容，户外编译在真实成员保留后预留台面。未声明该数组的旧输入保持可读，不推测补造内院。purpose 含 garden 时生成分层花园，其余生成广场。它是程序管理的公共空间，不替代显式 Landscape Parcel。喷泉、雕像等作者模板仍可作为独立成员安排。
 
 `districtDesigns` 的 coreGroupId/coreStructureRef 与 groupIds 接入正式户外编译：保留核心的真实 footprint 作为该区台地取高依据，所有归属配套共享高程。核心未保留时记录 CITY_TERRACE_CORE_NOT_RETAINED，保留旧归纳路径，不伪造核心。
 
