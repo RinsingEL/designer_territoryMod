@@ -26,6 +26,10 @@
 - `roads`：以实际道路类型为键；同部位的道路类型覆盖优先于功能区覆盖，再继承城市默认。可用类型见 `designGuide.surfaceMaterials.roadKinds`。
 - `landscapes`：以本蓝图 landscapeId 为键的景观实例覆盖，不继承城市道路用材。
 
+村路外观仅作为 `hamlet/village` 规模的缺省，不能根据 COMPACT_ALLEY 类型就推断是村庄；`town/city/large_city` 和规模未知时不套用。一个候选路段在实际道路格上能解析出任意显式 roadSurface/roadStair/roadCurb/roadBase 时，保留整段已有选材与路缘，不套用村路外观。`quality_report.villageRoads` 记录规模、appliedRoadCount 和逐段 sourceId/roadKind/reason（disabled、not_village_scale、bridge、explicit_materials、village_fallback）。
+
+村路的楼梯及底板缺省冻结在 `materialField.roads[].fallbackMaterials`，只属于相同 sourceId，优先级低于道路类型、分区和城市显式选材，不传播给同类型的其他道路。缺省为空时省略该可选字段，保留旧冻结计划的序列化与哈希；保存重载及运行时接坡不重新读取村路配置。
+
 外观组定义与完整预设集中于 `src/main/resources/geomantia/city_surface_appearances.json`，由同一个目录驱动解析器和 Agent guide：
 
 | 组 | 部位 | 预设 |
