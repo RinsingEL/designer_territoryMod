@@ -151,6 +151,8 @@ City 运行时仍不执行 Jigsaw。对于人工从模组资源中收集、视�
 - 非整数、字符串、布尔值、显式 null 及越界值返回 `CITY_TEMPLATE_GROUND_PLANE_INVALID`。旋转、镜像只改变 XZ，不改变该字段。
 - 此字段属于作者目录元数据，随 D4 候选、阵列 placement plan、D6 `plannedWorldgenStructures` / `structureTemplate`、active registry 和 ledger 保存。D7 同时检查字段存在性和值；不能以相同 NBT hash 忽略地面声明漂移。
 - 世界已经持久化的 `templateDatumY` 是放置原点，所有后续分片继续复用，不重新扣除 groundPlaneY，也不因新目录元数据移动已有 StructureStart。
+
+2026-10-18 共享台地降低建筑的施工补充：稀疏NBT未列出的体素不等于显式空气。普通建筑在作者方块写入前，按同一groundPlane解析出的世界first-free Y，清除锁定footprint内该高度及以上的原地表，随后放置模板并支撑基底；每个owner仅处理自身chunk与footprint的交集。保留groundPlane以下地基，不改变模板identity、尺寸、原点或邻楼占地，不依赖模板是否显式保存空气。`structure_start_decoration` 路树不进行这一步，避免按树冠范围挖地。旧已生成存档不自动执行补切或移动建筑，复验使用独立新副本。
 - 不写入原版 StructureTemplate NBT 的未知根字段；目录变更须重新计算内容包 catalogSha256 并正式生成新 Context，不手改旧冻结产物。
 
 可选作者字段 `frontagePolicy`：

@@ -8,6 +8,14 @@ required Parcel 只消费 D4 `city_landscape_capacity_reservation_plan.v0.2` 实
 
 ## 核心台地、相邻小间隙与公共绿化（2026-10-09）
 
+2026-10-18 第二轮高度修复：核心标高采用地形整数高度，不再自动量化到4的倍数。入口先校验未改写的远端全宽落脚面，再冻结整段；公共地面随后消费实际 platformSpans 与道路高度，不能用 publicSpaces 矩形覆盖台内外高程。外围绿地在全域求解有限土方与邻接坡度，不按8×8或owner chunk独立取高。不同固定台地的真实边界保留分层，从最终地面重新派生护栏；无空间连通的约束在 quality.publicGround.transitionConflictColumns / transitionConflictSamples / warnings 中保留诊断。
+
+道路肩部与填隙步骤新增的实际台地也必须有功能区归属：在已有 platformSpans 域内，从各核心组掩码多源扩散归属，等距按districtId稳定决胜，不跨未建设自然域吸收其他台地。归属冻结后才给道路定坡，避免无归属肩部沿用旧的逐建筑高度，把同区道路拉低。
+
+公共绿地来源区分 `public_ground::shared::`、`natural::`、`transition::`、`bridge::`（均保留 public_ground 前缀）。普通公共地面相对实际自然地形最多填/切6格；已接受的共享台地（platformSpans、TERRACE_GROUND或shared来源）沿用建筑基础最多12格的切方范围，不能因表面换成草地又缩回6格。两类公共地面的填高上限仍为6格，超限、液体或非自然地物保留；允许的草坪填高使用实土，不使用建筑 DECK。建筑实际占地与显式桥面仍使用各自承载规则。规划与执行使用相同的土方判定，裁剪同步写入 Area exclusions，不能在执行时恢复成未冻结基础。
+
+完整方块及当前 ROAD_SLAB/BRIDGE_DECK 的 double slab 站立面是方块Y+1；ROAD_STAIR 的 targetSurfaceY 是楼梯方块Y，低端对应的地面基准为 targetSurfaceY-1。台地、道路邻边与种植承载比较时先转换为相同基准，素材自身 surfaceOffset 不参与城市基面的定高。
+
 正式户外编译读取 D6 保留的 districtDesigns 核心与 publicSpaces，按核心脚下地形样本冻结本区统一台面；旧无核心设计仍走原路径。道路在整个冻结图上重算台地衔接，核心改变但邻区同高时也重算已有道路，不遗留旧高程。
 
 小间隙默认以两区边界到候选格的最短距离之和不超过 32 格判定，连片至少 60 格；原地形与台面高差最多 6 格。只连接实际道路附近干燥、缓坡的建设余隙，避开水体、岸壁、峡谷、实际建筑、显式景观和预留走廊。沿道路法线同步补齐另一侧，遇保护范围停止；不封河、填峡谷或处理所有城际跨度。新增 TERRACE_GROUND 冻结每格道路台面高程，执行时以实体石质支撑填实并清除原生植被，外缘 TERRACE_RAIL 保留护栏和柱头。相接内部不重复筑边，建筑附属自动围栏只保留真正台地外缘；显式功能地块边界不删除。
