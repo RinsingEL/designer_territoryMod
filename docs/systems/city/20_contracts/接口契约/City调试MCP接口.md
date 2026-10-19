@@ -251,3 +251,17 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 任意已持久化 post-D4 job（包括失败、已完成）、活动队列或直接世界激活／放置报告均拒绝重开和恢复，返回 `CITY_D4_REVISION_AFTER_EXECUTION_STARTED`。宿主串行处理设计回退与 enqueue/retry 的状态检查，防止重开与启动施工交错。普通默认定稿仍自动入队；需要后续重开时，定稿必须明确 `autoAdvanceAfterD4=false`。本批不提供已生成城市的世界 undo。
 
 过期 workflowRevision、base hash、未知版本、版本损坏或 Context 不符均拒绝，不覆盖既有 accepted 方案；恢复编译不成立时保留原工作流和接受方案，并返回真实失败证据。历史视图的 blueprintHash 是版本内容标识，不是当前 accepted trace hash；重开请使用 history 返回的 baseBlueprintHash。
+
+## 2026-10-19：配置开启的 D4 从零重做
+
+实例配置 `config/geomantia/mcp_server.json` 增加布尔字段 `debug`，默认 `false`；旧配置省略时也为关闭。只有配置为 `"debug": true` 时，高级角色 MCP（默认 5001）才发布 `planning_reset_d4`。Flash（默认 5002）不发布也不可执行。保存端口或内置接管设置必须保留 debug 值。该开关不是 MCP 请求参数；字符串 `"true"` 不合法。服务端每次执行均重新校验配置，关闭后旧连接也不可继续调用；修改配置后刷新客户端工具列表，必要时重连。
+
+大厅在 debug 开启且当前城市可重置时返回 `canResetD4=true` 和 `d4ResetVersion`，显示“调试：从零重做 D4”。用户明确选择从零重做后调用：
+
+`planning_reset_d4(runId, citySeedId, resetVersion=d4ResetVersion, reason)`
+
+runId、citySeedId 与版本必须取自最新大厅。版本绑定当前城市、工作流、冻结 Context、草稿与接受 trace；过期请求或同请求重放返回 `CITY_D4_RESET_VERSION_STALE`。仅允许当前 D4 城市，校验高级角色、会话租约与非运行状态；占用中的其他执行端不可被抢占。配置关闭返回 `PLANNING_DEBUG_DISABLED`，请求中填写 debug 不改变配置或准入。
+
+重置允许未定稿草稿及尚未施工的定稿。旧工作流、设计 session、草稿、预览与 accepted 产物，以及 D4 后续派生计划归档至 `steps/blueprint/debug_resets/<唯一标识>/`（旧布局使用对应 blueprint 目录），保留原相对路径和 `manifest.json`。D3 地貌、选址、`land_use_terrain_field.json`、冻结 Context/catalog snapshot、已有版本历史及 failure budget 保持。工作流 revision 递增，清空全城设置、分区与设计内容，回到 `OVERVIEW`；旧任务和动作缓存失效，成功后通过 `planning_next` 领取新任务。
+
+宿主经 `/planning/reset_d4` 调度内部 `/realm/city/debug_reset_d4`，沿用提交 artifact 锁、施工队列互斥和当前城市校验；内部端点也要求配置开启及有效高级会话操作。所有移动前校验路径范围，I/O 失败回滚已移动文件。任意 post-D4 job、世界激活或放置报告仍返回 `CITY_D4_REVISION_AFTER_EXECUTION_STARTED`。操作不定稿、不启动施工、不修改世界，也不替代已有 `planning_redesign` 的保留方案修订语义。
