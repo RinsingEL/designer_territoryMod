@@ -295,9 +295,13 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 
 ## CityLandUseSurfacePrintPlan
 
-`city_land_use_surface_print_plan.v0.7` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schemaVersion`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`、`featureCells[]`；hash 必须由严格 codec 的规范 JSON 计算。Area recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`；正式道路和住宅外溢边界以精确 feature cells 表达；建筑装饰归 NBT 素材负责，执行期不重新读取 Blueprint、目录或 D4 几何。
+`city_land_use_surface_print_plan.v0.7` 是与 area plan 分离冻结的当前执行计划。顶层字段为 `schema`、`cityId`、`sourceLandUsePlanHash`、`planHash`、`areas[]`、`sharedBoundarySpans[]`、`featureCells[]` 和可选的 `materialField`；hash 必须由严格 codec 的规范 JSON 计算。Area recipe 判别联合只允许 `uniform|contour_bands|relay_region_growth`；正式道路和住宅外溢边界以精确 feature cells 表达；建筑装饰归 NBT 素材负责，执行期不重新读取 Blueprint、目录或 D4 几何。
 
-`featureCells[]` 每项严格为 `{sourceId,x,z,blockId,surfaceOffset,kind,facing}`，同一 `{x,z,surfaceOffset}` 唯一。`kind` 只允许 `ROAD_SLAB|ROAD_STAIR|BRIDGE_DECK|BRIDGE_RAIL|GREEN_GROUND|GREEN_PATH|GREEN_PLANT|OVERFLOW_BOUNDARY`；只有 `ROAD_STAIR` 的 `facing` 可为 `NORTH|EAST|SOUTH|WEST`，其余固定 `NONE`。主路使用深色 deepslate tile，普通街使用 polished andesite，COMPACT 巷使用 mud brick；它们都与 Foundation/广场铺装分离。陆地道路 `widthBlocks` 范围冻结为 bottom slab，轴线两侧外加一格 bottom stair 路缘；桥段冻结 spruce bottom slab 桥面与 spruce fence 护栏，执行层沿护栏按稳定 7 格节奏向水底写 stone-brick 成对桥墩。正式编译不再生成 GREEN_GROUND/GREEN_PATH/GREEN_PLANT；旧 codec 能读取这些 feature 不代表会继续自动生成建筑附属绿化。住宅外溢边界沿冻结矩形写 `boundaryBlockId`，所有关联 street bounds 从边界中扣除形成门洞。道路优先于绿化与边界，冲突植物上层必须删除。
+`featureCells[]` 每项包含 `{sourceId,x,z,blockId,surfaceOffset,kind,facing}`，并可按类型携带 `targetSurfaceY` 冻结高程。`kind` 允许 `ROAD_SLAB|ROAD_STAIR|ROAD_LAMP|BRIDGE_DECK|BRIDGE_RAIL|GREEN_GROUND|GREEN_PATH|GREEN_PLANT|OVERFLOW_BOUNDARY|TERRACE_GROUND|TERRACE_RAIL|GREEN_FIXTURE|AUTHORED_BLOCK`。`ROAD_STAIR` 必须有四向 `facing`，`GREEN_FIXTURE` 可有四向或 `NONE`，其余固定 `NONE`。普通 feature 以 `{x,z,surfaceOffset}` 判重；`AUTHORED_BLOCK` 必须携带 `targetSurfaceY`，单独以 `{x,z,targetSurfaceY+surfaceOffset}` 的绝对高度键判重。重复占位仍拒绝，不能靠取消校验解决护栏与植物冲突。
+
+主路使用深色 deepslate tile，普通街使用 polished andesite，COMPACT 巷使用 mud brick；它们都与 Foundation/广场铺装分离。`ROAD_SLAB` 与 `BRIDGE_DECK` 选用半砖材料时，执行为 `double slab`，站立面按方块 Y+1 处理；楼梯继续使用 `bottom straight stair` 和冻结朝向，不能把完整路面与下半砖混用为同一站立面。路缘、桥护栏和桥墩按冻结道路几何与材料配置生成；`SURFACE_ONLY` 窄巷不额外扩出路缘。
+
+正式公共地面与绿化仍可生成 `GREEN_GROUND/GREEN_PATH/GREEN_PLANT`；已取消的是逐栋建筑附属自动绿化，建筑自带装饰仍归 NBT。住宅外溢边界沿冻结矩形写 `boundaryBlockId`，关联 street bounds 从边界中扣除形成门洞。通路上的冲突植物应清除；共享台地护栏的地面与种植占位分别处理，见“公共地面与非台地道路增量”。
 
 `sharedBoundarySpans[]` 在 AreaPlan 的单侧 owner 基础上再冻结最终 `boundaryBlockId`。双方均 `OPEN` 时允许空材料；否则 owner chunk 只裁切这些全局 spans 并写一次，不得按 chunk 邻接或执行顺序重算归属。
 
@@ -311,7 +315,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `surfaceAlgorithm` / `algorithmAnchor` | `uniform|contour_bands|relay_region_growth` 与 nullable/有效根起点；nullable 字段必须显式写 JSON null。 |
 | `recipe` | `uniform`、`contour_bands` 或 `relay_region_growth` 判别联合。 |
 
-`uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。正式 Foundation 新计划另冻结 `platformSpans: [{z,minX,maxX,targetY}]`：整片最终基面连通域在 owner 裁切前按 D3 非水采样的主导四格高度统一定高，低坑不另生成低台。区块只裁切冻结高度，不按本块重新投票；主干道优先使用所在基面高度。普通铺装及旧计划允许省略此字段，省略时保持旧 hash 与读取兼容；新增高度参与 planHash。Landscape 覆盖区不由 Foundation 强行刷平。超出执行土方安全范围仍报明确错误，不静默留裸地。
+`uniform` 冻结 `surfaceBlockId` 与可选 `boundaryBlockId`。正式 Foundation 新计划另冻结 `platformSpans: [{z,minX,maxX,targetY}]`，记录 owner 裁切前确定的实际台地高程。声明功能区核心的设计按前文核心共享台地规则取高，不再量化到四格，也不把不同核心的台地仅因连通就统一成同一高度；旧无核心设计保留原取高路径，不反向覆盖核心共享台地。区块只裁切冻结高度，不按本块重新投票；主干道衔接消费所在台地的最终高度。普通铺装及旧计划允许省略此字段，省略时保持旧 hash 与读取兼容；新增高度参与 planHash。Landscape 覆盖区不由 Foundation 强行刷平。公共地面土方裁剪与排除列按前文规则冻结，保留质量诊断，不在执行时恢复被排除的台地。
 
 `contour_bands` 冻结配置的正整数 `fieldBeforeBlocks/channelWidthBlocks/fieldAfterBlocks` 及其和 `repeatPeriodBlocks`，并冻结 `surfaceBlockId`、`cropBlockId`、`channelBankBlockId`、`channelWaterBlockId`、`channelBankOverlayBlockId`、可选 `boundaryBlockId`、`classificationMode`、`anchor` 与 `bandSpans[]`。`classificationMode` 允许 `CONTOUR_NORMAL|DIRECTIONAL_CURVES|RADIAL_FALLBACK`，后者只用于读取旧冻结结果；`bandSpans[]` 每项为 `{z,minX,maxX,role}`。核心分类器先输出 `field|channel_before_bank|channel_water|channel_after_bank`，planner 再按完整全局 WATER 四邻接把所有开放端点改为 `channel_end_cap`；最终 SurfacePrintPlan 接受这五种 role。
 
@@ -342,7 +346,7 @@ D3 产出 `land_use_terrain_field.json`。它只使用规划期可用的 GIS / �
 | `WATER` | 写 water 基层。 |
 | `GROUND` | 只写 bank/ground 基层，用于土路、石子带等纯地面间隔。 |
 
-Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计，不由 SurfacePrint 把任意 semantic contentRef 解释成方块；Landscape 多作物/多树种仍需对应内容目录。建筑自带绿化是独立已冻结能力：它只消费 Reference Catalog v0.9 `styleProfiles[].plantPalette[]` 的真实 blockId/weight，并通过 `GREEN_PLANT` feature cells 执行，不能与 Landscape semantic contentWeights 混用。
+Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计，不由 SurfacePrint 把任意 semantic contentRef 解释成方块；Landscape 多作物/多树种仍需对应内容目录。建筑自带装饰由 NBT 保留；公共绿化按自身配置冻结地面和植物，不能恢复逐栋建筑附属自动绿化，也不能把 Landscape semantic contentWeights 当作公共绿化方块配方。
 
 
 ## LandUse 规划 Trace
@@ -357,7 +361,13 @@ Landscape `contentWeights[]` 继续只进入 plan hash、trace 和预览审计�
 
 ### 主路冻结高度（2026-09-06 用户确认的高侧下挖方案）
 
-SurfacePrint `featureCells[]` 增加可选整数 `targetSurfaceY`，仅允许零 offset 的 `ROAD_SLAB/ROAD_STAIR`；未提供时沿用原执行语义且序列化不写入该字段，提供时参与计划哈希。chunk feature operation 必须原样传递，不得在 owner 内重新估算该道路高度。
+SurfacePrint `featureCells[]` 的整数 `targetSurfaceY` 用于冻结高程，当前允许范围如下：
+
+- `surfaceOffset=0`：`TERRACE_GROUND|ROAD_SLAB|ROAD_STAIR|BRIDGE_DECK|GREEN_PATH|GREEN_GROUND`。
+- `surfaceOffset>0`：`BRIDGE_RAIL|TERRACE_RAIL|GREEN_PLANT|GREEN_FIXTURE`，上层设施沿用冻结地面基准。
+- `AUTHORED_BLOCK`：必须提供 `targetSurfaceY`，按素材的有符号 `surfaceOffset` 计算绝对高度；不套用前两类的 offset 限制。
+
+其他类型不得携带冻结高程。允许省略的类型未提供时沿用原执行语义，序列化不写入该字段；提供时参与计划哈希。chunk feature operation 必须原样传递，不得在 owner 内重新估算已经冻结的高度。
 
 非桥主路在整段冻结地形上求连续纵断面，默认水平3格上升1格，空间不足尝试2格；规划下挖/填方各不超过12格。端点、交叉口及入口附近锁定冻结采样高度，不为坡道移动建筑。当前采样固定值不是实测门槛Y。无法满足固定点/坡长时保留旧路径并记录诊断警告，尚不包含自动绕行。
 
@@ -372,7 +382,7 @@ SurfacePrint `featureCells[]` 增加可选整数 `targetSurfaceY`，仅允许零
 - 只在 `WorldGenRegion` 首次 FEATURES owner 回调处理当前 chunk；不得跨 owner 写相邻 chunk。
 - owner fragment 只读 prepared 局部索引，不重算 plan hash、不扫描全城 band spans、不读取无关 owner 状态。PAVE 可携带只读 grading halo；不得把 halo 计为 owner relevant cell 或跨 owner 主动写入。
 - 普通 PAVE 微整地固定使用 7x7 真实顶层高度的中位数作为局部参考，只接受补高 1..3 格、连通面积 <=16 且 X/Z span <=4 的封闭低洼。Foundation PAVE 使用独立执行策略：以 7x7 外环中位高度为目标，低处最多补高 48 格并允许覆盖水/岩浆，小凸起最多削低 4 格；7x7 局部起伏达到 12 格的非低洼列视为山体并跳过 Foundation surface/boundary。两者都不读取或填充地下空洞；填方基层使用 `MICRO_FILL_SUBGRADE`，目标顶层仍使用原 PAVE surface material。
-- owner 先写 Area base/overlay，再写 `surfaceOffset=0` 的道路/绿化 feature，随后写 crop/plant/外溢边界上层，最后执行 Area boundary finalize。ROAD_SLAB 使用 bottom slab；ROAD_STAIR 使用 bottom straight stair 和冻结外向。整个 owner 共用一次预检、快照与逆序回滚，任一 feature 写入失败也必须回滚同 owner 已写内容。
+- owner 先写 Area base/overlay，再写 `surfaceOffset=0` 的道路/绿化 feature，随后写 crop/plant/外溢边界上层，最后执行 Area boundary finalize。ROAD_SLAB 与 BRIDGE_DECK 的半砖材料执行为 double slab；ROAD_STAIR 使用 bottom straight stair 和冻结朝向，站立面换算遵循前文统一基准。整个 owner 共用一次预检、快照与逆序回滚，任一 feature 写入失败也必须回滚同 owner 已写内容。
 - boundary 等连接类方块落地前必须按现场邻居求最终 BlockState，并触发原版邻居更新；跨 owner 接缝只允许由该原版更新传播，不得额外生成跨 owner 几何写入。
 - footprint、corridor 和 gate 必须从操作中排除；自然表面不在可替换白名单时单格 skip。
 - WATER 操作在实际地面方块同一 Y 替换地面，水面低于田面；不得放在地面上方，也不得为“下挖”把水放到无法灌溉的田块 Y-1。槽底必须是实体支撑，四侧必须可封水（同层已生成源水可连续）；高差开口或无槽底时改为作者 bank 材料封口。此检查只读一格邻域，不跨 owner 写入、不进行额外地形扩张。未铺实体底座的水面/空洞上不生成普通围栏。
@@ -408,7 +418,8 @@ worldgen 按 owner chunk 查统一轮廓，每列最多检查 3×3 已可访问�
 
 城区包络采用全部建筑 footprint，建设台面只采用 `foundationGroupIds`。非台地建筑 footprint 不得被邻近台面的扩张覆盖。公共地表独立于 Foundation：可无 Foundation，同时保留显式 Landscape 的容量与必需/可选处理。
 
-- 城区可用残余扣除所有建筑、道路及边界、已声明景观、水域、峭壁和未采样区域，生成 `sourceId=public_greenery::<cityId>` 的 `GREEN_GROUND/GREEN_PLANT`。它们不产生台地高程，不逐栋补绿化圈。实际处理区域在 UrbanSpacePlan 中标为 `COMMON_GREEN`，保护区域保持自然保留。
+- 公共地面候选扣除实际建筑及其净空、道路通行空间、已声明景观和其他保护区域。已冻结的 `TERRACE_GROUND` 可继续参与公共地面整理并保留原高程与来源；共享台地护栏列不因存在护栏而排除地面整平。公共绿化路径可生成 `sourceId=public_greenery::<cityId>` 的 `GREEN_GROUND/GREEN_PLANT`，但不逐栋补绿化圈、不另建一套台地高程；按前文规则消费共享台地或外围过渡地面。实际处理区域在 UrbanSpacePlan 中标为 `COMMON_GREEN`，保护区域保持自然保留。
+- **共享护栏与种植分层占位（2026-10-19 修复）**：`TERRACE_RAIL` 且来源以 `shared_terrace::` 开头时，护栏及其种植净空阻挡上层植物，护栏下地面仍参与统一整平。整理公共空间时，只清除目标上层的 `GREEN_PLANT`，保留同处已有的护栏和其他非植物设施。最终护栏是否仍需保留由地面完成后的边界重建决定；中间计划也必须通过重复占位校验，不能等到后续重建才消解冲突。该修复已通过自动回归和原冻结方案离线重放，尚未实机复验。
 - `qualityReport.publicGreenGroundBlocks/publicGreenPlantBlocks` 为计划格数；不等同于世界执行成功数。执行按真实地面更换地表、清除原有可识别植被，跳过非自然地面；所有写入沿用预检查与回滚。公共地面同时进入生物群系生成避让 mask。
 - 预设读 `config/geomantia/city_public_greenery.json`，未提供时使用 bundled `data/geomantia/city/public_greenery.json`。字段 `ground`、非空 `plants[]`、`density`（0..1）、`edgeClearance`（0..8）；默认草地、花草/低矮叶丛，密度0.16、边缘留白1格。预设冻结为 SurfacePrint features 并参与哈希。
 - 普通非台地道路不冻结 D3 粗采样高度，执行时在逐列实际地表上替换；台地或桥梁衔接道路继续冻结规划高程。非台地样本不再取整到4格。水域沿用桥梁判定，不把零碎水面统一填高。
