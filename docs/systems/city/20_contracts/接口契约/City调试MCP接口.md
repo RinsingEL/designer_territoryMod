@@ -230,6 +230,8 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 
 ### 当前版本的生成交接
 
+`city_d4_finalize` 在当前草稿缺少必需内容时返回 `ok=false`、`reasonCode=CITY_D4_REQUIRED_CONTENT_MISSING`、当前 `baseDraftHash`、`d4Workflow` 和重新计算的 `generationHandoff`。`missingRequiredStructures[]` 附 `districtIds[]` 与 `placementEvidence[]`；后者只包含同 group/ref 的 skippedMembers，保留落位失败原因，并以 `plannedBoundsOverlaps[]` 列出名义占位与当前保留建筑 collisionEnvelope 的重叠（anchorId/placementGroupId/blueprintStructureRef/collisionEnvelope）。这是名义位置的平面几何证据，不代表所有尝试位置均因同一建筑失败；没有占位证据时返回空数组，不猜测原因。拒绝不推进 workflow、不写成功交接文件。
+
 编译预览返回 `generationHandoff`，最终保存同一内容为 `city_d4_generation_handoff.json`：包含 contextId/baseDraftHash、districtDesigns、requiredStructures（CORE/REQUIRED_SUPPORT 与 retainedInLayout）、missingRequiredStructures、terrainRequirements 与 skippedMembers。最终提交拒绝缺失核心或必需配套，不允许 functionsPreserved 覆盖机器检测。terrainRequirements 是已保留布局的待适配证据，并非已施工证明。后续生成需要显式解决这些需求，当前精确台地、支撑与跨水施工仍未由本批实现。
 
 新 protocolVersion=3 的定向修订与可选 integrate 都保护其他区布局；跨区关系可表达交通意图，arrayCompositions 不得将其他功能区纳入共同阵列。
