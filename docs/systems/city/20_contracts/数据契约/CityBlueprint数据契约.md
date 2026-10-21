@@ -702,3 +702,18 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 ### 公共空间坐标例外（2026-10-21）
 
 通用禁字段检查仅放行 outdoorPlan.publicRealm.spaces[].origin 的 x/z、spaces[].plan.entries[]/clearings[]/plantingZones[] 的 x/z、spaces[].plan.nodes[] 及递归 children[] 的 x/z/rotation，以及 externalAccess.waypoints[] 的 x/z。不豁免 y、建筑模板身份、anchorBlock、mirror 或任意嵌套对象。数值、旋转、尺寸、地形与安全校验继续由公共空间编译器执行。
+
+
+## 乡野与地形线增量契约（2026-10-21）
+
+保留既有 Blueprint schema，新增可选参数；未提交时行为不变。D4 Context 增加 `terrainLines`（`city_terrain_lines.v1`），由冻结的 D3 terrain field 提取，提供 lineRef、kind、长度、方位、端点描述与 sampleCount（不把逐点几何重复塞入模型上下文）。SHORE 为已采样陆水交界；CONTOUR_<高程> 为跨八格高程带的陆地边；CLIFF 为高差至少八格的高侧边。断线、分支分为独立引用；未知格与城市边界不冒充岸线。法向面向水面或低地，D4 使用该线，不重扫世界。粗地形线不豁免落位安全校验。
+
+`groups[].layout.natural` 用 `mode=TERRAIN_LINE`，组算法选当前 catalog 的 LINEAR profile，必填 lineRef；rows（1–8，默认 1）、spacingBlocks（8–512，默认 64）、setbackBlocks（0–128，默认 8）控制排数、沿线间距与陆侧退距。程序按真实素材尺寸增大必要格距，建筑按法向选择合法朝向，后排退至陆地/高地侧。该组是地形上的根，不进入父组合；宿主采用地形线原点，设计者不再提交 anchorBlock。沿线街带以真实线段规划，仍经过障碍处理、入口连接与最终用途裁剪。线长不足或引用失效明确拒绝，不回落普通直线。
+
+`arrayCompositions[].layout.natural` 用 `mode=SCATTER`，组合算法选 GRID profile；spacingBlocks 为完整单位包络最小间隙，radiusBlocks（16–2048，默认 192）为 anchorBlock 周围搜索范围，省略 anchorBlock 时使用城市场地中心。内部单位沿用普通小阵列或嵌套小组合。散布由冻结地形、单位尺寸与 seed 确定，优先平缓近水陆地，检查完整已采样区域；不改成规则网格，不挤压其他已保留成果。SCATTER 自身不能嵌入会移动它的父组合。搜索容量不足明确返回已找到/请求数量，禁止越界保底。包含 SIMPLE 道路配置在内，保留单位按最短连接树生成 `RURAL_SCATTER_PATH`，道路宽三格、使用真实入口并复用现有通路；到城内的连接仍由显式 CONNECTION 决定。普通组合不自动新增道路。
+
+`outdoorPlan.landscapes[].growth` 可选 `ruralMosaic=true`：在独立 cell 生长域内多源按地形成本分块，parcelCount 仍来自现有契约，块间留一格田埂。单块大小取决于目标 cell 数与可用域，不套旧 512 格上限；targetCellCount 是软目标，地形/建筑/道路裁减继续反馈。内容由各景观及逐块 fillSelection 权重选择；新林使用作者内容。可选 `preserveVegetation=true` 仅与 ruralMosaic 同用，用于城外保留林块：保留 D4 reservation 作为景观排除域，D6 不下发该块种植或清理，记录 `RURAL_WOODLAND_PRESERVED`，不能据此声称新林已种成。城区公共绿化规则不变。
+
+冻版本仍保存完整参数、阵列几何与景观 reservation；后续阶段不重新随机选择位置。成功编译与自动回归不代表游戏视觉验收通过。码头、栈桥需采用支持对应水上落位的已有素材，峡谷跨岸使用显式道路连接和既有桥梁/基础链，素材不足必须报告。
+
+干峡谷连接只对两端均为 cliff_ 地形线组的显式 CONNECTION 启用：桥头同轴、已采样干地、高差不超过四格，跨度不超过既有 100 格桥限，桥身全宽避结构/未知地形/高于桥面的地形，且中间确有至少八格落差。结果 crossingType=DRY_CANYON，waterSpanBlocks=0；D6 SurfacePrint 按两岸高程冻结统一桥面和护栏，不把谷底填成道路。其他组或无显式连接不会因坡度失败自动架干峡谷桥。

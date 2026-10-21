@@ -267,3 +267,7 @@ runId、citySeedId 与版本必须取自最新大厅。版本绑定当前城市�
 重置允许未定稿草稿及尚未施工的定稿。旧工作流、设计 session、草稿、预览与 accepted 产物，以及 D4 后续派生计划归档至 `steps/blueprint/debug_resets/<唯一标识>/`（旧布局使用对应 blueprint 目录），保留原相对路径和 `manifest.json`。D3 地貌、选址、`land_use_terrain_field.json`、冻结 Context/catalog snapshot、已有版本历史及 failure budget 保持。工作流 revision 递增，清空全城设置、分区与设计内容，回到 `OVERVIEW`；旧任务和动作缓存失效，成功后通过 `planning_next` 领取新任务。
 
 宿主经 `/planning/reset_d4` 调度内部 `/realm/city/debug_reset_d4`，沿用提交 artifact 锁、施工队列互斥和当前城市校验；内部端点也要求配置开启及有效高级会话操作。所有移动前校验路径范围，I/O 失败回滚已移动文件。任意 post-D4 job、世界激活或放置报告仍返回 `CITY_D4_REVISION_AFTER_EXECUTION_STARTED`。操作不定稿、不启动施工、不修改世界，也不替代已有 `planning_redesign` 的保留方案修订语义。
+
+### 乡野与地形线（2026-10-21）
+
+D4 prepare Context 的 terrainLines 提供地形线引用。districtDesign 的 groups/arrayCompositions 的 layout.natural 与 landscapes[].growth.ruralMosaic/preserveVegetation 经 Java 工具及 MCP schema 同步透传；具体字段见 CityBlueprint 数据契约。沿线叶子组与乡野根组合保留原有草稿 hash、分区修订及施工冻结边界。
