@@ -886,3 +886,7 @@ T4 v1.2 的 AI / 人类输入包。它只围绕单个国度，而不是整张世
 T2 仍保存合法陆地锚点与首都意图用于既有任务交接；该锚点不改变固定边界。T3 在同一保存流程核验并物化固定范围，不使用 `scalePlan` 的面积比例或扩张预算来裁剪固定国度；普通国度保持原行为。
 
 `RealmTerritoryMap.territoryCells[].territoryType` 区分 `land` 与 `nearshore`；旧缺失值按 `land` 恢复。两者均以 `owned` 表达实际归属。`realmStats.areaCells`、陆地比例及规模统计继续只计陆地；`nearshoreAreaCells` 单独统计近海格。近海归属进入地图和城市范围检查，不自动证明水域地块可建设。保存恢复须核对固定边界与声明一致，不接受固定国度范围被预算缩小或额外扩大的 checkpoint。
+
+### 城市种子设计指导（2026-10-21）
+
+T1 提示、T4 工具 serviceHierarchy 说明与 T4 回执 citySeedDesignGuidance 区分城市连续和城市大小。结合 role、serviceHierarchy、coreFunctions 与真实场地展开职责，首都或全国唯一城市不默认缩成小镇；普通地方聚落不盲目扩大。theoreticalScale 仍负责物理承载范围，不自动改写历史种子或扩大边界。

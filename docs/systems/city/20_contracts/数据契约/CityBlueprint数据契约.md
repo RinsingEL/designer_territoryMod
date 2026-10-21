@@ -4,6 +4,8 @@
 
 本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
+2026-10-21：scaleDesignTask 接收完整 citySeed，将 role、serviceHierarchy、coreFunctions、positioning、gameplayRequirements 作为 cityResponsibility 提供给设计者；生产上下文不再提供脱离职责的阵列 min/max 数量。自由文本职责由设计者结合 D3 解释，不按关键词修改物理档位，不引入建筑数、子区数或覆盖率门禁。
+
 2026-10-11 用户最新确认：D4 改用工作台式显式坐标设计，取消 Top Patch 审查和建筑选 Patch 接口。CityBlueprint 允许顶层 groups/arrayCompositions 提交 anchorBlock={x,z}（整数世界方块坐标），程序据此展开逐栋结构坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。逐栋建筑坐标、旋转、模板 identity、collision、逐格 mask 与实际面积由程序编译；顶层阵列坐标由 AI 指定。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。2026-10-11 用户确认的公共空间配置为例外：`publicRealm` 可表达公共场地相对构图及 AI 决定的外城/港口出口世界坐标，由程序校验后冻结，不改变建筑落位职责。
 
 ## 当前 schema
@@ -386,7 +388,7 @@ required Landscape 在 required 建筑落位后，以 owner 为种子枚举近�
 
 ## 禁止字段
 
-Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
+除明确例外外，Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
 
 ## 校验与失败预算
 
@@ -696,3 +698,7 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 `city_d4_design_version.v1` 是同城、同冻结 Context 的成功设计快照，持久化在 blueprint/design_versions。字段为 schema、versionId（content 的 SHA-256 十六进制）、contextId、cityId、createdAt、content={workflow,blueprint,geometry}。geometry 记录 compiledLayout/landscapeLayout 用于正式编译时保持历史布局；历史数据不直接作为新接受或施工输入。
 
 恢复后继续使用当前 workflow revision 并递增，重新编译、复核和定稿；failure budget 与冻结 Context 不恢复至旧值。旧接受与派生计划退役为证据，当前 accepted 文件撤销资格，故下游不能继续使用旧方案。仅尚未进入施工流程的城市允许恢复，成功施工后的世界撤销不属于本协议。
+
+### 公共空间坐标例外（2026-10-21）
+
+通用禁字段检查仅放行 outdoorPlan.publicRealm.spaces[].origin 的 x/z、spaces[].plan.entries[]/clearings[]/plantingZones[] 的 x/z、spaces[].plan.nodes[] 及递归 children[] 的 x/z/rotation，以及 externalAccess.waypoints[] 的 x/z。不豁免 y、建筑模板身份、anchorBlock、mirror 或任意嵌套对象。数值、旋转、尺寸、地形与安全校验继续由公共空间编译器执行。

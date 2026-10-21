@@ -50,7 +50,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 
 公共请求共用 `/realm/city/submit_d4_blueprint`，路由注入 `d4Tool`，携带 `contextId/workflowRevision`；公开 MCP 另带 `runId/citySeedId`，Provider 由宿主绑定。存档阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。
 
-- overview 包含 citySettings、districts 及可选 districtDisposition；首个有效区保存前可用当前 workflowRevision 重交总览，省略旧预标记即清除。已有有效区后不重交总览。
+- overview 包含 citySettings、districts 及可选 districtDisposition；首个有效区保存前可用当前 workflowRevision 重交总览，省略旧预标记即清除。已有有效区后，携当前 baseDraftHash、workflowRevision 与非空 assessment 重交列表，允许增补或拆分尚未设计区。全城 citySettings、overviewAnswers、已保存区的完整定义与归属标记冻结；被拆除的未设计区预标记随列表移除；bodies、选材、人口、草稿几何与归属保留。已完成大区可保留原区并增补相邻子区，原区内容用定向修订调整，不经总览迁移或删除已保存建筑。成功后 revision 加一并保存历史版本，跳过已保存区继续首个未设计区；失败不改工作流。定稿后先重开，施工开始后拒绝。
 - districtDesign 承载 groups、arrayCompositions、relations、foundationGroupIds、landscapes 和局部 surfaceMaterials；core 与定向修订字段见下方当前版本契约。
 - preview 使用 baseDraftHash 与 overview=true 或 groupIds（1–3）。finalize 使用当前 baseDraftHash、assessment、functionsPreserved=true 和可选 autoAdvanceAfterD4；不夹带新设计，不要求先扩张。
 - 可选 mark 按每区一次记录 districtDisposition；independent 区需 peripheralRole 与 reason。可选 integrate 使用 targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes，并绑定当前 baseDraftHash 与 assessment；当前版本始终保护其他区布局。ADJUST_ARRAY 调整本区阵列，OUTWARD_ARRAY 追加完整阵列；REPAIR_CORE 见组合审查增量。
