@@ -50,7 +50,7 @@ Provider 的 D3 选址复核初始资料使用地貌类型计数、首批非排�
 
 公共请求共用 `/realm/city/submit_d4_blueprint`，路由注入 `d4Tool`，携带 `contextId/workflowRevision`；公开 MCP 另带 `runId/citySeedId`，Provider 由宿主绑定。存档阶段为 OVERVIEW / DISTRICTS / INTEGRATION / COMPLETE。
 
-- overview 包含 citySettings、districts 及可选 districtDisposition；首个有效区保存前可用当前 workflowRevision 重交总览，省略旧预标记即清除。已有有效区后不重交总览。
+- overview 包含 citySettings、districts 及可选 districtDisposition；首个有效区保存前可用当前 workflowRevision 重交总览，省略旧预标记即清除。已有有效区后，携当前 baseDraftHash、workflowRevision 与非空 assessment 重交列表，允许增补或拆分尚未设计区。全城 citySettings、overviewAnswers、已保存区的完整定义与归属标记冻结；被拆除的未设计区预标记随列表移除；bodies、选材、人口、草稿几何与归属保留。已完成大区可保留原区并增补相邻子区，原区内容用定向修订调整，不经总览迁移或删除已保存建筑。成功后 revision 加一并保存历史版本，跳过已保存区继续首个未设计区；失败不改工作流。定稿后先重开，施工开始后拒绝。
 - districtDesign 承载 groups、arrayCompositions、relations、foundationGroupIds、landscapes 和局部 surfaceMaterials；core 与定向修订字段见下方当前版本契约。
 - preview 使用 baseDraftHash 与 overview=true 或 groupIds（1–3）。finalize 使用当前 baseDraftHash、assessment、functionsPreserved=true 和可选 autoAdvanceAfterD4；不夹带新设计，不要求先扩张。
 - 可选 mark 按每区一次记录 districtDisposition；independent 区需 peripheralRole 与 reason。可选 integrate 使用 targetDistrictId、protectedDistrictIds、expansionMode、integrationIntent、changes，并绑定当前 baseDraftHash 与 assessment；当前版本始终保护其他区布局。ADJUST_ARRAY 调整本区阵列，OUTWARD_ARRAY 追加完整阵列；REPAIR_CORE 见组合审查增量。
@@ -230,6 +230,8 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 
 ### 当前版本的生成交接
 
+`city_d4_finalize` 在当前草稿缺少必需内容时返回 `ok=false`、`reasonCode=CITY_D4_REQUIRED_CONTENT_MISSING`、当前 `baseDraftHash`、`d4Workflow` 和重新计算的 `generationHandoff`。`missingRequiredStructures[]` 附 `districtIds[]` 与 `placementEvidence[]`；后者只包含同 group/ref 的 skippedMembers，保留落位失败原因，并以 `plannedBoundsOverlaps[]` 列出名义占位与当前保留建筑 collisionEnvelope 的重叠（anchorId/placementGroupId/blueprintStructureRef/collisionEnvelope）。这是名义位置的平面几何证据，不代表所有尝试位置均因同一建筑失败；没有占位证据时返回空数组，不猜测原因。拒绝不推进 workflow、不写成功交接文件。
+
 编译预览返回 `generationHandoff`，最终保存同一内容为 `city_d4_generation_handoff.json`：包含 contextId/baseDraftHash、districtDesigns、requiredStructures（CORE/REQUIRED_SUPPORT 与 retainedInLayout）、missingRequiredStructures、terrainRequirements 与 skippedMembers。最终提交拒绝缺失核心或必需配套，不允许 functionsPreserved 覆盖机器检测。terrainRequirements 是已保留布局的待适配证据，并非已施工证明。后续生成需要显式解决这些需求，当前精确台地、支撑与跨水施工仍未由本批实现。
 
 新 protocolVersion=3 的定向修订与可选 integrate 都保护其他区布局；跨区关系可表达交通意图，arrayCompositions 不得将其他功能区纳入共同阵列。
@@ -265,3 +267,7 @@ runId、citySeedId 与版本必须取自最新大厅。版本绑定当前城市�
 重置允许未定稿草稿及尚未施工的定稿。旧工作流、设计 session、草稿、预览与 accepted 产物，以及 D4 后续派生计划归档至 `steps/blueprint/debug_resets/<唯一标识>/`（旧布局使用对应 blueprint 目录），保留原相对路径和 `manifest.json`。D3 地貌、选址、`land_use_terrain_field.json`、冻结 Context/catalog snapshot、已有版本历史及 failure budget 保持。工作流 revision 递增，清空全城设置、分区与设计内容，回到 `OVERVIEW`；旧任务和动作缓存失效，成功后通过 `planning_next` 领取新任务。
 
 宿主经 `/planning/reset_d4` 调度内部 `/realm/city/debug_reset_d4`，沿用提交 artifact 锁、施工队列互斥和当前城市校验；内部端点也要求配置开启及有效高级会话操作。所有移动前校验路径范围，I/O 失败回滚已移动文件。任意 post-D4 job、世界激活或放置报告仍返回 `CITY_D4_REVISION_AFTER_EXECUTION_STARTED`。操作不定稿、不启动施工、不修改世界，也不替代已有 `planning_redesign` 的保留方案修订语义。
+
+### 乡野与地形线（2026-10-21）
+
+D4 prepare Context 的 terrainLines 提供地形线引用。districtDesign 的 groups/arrayCompositions 的 layout.natural 与 landscapes[].growth.ruralMosaic/preserveVegetation 经 Java 工具及 MCP schema 同步透传；具体字段见 CityBlueprint 数据契约。沿线叶子组与乡野根组合保留原有草稿 hash、分区修订及施工冻结边界。

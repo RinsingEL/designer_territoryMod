@@ -4,6 +4,8 @@
 
 本文冻结 D4 结构设计与 D6 后户外空间设计共用的城市决策边界。城市编译器不调用 LLM：程序先生成完整只读 `CityBlueprintContext`，AI 提交设计，宿主组装完整 canonical `CityBlueprint` revision。可操作的编译设计冲突允许同一 Context 下修订，最多五次；明确的搜索预算耗尽、程序安全上限、锚点终审故障属于程序阻塞，不增加设计失败预算。上下文准备和提交校验拒绝也不计入预算。
 
+2026-10-21：scaleDesignTask 接收完整 citySeed，将 role、serviceHierarchy、coreFunctions、positioning、gameplayRequirements 作为 cityResponsibility 提供给设计者；生产上下文不再提供脱离职责的阵列 min/max 数量。自由文本职责由设计者结合 D3 解释，不按关键词修改物理档位，不引入建筑数、子区数或覆盖率门禁。
+
 2026-10-11 用户最新确认：D4 改用工作台式显式坐标设计，取消 Top Patch 审查和建筑选 Patch 接口。CityBlueprint 允许顶层 groups/arrayCompositions 提交 anchorBlock={x,z}（整数世界方块坐标），程序据此展开逐栋结构坐标。结构编译器消费 `groups[]/arrayCompositions[]/relations[]`；D6 锁定真实 footprint 后，户外编译器消费同一 Blueprint 的 `outdoorPlan`。逐栋建筑坐标、旋转、模板 identity、collision、逐格 mask 与实际面积由程序编译；顶层阵列坐标由 AI 指定。可选 layout 的间距与院落尺寸是布局约束，不是建筑坐标。2026-10-11 用户确认的公共空间配置为例外：`publicRealm` 可表达公共场地相对构图及 AI 决定的外城/港口出口世界坐标，由程序校验后冻结，不改变建筑落位职责。
 
 ## 当前 schema
@@ -386,7 +388,7 @@ required Landscape 在 required 建筑落位后，以 owner 为种子枚举近�
 
 ## 禁止字段
 
-Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
+除明确例外外，Blueprint 任意层级禁止：世界/block `x/y/z`、`blockX/Y/Z`、anchor、rotation、mirror、candidateId、直接 templateId/templateRef/nbtFile、`algorithm` 或 `algorithmName`。户外层另禁止 block ID、逐格 mask、固定形状、距离环、几何 fallback、裸面积、行动力和成本。它们属于程序输出，不属于 AI 决策。
 
 ## 校验与失败预算
 
@@ -465,6 +467,8 @@ required、fill 和 connectivity batch 必须调用同一 Structure Terrain gate
 最终 `city_structure_anchor_plan` 与 `city_structure_anchor_map` 根级必填 `streetBands[]`、`cityMainRoadPlan`、`streetFirstNetworkTrace` 与 `residentialOverflowPlan`。区内道路项 schema 为 `city_internal_street_band`，必填 `streetBandId/roadNetworkId/roadKind/segmentIndex/groupId/geometryMode=STRAIGHT_AXIS_CLIPPED_BY_TERRAIN/widthBlocks/surfacePolicy=FOLLOW_TERRAIN_STEP_GRADED/crossSectionProfile=STAIR_SLAB_STAIR/hardSkeleton/axisX/axisZ/start/end/bounds/platformBounds/platformPolicy=LOCAL_HARD_SKELETON`；先行骨架另写 `reservedBeforeFill=true/planningPhase=STREET_SKELETON_BEFORE_FILL`，最终保留段改写 `planningPhase=FINAL_NETWORK_AFTER_BUILDING_USE_REVIEW/usageReview/servedEntranceIds[]/junctionCount`。短巷写 `hardSkeleton=false/reservedBeforeFill=false/planningPhase=FINAL_INDIVIDUAL_ENTRANCE_FALLBACK`；绕障共享扩展写 `roadKind=SHARED_NETWORK_EXTENSION/planningPhase=FINAL_SHARED_NETWORK_REROUTE`。`widthBlocks` 是中间半砖路面宽，两侧台阶路缘各额外占 1 block。短巷必须先沿 transformed entrance 门向退出完整横断面净空，再以 block 级四邻域避开全城 actual footprint；最多 32 格短巷无合法解时，只能在同一 Group 的既有网络上生成确定性绕障共享扩展，不得跨 Group 或为 ORGANIC_COMPACT 隐式造路。CENTER_SYMMETRIC 仅在 profile 开关启用时产轴街。
 
 `streetFirstNetworkTrace.schema=city_street_first_network_trace`，必填 `planningOrder=CORE_THEN_SHARED_SKELETON_THEN_FILL_THEN_USAGE_REVIEW`、`reservedSkeletonSegmentCount/retainedSkeletonSegmentCount/removedUnusedSegmentCount/networkExtensionSegmentCount/shortAlleySegmentCount`、`removedStreetBandIds[]` 与 `accessOutcomes[]`。每个入口结果写 `entranceId/groupId/status/reasonCode`；正常城市不得含 `UNRESOLVED`，极端地形无法接入时必须进入 acceptance warning，不能静默消失。
+
+骨架端部用途复核在最终短巷和共享延伸生成后执行，按实际近邻入口与最终道路相交范围裁去两端空尾；仅有同组 LINEAR 临街意图不再足以保留无实际服务的整段。主路、入口短巷和共享延伸不参与此轮裁短；保留路口横断面与接路落点，单格落点保留最小有向线段。裁剪同步更新 start/end、bounds/platformBounds，保留原道路身份；trace 增加 `trimmedUnusedTailSegmentCount` 与 `trimmedStreetBands[]`（streetBandId/previousBounds/retainedBounds）。该用途裁剪不证明全城道路只有一个连通分量。
 
 `cityMainRoadPlan.schema=city_main_road_plan`，必填 `cityId/roadProfileRef/hierarchy/density/planningOwner=BLUEPRINT_EXPLICIT_TRAFFIC_CONNECTIONS/sharedNetworkPolicy=ONE_NETWORK_SERVES_MULTIPLE_TRAFFIC_DEMANDS/geometryMode=TERRAIN_AWARE_AXIS_ALIGNED_90_DEGREE/surfacePolicy=FOLLOW_TERRAIN_STEP_GRADED/crossSectionProfile=STAIR_SLAB_STAIR/internalStreetMaxWidthBlocks/mainRoadWidthBlocks/status/reasonCode/connectionCount/segmentCount/sharedNetworkReuseBlocks/connections[]`。只有 `relations[].relationKind=CONNECTION` 表示需要修路的显式交通意图；`HIERARCHY/ADJACENCY/BUFFER/DISTANCE/DIRECTION`、父阵列成员关系和功能区空间关系都不得自动生成主路或桥。每条显式交通连接的两端必须解析到真实模板 `roadEntrances[]` 或已冻结区内街端点，不再使用 Group 边界伪 gateway；连接项写 `routingPolicy=SHARED_NETWORK_REUSE_BEFORE_NEW_CORRIDOR/sharedNetworkReuseBlocks`。路径先在 D3 terrain field 四邻域避崖、再在 block 级按完整路面和路缘宽度避开实际建筑 footprint；已冻结主路 cell 的代价低于新走廊，后续需求优先复用同一网络。没有显式交通连接时合法输出空计划，显式连接缺真实出口或无合法路径时记录明确失败。
 
@@ -694,3 +698,22 @@ D4 当前案是《按功能区设计城市》。新状态 protocolVersion=3；�
 `city_d4_design_version.v1` 是同城、同冻结 Context 的成功设计快照，持久化在 blueprint/design_versions。字段为 schema、versionId（content 的 SHA-256 十六进制）、contextId、cityId、createdAt、content={workflow,blueprint,geometry}。geometry 记录 compiledLayout/landscapeLayout 用于正式编译时保持历史布局；历史数据不直接作为新接受或施工输入。
 
 恢复后继续使用当前 workflow revision 并递增，重新编译、复核和定稿；failure budget 与冻结 Context 不恢复至旧值。旧接受与派生计划退役为证据，当前 accepted 文件撤销资格，故下游不能继续使用旧方案。仅尚未进入施工流程的城市允许恢复，成功施工后的世界撤销不属于本协议。
+
+### 公共空间坐标例外（2026-10-21）
+
+通用禁字段检查仅放行 outdoorPlan.publicRealm.spaces[].origin 的 x/z、spaces[].plan.entries[]/clearings[]/plantingZones[] 的 x/z、spaces[].plan.nodes[] 及递归 children[] 的 x/z/rotation，以及 externalAccess.waypoints[] 的 x/z。不豁免 y、建筑模板身份、anchorBlock、mirror 或任意嵌套对象。数值、旋转、尺寸、地形与安全校验继续由公共空间编译器执行。
+
+
+## 乡野与地形线增量契约（2026-10-21）
+
+保留既有 Blueprint schema，新增可选参数；未提交时行为不变。D4 Context 增加 `terrainLines`（`city_terrain_lines.v1`），由冻结的 D3 terrain field 提取，提供 lineRef、kind、长度、方位、端点描述与 sampleCount（不把逐点几何重复塞入模型上下文）。SHORE 为已采样陆水交界；CONTOUR_<高程> 为跨八格高程带的陆地边；CLIFF 为高差至少八格的高侧边。断线、分支分为独立引用；未知格与城市边界不冒充岸线。法向面向水面或低地，D4 使用该线，不重扫世界。粗地形线不豁免落位安全校验。
+
+`groups[].layout.natural` 用 `mode=TERRAIN_LINE`，组算法选当前 catalog 的 LINEAR profile，必填 lineRef；rows（1–8，默认 1）、spacingBlocks（8–512，默认 64）、setbackBlocks（0–128，默认 8）控制排数、沿线间距与陆侧退距。程序按真实素材尺寸增大必要格距，建筑按法向选择合法朝向，后排退至陆地/高地侧。该组是地形上的根，不进入父组合；宿主采用地形线原点，设计者不再提交 anchorBlock。沿线街带以真实线段规划，仍经过障碍处理、入口连接与最终用途裁剪。线长不足或引用失效明确拒绝，不回落普通直线。
+
+`arrayCompositions[].layout.natural` 用 `mode=SCATTER`，组合算法选 GRID profile；spacingBlocks 为完整单位包络最小间隙，radiusBlocks（16–2048，默认 192）为 anchorBlock 周围搜索范围，省略 anchorBlock 时使用城市场地中心。内部单位沿用普通小阵列或嵌套小组合。散布由冻结地形、单位尺寸与 seed 确定，优先平缓近水陆地，检查完整已采样区域；不改成规则网格，不挤压其他已保留成果。SCATTER 自身不能嵌入会移动它的父组合。搜索容量不足明确返回已找到/请求数量，禁止越界保底。包含 SIMPLE 道路配置在内，保留单位按最短连接树生成 `RURAL_SCATTER_PATH`，道路宽三格、使用真实入口并复用现有通路；到城内的连接仍由显式 CONNECTION 决定。普通组合不自动新增道路。
+
+`outdoorPlan.landscapes[].growth` 可选 `ruralMosaic=true`：在独立 cell 生长域内多源按地形成本分块，parcelCount 仍来自现有契约，块间留一格田埂。单块大小取决于目标 cell 数与可用域，不套旧 512 格上限；targetCellCount 是软目标，地形/建筑/道路裁减继续反馈。内容由各景观及逐块 fillSelection 权重选择；新林使用作者内容。可选 `preserveVegetation=true` 仅与 ruralMosaic 同用，用于城外保留林块：保留 D4 reservation 作为景观排除域，D6 不下发该块种植或清理，记录 `RURAL_WOODLAND_PRESERVED`，不能据此声称新林已种成。城区公共绿化规则不变。
+
+冻版本仍保存完整参数、阵列几何与景观 reservation；后续阶段不重新随机选择位置。成功编译与自动回归不代表游戏视觉验收通过。码头、栈桥需采用支持对应水上落位的已有素材，峡谷跨岸使用显式道路连接和既有桥梁/基础链，素材不足必须报告。
+
+干峡谷连接只对两端均为 cliff_ 地形线组的显式 CONNECTION 启用：桥头同轴、已采样干地、高差不超过四格，跨度不超过既有 100 格桥限，桥身全宽避结构/未知地形/高于桥面的地形，且中间确有至少八格落差。结果 crossingType=DRY_CANYON，waterSpanBlocks=0；D6 SurfacePrint 按两岸高程冻结统一桥面和护栏，不把谷底填成道路。其他组或无显式连接不会因坡度失败自动架干峡谷桥。
